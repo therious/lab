@@ -17,6 +17,8 @@ var isNumber     =  th.isNumber;
 var isString     =  th.isString;
 var isUndefined  =  th.isUndefined;
 
+var sprintf = th.sprintf;
+
 var sample = {
   kArray: [],
   kObject: {},
@@ -131,6 +133,13 @@ describe('#isBoolean', function() {
   });
 });
 
+
+describe('#sprintf', function () {
+  it('tests if sprintf produces expected strings', function () {
+
+    sprintf("%s%d", 'A', '1').should.equal('A1');
+  });
+});
 
 
 

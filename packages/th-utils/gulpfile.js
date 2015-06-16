@@ -20,4 +20,4 @@ gulp.task('watch', function() {
 });
 
 
-gulp.task('default', ['test', 'watch']);
+gulp.task('default', ['test']);
