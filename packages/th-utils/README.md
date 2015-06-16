@@ -26,9 +26,9 @@ Logger.log("also takes a sprintf style string, and for now just maps to console.
 
 ## Tests
 
-tests to be provided eventually, when they are...
+Run gulp default target to execute tests
 
 ```shell
-   npm test
+   gulp
 ```
 
