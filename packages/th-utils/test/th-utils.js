@@ -2,7 +2,7 @@
  * Created by hzamir on 6/16/15.
  */
 
-var should = require('chai').should();
+var expect = require('chai').expect;
 
 var th = require('../th-utils');
 var logger = th.Logger;
@@ -36,33 +36,38 @@ var sample = {
 
 describe('#isNumber', function() {
   it('tests if val is a number', function () {
-    isNumber(sample.kNumber).should.equal(true);
 
-    isNumber(NaN).should.equal(false);
-    isNumber(sample.kArray).should.equal(false);
-    isNumber(sample.kNull).should.equal(false);
-    isNumber(sample.kObject).should.equal(false);
-    isNumber(sample.kString).should.equal(false);
-    isNumber(sample.kBoolean).should.equal(false);
-    isNumber(sample.kFunction).should.equal(false);
-    isNumber(sample.kUndefined).should.equal(false);
+    expect(isNumber(sample.kNumber)).true;
 
-
+    expect(isNumber(sample.kObject)).false;
+    expect(isNumber(NaN)).false;
+    expect(isNumber(sample.kArray)).false;
+    expect(isNumber(sample.kNull)).false;
+    expect(isNumber(sample.kObject)).false;
+    expect(isNumber(sample.kString)).false;
+    expect(isNumber(true)).false;
+    expect(isNumber(false)).false;
+    expect(isNumber(sample.kFunction)).false;
+    expect(isNumber(sample.kUndefined)).false;
   });
 });
 
 describe('#isFunction', function() {
   it('tests if val is a function', function () {
 
-    isFunction(sample.kNumber).should.equal(false);
-    isFunction(NaN).should.equal(false);
-    isFunction(sample.kArray).should.equal(false);
-    isFunction(sample.kNull).should.equal(false);
-    isFunction(sample.kObject).should.equal(false);
-    isFunction(sample.kString).should.equal(false);
-    isFunction(sample.kBoolean).should.equal(false);
-    isFunction(sample.kFunction).should.equal(true);
-    isFunction(sample.kUndefined).should.equal(false);
+    expect(isFunction(sample.kFunction)).true;
+
+    expect(isFunction(sample.kNumber)).false;
+    expect(isFunction(sample.kObject)).false;
+    expect(isFunction(NaN)).false;
+    expect(isFunction(sample.kArray)).false;
+    expect(isFunction(sample.kNull)).false;
+    expect(isFunction(sample.kObject)).false;
+    expect(isFunction(sample.kString)).false;
+    expect(isFunction(true)).false;
+    expect(isFunction(false)).false;
+    expect(isFunction(sample.kUndefined)).false;
+
 
   });
 });
@@ -70,74 +75,83 @@ describe('#isFunction', function() {
 
 describe('#isObject', function() {
   it('tests if val is an object', function () {
+    expect(isObject(sample.kObject),'kObject').true;
+    expect(isObject(sample.kFunction), 'kFunction').true;    // we should have an isObjectNotFunction test
+    expect(isObject(sample.kArray),'kArray').true;
 
-//    isObject(sample.kNumber).should.equal(false);
-//    isObject(NaN).should.equal(false);
-//    isObject(sample.kArray).should.equal(false);
-//    isObject(sample.kNull).should.equal(false);
-//    isObject(sample.kObject).should.equal(true);
-//    isObject(sample.kString).should.equal(false);
-//    isObject(sample.kBoolean).should.equal(false);
-//    isObject(sample.kFunction).should.equal(false);
-//    isObject(sample.kUndefined).should.equal(false);
 
+    expect(isObject(sample.kNumber), 'kNumber').false;
+    expect(isObject(NaN),'NaN').false;
+    expect(isObject(sample.kNull),'kNull').false;
+    expect(isObject(sample.kString),'kString').false;
+    expect(isObject(true), 'true').false;
+    expect(isObject(false),'false').false;
+    expect(isObject(sample.kUndefined),'kUndefined').false;
   });
 });
 
 
 describe('#isArray', function() {
   it('tests if val is an array', function () {
-//    isArray(sample.kArray).should.equal(true);
-//
-//    isArray(sample.kNumber).should.equal(false);
-//    isArray(NaN).should.equal(false);
-//    isArray(sample.kNull).should.equal(false);
-//    isArray(sample.kObject).should.equal(false);
-//    isArray(sample.kString).should.equal(false);
-//    isArray(sample.kBoolean).should.equal(false);
-//    isArray(sample.kFunction).should.equal(false);
-//    isArray(sample.kUndefined).should.equal(false);
+    expect(isArray(sample.kArray), 'kArray').true;
+    expect(isArray(sample.kObject), 'kObject').false;
+    expect(isArray(sample.kNumber), 'kNumber').false;
+    expect(isArray(sample.kObject), 'kObject').false;
+    expect(isArray(sample.kString), 'kString').false;
+    expect(isArray(true),'true').false;
+    expect(isArray(false), 'false').false;
+    expect(isArray(sample.kFunction), 'kFunction').false;
+
+    expect(isArray(sample.kUndefined), 'kUndefined').false;
+    expect(isArray(NaN), 'NaN').false;     //??? why is this not false
+    expect(isArray(sample.kNull), 'kNull').false;
+
+
   });
 });
 
 
 describe('#isString', function() {
   it('tests if val is a string', function () {
-    isString(sample.kString).should.equal(true);
 
-    isString(sample.kNumber).should.equal(false);
-    isString(NaN).should.equal(false);
-    isString(sample.kArray).should.equal(false);
-    isString(sample.kNull).should.equal(false);
-    isString(sample.kObject).should.equal(false);
-    isString(sample.kBoolean).should.equal(false);
-    isString(sample.kFunction).should.equal(false);
-    isString(sample.kUndefined).should.equal(false);
+    expect(isString(sample.kString)).true;
+
+    expect(isString(sample.kArray)).false;
+    expect(isString(sample.kObject)).false;
+    expect(isString(sample.kNumber)).false;
+    expect(isString(NaN)).false;
+    expect(isString(sample.kNull)).false;
+    expect(isString(sample.kObject)).false;
+    expect(isString(true)).false;
+    expect(isString(false)).false;
+    expect(isString(sample.kFunction)).false;
+    expect(isString(sample.kUndefined)).false;
+
   });
 });
 
 
 describe('#isBoolean', function() {
   it('tests if val is a boolean', function () {
-//    isBoolean(true).should.equal(true);
-//    isBoolean(false).should.equal(false);
-//
-//    isBoolean(sample.kNumber).should.equal(false);
-//    isBoolean(NaN).should.equal(false);
-//    isBoolean(sample.kArray).should.equal(false);
-//    isBoolean(sample.kNull).should.equal(false);
-//    isBoolean(sample.kObject).should.equal(false);
-//    isBoolean(sample.kString).should.equal(false);
-//    isBoolean(sample.kFunction).should.equal(false);
-//    isBoolean(sample.kUndefined).should.equal(false);
+    expect(isBoolean(true)).true;
+    expect(isBoolean(false)).true;
+
+    expect(isBoolean(sample.kArray)).false;
+    expect(isBoolean(sample.kObject)).false;
+    expect(isBoolean(sample.kNumber)).false;
+    expect(isBoolean(NaN)).false;
+    expect(isBoolean(sample.kNull)).false;
+    expect(isBoolean(sample.kObject)).false;
+    expect(isBoolean(sample.kString)).false;
+    expect(isBoolean(sample.kFunction)).false;
+    expect(isBoolean(sample.kUndefined)).false;
   });
 });
 
 
 describe('#sprintf', function () {
   it('tests if sprintf produces expected strings', function () {
-
-    sprintf("%s%d", 'A', '1').should.equal('A1');
+    expect(sprintf("%s%d", 'A', '1')).equal('A1');
   });
 });
 

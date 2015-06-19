@@ -5,7 +5,8 @@
 function isFunction(a) {return typeof a === 'function';                           }
 function isObject(a)   {return (a && typeof a === 'object') || isFunction(a);     }
 function isAlien(a)    {return isObject(a) && typeof a.constructor !== 'function';}
-function isArray(a)    {return a && a.constructor === Array;                      }
+function isArray(a)    {return !!(a && (a.constructor === Array));                }
+
 function isBoolean(a)  {return typeof a === 'boolean';                            }
 function isNull(a)     {return a === null;                                        }
 function isNumber(a)   {return typeof a === 'number' && isFinite(a);              }
