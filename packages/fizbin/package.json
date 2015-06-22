@@ -1,10 +1,10 @@
 {
   "name": "fizbin",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "finite state machine",
   "main": "fizbin.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test/ --reporter spec"
   },
   "repository": {
     "type": "git",
@@ -16,8 +16,13 @@
     "url": "https://github.com/therious/fizbin/issues"
   },
   "homepage": "https://github.com/therious/fizbin",
-
   "dependencies": {
     "th-utils": ">= 0.1.0"
+  },
+  "devDependencies": {
+    "chai": "^3.0.0",
+    "gulp": "^3.9.0",
+    "gulp-mocha": "^2.1.1",
+    "mocha": "^2.2.5"
   }
 }
