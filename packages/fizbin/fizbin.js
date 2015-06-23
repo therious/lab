@@ -184,17 +184,23 @@ FsmFactory.prototype.markTerminalNodes= function()
 
   var wayOutMap = {};
 
-  var i;
+  var i,j;
   var st;
   for(i = 0; i < trans.length; ++i)
   {
      var transition = trans[i];
      if(transition.from == '*') {
-       for(var j = 0; j < states.length; ++j) {
+       for(j = 0; j < states.length; ++j) {
          st = states[j];
          if(transition.to != st) {
            wayOutMap[st] = 1; // there is a way out
          }
+       }
+     } else if(th.isArray(transition.from)) {
+       var fstates = transition.from;
+       for(j = 0; j < fstates.length; ++j) {
+         st = fstates[j];
+           wayOutMap[st] = 1; // there is a way out
        }
      } else {
       wayOutMap[transition.from] = 1; //there is a way out
@@ -694,15 +700,22 @@ FsmFactory.prototype._visualizeTransitions = function(nodeNameMap, edges)
   var trans = this.graph.srcTransitions;
    for(var i = 0; i < trans.length; ++i)  {
       var tsrc = trans[i];
-
+       var j, temp, states;
      if(tsrc.from == '*') {
-       var temp = cloneProperties(tsrc);
-       var states = this.graph.srcStates;
-       for(var j = 0; j < states.length; ++j) {
+        temp = cloneProperties(tsrc);
+        states = this.graph.srcStates;
+       for(j = 0; j < states.length; ++j) {
          if(tsrc.to != states[j]) {
            temp.from = states[j];
            this._visualizeTransition(temp, nodeNameMap, edges, true);
          }
+       } // end for
+     } if(th.isArray(tsrc.from)) {
+       temp = cloneProperties(tsrc);
+       states = tsrc.from;
+       for (j = 0; j < states.length; ++j) {
+         temp.from = states[j];
+         this._visualizeTransition(temp, nodeNameMap, edges);
        } // end for
      } else {
        // normal case
@@ -913,19 +926,32 @@ FsmFactory.prototype.compileTransitions = function()
 
   };
 
-  //iterateF(this.graph.srcTransitions, compile);  // simple version
 
-  th.iterateF(this.graph.srcTransitions,  // complex version checks for expression '*' to mean "all other states than destination"
+  // iterate through all the transitions and compile them
+  // for any transition, from: property may be a single state string, '*' (meaning all states besides the to: state)
+  // or it may be an array of states to transition from
+
+  th.iterateF(this.graph.srcTransitions,  // '*' to mean "all other states than destination"
       function(tsrc) {
+
+        var temp, states, i;
         if(tsrc.from == '*') {
-          var temp = cloneProperties(tsrc);
-          var states = graph.srcStates;
-          for(var i = 0; i < states.length; ++i) {
+           temp = cloneProperties(tsrc);
+           states = graph.srcStates;
+          for( i = 0; i < states.length; ++i) {
             if(tsrc.to != states[i]) {
               temp.from = states[i];
               compile(temp);
             }
           }
+        } else if(th.isArray(tsrc.from)) {
+          temp = cloneProperties(tsrc);
+          states = tsrc.from;
+          for( i = 0; i < states.length; ++i) {
+              temp.from = states[i];
+              compile(temp);
+          }
+
         } else {
           compile(tsrc);
         }

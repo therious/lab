@@ -2,18 +2,19 @@
 var expect = require('chai').expect;
 var fizbin = require('../fizbin');
 
+
 var FsmFactory = fizbin.FsmFactory;
 var fsm        = fizbin.fsm;
 
 // first define two logging methods to attach to entering and exiting states generally
 
 function f_enter(s,p,id) {
-  console.log('fsm id: ', id, ' enters state: ', s, ' from previous state: ', p);
+  console.log('fsm id:', id, 'enters state:', s, 'from previous state:', p);
 
 }
 
 function f_exit(s,n,id) {
-  console.log('fsm id: ', id, ' exits state: ', s, ' to transition to state ', n);
+  console.log('fsm id:', id, 'exits state:', s, 'to transition to state', n);
 }
 
 //-----------------------------------------------
@@ -35,8 +36,8 @@ SecurityLight.prototype = {
   // behaviors can be associated states by defining methods named for entering or exiting a specific state
   ,enter: f_enter
   ,exit: f_exit
-  ,enterOn: function() { log('light is on');  }
-  ,exitOn: function()  { log('light is off'); }
+  ,enterOn: function(s,p,id) { f_enter(s,p,id); if(s !== p) { console.log('light is on');  } }
+  ,exitOn: function(s,n,id)  { f_exit(s,n,id);  if(s !== n) { console.log('light is off'); } }
 };
 
 // this is the specification of the state machine. It is totally independent of associated behavior
@@ -56,12 +57,10 @@ SecurityLight.config =
   // and that all terms mentioned in condition expression (when) are declared as variables in the io section
   ,transitions:
     [
-       {from: 'Day',   to: 'Night', when:'!ambientLight'} // transition on variable changes
-      ,{from: 'Night', to: 'Day',   when: 'ambientLight'}
-      ,{from: 'Night', to: 'On',    evt: 'motion'       } // transition on receiving event tokens
-      ,{from: 'On',    to: 'On',    evt: 'motion'       }
-      ,{from: 'On',    to: 'Night', timer:5000          } // fizbin generates timer based events
-      ,{from: 'On',    to: 'Day',   when:'ambientLight' }
+       {from: 'Day',          to: 'Night', when:'!ambientLight'}    // transition on variable changes
+      ,{from: ['On','Night'], to: 'Day',   when: 'ambientLight'}    // two src states have same transition to dest
+      ,{from: ['On','Night'], to: 'On',    evt: 'motion'       }    // transition on receiving event tokens
+      ,{from: 'On',           to: 'Night', timer:5000          }    // fizbin generates timer based events
     ]
 
   ,options:{}
@@ -75,5 +74,12 @@ SecurityLight.factorize();
 describe('#InstatiationTest', function() {
   it('Instantiate an fsm', function () {
     var sl1 = new SecurityLight('sl-1');
+
+    sl1.fsm.transduce('motion');
+    sl1.fsm.transduce('motion');
+    sl1.fsm.transduce('motion');
+
+    sl1.fsm.ambientLight(true);
+
   });
 });
