@@ -755,11 +755,11 @@ FsmFactory.prototype.visualize = function()
 
   this._visualizeTransitions(nodeNameMap, edges);
 
-  var prolog = "digraph {\n\nrankdir=LR\ncompound=true\nnode[fontsize=14 width=.8  shape=circle style=\
-filled color=cornsilk]\nedge[color=blue fontsize=10]\n";
+  var prolog = "digraph {\n  rankdir=LR\n  compound=true\n  node[fontsize=14 width=.8  shape=circle style=\
+filled color=cornsilk]\n  edge[color=blue fontsize=10]\n  ";
 var epilog = "\n} /* end digraph */";
 
-  return prolog + nodes.join("\n") + edges.join("\n") + epilog;
+  return prolog + nodes.join("\n  ") + "\n  " + edges.join("\n  ") + epilog;
 };
 
 FsmFactory.prototype.compileConditionBasedTransition = function(tsrc)

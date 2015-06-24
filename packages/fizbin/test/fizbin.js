@@ -71,7 +71,7 @@ SecurityLight.factorize();
 
 
 
-describe('#InstatiationTest', function() {
+describe('#InstantiationTest', function() {
   it('Instantiate an fsm', function () {
     var sl1 = new SecurityLight('sl-1');
 
@@ -80,6 +80,18 @@ describe('#InstatiationTest', function() {
     sl1.fsm.transduce('motion');
 
     sl1.fsm.ambientLight(true);
+
+  });
+});
+
+
+
+describe('#Visualization', function() {
+  it('Visualize an fsm', function () {
+    var sl2 =   new SecurityLight('sl-2');
+
+    var str = sl2.fsm.visualize();
+    console.log(str);
 
   });
 });
