@@ -49,12 +49,10 @@ SecurityLight.config =
   // and that all terms mentioned in condition expression (when) are declared as variables in the io section
   ,transitions:
     [
-       {from: 'Day',   to: 'Night', when:'!ambientLight'} // transition on variable changes
-      ,{from: 'Night', to: 'Day',   when: 'ambientLight'}
-      ,{from: 'Night', to: 'On',    evt: 'motion'       } // transition on receiving event tokens
-      ,{from: 'On',    to: 'On',    evt: 'motion'       }
-      ,{from: 'On',    to: 'Night', timer:5000          } // fizbin generates timer based events
-      ,{from: 'On',    to: 'Day',   when:'ambientLight' }
+       {from: 'Day',          to: 'Night',  when:'!ambientLight'} // transition on variable changes
+      ,{from: ['Night','On'], to: 'Day',    when: 'ambientLight'}  
+      ,{from: ['Night','On'], to: 'On',      evt: 'motion'      } // transition on receiving event tokens
+      ,{from: 'On',           to: 'Night', timer: 5000          } // fizbin generates timer based events
     ]
 
   ,options:{}
