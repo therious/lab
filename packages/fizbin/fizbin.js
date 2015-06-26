@@ -399,6 +399,10 @@ fsm.logical = function (inst, id) {
     // bind a function directly to the name of the input
     inst[id] = function(v)
     {
+
+      if(v===undefined)
+        return this.perinst.inputs[id];   // its a getter if there is no variable passed in
+
       // note that nothing can happen by setting a variable to a value it already has
       if(v !== this.perinst.inputs[id]) {
         Logger.log('%s: setting input %s to %z', this.perinst.id, id, v);
@@ -429,6 +433,9 @@ fsm.numeric = function (inst, id) {
   // bind a function directly to the name of the input
   inst[id] = function(v)
   {
+    if(v===undefined)
+      return this.perinst.inputs[id];   // its a getter if there is no variable passed in
+
     // note that nothing can happen by setting a variable to a value it already has
     if (v !== this.perinst.inputs[id])
     {
