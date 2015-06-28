@@ -6,7 +6,6 @@ function isFunction(a) {return typeof a === 'function';                         
 function isObject(a)   {return (a && typeof a === 'object') || isFunction(a);     }
 function isAlien(a)    {return isObject(a) && typeof a.constructor !== 'function';}
 function isArray(a)    {return !!(a && (a.constructor === Array));                }
-
 function isBoolean(a)  {return typeof a === 'boolean';                            }
 function isNull(a)     {return a === null;                                        }
 function isNumber(a)   {return typeof a === 'number' && isFinite(a);              }
@@ -489,7 +488,6 @@ function stacktrace() {
 
 
 
-
 function assert(expr, more)
 {
   if(!expr) {
@@ -500,7 +498,7 @@ function assert(expr, more)
       for(var i = 1; i < arguments.length; ++i)
         args.push(arguments[i]);
 
-      details = sprintf.apply(window, args);
+      details = sprintf.apply(this, args);     // 'this' used to read 'window'
     }
 
     throw new Error('assertion violation: ' + details + '. \n'+ trace);
