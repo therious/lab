@@ -43,8 +43,7 @@ SimpleTimer.config =
 
   //---- io section defines signals (events are still union of those mentioned in transitions) ----
   ,io: {
-      duration: fsm.numeric  // placeholder till we make timers based on variable changes
-      ,counter:fsm.numeric
+      counter:fsm.numeric
       ,maximum:fsm.numeric
   }
 
@@ -55,7 +54,7 @@ SimpleTimer.config =
     [
        {from: '*',   to: 'Off',  evt:'stop'   }    // turn it off any time
       ,{from: '*',   to: 'On',   evt:'start'  }    // turn it on, if not already on
-      ,{from: 'On',  to: 'On', timer:1000, increment:'counter'}    // once on, fire every five seconds till turned off
+      ,{from: 'On',  to: 'On', timer:1000     }    // once on, fire every five seconds till turned off
       ,{from: '*',   to: 'Off', when: 'counter==maximum'}  // shut off after max times
     ]
    ,options:{}
@@ -70,9 +69,6 @@ describe('simpletimer test 1', function () {
     t1.fsm.maximum(10);
     t1.fsm.counter(0);
     t1.fsm.transduce('start');
-    //t1.fsm.duration(1000);
-
-
   });
 });
 
