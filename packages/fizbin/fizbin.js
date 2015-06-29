@@ -291,7 +291,7 @@ FsmFactory.prototype.invalidSobSrc = function(sobsrc)
 // enter and exit function execution
 // modify call(this to call(this.collaborator)
  FsmFactory.prototype.efExit  = function(psob, sob) { var x = psob.x; if(x) { x.call(this.taskInstance, psob.s, sob.s, this.perinst.id); }};
- FsmFactory.prototype.efEnter = function(sob, psob) { var e = sob.e;  if(e) { e.call(this.taskInstance, sob.s,  psob.s, this.perinst.id);  }};
+ FsmFactory.prototype.efEnter = function(sob, psob, cause) { var e = sob.e;  if(e) { e.call(this.taskInstance, sob.s,  psob.s, this.perinst.id, cause);  }};
 
 
  //-----  privileged readonly methods (have access to state) ----------------------
@@ -318,7 +318,7 @@ function doPotential(arrayf, o)
   return r;
 }
 
- FsmFactory.prototype.doTransition = function()
+ FsmFactory.prototype.doTransition = function(cause)
  {
     var ss = this.perinst.state;
     var ns = this.perinst.nextState;
@@ -341,7 +341,7 @@ function doPotential(arrayf, o)
        //log('instantiating multitimer {ss:%z, ns:%z}', ss,ns);
       this.perinst.multitimer = new MultiTimer(ns.timerConfig, this);
     }
-    this.efEnter(ns,ss);    // announce our entry into the new state
+    this.efEnter(ns,ss, cause);    // announce our entry into the new state
 
  };
 
@@ -358,7 +358,7 @@ function doPotential(arrayf, o)
         this.perinst.nextState = doPotential(potential, this.perinst.inputs);    // evaluate to find nextState, and/or reaction
         // are we transitioning out
         if(this.perinst.nextState) {
-           this.doTransition();
+           this.doTransition(fsmevt);
                              // reactions (input actions will produce actual output
           return defOut;     // since we are officially a transducer return something
         }
@@ -405,7 +405,7 @@ fsm.logical = function (inst, id) {
 
       // note that nothing can happen by setting a variable to a value it already has
       if(v !== this.perinst.inputs[id]) {
-        Logger.log('%s: setting input %s to %z', this.perinst.id, id, v);
+       // Logger.log('%s: setting input %s to %z', this.perinst.id, id, v);
         this.perinst.inputs[id] = v;
 
         var cm =  this.perinst.state.conditionMap;  // lookup any state transitions that depend on this variable given current state
@@ -418,7 +418,7 @@ fsm.logical = function (inst, id) {
           // are we transitioning out
           if (this.perinst.nextState)
           {
-            this.doTransition();
+            this.doTransition(id+"="+v);
           }
         }
 
@@ -439,7 +439,7 @@ fsm.numeric = function (inst, id) {
     // note that nothing can happen by setting a variable to a value it already has
     if (v !== this.perinst.inputs[id])
     {
-      Logger.log('%s: setting input %s to %z', this.perinst.id, id, v);
+      //Logger.log('%s: setting input %s to %z', this.perinst.id, id, v);
       this.perinst.inputs[id] = v;
       var cm = this.perinst.state.conditionMap;  // lookup any state transitions that depend on this variable given current state
       var potential = cm[id];                     // recognized token?
@@ -449,7 +449,7 @@ fsm.numeric = function (inst, id) {
         // are we transitioning out
         if (this.perinst.nextState)
         {
-          this.doTransition();
+          this.doTransition(id+"="+v);
         }
       }
 

@@ -8,13 +8,13 @@ var fsm        = fizbin.fsm;
 
 // first define two logging methods to attach to entering and exiting states generally
 
-function f_enter(s,p,id) {
-  console.log('fsm id:', id, 'enters state:', s, 'from previous state:', p);
+function f_enter(s,p,id, cause) {
+  console.log('fsm id:', id, 'enter state:', s,  "caused by", cause);
 
 }
 
 function f_exit(s,n,id) {
-  console.log('fsm id:', id, 'exits state:', s, 'to transition to state', n);
+  console.log('fsm id:', id, 'exit state:', s);
 }
 
 //-----------------------------------------------
@@ -36,8 +36,8 @@ SecurityLight.prototype = {
   // behaviors can be associated states by defining methods named for entering or exiting a specific state
   ,enter: f_enter
   ,exit: f_exit
-  ,enterOn: function(s,p,id) { f_enter(s,p,id); if(s !== p) { console.log('light is on');  } }
-  ,exitOn: function(s,n,id)  { f_exit(s,n,id);  if(s !== n) { console.log('light is off'); } }
+  ,enterOn: function(s,p,id, cause) { f_enter(s,p,id, cause); if(s !== p) { console.log('light is on');  }}
+  ,exitOn:  function(s,n,id)        { f_exit(s,n,id);         if(s !== n) { console.log('light is off'); }}
 };
 
 // this is the specification of the state machine. It is totally independent of associated behavior
