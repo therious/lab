@@ -1,6 +1,10 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
+import {guaranteedString} from "./utils/sample-utils";
+
+const a = 'real string';
+const b = undefined;
 
 function App() {
   return (
@@ -18,7 +22,9 @@ function App() {
         >
           Learn React
         </a>
+        <br/> {guaranteedString(a)} <br/>{guaranteedString(b)}
       </header>
+
     </div>
   );
 }
