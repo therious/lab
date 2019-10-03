@@ -1,5 +1,9 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Note
+I also use react-act-rewired to have some influence over the build
+In particular there should be no need to eject this app
+
 ## Available Scripts
 
 In the project directory, you can run:
