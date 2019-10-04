@@ -2,6 +2,8 @@ import React from 'react';
 import styled from 'styled-components';
 import logo from './logo.svg';
 
+import {Ladom} from "./Ladom";
+
 import {guaranteedString} from "./utils/sample-utils";
 
 const a = 'real string';
@@ -38,10 +40,14 @@ const AppLink = styled.a`
 `;
 
 
+const somejsx = <div>Hello<br/>There</div>;
+
+const closef=()=>console.warn('closing');
 
 function App() {
   return (
     <AppDiv >
+      <Ladom content={somejsx} outsideClose={true} close={closef}/>
       <AppHeader>
         <AppImg src={logo} alt="logo" />
         <p>
