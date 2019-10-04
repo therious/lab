@@ -1,5 +1,8 @@
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
+  background-color: #b3961e; /* todo same as moon */
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
     "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
