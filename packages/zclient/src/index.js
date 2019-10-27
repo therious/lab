@@ -11,8 +11,14 @@ import * as funcs from './action-funcs';
 
 import { combineReducers } from 'redux'
 
+const actionstyle = `
+    border: 1px solid black;
+    background-color:plum;
+    color: black;
+    `;
+
 function myreducer(state = initialState, action) {
-    console.warn(`+action - ${action.type}`, action);
+    console.log(`%c +action - ${action.type}`, actionstyle, action);
     const actionf = funcs[action.type];
     return actionf? actionf(state,action): state;
 }
