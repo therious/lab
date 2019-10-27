@@ -2,6 +2,7 @@ import React from 'react';
 import { render } from 'react-dom';
 import { createStore, bindActionCreators} from 'redux'
 import { Provider, connect } from 'react-redux'
+import { composeWithDevTools } from 'redux-devtools-extension';
 
 import './index.css';
 import App from './App';
@@ -26,7 +27,7 @@ function myreducer(state = initialState, action) {
 
 const rootReducer = combineReducers({myreducer });
 
-const store = createStore(rootReducer);
+const store = createStore(rootReducer, composeWithDevTools());
 
 
 const mapStateToProps = state => {
