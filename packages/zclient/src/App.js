@@ -76,9 +76,15 @@ const closef=()=>console.warn('closing');
 
 const  App = props => {
     console.log(`user: ${props.user} acounter: ${props.acounter}`);
+    const ac = 'acounter';
+
    return  (
         <Layout>
-            <Navbar>There is text here</Navbar>
+            <Navbar>There is text here
+                <button onClick={()=>props.actions.increment(ac)}>+ {ac}:{props[ac]}</button>
+                <button onClick={()=>props.actions.decrement(ac)}>- {ac}:{props[ac]}</button>
+
+            </Navbar>
             <Left>In left side bar?</Left>
             <CenterBody>In middle</CenterBody>
             <Right>In right sidebar?</Right>
