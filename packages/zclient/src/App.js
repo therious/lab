@@ -26,7 +26,7 @@ const palette = {
 const Layout = styled.div`
     display:grid;
     height: calc(100vh);
-    width: calc(100hw);
+    width: calc(100vw);
     
     row-gap:4px;
     column-gap:4px;
@@ -54,17 +54,17 @@ const Footer = styled.section`
 const CenterBody = styled.section`
     display: block;
     height:100%;
-    grid-area: CenterBody
+    grid-area: CenterBody;
     background-color: ${palette.drab};
     color: ${palette.black};
 `;
 const Left = styled.section`
-    grid-area: Left
+    grid-area: Left;
     background-color: ${palette.cornsilk};
     color: ${palette.midnight};
 `;
 const Right = styled.section`
-    grid-area: Right
+    grid-area: Right;
     background-color: ${palette.cornsilk};
     color: ${palette.midnight};
 `;
