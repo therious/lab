@@ -74,16 +74,18 @@ const somejsx = <div>Hello<br/>There</div>;
 
 const closef=()=>console.warn('closing');
 
-function App() {
-  return (
-      <Layout>
-          <Navbar>There is text here</Navbar>
-          <Left>In left side bar?</Left>
-          <CenterBody>In middle</CenterBody>
-          <Right>In right sidebar?</Right>
-          <Footer>Status stuff is over here</Footer>
-      </Layout>
-  );
-}
+const  App = props => {
+    console.log(`user: ${props.user} acounter: ${props.acounter}`);
+   return  (
+        <Layout>
+            <Navbar>There is text here</Navbar>
+            <Left>In left side bar?</Left>
+            <CenterBody>In middle</CenterBody>
+            <Right>In right sidebar?</Right>
+            <Footer>Status stuff is over here</Footer>
+        </Layout>
+    );
+};
+
 
 export default App;
