@@ -2,8 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 
 import {Ladom} from "./Ladom";
-
-
+import {MyGrid} from "./MyGrid";
 
 
 const palette = {
@@ -74,6 +73,21 @@ const somejsx = <div>Hello<br/>There</div>;
 
 const closef=()=>console.warn('closing');
 
+const columnDefs = [
+    {headerName: "Make", field: "make"},
+    {headerName: "Model", field: "model"},
+    {headerName: "Price", field: "price"}];
+
+const rowData = [
+    {
+        make: "Toyota", model: "Celica", price: 35000
+    }, {
+        make: "Ford", model: "Mondeo", price: 32000
+    }, {
+        make: "Porsche", model: "Boxter", price: 72000
+    }
+];
+
 const  App = props => {
     console.log(`user: ${props.user} acounter: ${props.acounter}`);
     const ac = 'acounter';
@@ -86,7 +100,7 @@ const  App = props => {
 
             </Navbar>
             <Left>In left side bar?</Left>
-            <CenterBody>In middle</CenterBody>
+            <CenterBody><MyGrid rowData={rowData} columnDefs={columnDefs}/></CenterBody>
             <Right>In right sidebar?</Right>
             <Footer>Status stuff is over here</Footer>
         </Layout>
