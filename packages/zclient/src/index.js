@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from 'react-dom';
-import { createStore, bindActionCreators} from 'redux'
+import { createStore, applyMiddleware, combineReducers, bindActionCreators} from 'redux'
 import { Provider, connect } from 'react-redux'
 import { composeWithDevTools } from 'redux-devtools-extension';
 
@@ -10,7 +10,7 @@ import {initialState} from "./constants/initial-state";
 import * as actions from './action-creators'
 import * as funcs from './action-funcs';
 
-import { combineReducers } from 'redux'
+import {crementMiddleWare} from "./example-redux-middleware";
 
 const actionstyle = `
     padding: 2px 8px;
@@ -27,7 +27,12 @@ function myreducer(state = initialState, action) {
 
 const rootReducer = combineReducers({myreducer });
 
-const store = createStore(rootReducer, composeWithDevTools());
+const store = createStore(
+    rootReducer,
+    composeWithDevTools(
+        applyMiddleware(crementMiddleWare)
+    )
+);
 
 
 const mapStateToProps = state => {
