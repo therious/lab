@@ -12,6 +12,7 @@ import * as funcs from './action-funcs';
 import { combineReducers } from 'redux'
 
 const actionstyle = `
+    padding: 2px 8px;
     border: 1px solid black;
     background-color:plum;
     color: black;
