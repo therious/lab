@@ -7,9 +7,9 @@ import { composeWithDevTools } from 'redux-devtools-extension';
 import './index.css';
 import App from './App';
 import {initialState} from "./constants/initial-state";
-import * as actions from './action-creators'
+import * as actionCreators from './action-creators'
 import * as funcs from './action-funcs';
-
+import {getMiddleware, init} from "./example-redux-middleware";
 import {crementMiddleWare} from "./example-redux-middleware";
 
 const actionstyle = `
@@ -30,7 +30,7 @@ const rootReducer = combineReducers({myreducer });
 const store = createStore(
     rootReducer,
     composeWithDevTools(
-        applyMiddleware(crementMiddleWare)
+        applyMiddleware(crementMiddleWare, getMiddleware)
     )
 );
 
@@ -40,9 +40,11 @@ const mapStateToProps = state => {
 };
 
 
-const mapDispatchToProps = dispatch => ({
-    actions: bindActionCreators(actions, dispatch)
-});
+const mapDispatchToProps = dispatch => {
+    const actions =  bindActionCreators(actionCreators, dispatch);
+    init(actions);
+    return { actions}
+};
 
 const ConnectedApp =  connect(
     mapStateToProps,

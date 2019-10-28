@@ -74,18 +74,18 @@ const somejsx = <div>Hello<br/>There</div>;
 const closef=()=>console.warn('closing');
 
 const columnDefs = [
-    {headerName: "Make", field: "make"},
-    {headerName: "Model", field: "model"},
-    {headerName: "Price", field: "price"}];
+    {headerName: "seq", field: "seq"},
+    {headerName: "time", field:"timestamp"},
+    {headerName: "symbol", field: "secid"},
+    {headerName: "price", field: "price"},
+    {headerName: "size", field: "size"}
+];
+
 
 const rowData = [
-    {
-        make: "Toyota", model: "Celica", price: 35000
-    }, {
-        make: "Ford", model: "Mondeo", price: 32000
-    }, {
-        make: "Porsche", model: "Boxter", price: 72000
-    }
+    {seq:1, timestamp:0, secid: 'AAPL', price:10.23, size: 300},
+    {seq:2, timestamp:0, secid: 'IBM', price:20.15, size: 2000}
+
 ];
 
 const  App = props => {
