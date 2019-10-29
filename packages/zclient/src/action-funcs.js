@@ -29,10 +29,25 @@ export const omsTradeListFromTo = (state, {params})=>state;
 export const omsVersionResponse         = (state,{response})=>state;
 export const omsOrderBidResponse        = (state,{response})=>state;
 export const omsOrderAskResponse        = (state,{response})=>state;
-export const omsPartyListResponse       = (state,{response})=>state;
 export const omsPartyLookupResponse     = (state,{response})=>state;
 export const omsPartyCreateResponse     = (state,{response})=>state;
-export const omsQuoteListResponse       = (state,{response})=>state;
-export const omsTradeListResponse       = (state,{response})=>state;
 export const omsTradeListSymbolResponse = (state,{response})=>state;
 export const omsTradeListFromToResponse = (state,{response})=>state;
+
+function rdExtractGenerator(keyField)
+{
+    return function(a,v){a[v[keyField]]=v; return a;}
+}
+
+function stateProducer(propName, keyField) {
+    const extractorf = rdExtractGenerator(keyField);
+
+    return function(state,{response}) {
+        const result = response.data.reduce(extractorf, {});
+        return {...state, [propName]:result}
+    }
+}
+
+export const omsQuoteListResponse       = stateProducer('quotes', 'name');
+export const omsTradeListResponse       = stateProducer('trades', 'sequence');
+export const omsPartyListResponse       = stateProducer('parties', 'name');
