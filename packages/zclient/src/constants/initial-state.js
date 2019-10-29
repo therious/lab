@@ -3,7 +3,7 @@ export const initialState = {
     acounter:0,
     bcounter:0,
     user: 'yoyo',
-    pickGrid:undefined,
+    pickGrid:'Trades',
     parties:{},
     quotes:{},
     trades:{},
