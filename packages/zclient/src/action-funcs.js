@@ -34,11 +34,17 @@ export const omsPartyCreateResponse     = (state,{response})=>state;
 export const omsTradeListSymbolResponse = (state,{response})=>state;
 export const omsTradeListFromToResponse = (state,{response})=>state;
 
+// generate an accumulator function to use with reduce that maps all object values to a specified keyfield in that value
 function rdExtractGenerator(keyField)
 {
     return function(a,v){a[v[keyField]]=v; return a;}
 }
 
+// generate a reducer that
+// accepts a response.data array of objects, reducing it and returning accumulated result in propName
+// accepts a response.data array of objects, reducing it and returning accumulated result in propName
+// accepts a response.data array of objects, reducing it and returning accumulated result in propName
+// the reducer takes the keyField, and assigns each value to the key field in the accumulator
 function stateProducer(propName, keyField) {
     const extractorf = rdExtractGenerator(keyField);
 
