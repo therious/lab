@@ -74,19 +74,14 @@ const somejsx = <div>Hello<br/>There</div>;
 const closef=()=>console.warn('closing');
 
 const columnDefs = [
-    {headerName: "seq", field: "seq"},
+    {headerName: "seq", field: "sequence"},
     {headerName: "time", field:"timestamp"},
-    {headerName: "symbol", field: "secid"},
+    {headerName: "symbol", field: "symbol"},
     {headerName: "price", field: "price"},
-    {headerName: "size", field: "size"}
+    {headerName: "quantity", field: "quantity"}
 ];
 
 
-const rowData = [
-    {seq:1, timestamp:0, secid: 'AAPL', price:10.23, size: 300},
-    {seq:2, timestamp:0, secid: 'IBM', price:20.15, size: 2000}
-
-];
 
 const  App = props => {
     console.log(`user: ${props.user} acounter: ${props.acounter}`);
@@ -100,7 +95,7 @@ const  App = props => {
 
             </Navbar>
             <Left>In left side bar?</Left>
-            <CenterBody><MyGrid rowData={rowData} columnDefs={columnDefs}/></CenterBody>
+            <CenterBody><MyGrid rowData={props.aTrades} columnDefs={columnDefs}/></CenterBody>
             <Right>In right sidebar?</Right>
             <Footer>Status stuff is over here</Footer>
         </Layout>

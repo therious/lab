@@ -4,5 +4,6 @@ export const initialState = {
     bcounter:0,
     user: 'yoyo',
     parties:{},
-    quotes:{}
+    quotes:{},
+    trades:{},
 };

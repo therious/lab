@@ -37,7 +37,12 @@ export const omsTradeListFromToResponse = (state,{response})=>state;
 // generate an accumulator function to use with reduce that maps all object values to a specified keyfield in that value
 function rdExtractGenerator(keyField)
 {
-    return function(a,v){a[v[keyField]]=v; return a;}
+    return function(a,v){
+        const id = v[keyField];
+        v.id = id;   // add canonical id field, used by row objects  (todo: temporary antipattern this)
+        a[id]=v;
+        return a;
+    }
 }
 
 // generate a reducer that

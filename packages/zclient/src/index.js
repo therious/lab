@@ -35,8 +35,21 @@ const store = createStore(
 );
 
 
+let pTrades;
+let pResult;
+
+// todo use reselect library for this
+const tradesToArray = (trades) =>{
+  if(pTrades !== trades) {
+    pTrades = trades;
+    pResult = Object.values(trades);
+  }
+  return pResult;
+};
+
 const mapStateToProps = state => {
-   return state.myreducer;
+    const aTrades = tradesToArray(state.myreducer.trades);
+   return {...state.myreducer, aTrades};
 };
 
 

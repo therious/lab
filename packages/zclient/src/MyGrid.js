@@ -14,7 +14,10 @@ export class MyGrid extends Component {
         const {rowData, columnDefs} = this.props;
         return (
             <div className="ag-theme-balham" style={style}>
-                <AgGridReact columnDefs={columnDefs} rowData={rowData}/>
+                <AgGridReact
+                    deltaRowDataMode={true}
+                    getRowNodeId={data=>data.id}
+                    columnDefs={columnDefs} rowData={rowData}/>
             </div>
         );
     }
