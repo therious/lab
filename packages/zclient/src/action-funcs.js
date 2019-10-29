@@ -59,6 +59,10 @@ function stateProducer(propName, keyField) {
     }
 }
 
+export const simpleValue = () => (state, action) => ({...state, [action.type]:action.value});
+
 export const omsQuoteListResponse       = stateProducer('quotes', 'name');
 export const omsTradeListResponse       = stateProducer('trades', 'sequence');
 export const omsPartyListResponse       = stateProducer('parties', 'name');
+
+export const pickGrid = simpleValue;

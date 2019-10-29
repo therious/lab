@@ -1,6 +1,7 @@
 export const increment = (counter)=>({type:'Increment', counter});
 export const decrement = (counter)=>({type:'Decrement', counter});
 
+export const pickGrid = (value)=>({type:'pickGrid', value});
 
 export const omsVersion = ()=> ({type:'omsVersion', get:'/version'});
 
