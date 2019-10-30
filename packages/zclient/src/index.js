@@ -41,7 +41,7 @@ const tradesSelector    = s => s.myreducer.trades;
 const partiesSelector   = s => s.myreducer.parties;
 const quotesSelector    = s => s.myreducer.quotes;
 
-const aTradesSelector  = createSelector(tradesSelector, o=>Object.values(o));
+const aTradesSelector  = createSelector(tradesSelector, o=>Object.values(o).slice(-100));
 const aQuotesSelector  = createSelector(quotesSelector, o=>Object.values(o));
 const aPartiesSelector = createSelector(partiesSelector, o=>Object.values(o));
 

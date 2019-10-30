@@ -1,8 +1,15 @@
 import {tsToDate, tsToTime} from "./datexforms";
+import {isNumber} from "luxon/src/impl/util";
+
+const vgTsToTime = (params)=>isNumber(params.value)? tsToTime(params.value):undefined;
+const vgTsToDate = (params)=>isNumber(params.value)?  tsToDate(params.value):undefined;
+const priceFormatter = (params)=>isNumber(params.value)? params.value.toFixed(2):undefined;
 
 const defCol = {
     sortable:true,
-    filter:true
+    filter:true,
+    enableCellChangeFlash:true,
+
 };
 
 
@@ -14,7 +21,8 @@ function toAgColDef(v) {
 
     const o = {...v};
 
-    o.headerName = o.h.toUpperCase();
+
+    o.headerName = (o.h||o.f).toUpperCase();
     o.field = o.f;
     delete o.f;
     delete o.h;
@@ -26,16 +34,17 @@ function toAgColDef(v) {
 
 const tradeListColumns = [
     'sequence',
-    {f:'timestamp', h:'Date'}, //valueFormatter: tsToDate
-    {f:'timestamp', h:'Time'}, //valueFormatter: tsToTime
-    'symbol',
-    'price',
-    'quantity'];
+    {f:'timestamp', h:'Date', valueFormatter: vgTsToDate}, //valueFormatter: tsToDate
+    {f:'timestamp', h:'Time', valueFormatter: vgTsToTime}, //valueFormatter: tsToTime
+    {f:'symbol'},
+    {f:'price', valueFormatter:priceFormatter},
+    'quantity'
+];
 
 const quoteColumns = [
-    {f:'name', h:'name'},
-    {f:'bid', h:'bid'},
-    {f:'ask', h:'ask'}
+    'name',
+    {f:'bid', valueFormatter:priceFormatter},
+    {f:'ask', valueFormatter:priceFormatter}
 ];
 
 const partyColumns = [

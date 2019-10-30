@@ -101,6 +101,8 @@ const getData = nthTime(function(props){
     props.actions.omsTradeList();
 }, 1);
 
+let interval;
+
 const  App = props => {
 
    getData(props);
@@ -115,9 +117,9 @@ const  App = props => {
         <Layout>
             <Navbar>There is text here
                 // put some buttons here to switch the grid
-                <button onClick={()=>{pickGrid('Trades'); omsTradeList();}}>Trades</button>
-                <button onClick={()=>{pickGrid('Quotes'); omsQuoteList();}}>Quotes</button>
-                <button onClick={()=>pickGrid('Parties')}>Parties</button>
+                <button onClick={()=>{pickGrid('Trades');  clearInterval(interval);setInterval(omsTradeList, 1000)}}>Trades</button>
+                <button onClick={()=>{pickGrid('Quotes'); clearInterval(interval); interval = setInterval(omsQuoteList, 1000)}}>Quotes</button>
+                <button onClick={()=>{pickGrid('Parties'); clearInterval(interval);}}>Parties</button>
 
             </Navbar>
             <Left>In left side bar?</Left>
