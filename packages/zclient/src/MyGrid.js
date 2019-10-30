@@ -15,6 +15,7 @@ export class MyGrid extends Component {
         return (
             <div className="ag-theme-dark" style={style}>
                 <AgGridReact
+                    reactNext={true}
                     deltaRowDataMode={true}
                     getRowNodeId={data=>data.id}
                     columnDefs={columnDefs} rowData={rowData}/>
