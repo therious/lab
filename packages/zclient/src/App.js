@@ -3,7 +3,7 @@ import styled from 'styled-components';
 
 import {Ladom} from "./Ladom";
 import {MyGrid} from "./MyGrid";
-
+import {columnDefsMap} from "./xform/columndefs";
 
 const palette = {
       plum: '#4b54a1',
@@ -73,29 +73,55 @@ const somejsx = <div>Hello<br/>There</div>;
 
 const closef=()=>console.warn('closing');
 
-const columnDefs = [
-    {headerName: "seq", field: "sequence"},
-    {headerName: "time", field:"timestamp"},
-    {headerName: "symbol", field: "symbol"},
-    {headerName: "price", field: "price"},
-    {headerName: "quantity", field: "quantity"}
-];
 
 
+
+const gridMap = {
+    Trades: 'aTrades',
+    Quotes: 'aQuotes',
+    Parties: 'aParties'
+};
+
+function nthTime(f,n)
+{
+    var counter = 0;
+    return function()
+    {
+        console.log(counter);
+        return (++counter === n)?
+            f.apply(this, arguments): undefined;
+    }
+
+
+}
+
+const getData = nthTime(function(props){
+   props.actions.omsPartyList();
+    props.actions.omsQuoteList();
+    props.actions.omsTradeList();
+}, 1);
 
 const  App = props => {
-    console.log(`user: ${props.user} acounter: ${props.acounter}`);
-    const ac = 'acounter';
 
+   getData(props);
+
+   const {pickGrid, omsTradeList, omsQuoteList} = props.actions;
+   const rowDataProp = props.pickGrid;
+   const rowData = props[gridMap[rowDataProp]]||[];
+   const columnDefs =  columnDefsMap[rowDataProp];
+
+   console.info(`props for grid are ${rowDataProp}`, columnDefs, rowData);
    return  (
         <Layout>
             <Navbar>There is text here
-                <button onClick={()=>props.actions.increment(ac)}>+ {ac}:{props[ac]}</button>
-                <button onClick={()=>props.actions.decrement(ac)}>- {ac}:{props[ac]}</button>
+                // put some buttons here to switch the grid
+                <button onClick={()=>{pickGrid('Trades'); omsTradeList();}}>Trades</button>
+                <button onClick={()=>{pickGrid('Quotes'); omsQuoteList();}}>Quotes</button>
+                <button onClick={()=>pickGrid('Parties')}>Parties</button>
 
             </Navbar>
             <Left>In left side bar?</Left>
-            <CenterBody><MyGrid rowData={props.aTrades} columnDefs={columnDefs}/></CenterBody>
+            <CenterBody><MyGrid rowData={rowData} columnDefs={columnDefs}/></CenterBody>
             <Right>In right sidebar?</Right>
             <Footer>Status stuff is over here</Footer>
         </Layout>
