@@ -65,4 +65,4 @@ export const omsQuoteListResponse       = stateProducer('quotes', 'name');
 export const omsTradeListResponse       = stateProducer('trades', 'sequence');
 export const omsPartyListResponse       = stateProducer('parties', 'name');
 
-export const pickGrid = simpleValue;
+export const pickGrid = (state, {value})=>({...state, pickGrid:value});
