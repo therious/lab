@@ -66,3 +66,5 @@ export const omsTradeListResponse       = stateProducer('trades', 'sequence');
 export const omsPartyListResponse       = stateProducer('parties', 'name');
 
 export const pickGrid = (state, {value})=>({...state, pickGrid:value});
+export const ToggleLeft =(state, {expanded})=>({...state, layout: {...state.layout, left: state.layout.left? 0: expanded}});
+export const ToggleRight =(state, {expanded})=>({...state, layout: {...state.layout, right: state.layout.right? 0: expanded}});

@@ -6,5 +6,6 @@ export const initialState = {
     pickGrid: 'Trades',
     parties: {},
     quotes: {},
-    trades: {}
+    trades: {},
+    layout: {left:100, right:100}
 };

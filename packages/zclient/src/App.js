@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import {Ladom} from "./Ladom";
 import {MyGrid} from "./MyGrid";
 import {columnDefsMap} from "./xform/columndefs";
+import {toggleRight} from "./action-creators";
 
 const palette = {
       plum: '#4b54a1',
@@ -30,13 +31,14 @@ const Layout = styled.div`
     row-gap:4px;
     column-gap:4px;
 
-    grid-template-columns: 200px minmax(0, 1fr) 400px;
+    grid-template-columns: ${props=>props.left}px minmax(0, 1fr) ${props=>props.right}px;
     grid-template-rows: 30px minmax(0, 1fr) 30px;
     grid-template-areas: "Navbar Navbar Navbar"
                          "Left CenterBody Right"
                          "Footer Footer Footer";    
 `;
 
+Layout.defaultProps = {left:200, right:100};
 
 const Navbar = styled.section`
     grid-area: Navbar;
@@ -107,19 +109,22 @@ const  App = props => {
 
    getData(props);
 
-   const {pickGrid, omsTradeList, omsQuoteList} = props.actions;
+   const {left,right} = props.layout;
+   const {pickGrid, omsTradeList, omsQuoteList, toggleLeft,toggleRight} = props.actions;
    const rowDataProp = props.pickGrid;
    const rowData = props[gridMap[rowDataProp]]||[];
    const columnDefs =  columnDefsMap[rowDataProp];
 
    console.info(`props for grid are ${rowDataProp}`, columnDefs, rowData);
    return  (
-        <Layout>
+        <Layout left={left} right={right}>
             <Navbar>There is text here
                 // put some buttons here to switch the grid
                 <button onClick={()=>{pickGrid('Trades');  clearInterval(interval);setInterval(omsTradeList, 1000)}}>Trades</button>
                 <button onClick={()=>{pickGrid('Quotes'); clearInterval(interval); interval = setInterval(omsQuoteList, 1000)}}>Quotes</button>
                 <button onClick={()=>{pickGrid('Parties'); clearInterval(interval);}}>Parties</button>
+                <button onClick={()=>{toggleLeft(100)}}>Left</button>
+                <button onClick={()=>{toggleRight(300)}}>Right</button>
 
             </Navbar>
             <Left>In left side bar?</Left>

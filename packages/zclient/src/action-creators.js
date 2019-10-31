@@ -2,6 +2,9 @@ export const increment = (counter)=>({type:'Increment', counter});
 export const decrement = (counter)=>({type:'Decrement', counter});
 
 export const pickGrid = (value)=>({type:'pickGrid', value});
+export const toggleLeft = (expanded) =>({type: 'ToggleLeft', expanded});
+export const toggleRight = (expanded) =>({type: 'ToggleRight', expanded});
+
 
 export const omsVersion = ()=> ({type:'omsVersion', get:'/version'});
 
