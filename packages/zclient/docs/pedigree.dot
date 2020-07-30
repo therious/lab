@@ -178,6 +178,11 @@ figaro [label="ENG AM CAN GER DUTC Jokyl Bengal Figaro" style="filled,bold"];
 patr [label="Ch Patrick von Glückwald"];
 jsuperman [label="ENG AM Ch Jokyl Superman"];
 bskip [label="SO AFR Ch Bengal Skipper of Limebell"];
+topnot [label="Ch Hilltop's Rocky Top Notch"];
+hplay [label="Ch Hatdale's Playboy"];
+ltamer [label="Ch Studio Liontamer"];
+yyy [label=""];
+yyy [label=""];
 yyy [label=""];
 yyy [label=""];
 yyy [label=""];
@@ -231,7 +236,7 @@ turkcav [label="Turkish Rural Cavalier"];
 ahall [label="Aireline Hallmark"];
 chvg [label="Charles von Glückwald"];
 jer4 [label="Jerry IV"];
-yyy [label=""];
+hshad [label="Hartill's Shadrack"];
 yyy [label=""];
 yyy [label=""];
 
@@ -364,6 +369,11 @@ forcin [label="Dandyaire For Cinnabar "];
 aruth [label="Aireline Ruth"];
 rvg [label="Rivie von Glückwald"];
 bkat [label="Bengal Katerina"];
+brlou [label="Hartill's Breezy Lou"];
+hlulo [label="Hartill's Lucy Louise "];
+
+apley [label="Taffy Apple of My Eye"];
+xxx [label=""];
 xxx [label=""];
 xxx [label=""];
 xxx [label=""];
@@ -456,7 +466,7 @@ jqos [label="Ch Jokyl Queen of Space"];
 bibi [label="Ch Bengal Bibi"];
 
 blulu [label="Ch Birchrun Lulubelle"];
-xxx [label=""];
+hkath [label="Ch Hatdale's Kathleen"];
 xxx [label=""];
 xxx [label=""];
 xxx [label=""];
@@ -465,16 +475,8 @@ xxx [label=""];
 
 
 node [shape=circle];
-p1
-p2
-p3
-p4
-p5
-p6
-p7
-p8
-p9
-p10
+p1;p2;p3;p4;p5;p6;p7;p8;p9
+p10;p11;p12;p13;p14;p15;p16;p17;p18;p19
 
 p1->bsk
 k3->dante
@@ -735,14 +737,20 @@ k36->ksam
 mow->agsnap [color=blue]
 erow->agsnap
 {bfly,bkat}->erow
-k61->bkat
+k62->bkat
 
 {thpl,hlucpr}->sshad
+{chal,htgirl}->thpl
+k63->{hshad,hlulo}->hlucpr
+
 {btin,sbab1}->fwkat
 {jer4,sbab0}->sbab1
 
 k37->btin
 {chal,thll}->dblth
+{blitz,htgirl}->chal
+{topnot,p10}->blitz
+{hplay,hkath}->htgirl
 {lbat,deli}->lkrisp
 {lmay,lbout}->lbat
 k39->lmay
@@ -768,6 +776,7 @@ k48->rlark
 {figaro,klat}->jsup
 {kres,fir}->figaro
 {jsple,klulu}->klat
+{sena,hheir}->klulu
 {figaro,jtop}->jsple
 {patr,catr}->svgluck
 k49->{patr,catr}
@@ -811,14 +820,20 @@ k57->asyo
 {mand,dia}->sros
 {duff,redf}->ston
 {cbrand,ppep}->duff
+{ltamer,apley}->cbrand
+k65->apley
+k64->ppep
 {chal,tita}->redf
+{smon,slady}->tita
 {sran,sfire}->qe2
 k58->{sran,sfire}
 k58->{idom,fino}->trink
-k59->{chvg,rvg}->fvgluck
+k49->{chvg,rvg}->fvgluck
 {gun,psy}->tyc
 {bskip,fir}->lea
 k60->{jer4,sbab0}
+{chal,brlou}->thll
+k61->brlou
 
 g33->g32->g31->g30
 g30->g29->g28->g27->g26->g25->g24->g23->g22->g21->g20
