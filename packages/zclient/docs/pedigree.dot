@@ -90,6 +90,14 @@ k47
 k48
 k49
 k50
+k51;k52;k53;k54
+k55
+k56
+k57
+k58
+k59
+k60
+
 
 
 node [style = filled, fillcolor=lightblue, shape=box3d];
@@ -149,7 +157,6 @@ opt [label="ENG AM CAN Ch Optimist of Mynair"];
 tyc [label="ENG Ch Siccawei Tycoon"];
 ston [label="Ch Love's Stoney Burke"];
 rrog [label="Ch Talyn's River Rogue"];
-blad [label="ENG AM Ch Bengal Bladud of Harham"];
 sabu [label="Ch Bengal Sabu"];
 
 
@@ -172,6 +179,7 @@ wall [label="ENG Ch Westhay Alliance"];
 rdef [label="Ch Rural Defiance"];
 bbon [label="CNTL Ch Brineland Bonnie Boy"];
 tweed [label="ENG Ch Riverina Tweedsbairn"];
+twee [label="ENG Ch Riverina Tweed"];
 
 smon [label="AM CAN Ch Aireline Star Monarch"];
 bfly [label="Ch Bengal Flyer"];
@@ -209,9 +217,13 @@ gluck [label="Ch Colon von Glückwold"];
 thpl [label="Ch Thunder's Playboy"];
 svgluck [label="Ch Sherry von Glückwold"];
 
-
 jsupm [label="Ch Jokyl Supermaster"];
-yyy [label=""];
+jsple [label="ENG Ch Jokyl Space Leader"];
+figaro [label="ENG AM CAN GER DUTC Jokyl Bengal Figaro" style="filled,bold"];
+
+patr [label="Ch Patrick von Glückwald"];
+jsuperman [label="ENG AM Ch Jokyl Superman"];
+bskip [label="SO AFR Ch Bengal Skipper of Limebell"];
 yyy [label=""];
 yyy [label=""];
 yyy [label=""];
@@ -258,7 +270,12 @@ lbat [label="Loudwell Battleship"];
 lmay [label="Loudwell Mayboy"];
 ldand [label="Loudwell Dandino"];
 lute [label="Lionheart Ute"];
-yyy [label=""];
+hiten [label="Hi-Tension"];
+sena [label="Stanbrook Senator"];
+
+turkcav [label="Turkish Rural Cavalier"];
+ahall [label="Aireline Hallmark"];
+chvg [label="Charles von Glückwald"];
 yyy [label=""];
 yyy [label=""];
 yyy [label=""];
@@ -383,8 +400,13 @@ lbout [label="Loudwell Boutiful "];
 cchil [label="Countess of Chilam"];
 fvgluck [label="Fanny von Glückwold"];
 pag [label="Pentragon Avant Garde"];
-xxx [label=""];
-xxx [label=""];
+klat [label="Kenlucky Latona"];
+klulu [label="Kenlucky Lulu"];
+hheir [label="Huntholme Heiress"];
+catr [label="Catrin von Gluckwald"];
+forcin [label="Dandyaire For Cinnabar "];
+aruth [label="Aireline Ruth"];
+rvg [label="Rivie von Glückwald"];
 xxx [label=""];
 xxx [label=""];
 xxx [label=""];
@@ -472,6 +494,12 @@ putprom [label="Ch Moraine Putwyn Promise"];
 erow [label="Ch Erowah Lorelei"];
 bmsea [label="Ch Briardale Misty Sea"];
 bbberth [label="Ch Briardale Big Bertha"];
+rlark [label="River-Aire Lark CDX"];
+jtop [label="Ch Jokyl Top of The Form"];
+jqos [label="Ch Jokyl Queen of Space"];
+bibi [label="Ch Bengal Bibi"];
+
+blulu [label="Ch Birchrun Lulubelle"];
 xxx [label=""];
 xxx [label=""];
 xxx [label=""];
@@ -581,13 +609,14 @@ kres->{fast,gun,baha} [color=red]
 fir->fast
 
 {nob,dia}->pam
-gun->{mow,maid,sah,styc} [color=purple penwidth=2]
+gun->{mow,maid,sah,styc,bee} [color=purple penwidth=2]
 thun->mow
 psy->{maid,pres,styc} [color=red]
 
 brim->sah [color=blue]
 
 {lea,bal}->beg
+{blad,mod}->bal
 {blad,mod}->kres
 {briar,loam}->fir
 {cour}->nob
@@ -771,6 +800,63 @@ k44->bmsea
 {lute,bbberth}->chbr
 k45->lute
 k46->bbberth
+{hiten,rlark}->ppip
+
+k47->hiten
+k48->rlark
+
+{figaro,klat}->jsup
+{kres,fir}->figaro
+{jsple,klulu}->klat
+{figaro,jtop}->jsple
+{patr,catr}->svgluck
+k49->{patr,catr}
+{jsuperman,jqos}->jsupm
+{jsple,psy}->jsuperman
+{figaro,jtop}->jqos
+{turkcav,loam}->jtop
+{eddy,arte}->jess
+{fast,humd}->ram
+{tweed,joy}->humd
+{twee,p9}->tweed
+k50->joy
+sflay->bee
+k51->sflay
+{staff,tsam}->hobo
+{ruffo,sund}->staff
+k52->ruffo
+k53->sund
+{roor,chap}->tsam
+k54->roor
+k55->chap
+{gabr,pprin}->shan
+{lepr,lcher}->pprin
+k56->lcher
+{bskip,fir}->lepr
+{chor,wgyp}->bdan
+{eben,wsab}->wgyp
+{check,cind}->{eben,wrind}
+{fere,wrind}->chor
+{lepr,bibi}->fere
+{sabu,blulu}->wsab
+{excal,wrind}->well
+{grem,asyo}->excal
+{check,forcin}->grem
+k57->asyo
+{ahall,aruth}->{check,cind} [color=purple, penwidth=2]
+{sabu,betc}->rrog
+{bfly,tupp}->betc
+{fast,sros}->gyps
+{mand,dia}->sros
+{duff,redf}->ston
+{cbrand,ppep}->duff
+{chal,tita}->redf
+{sran,sfire}->qe2
+k58->{sran,sfire}
+k58->{idom,fino}->trink
+k59->{chvg,rvg}->fvgluck
+{gun,psy}->tyc
+{bskip,fir}->lea
 
 g33->g32->g31->g30
 g30->g29->g28->g27->g26->g25->g24->g23->g22->g21->g20
@@ -789,6 +875,7 @@ g10->g9->g8->g7->g6->g5->g4->g3->g2->g1
 {rank = same; g10, ang, ford, dare}
 {rank = same; g11,  bwild,dddan}
 {rank = same; g12, pant }
+{rank = same; g18, bee }
 
 /* fill in missing g15 and up entries */
 }
