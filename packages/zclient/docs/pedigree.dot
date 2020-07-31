@@ -6,39 +6,15 @@ rankdir=LR;
 
 
 node [style = filled, fillcolor=green, shape = circle]
-g1
-g2
-g3
-g4
-g5
-g6
-g7
-g8
-g9
-g10
-g11
-g12
-g13
-g14
-g15
-g16
-g17
-g18
-g19
-g20
-g21
-g22
-g23
-g24
-g25
-g26
-g27
-g28
-g29
-g30
-g31
-g32
-g33
+ g0; g1; g2; g3; g4; g5; g6; g7; g8; g9;
+g10;g11;g12;g13;g14;g15;g16;g17;g18;g19;
+g20;g21;g22;g23;g24;g25;g26;g27;g28;g29;
+g30;g31;g32;g33;g34;g35;g36;g37;g38;g39;
+g40;g41;g42;g43;g44;g45;g46;g47;g48;g49;
+g50;g51;g52;g53;g54;g55;g56;g57;g58;g59;
+g60;
+
+
 
 
 node [style = filled, fillcolor=grey, shape=circle]
@@ -131,7 +107,7 @@ sdef [label="Ch Searchlight Defiance"];
 apol [label="ENG Ch Rural Wyrewood Apollo"];
 wall [label="ENG Ch Westhay Alliance"];
 rdef [label="Ch Rural Defiance"];
-bbon [label="CNTL Ch Brineland Bonnie Boy"];
+bbon [label="INTL Ch Brineland Bonnie Boy" style="filled,bold"];
 tweed [label="ENG Ch Riverina Tweedsbairn"];
 twee [label="ENG Ch Riverina Tweed"];
 
@@ -173,7 +149,7 @@ svgluck [label="Ch Sherry von Glückwold"];
 
 jsupm [label="Ch Jokyl Supermaster"];
 jsple [label="ENG Ch Jokyl Space Leader"];
-figaro [label="ENG AM CAN GER DUTC Jokyl Bengal Figaro" style="filled,bold"];
+figaro [label="ENG AM CAN GER DUTC\nJokyl Bengal Figaro" style="filled,bold"];
 
 patr [label="Ch Patrick von Glückwald"];
 jsuperman [label="ENG AM Ch Jokyl Superman"];
@@ -181,11 +157,24 @@ bskip [label="SO AFR Ch Bengal Skipper of Limebell"];
 topnot [label="Ch Hilltop's Rocky Top Notch"];
 hplay [label="Ch Hatdale's Playboy"];
 ltamer [label="Ch Studio Liontamer"];
+atoppa [label="ENG Ch Berrycroft Atoppa"];
+waris [label="ENG Ch Waycon Aristocrat"];
+staris [label="ENG Ch Stockfield Aristocrat"];
+mmand [label="ENG Ch Matador Mandarin"];
+ccour [label="INTL ENG Ch Clee Courtier"];
+
+warl [label="INTL ENG CH\nWarland Protector of Shelterock\n1933 WESTMINSTER BEST IN SHOW" style="filled,bold" penwidth=2];
+wanch [label="ENG Ch Wrose Anchor"];
+wcar [label="ENG Ch Wrose Cargo"];
+wwat [label="Ch Warland Waterman"];
+wwhat [label="ENG Ch Warland Whatnot"];
+wdit [label="ENG Warland Ditto"];
+rroya [label="Ch Rhosddu Royalist (1913)"];
 yyy [label=""];
 yyy [label=""];
 yyy [label=""];
 yyy [label=""];
-yyy [label=""];
+
 
 node [shape=egg]
 hit   [label="Blackheath's Direct Hit"];
@@ -237,6 +226,22 @@ ahall [label="Aireline Hallmark"];
 chvg [label="Charles von Glückwald"];
 jer4 [label="Jerry IV"];
 hshad [label="Hartill's Shadrack"];
+saris [label="Solo Aristocrat"];
+wroy [label="Wadsworth Royalist"];
+requi [label="Requisition"];
+mrollo [label="Midland Rollo (Midland Royal x Floral Wreath)"];
+mroyal[label="Midland Royal [Colne Master Royal x Madam Briar]"];
+coinmst [label="Colne Master Royal 093908 vXXIII"];
+
+cdict [label="Cragsman Dictator"];
+
+crking [label="Ch Cragsman King"];
+airguess [label="Airedale Guess"]
+
+
+cmonarq [label="Clonmel Monarque"];
+yyy [label=""];
+yyy [label=""];
 yyy [label=""];
 yyy [label=""];
 
@@ -373,7 +378,9 @@ brlou [label="Hartill's Breezy Lou"];
 hlulo [label="Hartill's Lucy Louise "];
 
 apley [label="Taffy Apple of My Eye"];
-xxx [label=""];
+pict [label="Wyrewood Siccawei Pictorial "];
+airjen [label="Airedale Jenny"]
+
 xxx [label=""];
 xxx [label=""];
 xxx [label=""];
@@ -467,10 +474,16 @@ bibi [label="Ch Bengal Bibi"];
 
 blulu [label="Ch Birchrun Lulubelle"];
 hkath [label="Ch Hatdale's Kathleen"];
+sideal [label="ENG Ch Siccawei Ideal"];
+swdam [label="ENG Ch Sweet Damsel's Legacy"];
+wstrategy [label="ENG Ch Warland Strategy"];
 xxx [label=""];
 xxx [label=""];
 xxx [label=""];
 xxx [label=""];
+xxx [label=""];
+xxx [label=""];
+
 
 
 
@@ -834,25 +847,69 @@ k49->{chvg,rvg}->fvgluck
 k60->{jer4,sbab0}
 {chal,brlou}->thll
 k61->brlou
+{apol,sideal}->pho
+{reun,pres}->sideal
+{saris,pict}->apol
+{atoppa}->saris
+wwhat->cmonarq->ccour->mmand->staris->waris->atoppa
+swdam->waris
+{warl}->swdam
 
-g33->g32->g31->g30
+k1->coinmst->mroyal->mrollo->requi->wroy->crking->cdict->wdit->wwhat->wwat->wcar->wanch->warl
+rroya->wstrategy->wdit
+
+node [fillcolor=yellow shape=diamond];
+
+nbtest [label="Newbold Test"]
+wrosa [label="Wharfedale Roseamond"]
+brtest [label="Briar Test"]
+mastbr [label="ENG Ch Master Briar"]
+crmvl [label="ENG Ch Crompton Marvel"]
+croor [label="Ch Crompton Oorang"]
+lemain [label="Leighton Mainspring"]
+gayflo [label="Gay Flossie"]
+craghi [label="Cragsman High Lady"]
+
+wjud [label="Woodland Judy"]
+rsalt [label="Ch Rock Salt"]
+rferr [label="Rock Ferry Test"]
+chbriar [label="Cholmondeley Briar"]
+airjer [label="Airedale Jerry"]
+bess [label="Bess"]
+brush [label="Ch Brush"]
+bruce [label="Ch Bruce"]
+ddd [label="xxx"]
+
+
+
+
+
+k0->{airguess,airjen}->nbtest->wrosa->brtest->mastbr->crmvl->croor->lemain->gayflo->craghi->crking
+k2->bruce->brush->Bess->airjer->chbriar->brtest->rferr->rsalt->wjud->crmvl
+
+g60->g59->g58->g57->g56->g55->g54->g53->g52->g51->g50
+g50->g49->g48->g47->g46->g45->g44->g43->g42->g41->g40
+g40->g39->g38->g37->g36->g35->g34->g33->g32->g31->g30
 g30->g29->g28->g27->g26->g25->g24->g23->g22->g21->g20
 g20->g19->g18->g17->g16->g15->g14->g13->g12->g11->g10
-g10->g9->g8->g7->g6->g5->g4->g3->g2->g1
+g10->g9->g8->g7->g6->g5->g4->g3->g2->g1->g0
 
-{rank = same; g1, willow, g1}
-{rank = same; g2, gats, rayna}
-{rank = same; g3, prin, bsk,steel,mrbig}
-{rank = same; g4, cosie,awing,raf}
-{rank = same; g5, akiss, chub}
-{rank = same; g6,hper,bon,luke,afire}
-{rank = same; g7, maxo,jflash}
-{rank = same; g8, gdream,that}
-{rank = same; g9, fuego}
-{rank = same; g10, ang, ford, dare}
-{rank = same; g11,  bwild,dddan}
-{rank = same; g12, pant }
-{rank = same; g18, bee }
+{rank = same; g0, willow}
+{rank = same; g1, gats, rayna}
+{rank = same; g2, prin, bsk,steel,mrbig}
+{rank = same; g3, cosie,awing,raf}
+{rank = same; g4, akiss, chub}
+{rank = same; g5,hper,bon,luke,afire}
+{rank = same; g6, maxo,jflash}
+{rank = same; g7, gdream,that}
+{rank = same; g8, fuego}
+{rank = same; g9, ang, ford, dare}
+{rank = same; g10,  bwild,dddan}
+{rank = same; g11, pant }
+{rank = same; g17, bee }
 
-/* fill in missing g15 and up entries */
+/* fill in missing g15 and up entries
+
+
+*/
 }
