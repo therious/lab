@@ -41,7 +41,7 @@ scots [label="AMCH ENGCH BIS Florac \nKing of Scots at Stargus", style="filled,b
 tnt   [label="AMCH Harrington's T'N'T"];
 
 man   [label="CH Brisline's \nLady's Man 1981"];
-fly   [label="AMCH Stone Ridge \nFairewood Flyer"];
+fly   [label="AMCH Stone Ridge \nFairewood Flyer CD"];
 spec  [label="AMCH Brisline's \nHouse Special"];
 
 lad [label="AMCH Devonshire's \nCeltic Lad"];
@@ -52,7 +52,7 @@ leg [label="AMCH BIS BISS Greenfield's \nCeltic Legend 1999", style="filled,bold
 jack [label="AMCH CANCH Greenfield's \nCaptain Jack 1997"];
 fan [label="AMCH ITCH ENGCH Greenfield \nCaptain Fantastic", style="filled,bold"];
 thief [label="AMCH Reydale \nPrince of Thieves 1995"];
-pride [label="AMCH BIS \nDevonshire's Celtic Pride 2003", style="filled,bold"];
+pride [label="GCH CH BIS \nDevonshire's Celtic Pride 2003", style="filled,bold"];
 war [label="AMCH Rangel's \nCeltic Warrior"];
 raf [label="AMCH Tatinejos \nRaphaello 2007"];
 luke [label="AMCH, BIS, BISS Stirling \nCool Hand Luke", style="filled,bold"];
@@ -76,7 +76,7 @@ gun [label="ENG AM Ch Bengal Gunga Din"];
 blad [label="ENG AM Ch Bengal Bladud of Harham"];
 briar [label="ENG Ch Mayjack Briar"];
 cour [label="INTL ENG Ch Clee Courtier"];
-mrbig [label="GCH Victorianne Mr. Big"];
+mrbig [label="GCHB CH Victorianne Mr. Big"];
 pho [label="ENG Ch Riverina Siccawei Phoebus"];
 
 grit [label="AMCH Bravo True Grit"];
@@ -126,7 +126,7 @@ rroad [label="AMCH Coppercrest Red Roadster "];
 ksam [label="Ch Kiryat Sampson's Tartan"];
 hper [label="CH Evermay's High Performance"];
 maxo [label="CH Timberwyck Maximum Overdrive"];
-serter [label="SH. Serendipity Terrydale HK X-F"];
+serter [label="CH Serendipity Terrydale HK X-F"];
 that [label="BIS CH (AUST) Stanstead That'll Do for Jokyl"];
 dddan [label="AMCH Blackjack's Double Down Danny"];
 msam [label="AM CHAMPION Blackjack's Mighty Samson"];
@@ -172,8 +172,25 @@ wdit [label="ENG Warland Ditto"];
 rroya [label="Ch Rhosddu Royalist (1913)"];
 sswiv [label="CH Soudan Swiveller 150891 1910"];
 elmon [label="Elruge Monarch 144512 1904"];
-yyy [label=""];
-yyy [label=""];
+ibrig [label="Ch Ileene Brigand"];
+mespot [label="Ch Mespot Tinker"];
+chub [label="CH Tierra De Churubusco Y Chubasco"];
+gburn [label="CH Cripple Creek George Burns"];
+cbrk [label="CH Gatewood Curcuit Breaker"];
+wbcody [label="CH Timberwyck Wild Bill Cody"];
+vjprime [label="CH Vict' Anne Jalynaire Primetime"];
+jleap [label="CH Joval Leap Of Faith"]
+kunite [label="CH Keystone's United We Stand"]
+yatas [label="CH Oak Grove Yatasto Of Joval"]
+smman [label="CH Finlair Scottshire Main Man"];
+httig [label="CH Moraine Hold That Tiger"];
+jdalc [label="CH Jalynaire Dallas Cowboy"];
+tscow [label="CH Tartan Scottshire Cowboy"];
+
+ttrang [label="Ch Tartan Texas Ranger"];
+yyy [label=""]
+yyy [label=""]
+yyy [label=""]
 
 
 node [shape=egg]
@@ -209,8 +226,6 @@ roor [label="Turner's Ringo Oorang"];
 jona [label="Waggin-Aire's Jonah"];
 drum [label="Terrydale's Admiral Drummer 1984"];
 awing [label="Joval on Angel's Wings"];
-chub [label="Tierra De Churubusco Y Chubasco"];
-cbrk [label="Gatewood Curcuit Breaker"];
 jluck [label="Jokyl Lucky Strike"];
 dblth [label="Emery's Double Thunder"];
 btin [label="Bengal Tindale"];
@@ -241,7 +256,9 @@ airguess [label="Airedale Guess"]
 
 cmonarq [label="Clonmel Monarque"];
 clonbed [label="Clonmel Bedrock"];
-yyy [label=""];
+jwiz [label="Jokyl Wizard"];
+
+bjringo [label="BlackJack's Ringo Star"];
 yyy [label=""];
 yyy [label=""];
 
@@ -330,11 +347,7 @@ beka [label="Waggin-Aire's Rebekah"];
 
 glorq [label="Tartan Glory of Quint"];
 hey [label="Bryn Hafod Hey Penny"];
-akiss [label="Joval Angel's Kiss"];
 
-afire [label="Joval Angel Fire"];
-
-cfold [label="Timberwyck Centerfold"];
 
 mprom [label="Moraine Magic Promise"];
 gdream [label="Ginger Dreamtime at Jokyl"];
@@ -383,7 +396,14 @@ airjen [label="Airedale Jenny"]
 
 clonres [label="Clonmel Reseda"];
 clonphi [label="Clonmel Philimes"];
+glwen [label="Gleeful Wendy"];
+
+ovita [label="Oak Grove Vitamin"];
+hotig [label="Jalynaire Hold On Tiger"]
 xxx [label=""];
+xxx [label=""];
+xxx [label=""];
+
 
 
 
@@ -425,7 +445,7 @@ dia [label="ENG Ch Riverina Diana of Siccawei"];
 bal [label="ENG Ch Bengal Kresent Ballerina"];
 bew [label="ENG Ch Riverina Bewitched"];
 
-bsk [label="Ch Arily's Nuttin' But Blue Skies Over Fernwood"];
+bsk [label="CH Arily's Nuttin' But Blue Skies Over Fernwood"];
 
 chel [label="AMCH Stone Ridge Fireside Chelsie"];
 bisc [label="ENG Ch Bengal Biscuit"];
@@ -446,12 +466,12 @@ lcher [label="ENG Ch Trick of Little Cherry"];
 tupp [label="Ch Talyn's Tuppence"];
 
 
-fgno [label="AMCH Friday Girl's Nite Out "];
+fgno [label="AMCH Friday Girl's Nite Out"];
 bbel [label="Ch Bravo Bonanza Belle de AAA"];
 fbod [label="Ch Finlair Bodacious"];
 hkex [label="CH Moraine Terydale HK Exchange"];
 jflash [label="BIS CH ENG/US Jokyl Flashback"];
-cosie [label="Ch Victorianne Cosmopolitan"];
+cosie [label="CH Victorianne Cosmopolitan"];
 cent [label="CH Timberwyck Centerstage"];
 rejo [label="CH (US) Serendipity Rejoices"];
 
@@ -477,7 +497,21 @@ hkath [label="Ch Hatdale's Kathleen"];
 sideal [label="ENG Ch Siccawei Ideal"];
 swdam [label="ENG Ch Sweet Damsel's Legacy"];
 wstrategy [label="ENG Ch Warland Strategy"];
-xxx [label=""];
+pointme [label="CH Arily-Joval Point Me At The Sky"]
+jezeb [label="CH Timberwyck Jezebel CD"]
+afire [label="CH Joval Angel Fire"];
+
+cfold [label="CH Timberwyck Centerfold"];
+gglor [label="CH Gatewood Glorybound"];
+vsilk [label="CH Victorianne Silkwood"];
+vwood [label="CH Victorianne Into The Woods"];
+fdr [label="CH Joval Flash De Rockingdale"];
+kbq [label="CH Keystone Brisline Quest For Camelot CD"]
+akiss [label="GCH CH Joval Angel's Kiss" style="filled,bold"];
+pwh [label="CH Victorianne Proudly We Hail"];
+pupd [label="CH Huntwood's A Puppy For Dee"];
+
+wsabella [label="Ch Westmoor's Sabella"];
 xxx [label=""];
 xxx [label=""];
 xxx [label=""];
@@ -491,7 +525,12 @@ node [shape=circle];
 p1;p2;p3;p4;p5;p6;p7;p8;p9
 p10;p11;p12;p13;p14;p15;p16;p17;p18;p19
 
-p1->bsk
+{jleap,fdr}->pointme->bsk
+{kunite,afire}->jleap
+{yatas,jflash}->fdr
+{jwiz,ovita}->yatas
+{maxo,kbq}->kunite
+
 k3->dante
 k4->tat
 k5->kid
@@ -674,14 +713,22 @@ leg->afire [color=red]
 jflash->afire
 
 {maxo,cosie}->mrbig
+{vjprime,vsilk}->cosie
+{jdalc,hotig}->vjprime
+{httig,pupd}->hotig
+{tscow,pupd}->jdalc
+
+{jack,vwood}->vsilk
 {serter,cent}->maxo
 intl->serter [color=red]
 rejo->serter
+{smman,pwh}->vwood
 
 {cbrk,cfold}->cent
-k19->cfold
-k20->cbrk
-
+{gburn,jezeb}->{cfold,wbcody}
+{ttrang,wsabella}->gburn
+{grit,hey}->ttrang
+{wbcody,gglor}->cbrk
 intl->hkex [color=red]
 mprom->hkex
 
@@ -694,7 +741,7 @@ k23->xmas
 scots->mprom [color=purple penwidth=2]
 silkt->mprom
 k24->silkt
-k25->rejo
+{scots,dip}->rejo
 {dddan, bwild}->dare
 
 grit->dddan [color=purple penwidth=2]
@@ -702,6 +749,8 @@ jackio->dddan
 
 k26->jackio
 msam->bwild [color=blue]
+msam->bjringo [color=blue]
+bjringo->ovita
 bisa->bwild
 
 bravo->msam [color=red]
@@ -888,7 +937,7 @@ k0->{airguess,airjen}->nbtest->wrosa->brtest->mastbr->crmvl->croor->lemain->gayf
 k1->{clonbed,clonphi}->clonres->elmon->sswiv->craghi
 mroyal->elmon
 k2->bruce->brush->Bess->airjer->chbriar->brtest->rferr->rsalt->wjud->crmvl
-
+mespot->ibrig->glwen->staris
 g60->g59->g58->g57->g56->g55->g54->g53->g52->g51->g50
 g50->g49->g48->g47->g46->g45->g44->g43->g42->g41->g40
 g40->g39->g38->g37->g36->g35->g34->g33->g32->g31->g30
