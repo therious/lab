@@ -170,8 +170,8 @@ wwat [label="Ch Warland Waterman"];
 wwhat [label="ENG Ch Warland Whatnot"];
 wdit [label="ENG Warland Ditto"];
 rroya [label="Ch Rhosddu Royalist (1913)"];
-yyy [label=""];
-yyy [label=""];
+sswiv [label="CH Soudan Swiveller 150891 1910"];
+elmon [label="Elruge Monarch 144512 1904"];
 yyy [label=""];
 yyy [label=""];
 
@@ -240,7 +240,7 @@ airguess [label="Airedale Guess"]
 
 
 cmonarq [label="Clonmel Monarque"];
-yyy [label=""];
+clonbed [label="Clonmel Bedrock"];
 yyy [label=""];
 yyy [label=""];
 yyy [label=""];
@@ -381,8 +381,8 @@ apley [label="Taffy Apple of My Eye"];
 pict [label="Wyrewood Siccawei Pictorial "];
 airjen [label="Airedale Jenny"]
 
-xxx [label=""];
-xxx [label=""];
+clonres [label="Clonmel Reseda"];
+clonphi [label="Clonmel Philimes"];
 xxx [label=""];
 
 
@@ -885,6 +885,8 @@ ddd [label="xxx"]
 
 
 k0->{airguess,airjen}->nbtest->wrosa->brtest->mastbr->crmvl->croor->lemain->gayflo->craghi->crking
+k1->{clonbed,clonphi}->clonres->elmon->sswiv->craghi
+mroyal->elmon
 k2->bruce->brush->Bess->airjer->chbriar->brtest->rferr->rsalt->wjud->crmvl
 
 g60->g59->g58->g57->g56->g55->g54->g53->g52->g51->g50
