@@ -28,7 +28,7 @@ k50;k51;k52;k53;k54;k55;k56;k57;k58;k59
 k60;k61;k62;k63;k64;k65;k66;k67;k68;k69
 k70;k71;k72;k73;k74;k75;k76;k77;k78;k79
 
-
+/* 35-170 (136), 177-231 (55), 252-357 (106), 367-455 (89) */
 
 node [style = filled, fillcolor=lightblue, shape=box3d];
 
@@ -39,16 +39,12 @@ bravo [label="AMCH Bravo \nStarbuck"];
 fame  [label="AMCH Stone Ridge \nFame of Fireside CD"];
 scots [label="AMCH ENGCH BIS Florac \nKing of Scots at Stargus", style="filled,bold"];
 tnt   [label="AMCH Harrington's T'N'T"];
-
 man   [label="CH Brisline's \nLady's Man 1981"];
 fly   [label="AMCH Stone Ridge \nFairewood Flyer CD"];
 spec  [label="AMCH Brisline's \nHouse Special"];
-
 lad [label="AMCH Devonshire's \nCeltic Lad"];
-
 intl [label="CH (US) Terrydale's \nInt'l Affair"];
 leg [label="AMCH BIS BISS Greenfield's \nCeltic Legend 1999", style="filled,bold"];
-
 jack [label="AMCH CANCH Greenfield's \nCaptain Jack 1997"];
 fan [label="AMCH ITCH ENGCH Greenfield \nCaptain Fantastic", style="filled,bold"];
 thief [label="AMCH Reydale \nPrince of Thieves 1995"];
@@ -58,7 +54,6 @@ raf [label="AMCH Tatinejos \nRaphaello 2007"];
 luke [label="AMCH, BIS, BISS Stirling \nCool Hand Luke", style="filled,bold"];
 prin [label="AMCH GCH Reydaleterrydale \nPrince of Persia 2010", style="filled,bold"];
 gats [label="AMCH ReydaleTerrydale \nRangel the Great Gatsby"];
-
 jer [label="Ch Jerilee's Jumping Jericho"];
 earl [label="Ch Geoffrey Earl of Stratford"];
 hench [label="Ch Barbate Henchman"];
@@ -66,19 +61,16 @@ pant [label="ENGCH Jokyl Gallipants"];
 sic [label="ENGCH Siccawei Galliard"];
 flam [label="ENG AM Ch Bengal Flamboyant"]
 bul [label="ENG AM Bengal Buldeo"];
-
 fast [label="INTL ENG Ch Bengal Fastnet"];
 mow [label="ENG Ch Bengal Mowgli"];
 sah [label="ENG SW Ch Bengal Brulyn Sahib"];
 kres [label="ENG Ch Bengal Kresent Brave"];
-
 gun [label="ENG AM Ch Bengal Gunga Din"];
 blad [label="ENG AM Ch Bengal Bladud of Harham"];
 briar [label="ENG Ch Mayjack Briar"];
 cour [label="INTL ENG Ch Clee Courtier"];
 mrbig [label="GCHB CH Victorianne Mr. Big"];
 pho [label="ENG Ch Riverina Siccawei Phoebus"];
-
 grit [label="AMCH Bravo True Grit"];
 tarq [label="ENG Ch Bengal Tarquin"];
 lanc [label="ENG Ch Siccawei Lancastrian"];
@@ -88,14 +80,10 @@ tyc [label="ENG Ch Siccawei Tycoon"];
 ston [label="Ch Love's Stoney Burke"];
 rrog [label="Ch Talyn's River Rogue"];
 sabu [label="Ch Bengal Sabu"];
-
-
 eddy [label="ENG AM Ch Siccawei Eddystone"];
 chal [label="Ch Town Girl's Challenge"];
 excal [label="Ch Barbate Excaliber"];
 gabr [label="Ch Love's Gabriel of Coppercrest"];
-
-
 styc [label="ENG Ch Searchlight Tycoon"];
 dipl [label="ENG Ch Bengal Colliepriest Diplomat"];
 bart [label="ENG Ch Barton of Burdale"];
@@ -110,7 +98,6 @@ rdef [label="Ch Rural Defiance"];
 bbon [label="INTL Ch Brineland Bonnie Boy" style="filled,bold"];
 tweed [label="ENG Ch Riverina Tweedsbairn"];
 twee [label="ENG Ch Riverina Tweed"];
-
 smon [label="AM CAN Ch Aireline Star Monarch"];
 bfly [label="Ch Bengal Flyer"];
 mand [label="ENG Ch Riverina Mandarin of Siccawei"];
@@ -121,8 +108,6 @@ check [label="Ch Wraggletaggle Checkmate"];
 ruffo [label="INTL Ch Ruff-out"];
 lepr [label="Ch Bengal Leprechaun"];
 rroad [label="AMCH Coppercrest Red Roadster "];
-
-
 ksam [label="Ch Kiryat Sampson's Tartan"];
 hper [label="CH Evermay's High Performance"];
 maxo [label="CH Timberwyck Maximum Overdrive"];
@@ -143,14 +128,11 @@ kung [label="Ch Briardale Kung Fu"];
 adonis [label="Ch Turith Adonis 1978"];
 chbr [label="Ch Briardale's Charlie Brown "];
 gluck [label="Ch Colon von Glückwold"];
-
 thpl [label="Ch Thunder's Playboy"];
 svgluck [label="Ch Sherry von Glückwold"];
-
 jsupm [label="Ch Jokyl Supermaster"];
 jsple [label="ENG Ch Jokyl Space Leader"];
 figaro [label="ENG AM CAN GER DUTC\nJokyl Bengal Figaro" style="filled,bold"];
-
 patr [label="Ch Patrick von Glückwald"];
 jsuperman [label="ENG AM Ch Jokyl Superman"];
 bskip [label="SO AFR Ch Bengal Skipper of Limebell"];
@@ -162,7 +144,6 @@ waris [label="ENG Ch Waycon Aristocrat"];
 staris [label="ENG Ch Stockfield Aristocrat"];
 mmand [label="ENG Ch Matador Mandarin"];
 ccour [label="INTL ENG Ch Clee Courtier"];
-
 warl [label="INTL ENG CH\nWarland Protector of Shelterock\n1933 WESTMINSTER BEST IN SHOW" style="filled,bold" penwidth=2];
 wanch [label="ENG Ch Wrose Anchor"];
 wcar [label="ENG Ch Wrose Cargo"];
@@ -186,9 +167,8 @@ smman [label="CH Finlair Scottshire Main Man"];
 httig [label="CH Moraine Hold That Tiger"];
 jdalc [label="CH Jalynaire Dallas Cowboy"];
 tscow [label="CH Tartan Scottshire Cowboy"];
-
 ttrang [label="Ch Tartan Texas Ranger"];
-yyy [label=""]
+firint [label="AMCH Firethorn Interpid 1986"]
 yyy [label=""]
 yyy [label=""]
 
@@ -198,20 +178,17 @@ hit   [label="Blackheath's Direct Hit"];
 kid [label="Spindletop \nNew Kid In Town"];
 dante [label="Stargus Dante in Treboss"];
 comet [label="Bengal\nTurith Comet"];
-
 nob [label="Walnut King Nobbler"];
 lea [label="Bengal Leander"];
 dict [label="Dovedale Dictator"];
 bdan [label="Barbate Dante"];
 hobo [label="King Hobo"];
 baha [label="Brulyn Baha'dur"];
-
 eyec [label="Mynair Eyecatcher of Wellington"];
 sran [label="Siccawei Ransom"];
 duff [label="Siouxaire's Chief Duff"];
 chor [label="Barbate Chorister"];
 staff [label="Sargent Staff Art"];
-
 marq [label="Siccawei Marquis"];
 jest [label="Siccawei Jester"];
 marb [label="Lineside Marquis of Burdale"];
@@ -222,7 +199,6 @@ idom [label="Indomitable of Mynair"];
 cbrand [label="Coppercrest Brandy"];
 blitz [label="Hilltop's Blitzkrieg"];
 roor [label="Turner's Ringo Oorang"];
-
 jona [label="Waggin-Aire's Jonah"];
 drum [label="Terrydale's Admiral Drummer 1984"];
 awing [label="Joval on Angel's Wings"];
@@ -235,7 +211,6 @@ ldand [label="Loudwell Dandino"];
 lute [label="Lionheart Ute"];
 hiten [label="Hi-Tension"];
 sena [label="Stanbrook Senator"];
-
 turkcav [label="Turkish Rural Cavalier"];
 ahall [label="Aireline Hallmark"];
 chvg [label="Charles von Glückwald"];
@@ -247,17 +222,12 @@ requi [label="Requisition"];
 mrollo [label="Midland Rollo (Midland Royal x Floral Wreath)"];
 mroyal[label="Midland Royal [Colne Master Royal x Madam Briar]"];
 coinmst [label="Colne Master Royal 093908 vXXIII"];
-
 cdict [label="Cragsman Dictator"];
-
 crking [label="Ch Cragsman King"];
 airguess [label="Airedale Guess"]
-
-
 cmonarq [label="Clonmel Monarque"];
 clonbed [label="Clonmel Bedrock"];
 jwiz [label="Jokyl Wizard"];
-
 bjringo [label="BlackJack's Ringo Star"];
 yyy [label=""];
 yyy [label=""];
@@ -288,7 +258,6 @@ tat [label="Tatinejos Galactica"];
 steel [label="Rangel's Tierra \nLady L of Steele"];
 flin [label="Flintkote River Princess"];
 brand [label="Borick's Brandy"];
-
 fir [label="Bengal Chippinghey Fircone"];
 thun [label="Bengal Thunder Bird"];
 psy [label="Suliston Psyche"];
@@ -322,11 +291,9 @@ souv [label="Westhay Souvenier"];
 rvog [label="Riverina Vogue "];
 cjack [label="Cummock Jacqueline"];
 bros [label="Chippinghey Briar Rose"];
-
 swisd [label="Siccawei Wisdom"];
 ssoli [label="Suliston Solitaire"];
 excl [label="Riverina Exculsive"];
-
 sfire [label="Siccawei Firelight"];
 betc [label="Talyn's You Betcha"];
 sros [label="Siccawei Rosalie"];
@@ -341,38 +308,29 @@ ppep [label="Pilgrim Princess Pepper of Glenties"];
 sund [label="Patsili Sundown Serenade"];
 chap [label="Chaparral"];
 pprin [label="Pilgrim Princess of Indianaire"];
-
 babe [label="Serendipity's Classy Babe 1983"];
 beka [label="Waggin-Aire's Rebekah"];
-
 glorq [label="Tartan Glory of Quint"];
 hey [label="Bryn Hafod Hey Penny"];
-
-
 mprom [label="Moraine Magic Promise"];
 gdream [label="Ginger Dreamtime at Jokyl"];
 nice [label="Stanstead That'll Do Nicely"];
 xmas [label="Ginger Xmas Carol"];
-
 silkt [label="Moraine Fairewood Silk Tiger"];
 bwild [label="Blackheath's Wild Thing"];
 jackio [label="Santeric Jackie-O"];
-
 wwisp [label="Starmist Wilo' Wisp"];
 ggrac [label="Blackjack's Goodness Gracious "];
 agrac [label="Chado's Airs and Graces"];
 blprom [label="Moraine Britelites N'Promises"];
 mpr [label="Ch Moraine Promise Returned"];
-
 agsnap [label="Airewire Ginger Snap"];
 fwkat [label="Far West Katy"];
 dwind [label="Briardale Duchess of Windsor"];
 creme [label="Bryn Haford Creme de la Creme"];
-
 hlucpr [label="Hartill's Lucy's Pride"];
 sbab1 [label="Skeeter Babe I"];
 sbab0 [label="Skeeter Babe"];
-
 thll [label="Thunder's Lucky Lady"];
 deli [label="Delilah of Loudwell"];
 lbout [label="Loudwell Boutiful "];
@@ -389,15 +347,12 @@ rvg [label="Rivie von Glückwald"];
 bkat [label="Bengal Katerina"];
 brlou [label="Hartill's Breezy Lou"];
 hlulo [label="Hartill's Lucy Louise "];
-
 apley [label="Taffy Apple of My Eye"];
 pict [label="Wyrewood Siccawei Pictorial "];
 airjen [label="Airedale Jenny"]
-
 clonres [label="Clonmel Reseda"];
 clonphi [label="Clonmel Philimes"];
 glwen [label="Gleeful Wendy"];
-
 ovita [label="Oak Grove Vitamin"];
 hotig [label="Jalynaire Hold On Tiger"]
 xxx [label=""];
@@ -416,9 +371,7 @@ dare [label="AMCH Blackheath's \nDouble Dare"];
 ador [label="CH Terrydale's Adorable Lady 1984"];
 ang  [label="ANCH Darbywood's \nAngel Fire"];
 des [label="AMCH Serendipity \nHeart's Desire"];
-
 sab [label="AMCH Windward \nDevonshire Sabrosa"];
-
 bliss [label="AMCH Star Bliss Minerva"];
 kris [label="AMCH CANCH Tartan \nScottshire Kristina 1994"];
 wind [label="AMCH Devonshire Windward Solitude"];
@@ -430,23 +383,18 @@ glor [label="AMCH Stirling \nFire And Glory"];
 sw [label="AMCH Penaire \nReydale Star Wars 2001"];
 bon [label="AMCH Tierra \nMaria Bonita De Rangel"];
 danz [label="AMCH Danzon \nDedi Cado A Isadora"];
-
-
 rayna [label="CH Fernwood's\nHere Comes The Sun\n'Rayna'"];
 cact [label="Ch Kaktus de AAA"];
 bell [label="CH Bravo\nBonanza Belle de AAA 1979"];
 imp [label="ENG Ch Siccawei Impudent Miss"];
 spr [label="INTL ENG AM Ch Bengal Springtime"];
-
 pam [label="ENG Ch Siccawei Princess Pam"];
 maid [label="ENG Ch Bengal Suliston Merrie Maid"];
 beg [label="ENG AM Ch Bengal Begum"];
 dia [label="ENG Ch Riverina Diana of Siccawei"];
 bal [label="ENG Ch Bengal Kresent Ballerina"];
 bew [label="ENG Ch Riverina Bewitched"];
-
 bsk [label="CH Arily's Nuttin' But Blue Skies Over Fernwood"];
-
 chel [label="AMCH Stone Ridge Fireside Chelsie"];
 bisc [label="ENG Ch Bengal Biscuit"];
 redf [label="Ch Coppercrest Red Flare"];
@@ -464,8 +412,6 @@ wsab [label="Ch Dellaire's Wirecrest Sabella"];
 cind [label="Ch Wraggletaggle Cinderella"];
 lcher [label="ENG Ch Trick of Little Cherry"];
 tupp [label="Ch Talyn's Tuppence"];
-
-
 fgno [label="AMCH Friday Girl's Nite Out"];
 bbel [label="Ch Bravo Bonanza Belle de AAA"];
 fbod [label="Ch Finlair Bodacious"];
@@ -474,14 +420,12 @@ jflash [label="BIS CH ENG/US Jokyl Flashback"];
 cosie [label="CH Victorianne Cosmopolitan"];
 cent [label="CH Timberwyck Centerstage"];
 rejo [label="CH (US) Serendipity Rejoices"];
-
 bisa [label="INTL CHAMPION Blackheath's Isadora 1982"];
 kkrun [label="ENG & AM. CHAMPION Jenirox Katie Krunch "];
 bcon [label="AMCH Blackheath's The Contessa "];
 shol [label="Ch Sunnydale's Holiday"];
 ppip [label="Ch River-Aire Proud Piper"];
 bcgirl [label="Ch Brown's Country Girl"];
-
 kitrek [label="Ch Finlair Kitty of Rek en Nad"];
 putprom [label="Ch Moraine Putwyn Promise"];
 erow [label="Ch Erowah Lorelei"];
@@ -491,7 +435,6 @@ rlark [label="River-Aire Lark CDX"];
 jtop [label="Ch Jokyl Top of The Form"];
 jqos [label="Ch Jokyl Queen of Space"];
 bibi [label="Ch Bengal Bibi"];
-
 blulu [label="Ch Birchrun Lulubelle"];
 hkath [label="Ch Hatdale's Kathleen"];
 sideal [label="ENG Ch Siccawei Ideal"];
@@ -500,7 +443,6 @@ wstrategy [label="ENG Ch Warland Strategy"];
 pointme [label="CH Arily-Joval Point Me At The Sky"]
 jezeb [label="CH Timberwyck Jezebel CD"]
 afire [label="CH Joval Angel Fire"];
-
 cfold [label="CH Timberwyck Centerfold"];
 gglor [label="CH Gatewood Glorybound"];
 vsilk [label="CH Victorianne Silkwood"];
@@ -510,10 +452,9 @@ kbq [label="CH Keystone Brisline Quest For Camelot CD"]
 akiss [label="GCH CH Joval Angel's Kiss" style="filled,bold"];
 pwh [label="CH Victorianne Proudly We Hail"];
 pupd [label="CH Huntwood's A Puppy For Dee"];
-
 wsabella [label="Ch Westmoor's Sabella"];
-xxx [label=""];
-xxx [label=""];
+wlook [label="AMCH Waggery's Look At Me 1984"];
+whello [label="AMCH Waggery's Hello It's Me 1980"];
 xxx [label=""];
 xxx [label=""];
 xxx [label=""];
@@ -574,7 +515,6 @@ wild->war
 
 {man,ador}->intl
 {ang}->bliss
-{scots}->bliss [color=purple penwidth=2]
 
 
 {fly,des}->{leg,jack,fan} [color=red]
@@ -584,9 +524,9 @@ blaze->cross
 kid->cross [color=blue]
 {lad,sirus}->wild
 {dip}->fuego [color=blue]
-{scots}->fuego [color=purple penwidth=2]
+{scots}->{bliss,fuego,des,mprom,rejo} [color=purple penwidth=3]
 
-{doc,p2}->man
+p2->man
 tig->ador [color=red]
 lov->ador [color=blue]
 
@@ -595,7 +535,6 @@ bravo->ang [color=red]
 eve->ang
 {fame,ford}->{fly}
 {dip}->des [color=blue]
-scots->des [color=purple penwidth=2]
 {tnt,rose}->lad
 {hit,dare}->sirus
 {comet,bell}->bravo [color=blue]
@@ -631,7 +570,7 @@ brim->sah [color=blue]
 {briar,loam}->fir
 {cour}->nob
 {pho,bew}->dia
-grit->fame [color=purple penwidth=2]
+
 chel->fame
 
 
@@ -695,14 +634,12 @@ k15->tzyg
 {k17}->fgno
 {jona,babe}->dip
 {drum,beka}->jona
-grit->babe [color=purple penwidth=2]
 glorq->babe
 
 {ksam,hey}->glorq
 tig->drum [color=red]
 lov->drum [color=blue]
 k18->beka
-grit->tig [color=purple penwidth=2]
 fbod->tig
 
 {chub,akiss}->awing
@@ -723,11 +660,15 @@ jflash->afire
 intl->serter [color=red]
 rejo->serter
 {smman,pwh}->vwood
+p12->whello->wlook->firint->pwh
+doc->{whello,man} [color=blue]
+b1->firint
+p11->pwh
 
 {cbrk,cfold}->cent
 {gburn,jezeb}->{cfold,wbcody}
 {ttrang,wsabella}->gburn
-{grit,hey}->ttrang
+hey->ttrang
 {wbcody,gglor}->cbrk
 intl->hkex [color=red]
 mprom->hkex
@@ -738,13 +679,12 @@ k21->jluck
 k22->nice
 {pant,xmas}->gdream
 k23->xmas
-scots->mprom [color=purple penwidth=2]
 silkt->mprom
 k24->silkt
-{scots,dip}->rejo
+dip->rejo
 {dddan, bwild}->dare
 
-grit->dddan [color=purple penwidth=2]
+grit->{dddan,ttrang,wlook,fame,babe,tig} [color=purple penwidth=3]
 jackio->dddan
 
 k26->jackio
