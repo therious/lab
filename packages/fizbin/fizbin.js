@@ -2,19 +2,19 @@
 // copyright 2008 Haim Zamir
 // 2015 - just barely getting started modernizing, nodizing, ehancing, etc.
 
-var th = require('th-utils');
+const th = require('th-utils');
 
-var assert = th.assert;
-var Logger = th.Logger;
-var Asbestos = th.Asbestos;
+const assert = th.assert;
+const Logger = th.Logger;
+const Asbestos = th.Asbestos;
 
 
 // these utility functions need to be moved/repacked as appropriate
 function renderExpressionAsFunctionStr(str)
 {
-  var re = /\b([A-Za-z]+[A-Za-z0-9_]*)\b/g;
+  const re = /\b([A-Za-z]+[A-Za-z0-9_]*)\b/g;
 
-  var nstr = str.replace(re, "inputs.$1");
+  const nstr = str.replace(re, "inputs.$1");
 
   return "function(inputs) { return ("+ nstr + ")   /*comment*/;}";
 
@@ -22,14 +22,14 @@ function renderExpressionAsFunctionStr(str)
 
 function expressionTerms(knownTerms, expr)
 {
-  var re = /\b([A-Za-z]+[A-Za-z0-9_]*)\b/g;
+  const re = /\b([A-Za-z]+[A-Za-z0-9_]*)\b/g;
 
-  var foundTerms = expr.match(re); // return array of all terms found
+  const foundTerms = expr.match(re); // return array of all terms found
   assert(th.isArray(foundTerms) && foundTerms.length >= 1, "transition expression %s must include at least one term", expr);
 
   for(var i = 0; i < foundTerms.length; ++i)
   {
-    var term = foundTerms[i];
+    const term = foundTerms[i];
     assert(knownTerms[term], "term [%s] in expression [%s] must be defined in the io section", term, expr);
 
     Logger.log('found term [%s] in expression [%s]', term, expr);
@@ -40,8 +40,8 @@ function expressionTerms(knownTerms, expr)
 
 function expressionToFunction(expr)
 {
-  var fstr = renderExpressionAsFunctionStr(expr);
-  var f = null;
+  const fstr = renderExpressionAsFunctionStr(expr);
+  let f = null;
   eval("f = " + fstr);
   return f;
 }
@@ -51,7 +51,7 @@ function expressionToFunction(expr)
 
 // this is our error space. all errors values are replaced with name of property
 // by propertize.  The javascript editor flags use of unknown properties
-var fsmerr =
+const fsmerr =
 {
    InvalidEnter:0
   ,InvalidExit:0
@@ -80,7 +80,7 @@ var fsmerr =
 };
 
 function cloneProperties(o) {
-  var r = {};
+  const r = {};
   for(var p in o) {
     if(o.hasOwnProperty(p))
       r[p]=o[p];
@@ -102,7 +102,7 @@ propertize(fsmerr);
 
 // convert all properties of object into an array of names
 function arrayize(o) {
-  var arr=[];
+  const arr=[];
   for(var p in o) {
     if(o.hasOwnProperty(p))
       arr.push(p);
@@ -111,20 +111,20 @@ function arrayize(o) {
 }
 
 
-var fsm = {}; // create a new place holder for all the fsm datatypes
+const fsm = {}; // create a new place holder for all the fsm datatypes
 
 function FsmFactory(collaboratorclass)
 {
-  var self = this; // for sake of closure functions
+  const self = this; // for sake of closure functions
 
-  var config = collaboratorclass.config;
+  const config = collaboratorclass.config;
   
   assert(th.isObject(config), fsmerr.BadFsmParams + fsmerr.BadConfiguration + fsmerr.NotAnObject);
 
-  var srcStates        =  config.states;
-  var initialState     =  config.start;
-  var srcTransitions   = config.transitions;
-  var options = config.options;
+  const srcStates        =  config.states;
+  const initialState     =  config.start;
+  const srcTransitions   = config.transitions;
+  const options = config.options;
   var error;
 
   this.taskClass = collaboratorclass;
@@ -143,7 +143,7 @@ function FsmFactory(collaboratorclass)
                                       // there is also a local version for each state (state pattern)
   };
 
-  var graph = this.graph;
+  const graph = this.graph;
 
 
   // sanity check our construction arguments  (ultimately will enable or disable assertion checking)
@@ -178,17 +178,17 @@ function FsmFactory(collaboratorclass)
 // mark some of the nodes as terminal (no way out of state)
 FsmFactory.prototype.markTerminalNodes= function()
 {
-  var states = this.graph.srcStates;
-  var sm = this.graph.stateMap;
-  var trans = this.graph.srcTransitions;
+  const states = this.graph.srcStates;
+  const sm = this.graph.stateMap;
+  const trans = this.graph.srcTransitions;
 
-  var wayOutMap = {};
+  const wayOutMap = {};
 
   var i,j;
   var st;
   for(i = 0; i < trans.length; ++i)
   {
-     var transition = trans[i];
+     const transition = trans[i];
      if(transition.from == '*') {
        for(j = 0; j < states.length; ++j) {
          st = states[j];
@@ -197,7 +197,7 @@ FsmFactory.prototype.markTerminalNodes= function()
          }
        }
      } else if(th.isArray(transition.from)) {
-       var fstates = transition.from;
+       const fstates = transition.from;
        for(j = 0; j < fstates.length; ++j) {
          st = fstates[j];
            wayOutMap[st] = 1; // there is a way out
@@ -221,7 +221,7 @@ FsmFactory.prototype.markTerminalNodes= function()
 
 FsmFactory.prototype.create = function(id, taskInstance)
 {
-  var t = th.inherits(this);  // create an object that inherits all of our methods (we only need the graph)
+  const t = th.inherits(this);  // create an object that inherits all of our methods (we only need the graph)
 
   // all private data going into a single enclosure variable called 'enclosure'
    t.perinst = {
@@ -257,7 +257,7 @@ FsmFactory.prototype.invalidArray = function(arr, min, max, invalidEntry)
   if(!th.isArray(arr))
     return fsmerr.NotAnArray;
 
-  var len = arr.length;
+  const len = arr.length;
   if(len < min)
     return fsmerr.ArrayTooSmall;
   if(len > max)
@@ -266,7 +266,7 @@ FsmFactory.prototype.invalidArray = function(arr, min, max, invalidEntry)
   if(invalidEntry) { // is there an invalidation function
     for(var i = 0; i < len; ++i)
     {
-      var err = invalidEntry.call(this,arr[i]);
+      const err = invalidEntry.call(this,arr[i]);
       if(err) {
         return 'invalidArray index ' + i + 'error #' + err;
       }
@@ -282,7 +282,7 @@ FsmFactory.prototype.invalidArray = function(arr, min, max, invalidEntry)
  */
 FsmFactory.prototype.invalidSobSrc = function(sobsrc)
 {
-  var isstring = th.isString(sobsrc);
+  const isstring = th.isString(sobsrc);
   if(isstring)  { return 0; }  // strings are fine they are name only
   return fsmerr.BadStateName + fsmerr.NotAString;
 };
@@ -290,8 +290,8 @@ FsmFactory.prototype.invalidSobSrc = function(sobsrc)
 
 // enter and exit function execution
 // modify call(this to call(this.collaborator)
- FsmFactory.prototype.efExit  = function(psob, sob) { var x = psob.x; if(x) { x.call(this.taskInstance, psob.s, sob.s, this.perinst.id); }};
- FsmFactory.prototype.efEnter = function(sob, psob, cause) { var e = sob.e;  if(e) { e.call(this.taskInstance, sob.s,  psob.s, this.perinst.id, cause);  }};
+ FsmFactory.prototype.efExit  = function(psob, sob) { const x = psob.x; if(x) { x.call(this.taskInstance, psob.s, sob.s, this.perinst.id); }};
+ FsmFactory.prototype.efEnter = function(sob, psob, cause) { const e = sob.e;  if(e) { e.call(this.taskInstance, sob.s,  psob.s, this.perinst.id, cause);  }};
 
 
  //-----  privileged readonly methods (have access to state) ----------------------
@@ -309,7 +309,7 @@ FsmFactory.prototype.invalidSobSrc = function(sobsrc)
 
 function doPotential(arrayf, o)
 {
-  var r;
+  let r;
   // arrayf should always have at least one function
   for(var i = 0, len = arrayf.length; i < len; ++i) {
     r  = arrayf[i](o);
@@ -320,10 +320,10 @@ function doPotential(arrayf, o)
 
  FsmFactory.prototype.doTransition = function(cause)
  {
-    var ss = this.perinst.state;
-    var ns = this.perinst.nextState;
+    const ss = this.perinst.state;
+    const ns = this.perinst.nextState;
 
-    var multitimer =  this.perinst.multitimer;
+    const multitimer =  this.perinst.multitimer;
     if(multitimer) {
       //log('clearing multitimer {ss:%z, ns:%z}', ss,ns);
       multitimer.clear();   // cancel any open timer
@@ -348,11 +348,11 @@ function doPotential(arrayf, o)
  //----- input interface into state machine, send external events here
  FsmFactory.prototype.transduce = function(fsmevt, defOut, ignoreOut)
  {
-     var ss = this.perinst.state;
+     const ss = this.perinst.state;
 
      //... does current state accept, ignore, or reject the purported event?
 
-     var potential = ss.eventMap[fsmevt];     // recognized token?
+     const potential = ss.eventMap[fsmevt];     // recognized token?
 
      if(potential) {                          // has potential to change states or react
         this.perinst.nextState = doPotential(potential, this.perinst.inputs);    // evaluate to find nextState, and/or reaction
@@ -381,7 +381,7 @@ function doPotential(arrayf, o)
 
 fsm.invalidOptions = function invalidOptions(options)
 {
-  var base = fsmerr.BadOptions;
+  const base = fsmerr.BadOptions;
 
   if(!th.isObject(options))      return base + fsmerr.NotAnObject;
 
@@ -408,8 +408,8 @@ fsm.logical = function (inst, id) {
        // Logger.log('%s: setting input %s to %z', this.perinst.id, id, v);
         this.perinst.inputs[id] = v;
 
-        var cm =  this.perinst.state.conditionMap;  // lookup any state transitions that depend on this variable given current state
-        var potential = cm[id];                     // recognized token?
+        const cm =  this.perinst.state.conditionMap;  // lookup any state transitions that depend on this constiable given current state
+        const potential = cm[id];                     // recognized token?
 
         if (potential)
         {                                // has potential to change states or react
@@ -441,8 +441,8 @@ fsm.numeric = function (inst, id) {
     {
       //Logger.log('%s: setting input %s to %z', this.perinst.id, id, v);
       this.perinst.inputs[id] = v;
-      var cm = this.perinst.state.conditionMap;  // lookup any state transitions that depend on this variable given current state
-      var potential = cm[id];                     // recognized token?
+      const cm = this.perinst.state.conditionMap;  // lookup any state transitions that depend on this variable given current state
+      const potential = cm[id];                     // recognized token?
       if (potential)
       {                                // has potential to change states or react
         this.perinst.nextState = doPotential(potential, this.perinst.inputs);    // evaluate to find nextState, and/or reaction
@@ -461,7 +461,7 @@ fsm.numeric = function (inst, id) {
 
 FsmFactory.prototype.compileIo = function()
 {
-  var sio = this.graph.srcInputs;
+  const sio = this.graph.srcInputs;
   for(var prop in sio) {
     if(sio.hasOwnProperty(prop))
       sio[prop](this, prop);  // creates a setter for all the io variables specified (by invoking fsm.logical, fsm.numeric, etc)
@@ -477,12 +477,12 @@ FsmFactory.prototype.compileIo = function()
  */
 FsmFactory.prototype.compileState =  function(src, sobmap/*, options*/)
 {
-  var sob = {};
+  const sob = {};
 
   sob.s = src;                                  // assume string (assertions checked elsewhere)
   sob.$label$ = 'State:'+sob.s;
 
-  var proto = this.taskClass.prototype;
+  const proto = this.taskClass.prototype;
 
   var f;
   f     = proto['enter'+ sob.s] || proto.enter; // state-specific or generic entry
@@ -512,15 +512,15 @@ FsmFactory.prototype.compileState =  function(src, sobmap/*, options*/)
 
 FsmFactory.prototype.compileStates = function(srcStates, options)
 {
-  var len = srcStates.length;
-  var sobmap = {};
+  const len = srcStates.length;
+  const sobmap = {};
 
   if(!this.taskClass.prototype)
     throw new Error('taskClass is not a class: ' + funcname2(this.taskClass));
 
   for(var i = 0; i < len; ++i)
   {
-     var sob = this.compileState(srcStates[i], sobmap, options);
+     const sob = this.compileState(srcStates[i], sobmap, options);
      sobmap[sob.s] = sob;
   }
   return sobmap;
@@ -533,11 +533,11 @@ FsmFactory.prototype.parseAdviceBasedEvent = function(str)
 {
     assert(this.graph.eventSources, "fsm does not have any defined event sources to use with %s", str);
 
-    var parts = str.split('#');   //str.match(/(.*)_(.*)/);
+    const parts = str.split('#');   //str.match(/(.*)_(.*)/);
     assert(parts.length == 2, "event '%s' does not have the proper id_event format", str );
-    var id  = parts[0];
+    const id  = parts[0];
 
-    var classobj = this.graph.eventSources[id];
+    const classobj = this.graph.eventSources[id];
     assert(classobj, "there is no event source matching id %s", id);
 
     parts.push(classobj);  //parts[2] has the actual class in it
@@ -579,13 +579,13 @@ function MultiTimer(config, target)
 {
   this.fsmTarget = target;
   this.index = 0;
-  var self = this;
+  const self = this;
 
   // define in constructure since enclosure needed
   this.fire = function()
   {
     ++self.index;
-    var tcfg = self.config;
+    const tcfg = self.config;
     if(self.index < tcfg.times.length) {
       self.arm();
     }
@@ -625,7 +625,7 @@ MultiTimer.prototype =
 
 FsmFactory.prototype.compileTimerBasedTransition = function(tsrc, sob)
 {
-  var expires = tsrc.timer;
+  const expires = tsrc.timer;
 
   if(sob.timerConfig === undefined) {
     sob.timerConfig = new MultiTimerConfig(sob.s);
@@ -640,18 +640,18 @@ FsmFactory.prototype.compileTimerBasedTransition = function(tsrc, sob)
 
 FsmFactory.prototype.compileAdviceBasedTransition = function(tsrc)
 {
-    var advice = tsrc.before? 'before': 'after';
-    var token = tsrc[advice];
+    const advice = tsrc.before? 'before': 'after';
+    const token = tsrc[advice];
     
-    var parts = this.parseAdviceBasedEvent(token);
-    var method = parts[1];
-    var classObj = parts[2];
+    const parts = this.parseAdviceBasedEvent(token);
+    const method = parts[1];
+    const classObj = parts[2];
 
-    var priorAdvice = Asbestos.recordAdvice(classObj.prototype, method, advice);
+    const priorAdvice = Asbestos.recordAdvice(classObj.prototype, method, advice);
 
     if(!priorAdvice) {
 
-        var f = function() {
+        const f = function() {
             assert(this.fsmTarget, "no fsmTarget for event: '%s'", token);
             assert(this.fsmTarget.transduce, "invalid fsmTarget for event '%s'", token);
             this.fsmTarget.transduce(token);
@@ -675,16 +675,16 @@ function preferString(o, a, b)
 
 FsmFactory.prototype._visualizeStates = function(nodeNameMap, edges)
 {
-  var states = this.graph.srcStates;
-  var sm = this.graph.stateMap;
-  var nodes = ['startHere[shape=box]'];
+  const states = this.graph.srcStates;
+  const sm = this.graph.stateMap;
+  const nodes = ['startHere[shape=box]'];
   // use pair of maps to isolate terminal nodes
   var i;
 
 
   // generate strings for the nodes themselves
    for(i = 0; i < states.length; ++i) {
-         var st = states[i];
+         const st = states[i];
          if(st == this.graph.initialState) {
            edges.push(th.sprintf('startHere->n%d [style=dashed label="initialState" fontSize=10]', i ));
          }
@@ -704,9 +704,9 @@ FsmFactory.prototype._visualizeStates = function(nodeNameMap, edges)
 
 FsmFactory.prototype._visualizeTransitions = function(nodeNameMap, edges)
 {
-  var trans = this.graph.srcTransitions;
+  const trans = this.graph.srcTransitions;
    for(var i = 0; i < trans.length; ++i)  {
-      var tsrc = trans[i];
+      const tsrc = trans[i];
        var j, temp, states;
      if(tsrc.from == '*') {
         temp = cloneProperties(tsrc);
@@ -734,18 +734,18 @@ FsmFactory.prototype._visualizeTransitions = function(nodeNameMap, edges)
 FsmFactory.prototype._visualizeTransition = function(transition, nodeNameMap, edges, ephemeral)
 {
 
-    var event = preferString(transition, 'timer', 'evt');
+    let event = preferString(transition, 'timer', 'evt');
       if(th.isNumber(transition.timer)) {
          event = th.sprintf("%0.2f secs", event / 1000);
       }
       var cond  = preferString(transition, 'when','when');
       if(cond) {
-         var extraspace = event? ' ':'';    // do I add an extra space?
+         const extraspace = event? ' ':'';    // do I add an extra space?
          cond = extraspace + '['+cond+']';  // rendered with brackets by Harel fsm convention
       }
 
-      var from  = nodeNameMap[transition.from];
-      var to    = nodeNameMap[transition.to];
+      const from  = nodeNameMap[transition.from];
+      const to    = nodeNameMap[transition.to];
       if(ephemeral) {
         edges.push(th.sprintf('%s->%s [label="%s%s" color=grey]', from,to , event, cond ));
       } else {
@@ -756,28 +756,28 @@ FsmFactory.prototype._visualizeTransition = function(transition, nodeNameMap, ed
 
 FsmFactory.prototype.visualize = function()
 {
-  var nodeNameMap = {};
-  var edges = [];
-  var nodes = this._visualizeStates(nodeNameMap, edges);
+  const nodeNameMap = {};
+  const edges = [];
+  const nodes = this._visualizeStates(nodeNameMap, edges);
 
   this._visualizeTransitions(nodeNameMap, edges);
 
-  var prolog = "digraph {\n  rankdir=LR\n  compound=true\n  node[fontsize=14 width=.8  shape=circle style=\
+  const prolog = "digraph {\n  rankdir=LR\n  compound=true\n  node[fontsize=14 width=.8  shape=circle style=\
 filled color=cornsilk]\n  edge[color=blue fontsize=10]\n  ";
-var epilog = "\n} /* end digraph */";
+const epilog = "\n} /* end digraph */";
 
   return prolog + nodes.join("\n  ") + "\n  " + edges.join("\n  ") + epilog;
 };
 
 FsmFactory.prototype.compileConditionBasedTransition = function(tsrc)
 {
-  var expr = tsrc.when;
+  const expr = tsrc.when;
   assert(th.isString(expr) || th.isArray(expr), "condition must be a string or array of strings");
 
   // support arrays of expressions, even though they are equivalent to a set of ORs
   if(th.isArray(expr)) {
     for(var j = 0; j < expr.length; ++j){
-       var clone = cloneProperties(tsrc);
+       const clone = cloneProperties(tsrc);
        clone.when = expr[j];
        this.compileConditionBasedTransition(clone);
     }
@@ -785,15 +785,15 @@ FsmFactory.prototype.compileConditionBasedTransition = function(tsrc)
    }
 
 
-  var terms = expressionTerms(this.graph.srcInputs, tsrc.when);  // produce an array of terms used in expression
-  var sobMap = this.graph.stateMap;
-  var srcsob      = sobMap[tsrc.from];
-  var dstsob      = sobMap[tsrc.to];
-  var cm          = srcsob.conditionMap;
+  const terms = expressionTerms(this.graph.srcInputs, tsrc.when);  // produce an array of terms used in expression
+  const sobMap = this.graph.stateMap;
+  const srcsob      = sobMap[tsrc.from];
+  const dstsob      = sobMap[tsrc.to];
+  const cm          = srcsob.conditionMap;
 
-  var f = expressionToFunction(tsrc.when);
+  const f = expressionToFunction(tsrc.when);
 
-  var nextStateFinder = function(inputs)
+  const nextStateFinder = function(inputs)
     {
       if(f && f(inputs)) {
         return dstsob;
@@ -802,7 +802,7 @@ FsmFactory.prototype.compileConditionBasedTransition = function(tsrc)
     };
 
   for(var i = 0; i < terms.length; ++i) {
-    var term = terms[i];
+    const term = terms[i];
     // guarantee a place to hold condition evaluation function for each term in expression
     if(cm[term] == undefined) {
       cm[term] = [];
@@ -814,7 +814,7 @@ FsmFactory.prototype.compileConditionBasedTransition = function(tsrc)
 
 FsmFactory.prototype.compileEventBasedTransition = function(tsrc)
 {
-  var token       = tsrc.evt;
+  const token       = tsrc.evt;
 
   // recurse with copy of tsrc if event is an array rather than a string
   // would also work for arrays of arrays, etc.
@@ -823,7 +823,7 @@ FsmFactory.prototype.compileEventBasedTransition = function(tsrc)
 
   if(th.isArray(token)) {
    for(var i = 0; i < token.length; ++i){
-      var clone = cloneProperties(tsrc);
+      const clone = cloneProperties(tsrc);
       clone.evt = token[i];
       this.compileEventBasedTransition(clone);
    }
@@ -831,13 +831,13 @@ FsmFactory.prototype.compileEventBasedTransition = function(tsrc)
   }
 
 
-  var sobMap      = this.graph.stateMap;
-  var knownEvents = this.graph.knownEvents;
+  const sobMap      = this.graph.stateMap;
+  const knownEvents = this.graph.knownEvents;
 
-  var srcsob      = sobMap[tsrc.from];
-  var dstsob      = sobMap[tsrc.to];
-  var em          = srcsob.eventMap;
-  var solo        = srcsob.soloMap;
+  const srcsob      = sobMap[tsrc.from];
+  const dstsob      = sobMap[tsrc.to];
+  const em          = srcsob.eventMap;
+  const solo        = srcsob.soloMap;
 
   if(em[token] === undefined) {
       em[token] = [];   // an empty array
@@ -853,7 +853,7 @@ FsmFactory.prototype.compileEventBasedTransition = function(tsrc)
 
     expressionTerms(this.graph.srcInputs, tsrc.when);  // produce an array of terms used in expression
 
-    var f = expressionToFunction(tsrc.when);
+    const f = expressionToFunction(tsrc.when);
     em[token].$label$ = "transition from evt: '"+token+"'";
     em[token].push( function( inputs)
       {
@@ -890,21 +890,21 @@ FsmFactory.prototype.compileEventBasedTransition = function(tsrc)
 FsmFactory.prototype.compileTransitions = function()
 {
 
-  var self = this;
-  var graph = self.graph;
-  var sobMap = graph.stateMap;
+  const self = this;
+  const graph = self.graph;
+  const sobMap = graph.stateMap;
 
   // given a single transition spec,
-  var compile = function(tsrc) {
+  const compile = function(tsrc) {
 
 
     //---- the source and destination state objects must exist
     // XXX still need to support special '*' any state transitions
-    var srcsob = sobMap[tsrc.from];
-    var dstsob = sobMap[tsrc.to];
+    const srcsob = sobMap[tsrc.from];
+    const dstsob = sobMap[tsrc.to];
 
     Logger.log("compiling transition for state machine '%s' from %s to %s [%z]", graph.taskName, srcsob.s, dstsob.s, tsrc);
-    var missingerrpfx = 'fsm: bad transition spec--missing ';
+    const missingerrpfx = 'fsm: bad transition spec--missing ';
     assert(srcsob, "%s unknown 'from' state: '%s'", missingerrpfx, tsrc.from);
     assert(dstsob, "%s unknown 'to' state: '%s'", missingerrpfx, tsrc.to);
 
