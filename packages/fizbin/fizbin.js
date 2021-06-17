@@ -255,7 +255,7 @@ class FsmFactory {
       for (let i = 0; i < len; ++i) {
         const err = invalidEntry.call(this, arr[i]);
         if (err) {
-          return 'invalidArray index ' + i + 'error #' + err;
+          return `invalidArray index ${i} error # ${err}`;
         }
       }
     }
@@ -395,27 +395,27 @@ class FsmFactory {
     const sob = {};
 
     sob.s = src;                                  // assume string (assertions checked elsewhere)
-    sob.$label$ = 'State:' + sob.s;
+    sob.$label$ = `State:${sob.s}`;
 
     const proto = this.taskClass.prototype;
 
     let f;
-    f = proto['enter' + sob.s] || proto.enter; // state-specific or generic entry
+    f = proto[`enter${sob.s}`] || proto.enter; // state-specific or generic entry
     if (f) {
       sob.e = f;
     }
 
-    f = proto['exit' + sob.s] || proto.exit;  // state-specific or generic exit
+    f = proto[`exit${sob.s}`] || proto.exit;  // state-specific or generic exit
     if (f) {
       sob.x = f;
     }
 
-    f = proto['extra' + sob.s] || proto.extra; // state-specific or generic extra (unrecognized but legal tokens)
+    f = proto[`extra${sob.s}`] || proto.extra; // state-specific or generic extra (unrecognized but legal tokens)
     if (f) {
       sob.extra = f;
     }
 
-    f = proto['alien' + sob.s] || proto.alien; // state-specific or generic extra (unrecognized but legal tokens)
+    f = proto[`alien${sob.s}`] || proto.alien; // state-specific or generic extra (unrecognized but legal tokens)
     if (f) {
       sob.alien = f;
     }
@@ -427,7 +427,7 @@ class FsmFactory {
 
     // we cannot have two states with the same name
     if (sobmap[sob.s]) {
-      throw new Error('redundant state:' + sob.s);
+      throw new Error(`redundant state: ${sob.s}`);
     }
 
     return sob;
@@ -438,7 +438,7 @@ class FsmFactory {
     const sobmap = {};
 
     if (!this.taskClass.prototype)
-      throw new Error('taskClass is not a class: ' + funcname2(this.taskClass));
+      throw new Error('taskClass is not a class: ' + funcname2(this.taskClass));  // todo find funcname2 this is broken code
 
     for (let i = 0; i < len; ++i) {
       const sob = this.compileState(srcStates[i], sobmap, options);
@@ -696,7 +696,7 @@ FsmFactory.prototype._visualizeStates = function (nodeNameMap, edges) {
     }
 
     nodes.push(th.sprintf('n%d [%slabel = "%s"]', i, extra, st));
-    nodeNameMap[st] = 'n' + i;
+    nodeNameMap[st] = `n${i}`;
   }
   return nodes;
 };
