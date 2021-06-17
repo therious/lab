@@ -55,7 +55,7 @@ var fsmerr =
 {
    InvalidEnter:0
   ,InvalidExit:0
-  ,IvalidStateName:0
+  ,InvalidStateName:0
   ,InvalidSobSrc:0
   ,BadStateName:0
   ,SobIsNotObject:0
