@@ -27,7 +27,7 @@ function expressionTerms(knownTerms, expr)
   const foundTerms = expr.match(re); // return array of all terms found
   assert(th.isArray(foundTerms) && foundTerms.length >= 1, "transition expression %s must include at least one term", expr);
 
-  for(var i = 0; i < foundTerms.length; ++i)
+  for(let i = 0; i < foundTerms.length; ++i)
   {
     const term = foundTerms[i];
     assert(knownTerms[term], "term [%s] in expression [%s] must be defined in the io section", term, expr);
@@ -81,7 +81,7 @@ const fsmerr =
 
 function cloneProperties(o) {
   const r = {};
-  for(var p in o) {
+  for(let p in o) {
     if(o.hasOwnProperty(p))
       r[p]=o[p];
   }
@@ -90,7 +90,7 @@ function cloneProperties(o) {
 
 // create string values for all properties
 function propertize(o) {
-  for(var p in o) {
+  for(let p in o) {
     if(o.hasOwnProperty(p))
     {
       o[p]=p;
@@ -103,7 +103,7 @@ propertize(fsmerr);
 // convert all properties of object into an array of names
 function arrayize(o) {
   const arr=[];
-  for(var p in o) {
+  for(let p in o) {
     if(o.hasOwnProperty(p))
       arr.push(p);
   }
@@ -125,7 +125,7 @@ function FsmFactory(collaboratorclass)
   const initialState     =  config.start;
   const srcTransitions   = config.transitions;
   const options = config.options;
-  var error;
+  let error;
 
   this.taskClass = collaboratorclass;
 
@@ -157,7 +157,7 @@ function FsmFactory(collaboratorclass)
   // private variables aside from our parameters which are also used via closure
   graph.stateMap  = self.compileStates(srcStates, options);   // map version of states
   assert(this.graph.stateMap[initialState], 'invalid initial state name: %s', initialState);
- // for(var k in graph.stateMap) { graph.stateNames.push(graph.stateMap[k].s);}
+ // for(let k in graph.stateMap) { graph.stateNames.push(graph.stateMap[k].s);}
 
   this.compileIo();
 
@@ -184,8 +184,8 @@ FsmFactory.prototype.markTerminalNodes= function()
 
   const wayOutMap = {};
 
-  var i,j;
-  var st;
+  let i,j;
+  let st;
   for(i = 0; i < trans.length; ++i)
   {
      const transition = trans[i];
@@ -264,7 +264,7 @@ FsmFactory.prototype.invalidArray = function(arr, min, max, invalidEntry)
     return fsmerr.ArrayTooLarge;
 
   if(invalidEntry) { // is there an invalidation function
-    for(var i = 0; i < len; ++i)
+    for(let i = 0; i < len; ++i)
     {
       const err = invalidEntry.call(this,arr[i]);
       if(err) {
@@ -311,7 +311,7 @@ function doPotential(arrayf, o)
 {
   let r;
   // arrayf should always have at least one function
-  for(var i = 0, len = arrayf.length; i < len; ++i) {
+  for(let i = 0, len = arrayf.length; i < len; ++i) {
     r  = arrayf[i](o);
     if(r) { break; }
   }
@@ -462,7 +462,7 @@ fsm.numeric = function (inst, id) {
 FsmFactory.prototype.compileIo = function()
 {
   const sio = this.graph.srcInputs;
-  for(var prop in sio) {
+  for(let prop in sio) {
     if(sio.hasOwnProperty(prop))
       sio[prop](this, prop);  // creates a setter for all the io variables specified (by invoking fsm.logical, fsm.numeric, etc)
   }
@@ -484,7 +484,7 @@ FsmFactory.prototype.compileState =  function(src, sobmap/*, options*/)
 
   const proto = this.taskClass.prototype;
 
-  var f;
+  let f;
   f     = proto['enter'+ sob.s] || proto.enter; // state-specific or generic entry
   if(f) { sob.e = f; }
 
@@ -518,7 +518,7 @@ FsmFactory.prototype.compileStates = function(srcStates, options)
   if(!this.taskClass.prototype)
     throw new Error('taskClass is not a class: ' + funcname2(this.taskClass));
 
-  for(var i = 0; i < len; ++i)
+  for(let i = 0; i < len; ++i)
   {
      const sob = this.compileState(srcStates[i], sobmap, options);
      sobmap[sob.s] = sob;
@@ -679,7 +679,7 @@ FsmFactory.prototype._visualizeStates = function(nodeNameMap, edges)
   const sm = this.graph.stateMap;
   const nodes = ['startHere[shape=box]'];
   // use pair of maps to isolate terminal nodes
-  var i;
+  let i;
 
 
   // generate strings for the nodes themselves
@@ -688,7 +688,7 @@ FsmFactory.prototype._visualizeStates = function(nodeNameMap, edges)
          if(st == this.graph.initialState) {
            edges.push(th.sprintf('startHere->n%d [style=dashed label="initialState" fontSize=10]', i ));
          }
-         var extra = '';
+         let extra = '';
          if(st == this.perinst.state.s) {
             extra += 'color=palegreen ';
          }
@@ -705,9 +705,9 @@ FsmFactory.prototype._visualizeStates = function(nodeNameMap, edges)
 FsmFactory.prototype._visualizeTransitions = function(nodeNameMap, edges)
 {
   const trans = this.graph.srcTransitions;
-   for(var i = 0; i < trans.length; ++i)  {
+   for(let i = 0; i < trans.length; ++i)  {
       const tsrc = trans[i];
-       var j, temp, states;
+       let j, temp, states;
      if(tsrc.from == '*') {
         temp = cloneProperties(tsrc);
         states = this.graph.srcStates;
@@ -738,7 +738,7 @@ FsmFactory.prototype._visualizeTransition = function(transition, nodeNameMap, ed
       if(th.isNumber(transition.timer)) {
          event = th.sprintf("%0.2f secs", event / 1000);
       }
-      var cond  = preferString(transition, 'when','when');
+      let cond  = preferString(transition, 'when','when');
       if(cond) {
          const extraspace = event? ' ':'';    // do I add an extra space?
          cond = extraspace + '['+cond+']';  // rendered with brackets by Harel fsm convention
@@ -776,7 +776,7 @@ FsmFactory.prototype.compileConditionBasedTransition = function(tsrc)
 
   // support arrays of expressions, even though they are equivalent to a set of ORs
   if(th.isArray(expr)) {
-    for(var j = 0; j < expr.length; ++j){
+    for(let j = 0; j < expr.length; ++j){
        const clone = cloneProperties(tsrc);
        clone.when = expr[j];
        this.compileConditionBasedTransition(clone);
@@ -801,7 +801,7 @@ FsmFactory.prototype.compileConditionBasedTransition = function(tsrc)
       return null;
     };
 
-  for(var i = 0; i < terms.length; ++i) {
+  for(let i = 0; i < terms.length; ++i) {
     const term = terms[i];
     // guarantee a place to hold condition evaluation function for each term in expression
     if(cm[term] == undefined) {
@@ -822,7 +822,7 @@ FsmFactory.prototype.compileEventBasedTransition = function(tsrc)
   assert((th.isString(token) || th.isArray(token)), "events must be strings or array of strings");
 
   if(th.isArray(token)) {
-   for(var i = 0; i < token.length; ++i){
+   for(let i = 0; i < token.length; ++i){
       const clone = cloneProperties(tsrc);
       clone.evt = token[i];
       this.compileEventBasedTransition(clone);
@@ -941,7 +941,7 @@ FsmFactory.prototype.compileTransitions = function()
   th.iterateF(this.graph.srcTransitions,  // '*' to mean "all other states than destination"
       function(tsrc) {
 
-        var temp, states, i;
+        let temp, states, i;
         if(tsrc.from == '*') {
            temp = cloneProperties(tsrc);
            states = graph.srcStates;
@@ -966,7 +966,7 @@ FsmFactory.prototype.compileTransitions = function()
   );
 
   // now cleanup all the soloMaps
-  for(var state in sobMap) {
+  for(let state in sobMap) {
     if(sobMap.hasOwnProperty(state))
       delete sobMap[state].soloMap; // no longer need the soloMap, it was just built to detect compilation errors
   }
