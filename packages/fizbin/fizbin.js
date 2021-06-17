@@ -189,10 +189,10 @@ FsmFactory.prototype.markTerminalNodes= function()
   for(i = 0; i < trans.length; ++i)
   {
      const transition = trans[i];
-     if(transition.from == '*') {
+     if(transition.from === '*') {
        for(j = 0; j < states.length; ++j) {
          st = states[j];
-         if(transition.to != st) {
+         if(transition.to !== st) {
            wayOutMap[st] = 1; // there is a way out
          }
        }
@@ -534,7 +534,7 @@ FsmFactory.prototype.parseAdviceBasedEvent = function(str)
     assert(this.graph.eventSources, "fsm does not have any defined event sources to use with %s", str);
 
     const parts = str.split('#');   //str.match(/(.*)_(.*)/);
-    assert(parts.length == 2, "event '%s' does not have the proper id_event format", str );
+    assert(parts.length === 2, "event '%s' does not have the proper id_event format", str );
     const id  = parts[0];
 
     const classobj = this.graph.eventSources[id];
@@ -659,7 +659,7 @@ FsmFactory.prototype.compileAdviceBasedTransition = function(tsrc)
         // use foundation class Asbestos to add AOP type advice to generate event
         Asbestos[advice](classObj.prototype, method, f, true);
     } else {
-        assert(priorAdvice == advice, "only one type of advice allowed for event '%s'", method);
+        assert(priorAdvice === advice, "only one type of advice allowed for event '%s'", method);
     }
 
     // from here it is a straightforward event
@@ -685,11 +685,11 @@ FsmFactory.prototype._visualizeStates = function(nodeNameMap, edges)
   // generate strings for the nodes themselves
    for(i = 0; i < states.length; ++i) {
          const st = states[i];
-         if(st == this.graph.initialState) {
+         if(st === this.graph.initialState) {
            edges.push(th.sprintf('startHere->n%d [style=dashed label="initialState" fontSize=10]', i ));
          }
          let extra = '';
-         if(st == this.perinst.state.s) {
+         if(st === this.perinst.state.s) {
             extra += 'color=palegreen ';
          }
          if(sm[st].terminal) {
@@ -708,11 +708,11 @@ FsmFactory.prototype._visualizeTransitions = function(nodeNameMap, edges)
    for(let i = 0; i < trans.length; ++i)  {
       const tsrc = trans[i];
        let j, temp, states;
-     if(tsrc.from == '*') {
+     if(tsrc.from === '*') {
         temp = cloneProperties(tsrc);
         states = this.graph.srcStates;
        for(j = 0; j < states.length; ++j) {
-         if(tsrc.to != states[j]) {
+         if(tsrc.to !== states[j]) {
            temp.from = states[j];
            this._visualizeTransition(temp, nodeNameMap, edges, true);
          }
@@ -804,7 +804,7 @@ FsmFactory.prototype.compileConditionBasedTransition = function(tsrc)
   for(let i = 0; i < terms.length; ++i) {
     const term = terms[i];
     // guarantee a place to hold condition evaluation function for each term in expression
-    if(cm[term] == undefined) {
+    if(cm[term] === undefined) {
       cm[term] = [];
     }
     cm[term].push(nextStateFinder);
@@ -869,7 +869,7 @@ FsmFactory.prototype.compileEventBasedTransition = function(tsrc)
     assert(solo[token] === undefined,
         "can't have two unconditional transitions from state '%s' (event '%s') (the 2nd transition being to state: '%s')",
         srcsob.s,  token, dstsob.s);
-    assert(em[token].length == 0,
+    assert(em[token].length === 0,
         "can't specify an unconditional transition from state '%s' to state '%s' (event '%s'), having already specified an conditional transition triggered by same event",
         srcsob.s, dstsob.s, token);
     solo[token] = true;                  // prevent any more transitions from state via same event token
@@ -942,11 +942,11 @@ FsmFactory.prototype.compileTransitions = function()
       function(tsrc) {
 
         let temp, states, i;
-        if(tsrc.from == '*') {
+        if(tsrc.from === '*') {
            temp = cloneProperties(tsrc);
            states = graph.srcStates;
           for( i = 0; i < states.length; ++i) {
-            if(tsrc.to != states[i]) {
+            if(tsrc.to !== states[i]) {
               temp.from = states[i];
               compile(temp);
             }
@@ -964,6 +964,7 @@ FsmFactory.prototype.compileTransitions = function()
         }
       }
   );
+
 
   // now cleanup all the soloMaps
   for(let state in sobMap) {
