@@ -6,7 +6,7 @@ rankdir=LR;
 
 
 node [style = filled, fillcolor=green, shape = circle]
- g0; g1; g2; g3; g4; g5; g6; g7; g8; g9;
+g0; g1; g2; g3; g4; g5; g6; g7; g8; g9;
 g10;g11;g12;g13;g14;g15;g16;g17;g18;g19;
 g20;g21;g22;g23;g24;g25;g26;g27;g28;g29;
 g30;g31;g32;g33;g34;g35;g36;g37;g38;g39;
@@ -135,7 +135,7 @@ jsple [label="ENG Ch Jokyl Space Leader"];
 figaro [label="ENG AM CAN GER DUTC\nJokyl Bengal Figaro" style="filled,bold"];
 patr [label="Ch Patrick von Glückwald"];
 jsuperman [label="ENG AM Ch Jokyl Superman"];
-bskip [label="SO AFR Ch Bengal Skipper of Limebell"];
+bskip [label="SO AFR Ch Bengal Skipper of Limebell"];  /* parents found at https://dogs.pedigreeonline.com/bengal-skipper-of-limebell-Kid0h7eq/pedigree */
 topnot [label="Ch Hilltop's Rocky Top Notch"];
 hplay [label="Ch Hatdale's Playboy"];
 ltamer [label="Ch Studio Liontamer"];
@@ -229,6 +229,10 @@ cmonarq [label="Clonmel Monarque"];
 clonbed [label="Clonmel Bedrock"];
 jwiz [label="Jokyl Wizard"];
 bjringo [label="BlackJack's Ringo Star"];
+ddut  [label="Double Dutch of Clare"];
+envoy [label="Ballintobers Envoy for Jokyl 1996"];
+smguy [label="Jokyl Smart Guy"];
+voila [label="Ginger Voila of Stanstead"];
 yyy [label=""];
 yyy [label=""];
 
@@ -349,12 +353,21 @@ brlou [label="Hartill's Breezy Lou"];
 hlulo [label="Hartill's Lucy Louise "];
 apley [label="Taffy Apple of My Eye"];
 pict [label="Wyrewood Siccawei Pictorial "];
-airjen [label="Airedale Jenny"]
+airjen [label="Airedale Jenny"];
 clonres [label="Clonmel Reseda"];
 clonphi [label="Clonmel Philimes"];
 glwen [label="Gleeful Wendy"];
 ovita [label="Oak Grove Vitamin"];
-hotig [label="Jalynaire Hold On Tiger"]
+hotig [label="Jalynaire Hold On Tiger"];
+diad [label="Drakehall Diadem"];
+nbnice [label="Branded Naughty But Nice of Jokyl"];
+mlman [label="Midnight Lady of the Manor 1991"];
+spants [label="Jokyl Smartie Pants"];
+drock [label="Jokyl Dollyrocker"];
+kkat [label="Kentucky Katrina"];
+coco [label="Ballintober Coco 1991"];
+cwhis [label="Careless Whisper of Kenive"];
+bfrey [label="Bengal Freya"]
 xxx [label=""];
 xxx [label=""];
 xxx [label=""];
@@ -455,6 +468,7 @@ pupd [label="CH Huntwood's A Puppy For Dee"];
 wsabella [label="Ch Westmoor's Sabella"];
 wlook [label="AMCH Waggery's Look At Me 1984"];
 whello [label="AMCH Waggery's Hello It's Me 1980"];
+jeleg [label="ENG Ch Jokyl Elegance"];
 xxx [label=""];
 xxx [label=""];
 xxx [label=""];
@@ -470,6 +484,15 @@ p10;p11;p12;p13;p14;p15;p16;p17;p18;p19
 {kunite,afire}->jleap
 {yatas,jflash}->fdr
 {jwiz,ovita}->yatas
+nbnice->jwiz
+pant->nbnice
+mlman->nbnice
+voila->mlman
+cwhis->mlman
+diad->voila
+ddut->voila
+pant->envoy->jwiz
+coco->envoy
 {maxo,kbq}->kunite
 
 k3->dante
@@ -481,12 +504,16 @@ k8->sab
 k9->kris
 k10->sea
 p3->flor
-p4->pant
-
+spants->pant
+smguy->spants
+drock->spants
 
 {gats, rayna}->willow
 {mrbig, bsk}->rayna
-
+jsple->drock
+kkat->drock
+flam->smguy
+jeleg->smguy
 
 {prin,steel}->gats
 
@@ -678,7 +705,7 @@ mprom->hkex
 k21->jluck
 k22->nice
 {pant,xmas}->gdream
-k23->xmas
+k23->{ddut,diad}->xmas
 silkt->mprom
 k24->silkt
 dip->rejo
@@ -810,6 +837,7 @@ k56->lcher
 {check,cind}->{eben,wrind}
 {fere,wrind}->chor
 {lepr,bibi}->fere
+{kres,bfrey}->bibi
 {sabu,blulu}->wsab
 {excal,wrind}->well
 {grem,asyo}->excal
