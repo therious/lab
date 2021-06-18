@@ -7,6 +7,7 @@ const th = require('th-utils');
 const assert = th.assert;
 const Logger = th.Logger;
 const Asbestos = th.Asbestos;
+
 // take a variable number of arguments and prefer the first initialized one
 function preferString(o, a, b) {
   return o[a] ? o[a] : (o[b] ? o[b] : '');
@@ -107,6 +108,75 @@ function arrayize(o) {
   return arr;
 }
 
+
+// have to distinguish between the data that is shared between all MultiTimers (name, times) for a given state
+// and the timer instance (id, index, target)
+
+class MultiTimerConfig {
+  constructor(name) {
+    this.name = name;
+    this.times = [];   // array of timer fire delays
+    this.latest = 0;  // just tracks the latest time submitted so far to the timer, while timer is being built
+  }
+
+  add(expires) {
+    assert(th.isNumber(expires), "timer value '%s' must be a number", expires);
+    assert(expires > 0, "timer value'%s' must be greater than zero", expires);
+    assert(expires > this.latest, "timer value (%s) must exceed previous timer for same state (%s)", expires, this.latest);
+    this.times.push(expires - this.latest);
+    this.latest = expires;
+    return this.eventName(this.times.length);
+  }
+
+  eventName(arrayLength) {
+    return `${this.name}[${arrayLength - 1}]`;
+  }
+}
+
+class MultiTimer {
+  constructor(config, target) {
+    this.fsmTarget = target;
+    this.index = 0;
+    const self = this;
+
+    // define in constructure since enclosure needed
+    this.fire = function () {
+      ++self.index;
+      const tcfg = self.config;
+      if (self.index < tcfg.times.length) {
+        self.arm();
+      }
+
+      //log('timer fire configuration = %z', tcfg);
+      self.fsmTarget.transduce(tcfg.eventName(self.index));  // send event to state machine
+
+    };
+    this.reset(config);  // clears and rearms timer
+  }
+
+  clear() {
+    if (this.id) {
+      clearTimeout(this.id);
+    }
+    this.id = null;
+    this.index = 0;
+  }
+
+  reset(config) {
+    this.config = config;
+    //log('timer.reset(%z)', config);
+
+    // a minority of states have timer generated events, so config may be undefined
+    // then there is nothing to rearm, and timer awaits reset to a defined config
+    if (config) {
+      this.arm();
+    }
+  }
+
+  arm() {
+    this.id = setTimeout(this.fire, this.config.times[this.index]);
+  }
+}
 
 const fsm = {}; // create a new place holder for all the fsm datatypes
 
@@ -495,7 +565,7 @@ class FsmFactory {
 
     if (!priorAdvice) {
 
-      const f = function() {
+      const f = function () {
         assert(this.fsmTarget, "no fsmTarget for event: '%s'", token);
         assert(this.fsmTarget.transduce, "invalid fsmTarget for event '%s'", token);
         this.fsmTarget.transduce(token);
@@ -582,7 +652,7 @@ class FsmFactory {
 
     const from = nodeNameMap[transition.from];
     const to = nodeNameMap[transition.to];
-    const ephstr = ephemeral?' color=grey':'';
+    const ephstr = ephemeral ? ' color=grey' : '';
     edges.push(`${from}->${to} [label="${event}${cond}"${ephstr}]`);
 
   }
@@ -890,81 +960,6 @@ fsm.numeric = function (inst, id) {
     } // end if logical input is changing the current value
   };
 };
-
-//fsm.timer   = function (inst,e,id)      { assert(0, 'compileTimerInput:   ' +id);};
-
-
-// have to distinguish between the data that is shared between all MultiTimers (name, times) for a given state
-// and the timer instance (id, index, target)
-function MultiTimerConfig(name) {
-  this.name = name;
-  this.times = [];   // array of timer fire delays
-  this.latest = 0;  // just tracks the latest time submitted so far to the timer, while timer is being built
-}
-
-MultiTimerConfig.prototype = {
-  constructor: MultiTimerConfig
-  , add: function (expires) {
-    assert(th.isNumber(expires), "timer value '%s' must be a number", expires);
-    assert(expires > 0, "timer value'%s' must be greater than zero", expires);
-    assert(expires > this.latest, "timer value (%s) must exceed previous timer for same state (%s)", expires, this.latest);
-    this.times.push(expires - this.latest);
-    this.latest = expires;
-    return this.eventName(this.times.length);
-  }
-
-  , eventName: function (arrayLength) {
-    return this.name + "[" + (arrayLength - 1) + "]";
-  }
-
-};
-
-function MultiTimer(config, target) {
-  this.fsmTarget = target;
-  this.index = 0;
-  const self = this;
-
-  // define in constructure since enclosure needed
-  this.fire = function () {
-    ++self.index;
-    const tcfg = self.config;
-    if (self.index < tcfg.times.length) {
-      self.arm();
-    }
-
-    //log('timer fire configuration = %z', tcfg);
-    self.fsmTarget.transduce(tcfg.eventName(self.index));  // send event to state machine
-
-  };
-  this.reset(config);  // clears and rearms timer
-}
-
-MultiTimer.prototype =
-  {
-    constructor: MultiTimer
-
-    , clear: function () {
-      if (this.id) {
-        clearTimeout(this.id);
-      }
-      this.id = null;
-      this.index = 0;
-    }
-    , reset: function (config) {
-      this.config = config;
-      //log('timer.reset(%z)', config);
-
-      // a minority of states have timer generated events, so config may be undefined
-      // then there is nothing to rearm, and timer awaits reset to a defined config
-      if (config) {
-        this.arm();
-      }
-    }
-    , arm: function () {
-      this.id = setTimeout(this.fire, this.config.times[this.index]);
-    }
-  };
-
 
 
 exports.FsmFactory = FsmFactory;
