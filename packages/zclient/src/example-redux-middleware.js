@@ -1,4 +1,5 @@
 import axios from 'axios';
+import {reqIdGenerate} from "./reqIdGenerator";
 
 const middlestyle = `
     padding: 2px 8px;
@@ -51,6 +52,9 @@ export const getMiddleware = store => next => action => {
     const startsWithOms = aType.startsWith('oms');
     const isResponse = startsWithOms && aType.endsWith('Response');
 
+    reqIdGenerate();
+
+
     if(startsWithOms && !isResponse)
     {
         const rAction = aType+'Response';
@@ -67,13 +71,12 @@ export const getMiddleware = store => next => action => {
             case 'post':
                 axios.post(url, {...action.body}).then(responsef).catch(catchf);
                 break;
-
             case 'get':
+            default:
                 if(action.params)
                     axios.get(url, {params:action.params} ).then(responsef).catch(catchf);
                 else
                     axios.get(url).then(responsef).catch(catchf);
-                break;
         }
     }
 

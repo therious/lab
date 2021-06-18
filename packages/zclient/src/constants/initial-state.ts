@@ -1,5 +1,5 @@
 export const initialState = {
-    minisession: undefined,
+    minisession: Date.now(),
     acounter: 0,
     bcounter: 0,
     user: 'yoyo',
