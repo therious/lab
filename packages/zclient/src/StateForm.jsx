@@ -4,8 +4,8 @@ import styled from 'styled-components';
 
 const StateContent = styled.div`
   background-color: #fefefe;
-  margin:           15% auto; /* 15% from the top and centered */
-  padding:          20px;
+  margin:           10px auto; /* 15% from the top and centered */
+  padding:          10px;
   border:           1px solid #888;
   width:            80%;
 `;
@@ -32,6 +32,43 @@ const MachineName = styled.div`
   font-weight:      bold;
   ::before {content: "Machine: "}
 `;
+
+
+const ContextDiv = styled.dl`
+  width: 100%;
+  overflow: hidden;
+  background: #ff0;
+  padding: 0;
+  margin: 0
+`;
+const VarName = styled.dt`
+  color: darkred;
+  float: left;
+  width: 50%;
+  /* adjust the width; make sure the total of both is 100% */
+  background: #cc0;
+  padding: 0;
+  margin: 0
+
+`;
+
+const VarValue = styled.dd`
+  color: mediumslateblue;
+  float: left;
+  width: 50%;
+  /* adjust the width; make sure the total of both is 100% */
+  background: #dd0;
+  padding: 0;
+  margin: 0
+`;
+
+
+const ContextVars = ({context}) =>
+<dl>
+    {Object.entries(context).map(([k,v])=><><VarName>{k}</VarName><VarValue>{v}</VarValue></>)}
+</dl>;
+
+
 const extractEventTokens = (stConfig) => {
     const {states} = stConfig;
     const tokenSet = new Set();
@@ -43,16 +80,15 @@ const extractEventTokens = (stConfig) => {
 }
 export const  StateForm = ({stConfig}) => {
 
-    const {id:machineName,states} = stConfig;
+    const {id:machineName,states={},context={}} = stConfig;
 
     const stateList = Object.keys(states);
     const evtTokens = extractEventTokens(stConfig);
 
-    console.log(stConfig);
-
   return(
       <StateContent>
           <MachineName>{machineName}</MachineName>
+          <ContextVars context={context}/>
           <div>
             {stateList.map(stName=>(<StDiv>{stName}</StDiv>))}
           </div>
