@@ -4,7 +4,6 @@ import styled from 'styled-components';
 import {Ladom} from "./Ladom";
 import {MyGrid} from "./MyGrid";
 import {columnDefsMap} from "./xform/columndefs";
-import {toggleRight} from "./action-creators";
 
 const palette = {
       plum: '#4b54a1',
