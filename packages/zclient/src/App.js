@@ -4,6 +4,8 @@ import styled from 'styled-components';
 import {Ladom} from "./Ladom";
 import {MyGrid} from "./MyGrid";
 import {columnDefsMap} from "./xform/columndefs";
+import {StateForm} from "./StateForm";
+import {glassMachineConfig, securityLightConfig} from "./security-light";
 
 const palette = {
       plum: '#4b54a1',
@@ -115,6 +117,7 @@ const  App = props => {
    const columnDefs =  columnDefsMap[rowDataProp];
 
    console.info(`props for grid are ${rowDataProp}`, columnDefs, rowData);
+
    return  (
         <Layout left={left} right={right}>
             <Navbar>There is text here
@@ -127,6 +130,8 @@ const  App = props => {
 
             </Navbar>
             <Left>In left side bar?</Left>
+            <StateForm stConfig={securityLightConfig}/>
+            <StateForm stConfig={glassMachineConfig}/>
             <CenterBody><MyGrid rowData={rowData} columnDefs={columnDefs}/></CenterBody>
             <Right>In right sidebar?</Right>
             <Footer>Status stuff is over here</Footer>
