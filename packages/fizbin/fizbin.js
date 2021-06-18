@@ -586,25 +586,18 @@ class FsmFactory {
     const sm = this.graph.stateMap;
     const nodes = ['startHere[shape=box]'];
     // use pair of maps to isolate terminal nodes
-    let i;
-
-
     // generate strings for the nodes themselves
-    for (i = 0; i < states.length; ++i) {
+    for (let i = 0; i < states.length; ++i) {
       const st = states[i];
       if (st === this.graph.initialState) {
-        edges.push(th.sprintf('startHere->n%d [style=dashed label="initialState" fontSize=10]', i));
+        edges.push(`startHere->n${i} [style=dashed label="initialState" fontSize=10]`);
       }
-      let extra = '';
-      if (st === this.perinst.state.s) {
-        extra += 'color=palegreen ';
-      }
-      if (sm[st].terminal) {
-        extra += ' shape=box ';   // doublecircle seems not to work
-      }
+      const color = (st === this.perinst.state.s)? 'color=palegreen':'';
+      const shape = sm[st].terminal? 'shape=box':'';
 
-      nodes.push(th.sprintf('n%d [%slabel = "%s"]', i, extra, st));
-      nodeNameMap[st] = `n${i}`;
+      const noden = `n${i}`;
+      nodes.push(`${noden} [label = "${st}" ${color} ${shape}]`);
+      nodeNameMap[st] = noden;
     }
     return nodes;
   }
@@ -665,11 +658,18 @@ class FsmFactory {
 
     this._visualizeTransitions(nodeNameMap, edges);
 
-    const prolog = "digraph {\n  rankdir=LR\n  compound=true\n  node[fontsize=14 width=.8  shape=circle style=\
-filled color=cornsilk]\n  edge[color=blue fontsize=10]\n  ";
-    const epilog = "\n} /* end digraph */";
 
-    return prolog + nodes.join("\n  ") + "\n  " + edges.join("\n  ") + epilog;
+    return `
+digraph {
+  rankdir=LR
+  compound=true
+  node[fontsize=14 width=.8  shape=circle style=filled color=cornsilk]
+  edge[color=blue fontsize=10]
+  ${nodes.join("\n  ")}
+  ${edges.join("\n  ")}
+}   
+`;
+
   }
 
   compileConditionBasedTransition(tsrc) {
@@ -943,6 +943,7 @@ fsm.numeric = function (inst, id) {
     if (v === undefined)
       return this.perinst.inputs[id];   // its a getter if there is no variable passed in
 
+    // note that nothing can happen by setting a variable to a value it already has
     // note that nothing can happen by setting a variable to a value it already has
     if (v !== this.perinst.inputs[id]) {
       //Logger.log('%s: setting input %s to %z', this.perinst.id, id, v);
