@@ -19,7 +19,7 @@ let pNowMicros = 0;
 
 const reqIdRegEx = /#(?<origin>[0-9a-z]{11})\+(?<now>[0-9,.]{15})=(?<counter>[0-9,]{7})/;
 
-const ignoreRegex = /(\,|\.)/g;
+const ignoreRegex = /(,|\.)/g;
 
 const parseIgnore = s => {
     const ss = s.replace(ignoreRegex, '')
