@@ -131,9 +131,11 @@ const  App = props => {
             </Navbar>
             <Left>In left side bar?</Left>
             <CenterBody>
-                <StateForm stConfig={securityLightConfig}/>
-                <StateForm stConfig={glassMachineConfig}/>
-                <MyGrid rowData={rowData} columnDefs={columnDefs}/></CenterBody>
+                <StateForm expanded={true} stConfig={securityLightConfig}/>
+                <StateForm expanded={true} stConfig={glassMachineConfig}/>
+                {/*<MyGrid rowData={rowData} columnDefs={columnDefs}/>*/}
+
+            </CenterBody>
             <Right>In right sidebar?</Right>
             <Footer>Status stuff is over here</Footer>
         </Layout>

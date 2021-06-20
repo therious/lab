@@ -13,7 +13,9 @@ export const securityLightConfig = {
     id: 'seclight',
     // the initial context (extended state) of the statechart
     context: {
-        ambientDaylight: false
+        ambientDaylight: false,
+        temperature:20,
+        moreStuff: 'hello'
     },
     initial: 'Night',
     states: {

@@ -4,40 +4,27 @@ import styled, {css} from 'styled-components';
 const bdr = '1px solid black';
 
 const solidBorder =css`
-  margin-bottom: 0;
-  margin-right: 0;
-  margin-top: -1px;
-  margin-left: -1px;
   border: 1px solid black;
+`;
+
+const elementText = css`
+    font-size: 12px;
+    font-weight: normal;
+    color: black;
+    padding: 3px;
 `;
 
 const containerPadding =css`
  padding: 2px;
 `;
 
-const StateContent = styled.div`
+const FsmTag = styled.div`
+  overflow-y: hidden;
   background-color: #fefefe;
   margin:           10px auto; /* 15% from the top and centered */
   padding:          10px;
   border:           1px solid #888;
   width:            80%;
-`;
-
-const StDiv = styled.div`
-  ${solidBorder};
-  background-color: #cccccc;
-  padding:         10px;
-  border:           1px solid #333;
-  color: blue;
-  ::before {content: "St: "}
-`;
-
-const EvtDiv = styled.div`
-  ${solidBorder};
-  background-color: #abf;
-  padding:         10px;
-  color: green;
-  ::before {content: "Evt: "}
 `;
 
 const MachineName = styled.div`
@@ -48,41 +35,91 @@ const MachineName = styled.div`
 `;
 
 
-const ContextDiv = styled.dl`
+const StTag = styled.div`
+  ${solidBorder};
+  display: inline-grid;
+  background-color: white;
+  margin: 2px;
+  border:           1px solid #333;
+  border-radius: 50%;
+  min-width: 40px;
+  text-align:center ;
+  ${elementText};
+  padding: 4px;
+
+  color: blue;
+`;
+
+const EvtTag = styled.button`
+  ${solidBorder};
+  border-radius: 6px;
+
+  background-color: #abf;
+  :hover {
+    background-color: aqua; 
+  }
+  ${elementText};
+`;
+
+
+const ContextTag = styled.div`
   margin: 5px auto;
   ${containerPadding};
   overflow: hidden;
 `;
-const VarName = styled.dt`
-  ${solidBorder};
-  color: darkred;
-  float: left;
-  width: 50%;
-  /* adjust the width; make sure the total of both is 100% */
-  background: #cc0;
-  padding: 3px;
 
+const ContextPair = styled.span`
+    display:inline-block;
+    margin-right: 3px;
+
+  :not(:last-child) {
+      padding-right: 10px;
+      border-right: 1px dotted #aaa; 
+    }
 `;
 
-const VarValue = styled.dd`
+const ContextVarName = styled.span`
+  ${elementText};
+
+  color: black;
+  text-align: right;
+  display: inline;
+  width: 200px;
+  /* adjust the width; make sure the total of both is 100% */
+  ::after { content: ":"};
+`;
+
+const ContextVarValue = styled.span`
   ${solidBorder};
+  ${elementText};
+
+  display: inline-block;
   color: mediumslateblue;
-  float: left;
-  width: 50%;
+  min-width: 40px;
+  width: auto;
   /* adjust the width; make sure the total of both is 100% */
   background: white;
-  padding: 3px;
 `;
 
+const SectionLabel = styled.span`
+  display: inline-block;
+  min-width: 60px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: right;
+  margin-right:12px;
+  ::after {content: ":"}
+`
 const PaddedDiv = styled.div`
 ${containerPadding};
 `;
 
 
 const ContextVars = ({context}) =>
-<ContextDiv>
-    {Object.entries(context).map(([k,v])=><><VarName>{k}</VarName><VarValue>{v.toString()}</VarValue></>)}
-</ContextDiv>;
+<ContextTag>
+    <SectionLabel>Context</SectionLabel>
+    {Object.entries(context).map(([k,v])=><ContextPair><ContextVarName>{k}</ContextVarName><ContextVarValue>{v.toString()}</ContextVarValue></ContextPair>)}
+</ContextTag>;
 
 
 const extractEventTokens = (stConfig) => {
@@ -94,24 +131,29 @@ const extractEventTokens = (stConfig) => {
     })
     return [...tokenSet];
 }
-export const  StateForm = ({stConfig}) => {
+export const  StateForm = ({expanded, stConfig}) => {
 
     const {id:machineName,states={},context={}} = stConfig;
 
     const stateList = Object.keys(states);
     const evtTokens = extractEventTokens(stConfig);
 
+    const height = expanded? 'auto': '50px';
   return(
-      <StateContent>
+      <FsmTag style={{height}}>
           <MachineName>{machineName}</MachineName>
+          <hr/>
+          <PaddedDiv>
+              <SectionLabel>States</SectionLabel>
+            {stateList.map(stName=>(<StTag>{stName}</StTag>))}
+          </PaddedDiv>
+          <hr/>
           <ContextVars context={context}/>
-
+          <hr/>
           <PaddedDiv>
-            {stateList.map(stName=>(<StDiv>{stName}</StDiv>))}
+              <SectionLabel>Events</SectionLabel>
+              {evtTokens.map(evtName=>(<EvtTag>{evtName}</EvtTag>))}
           </PaddedDiv>
-          <PaddedDiv>
-            {evtTokens.map(evtName=>(<EvtDiv>{evtName}</EvtDiv>))}
-          </PaddedDiv>
-      </StateContent>
+      </FsmTag>
   )
 }
