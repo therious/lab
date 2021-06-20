@@ -1,6 +1,19 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, {css} from 'styled-components';
 
+const bdr = '1px solid black';
+
+const solidBorder =css`
+  margin-bottom: 0;
+  margin-right: 0;
+  margin-top: -1px;
+  margin-left: -1px;
+  border: 1px solid black;
+`;
+
+const containerPadding =css`
+ padding: 2px;
+`;
 
 const StateContent = styled.div`
   background-color: #fefefe;
@@ -11,6 +24,7 @@ const StateContent = styled.div`
 `;
 
 const StDiv = styled.div`
+  ${solidBorder};
   background-color: #cccccc;
   padding:         10px;
   border:           1px solid #333;
@@ -19,9 +33,9 @@ const StDiv = styled.div`
 `;
 
 const EvtDiv = styled.div`
+  ${solidBorder};
   background-color: #abf;
   padding:         10px;
-  border:           1px solid #333;
   color: green;
   ::before {content: "Evt: "}
 `;
@@ -35,38 +49,40 @@ const MachineName = styled.div`
 
 
 const ContextDiv = styled.dl`
-  width: 100%;
+  margin: 5px auto;
+  ${containerPadding};
   overflow: hidden;
-  background: #ff0;
-  padding: 0;
-  margin: 0
 `;
 const VarName = styled.dt`
+  ${solidBorder};
   color: darkred;
   float: left;
   width: 50%;
   /* adjust the width; make sure the total of both is 100% */
   background: #cc0;
-  padding: 0;
-  margin: 0
+  padding: 3px;
 
 `;
 
 const VarValue = styled.dd`
+  ${solidBorder};
   color: mediumslateblue;
   float: left;
   width: 50%;
   /* adjust the width; make sure the total of both is 100% */
-  background: #dd0;
-  padding: 0;
-  margin: 0
+  background: white;
+  padding: 3px;
+`;
+
+const PaddedDiv = styled.div`
+${containerPadding};
 `;
 
 
 const ContextVars = ({context}) =>
-<dl>
-    {Object.entries(context).map(([k,v])=><><VarName>{k}</VarName><VarValue>{v}</VarValue></>)}
-</dl>;
+<ContextDiv>
+    {Object.entries(context).map(([k,v])=><><VarName>{k}</VarName><VarValue>{v.toString()}</VarValue></>)}
+</ContextDiv>;
 
 
 const extractEventTokens = (stConfig) => {
@@ -89,12 +105,13 @@ export const  StateForm = ({stConfig}) => {
       <StateContent>
           <MachineName>{machineName}</MachineName>
           <ContextVars context={context}/>
-          <div>
+
+          <PaddedDiv>
             {stateList.map(stName=>(<StDiv>{stName}</StDiv>))}
-          </div>
-          <div>
+          </PaddedDiv>
+          <PaddedDiv>
             {evtTokens.map(evtName=>(<EvtDiv>{evtName}</EvtDiv>))}
-          </div>
+          </PaddedDiv>
       </StateContent>
   )
 }
