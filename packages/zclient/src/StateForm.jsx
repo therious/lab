@@ -1,8 +1,6 @@
 import React from 'react';
 import styled, {css} from 'styled-components';
 
-const bdr = '1px solid black';
-
 const solidBorder =css`
   border: 1px solid black;
 `;
