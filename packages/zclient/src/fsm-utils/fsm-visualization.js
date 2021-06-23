@@ -38,14 +38,14 @@ export function fizbinToPlantUml(config)
   const {name,start:initialState} = config;
 
 
-  const context = Object.entries(config.io).map(([k,v])=>`${k}: //${v}//`);
+  const context = Object.entries(config.io).map(([k,v])=>`${k}: ${v?'//'+v+'//':''}`);
 
   const contextStr = context?
 `
 note as Context  #FFFFFF
   **Context:**
-  --
-  ${context.join('\n')}
+--
+  ${context.join('\n  ')}
 end note
 
 `
