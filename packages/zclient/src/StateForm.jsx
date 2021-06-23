@@ -51,7 +51,7 @@ const StTag = styled.div`
 const EvtTag = styled.button`
   ${solidBorder};
   border-radius: 6px;
-
+  margin:2px;
   background-color: #abf;
   :hover {
     background-color: aqua; 
@@ -124,7 +124,7 @@ const extractEventTokens = (stConfig) => {
     const {states} = stConfig;
     const tokenSet = new Set();
 
-    Object.entries(states).forEach(([stName,sob])=>{
+    Object.values(states).forEach((sob)=>{
         Object.keys(sob.on || {}).forEach(k=>tokenSet.add(k))
     })
     return [...tokenSet];
