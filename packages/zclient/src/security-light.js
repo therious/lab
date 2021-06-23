@@ -1,5 +1,6 @@
 import { createMachine, assign } from 'xstate';
-import {fizbinToXState} from "./fizbin-utills";
+import {fizbinToXState} from "./fsm-utils/fizbin-utills";
+import {fizbinToPlantUml} from "./fsm-utils/fsm-visualization";
 // Action to increment the context amount
 const addWater = assign({
   amount: (context, event) => context.amount + 1
@@ -41,7 +42,16 @@ const x = {
 };
 
 
+const y = {
+
+
+
+
+}
+
+
 export const sec2 = fizbinToXState(x);
+export const securityLightPlantUml = fizbinToPlantUml(x);
 
 export const securityLightConfig = {
   id: 'seclight',

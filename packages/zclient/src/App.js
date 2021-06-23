@@ -5,7 +5,7 @@ import {Ladom} from "./Ladom";
 import {MyGrid} from "./MyGrid";
 import {columnDefsMap} from "./xform/columndefs";
 import {StateForm} from "./StateForm";
-import {glassMachineConfig, securityLightConfig, sec2} from "./security-light";
+import {glassMachineConfig, securityLightConfig, sec2, securityLightPlantUml} from "./security-light";
 
 const palette = {
       plum: '#4b54a1',
@@ -131,6 +131,7 @@ const  App = props => {
             </Navbar>
             <Left>In left side bar?</Left>
             <CenterBody>
+                <textarea>{securityLightPlantUml}</textarea>
                 <StateForm expanded={true} stConfig={securityLightConfig}/>
                 <StateForm expanded={true} stConfig={sec2}/>
 
