@@ -5,7 +5,9 @@ import {Ladom} from "./Ladom";
 import {MyGrid} from "./MyGrid";
 import {columnDefsMap} from "./xform/columndefs";
 import {StateForm} from "./StateForm";
-import {glassMachineConfig, securityLightConfig, sec2, securityLightPlantUml} from "./security-light";
+import { securityLightConfig, sec2, securityLightPlantUml} from "./fsm-configs/security-light";
+import {glassMachineConfig} from "./fsm-configs/glass";
+import {umlHeartbeatSubscription,heartbeatXStateConfig} from './fsm-configs/subscription';
 
 const palette = {
       plum: '#4b54a1',
@@ -131,11 +133,9 @@ const  App = props => {
             </Navbar>
             <Left>In left side bar?</Left>
             <CenterBody>
-                <textarea>{securityLightPlantUml}</textarea>
-                <StateForm expanded={true} stConfig={securityLightConfig}/>
-                <StateForm expanded={true} stConfig={sec2}/>
-
-
+                <textarea>{umlHeartbeatSubscription}</textarea>
+              <StateForm expanded={true} stConfig={heartbeatXStateConfig}/>
+              <StateForm expanded={true} stConfig={securityLightConfig}/>
               <StateForm expanded={true} stConfig={glassMachineConfig}/>
                 {/*<MyGrid rowData={rowData} columnDefs={columnDefs}/>*/}
 
