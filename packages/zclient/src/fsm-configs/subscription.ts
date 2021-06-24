@@ -1,4 +1,4 @@
-import {fizbinToXState} from "../fsm-utils/fizbin-utills";
+import {fizbinToXState} from "../fsm-utils/fizbin-utils";
 import {fizbinToPlantUml} from "../fsm-utils/fsm-visualization";
 
 /*
@@ -98,5 +98,20 @@ const x = {
   ,options:{}
 };
 
-export const heartbeatXStateConfig    = fizbinToXState(x);
-export const umlHeartbeatSubscription = fizbinToPlantUml(x);
+
+const restartUic = 'restartUic';
+const errorAlert = 'errorAlert';
+
+const behaviors = {
+  enter:                'logEntry',
+  exit:                 'logExit',
+  enterNoMemoryMaps:    errorAlert,
+  enterUnmapped:        errorAlert,
+  enterNoFile:          'retry subscribe after delay',
+  enterCorruptionError: restartUic,
+  enterToast:           restartUic,
+  enterMapped:          'subscribe'
+}
+
+export const heartbeatXStateConfig    = fizbinToXState(x,behaviors);
+export const umlHeartbeatSubscription = fizbinToPlantUml(x, behaviors);

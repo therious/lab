@@ -1,4 +1,4 @@
-import {splitTransitions} from "./fizbin-utills";
+import {normalizeBehavior, splitTransitions} from "./fizbin-utils";
 
 const fmtMillisAsSeconds = {minimumIntegerDigits: 1, maximumFractionDigits: 3, minimumFractionDigits:0};
 
@@ -32,15 +32,34 @@ function transitionToString({from, to, when:cond=null,evt=null,timer:after=null}
 
 }
 
-export function fizbinToPlantUml(config)
+function actionStringize(normalized)
 {
-  const transitions = splitTransitions(config).map(t=>transitionToString(t));
-  const {name,start:initialState} = config;
+  const results = [];
 
+  Object.entries(normalized).forEach(([k,v])=>{
+    v.enter.forEach(fn=>results.push(`state ${k} : enter / ${fn}`));
+    v.exit.forEach(fn=>results.push(`state ${k} : exit / ${fn}`));
+  });
+  return results;
+}
+export function fizbinToPlantUml(config, behavior={})
+{
+  const {transitions,terminal} = splitTransitions(config);
+
+  const terminalStrings = terminal.map(t=>`state ${t} #magenta`);
+  const normalized = normalizeBehavior(behavior, config);
+
+  const attributeStrings = actionStringize(normalized);
+
+
+
+  const transitionStrings = transitions.map(t=>transitionToString(t));
+  const {name,start:initialState} = config;
+  const crIndent = '\n  ';
 
   const context = Object.entries(config.io).map(([k,v])=>`${k}: ${v?'//'+v+'//':''}`);
 
-  const contextStr = context?
+  const contextStr = !context? '':
 `
 note as Context  #FFFFFF
   **Context:**
@@ -48,9 +67,7 @@ note as Context  #FFFFFF
   ${context.join('\n  ')}
 end note
 
-`
-    :'';
-
+`;
 
   return (
 `
@@ -65,9 +82,11 @@ skinparam State {
 
 state ${name} {
 ${contextStr}
+  ${   attributeStrings.join(crIndent)}
+  ${terminalStrings.join(crIndent)}
 
   [*]-->${initialState}
-  ${transitions.join("\n  ")}
+  ${transitionStrings.join(crIndent)}
 }  
 @enduml
 `

@@ -1,5 +1,5 @@
 import { createMachine, assign } from 'xstate';
-import {fizbinToXState} from "../fsm-utils/fizbin-utills";
+import {fizbinToXState} from "../fsm-utils/fizbin-utils";
 import {fizbinToPlantUml} from "../fsm-utils/fsm-visualization";
 
 const On='On', Day='Day',Night='Night';
