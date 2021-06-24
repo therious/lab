@@ -5,7 +5,7 @@ import { createStore, applyMiddleware, combineReducers, bindActionCreators} from
 import { Provider, connect } from 'react-redux'
 import { composeWithDevTools } from 'redux-devtools-extension';
 import {createSelector} from 'reselect';
-import {Config, ConfigSingleton} from "./utils/config";
+import {Config} from "./utils/config";
 import {Inflate} from "./utils/inflate";
 
 import './index.css';
@@ -18,7 +18,7 @@ import {getMiddleware, init} from "./example-redux-middleware";
 
 (async ()=>{
     try {
-        const config = await Config.fetch('/config/testconfig.json');
+        const config = await Config.fetch();
         console.warn(`config loaded`);
 
     } catch(e) {

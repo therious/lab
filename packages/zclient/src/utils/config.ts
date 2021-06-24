@@ -17,6 +17,7 @@ function deepFreeze(o:any)
 
 async function fetchConfig(url:string):Promise<any>
 {
+
   console.info(`fetching configuration at ${url}`);
   let result;
   try {
@@ -31,18 +32,22 @@ async function fetchConfig(url:string):Promise<any>
 
 export let promisedConfig:ConfigSingleton|null = null;
 
+
 export class Config
 {
-  public static async fetch(configUrl:string): Promise<ConfigSingleton>
+  public static queryParams(): Record<string, any>
   {
-    let configObject:ConfigSingleton;
-
-    configObject = await fetchConfig(configUrl);
-    configObject.queryParams = Object?.fromEntries([...new URLSearchParams(globalThis?.location?.search)]);
-
+    return Object?.fromEntries([...new URLSearchParams(globalThis?.location?.search)]);
+  }
+  public static async fetch(explictUrl?:string): Promise<ConfigSingleton>
+  {
+    const qp = this.queryParams();
+    const configUrl = explictUrl || `/config/${qp.config}`;
+    const configObject:ConfigSingleton = await fetchConfig(configUrl);
+    configObject.queryParams = qp;
+    deepFreeze(configObject);
     promisedConfig = configObject;
     return promisedConfig;
-
   }
   public static singleton():ConfigSingleton
   {
