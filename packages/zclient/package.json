@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "reflect-metadata": "^0.1.13",
     "xstate": "^4.20.0",
+    "tsyringe": "^4.5.0",
     "ag-grid-community": "~21.2.2",
     "ag-grid-enterprise": "~21.2.2",
     "ag-grid-react": "~21.2.2",

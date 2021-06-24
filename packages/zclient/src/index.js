@@ -1,9 +1,12 @@
+import "reflect-metadata";
 import React from 'react';
 import { render } from 'react-dom';
 import { createStore, applyMiddleware, combineReducers, bindActionCreators} from 'redux'
 import { Provider, connect } from 'react-redux'
 import { composeWithDevTools } from 'redux-devtools-extension';
 import {createSelector} from 'reselect';
+import {Config, ConfigSingleton} from "./utils/config";
+import {Inflate} from "./utils/inflate";
 
 import './index.css';
 import App from './App';
@@ -11,6 +14,17 @@ import {initialState} from "./constants/initial-state";
 import * as actionCreators from './action-creators'
 import * as funcs from './action-funcs';
 import {getMiddleware, init} from "./example-redux-middleware";
+
+
+(async ()=>{
+    try {
+        const config = await Config.fetch('/config/testconfig.json');
+        console.warn(`config loaded`);
+
+    } catch(e) {
+        console.error(e);
+    }
+})();
 
 const actionstyle = `
     padding: 2px 8px;
