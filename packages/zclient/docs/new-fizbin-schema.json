@@ -1,0 +1,68 @@
+{
+  "$id": "https://example.com/person.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fizbin Schema",
+  "required": ["name","states","context","transitions"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "start": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string"
+    },
+    "states": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "context": {
+      "type": "object"
+    },
+    "transitions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from","to"],
+        "properties": {
+          "from": {
+            "anyOf": [{
+              "type": "string"
+            },{
+              "type": "array", "items": {
+                "type": "string"
+              }
+            }
+            ]
+          },
+          "to": {
+            "type": "string"
+          },
+          "evt": {
+            "type": "string"
+          },
+          "cond": {
+            "type": "string"
+          },
+          "after": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "behavior" : {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^enter": {"type": "string"},
+        "^exit": {"type": "string"}
+      }
+    }
+  }
+}
