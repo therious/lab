@@ -51,7 +51,7 @@ export function fizbinToPlantUml(config, behavior={})
 
   const attributeStrings = actionStringize(normalized);
 
-
+  const targetString = config.target? `state ${config.target} #palegreen`:'';
 
   const transitionStrings = transitions.map(t=>transitionToString(t));
   const {name,start:initialState} = config;
@@ -80,11 +80,13 @@ skinparam State {
   BorderColor Black
 }
 
+
 state ${name} {
 ${contextStr}
   ${   attributeStrings.join(crIndent)}
   ${terminalStrings.join(crIndent)}
-
+  ${targetString}
+  
   [*]-->${initialState}
   ${transitionStrings.join(crIndent)}
 }  
