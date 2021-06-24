@@ -47,10 +47,30 @@ const Startup='Startup',
 const hbSecs = 10;
 const hbMax  = 3;
 
+/*
+  Aside from simple terminal vs non-terminal node visualization distinction
+  need a way to provide visualization hints for node to represent the following distinctions
+
+  terminal - no recovery
+  terminal - with automated action that restarts system
+  ideal state - one state is the target state, it should draw attention
+
+  stepping stone state        - all states leading in target state (if no target state then all states in line from start to terminal states)
+  ideal/target state          - one state we are trying to maintain
+  recoverable state           - not stepping, terminal, or ideal
+  terminal state, no recovery - a state that cannot fix itself
+  terminal rebooting state    - a terminal state in terms of machine, but one which restarts same machiune
+
+
+
+aside from automatically marking some states as terminal,
+need a way to hint to visualizations that some starts indicate an issue, other states are an ideal target state
+ */
 
 const x = {
   name:    'HeartbeatSubsciption',
-  start:   Startup                                     // initial state
+  start:   Startup,                                     // initial state
+  target: Current // optional target property designates one state to stand out as a target or ideal state
   ,states: [
     Startup,    // system startup, no environmental check
     NoMemoryMaps,
@@ -68,7 +88,9 @@ const x = {
   ,io: {
      fileKey:  '',
      fileName: '',
-     lastStatus: '' // was heartbeat indicating UIB was up, or down?
+     lastUicHb: -1,
+     lastUibHb: -1,
+     lastUibUpdate: -1,
   }
 
 
@@ -78,21 +100,20 @@ const x = {
   // and that all terms mentioned in condition expression (when) are declared as variables in the io section
   ,transitions:
     [
-      {from: Startup,     to: NoMemoryMaps,     evt: 'nomaps'      },
-      {from: Startup,     to: Unmapped,         evt: 'keymissing'  },
-      {from: Startup,     to: Mapped,           evt: 'keyfound'    },
-      {from: Mapped,      to: FileOpened,       evt: 'opensuccess' },
-      {from: Mapped,      to: NoFile,           evt: 'exception'   },
+      {from: Startup,         to: NoMemoryMaps,     evt: 'nomaps'      },
+      {from: Startup,         to: Unmapped,         evt: 'keymissing'  },
+      {from: Startup,         to: Mapped,           evt: 'keyfound'    },
+      {from: [Mapped,NoFile], to: FileOpened,       evt: 'opensuccess' },
+      {from: [Mapped,NoFile], to: NoFile,           evt: 'exception'   },
 
-      {from: FileOpened,  to: Current,          evt: 'blah'        },
-      {from: FileOpened,  to: CorruptionError,  evt: 'exception'   },
-      {from: Current,     to: CorruptionError,  evt: 'exception'   },
-      {from: Current,     to: Current,          evt: 'heartbeat'   },
-      {from: Current,     to: Current,          evt: 'heartbeat'   },
+      {from: FileOpened,      to: Current,          evt: 'blah'        },
+      {from: FileOpened,      to: CorruptionError,  evt: 'exception'   },
+      {from: Current,         to: CorruptionError,  evt: 'exception'   },
+      {from: Current,         to: Current,          evt: 'heartbeat'   },
 
-      {from: Current,     to: Stale,            timer: 1000 * hbSecs       },
-      {from: Stale,       to: Current,          evt: 'heartbeat'   },
-      {from: Stale,       to: Toast,            timer: 1000 * hbSecs * (hbMax-1) }
+      {from: Current,         to: Stale,            timer: 1000 * hbSecs },
+      {from: Stale,           to: Current,          evt: 'heartbeat'   },
+      {from: Stale,           to: Toast,            timer: 1000 * hbSecs * (hbMax-1) }
     ]
 
   ,options:{}
@@ -103,8 +124,8 @@ const restartUic = 'restartUic';
 const errorAlert = 'errorAlert';
 
 const behaviors = {
-  enter:                'logEntry',
-  exit:                 'logExit',
+  // enter:                'logEntry',
+  // exit:                 'logExit',
   enterNoMemoryMaps:    errorAlert,
   enterUnmapped:        errorAlert,
   enterNoFile:          'retry subscribe after delay',
