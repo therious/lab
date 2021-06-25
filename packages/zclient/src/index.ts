@@ -14,7 +14,7 @@ import {connectApp} from "./connect-app";
         const config = await Config.fetch('/config/hello.yaml');
         console.warn(`config loaded`);
         const inflate = new Inflate(config);
-        // const extendedConfig = inflate.intializeSequence('bootSequence');
+        const extendedConfig = inflate.intializeSequence('bootSequence');
 
         connectApp();
     } catch(e) {
