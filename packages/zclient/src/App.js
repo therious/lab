@@ -133,7 +133,7 @@ const  App = props => {
             </Navbar>
             <Left>In left side bar?</Left>
             <CenterBody>
-                <textarea>{umlHeartbeatSubscription}</textarea>
+              <textarea readOnly={true} value={umlHeartbeatSubscription}/>
               <StateForm expanded={true} stConfig={heartbeatXStateConfig}/>
               <StateForm expanded={true} stConfig={securityLightConfig}/>
               <StateForm expanded={true} stConfig={glassMachineConfig}/>
