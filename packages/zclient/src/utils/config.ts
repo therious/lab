@@ -1,5 +1,6 @@
 import axios from "axios";
-
+// @ts-ignore
+import jsYaml from "js-yaml";
 
 
 export interface ConfigSingleton {
@@ -22,7 +23,8 @@ async function fetchConfig(url:string):Promise<any>
   let result;
   try {
     result = (await axios.get(url)).data;
-
+    if(url.endsWith(".yaml"))
+      result = jsYaml.load(result);
   } catch(err) {
     console.error(`Could not load configuration from ${url}`, err);
     throw err;
