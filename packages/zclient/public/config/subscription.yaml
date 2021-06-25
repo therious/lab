@@ -1,0 +1,35 @@
+name: hello
+states:
+  - Startup
+  - NoMemoryMaps
+  - Unmapped
+  - Mapped
+  - NoFile
+  - FileOpened
+  - CorruptionError
+  - Current
+  - Stale
+  - Toast
+context:
+  fileKey:
+  filePath:
+  lastUicHb: -1
+  lastUibHb: -1
+  lastUibUpdate: -1
+transitions: [
+  {from: Startup,         to: NoMemoryMaps,     evt: 'nomaps'      },
+  {from: Startup,         to: Unmapped,         evt: 'keymissing'  },
+  {from: Startup,         to: Mapped,           evt: 'keyfound'    },
+  {from: [Mapped,NoFile], to: FileOpened,       evt: 'opensuccess' },
+  {from: [Mapped,NoFile], to: NoFile,           evt: 'exception'   },
+
+  {from: FileOpened,      to: Current,          evt: 'blah'        },
+  {from: FileOpened,      to: CorruptionError,  evt: 'exception'   },
+  {from: Current,         to: CorruptionError,  evt: 'exception'   },
+  {from: Current,         to: Current,          evt: 'heartbeat'   },
+
+  {from: Current,         to: Stale,            after: 10000       },
+  {from: Stale,           to: Current,          evt: 'heartbeat'   },
+  {from: Stale,           to: Toast,            after: 20000       }
+]
+

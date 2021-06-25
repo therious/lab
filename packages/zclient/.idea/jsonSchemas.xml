@@ -14,6 +14,24 @@
                   <Item>
                     <option name="path" value="docs/new-fizbin-schema.json" />
                   </Item>
+                  <Item>
+                    <option name="path" value="public/config/subscription.yaml" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+        <entry key="zconfig-schema">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="zconfig-schema" />
+              <option name="relativePathToSchema" value="docs/zconfig-schema.json" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value="public/config/hello.yaml" />
+                  </Item>
                 </list>
               </option>
             </SchemaInfo>
