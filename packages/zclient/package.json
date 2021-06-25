@@ -21,6 +21,8 @@
     "xstate": "^4.20.0"
   },
   "devDependencies": {
+    "babel-plugin-transform-typescript-metadata": "^0.3.2",
+    "@craco/craco": "^6.1.2",
     "redux-devtools-extension": "~2.13.8",
     "reselect": "~4.0.0",
     "typescript": "^4.3.4",
@@ -31,9 +33,9 @@
     "@types/styled-components": "~5.1.10"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom"
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test --env=jsdom"
   },
   "eslintConfig": {
     "extends": "react-app"
