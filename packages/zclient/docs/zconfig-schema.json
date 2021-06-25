@@ -1,0 +1,38 @@
+{
+  "$id": "http://therious.com/zconfig-schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Therious Configuration Schema",
+  "required": ["bootSequence", "sequence"],
+
+  "additionalProperties": true,
+  "definitions": {
+    "seq": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "stateMachine": {
+      "$ref": "http://therious.com/new-fizbin-schema.json"
+    }
+  },
+  "properties": {
+    "bootSequence": {
+      "$ref": "#/definitions/seq"
+    },
+    "sequence": {
+      "type": "object",
+      "children": {
+        "$ref": "#/definitions/seq"
+      }
+    },
+    "stateMachines": {
+      "type": "object",
+      "patternProperties": {
+        ".+": {
+          "$ref": "#/definitions/stateMachine"
+        }
+      }
+    }
+  }
+}
