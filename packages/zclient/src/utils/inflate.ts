@@ -12,7 +12,9 @@ export class Inflate {
 
   applyInitializers()
   {
-
+    Object.entries(this.config).forEach(([k,v])=>{
+      this.registerValue(k,v);
+    })
   }
 
   private registerValue(name:string, useValue:any)
