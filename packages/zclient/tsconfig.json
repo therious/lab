@@ -19,10 +19,14 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react"
+    "jsx": "react",
+    "noFallthroughCasesInSwitch": false
   },
   "exclude": [
-    "node_modules", "build","scripts","jest"
+    "node_modules",
+    "build",
+    "scripts",
+    "jest"
   ],
   "include": [
     "src"
