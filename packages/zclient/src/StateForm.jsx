@@ -116,7 +116,7 @@ ${containerPadding};
 const ContextVars = ({context}) =>
 <ContextTag>
     <SectionLabel>Context</SectionLabel>
-    {Object.entries(context).map(([k,v])=><ContextPair><ContextVarName>{k}</ContextVarName><ContextVarValue>{v.toString()}</ContextVarValue></ContextPair>)}
+    {Object.entries(context).map(([k,v],i)=><ContextPair key={i}><ContextVarName>{k}</ContextVarName><ContextVarValue>{v.toString()}</ContextVarValue></ContextPair>)}
 </ContextTag>;
 
 
@@ -143,14 +143,14 @@ export const  StateForm = ({expanded, stConfig}) => {
           <hr/>
           <PaddedDiv>
               <SectionLabel>States</SectionLabel>
-            {stateList.map(stName=>(<StTag>{stName}</StTag>))}
+            {stateList.map((stName,i)=>(<StTag key={i}>{stName}</StTag>))}
           </PaddedDiv>
           <hr/>
           <ContextVars context={context}/>
           <hr/>
           <PaddedDiv>
               <SectionLabel>Events</SectionLabel>
-              {evtTokens.map(evtName=>(<EvtTag>{evtName}</EvtTag>))}
+              {evtTokens.map((evtName,i)=>(<EvtTag key={i}>{evtName}</EvtTag>))}
           </PaddedDiv>
       </FsmTag>
   )
