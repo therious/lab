@@ -1,6 +1,9 @@
+TestClassParams:
+  alpha: 1
+  beta: 2
+
 bootSequence:
-  - abc
-  - def
+  - TestClass
 
 sequence:
   abc:
