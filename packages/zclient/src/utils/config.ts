@@ -47,7 +47,7 @@ export class Config
     const configUrl = explictUrl || `/config/${qp.config}`;
     const configObject:ConfigSingleton = await fetchConfig(configUrl);
     configObject.queryParams = qp;
-    deepFreeze(configObject);
+    // deepFreeze(configObject);
     promisedConfig = configObject;
     return promisedConfig;
   }
