@@ -1,11 +1,12 @@
 {
   "name": "fizbin",
-  "version": "0.7.6",
+  "version": "0.8.0",
   "description": "finite state machine",
   "keywords": [
-      "fsm", "state machine", "finite state machine"
+    "fsm",
+    "state machine",
+    "finite state machine"
   ],
-
   "main": "fizbin.js",
   "scripts": {
     "test": "mocha test/ --reporter spec"
@@ -21,7 +22,7 @@
   },
   "homepage": "https://github.com/therious/fizbin",
   "dependencies": {
-    "th-utils": "~0.1.1"
+    "th-utils": "^0.2.0"
   },
   "devDependencies": {
     "chai": "^3.0.0",
