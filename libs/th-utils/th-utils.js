@@ -251,7 +251,7 @@ const Sprintf =
   pad: function(str,ch,len)
   { let ps='';
     const l2 = Math.abs(len);
-    for(var i=0; i<l2; ++i) {ps+=ch;}
+    for(let i=0; i<l2; ++i) {ps+=ch;}
     return len>0?str+ps:ps+str;
   }
 
@@ -269,9 +269,9 @@ const Sprintf =
     }
     return rs;
   };
-  var iWidth = parseInt(width,10);
+  const iWidth = parseInt(width,10);
   if(width.charAt(0) === '0')
-  { var ec=0;
+  { let ec=0;
     if(flags.indexOf(' ')>=0 || flags.indexOf('+')>=0) {ec++;}
     if(rs.length<(iWidth-ec)){ rs = Sprintf.pad(rs,'0',rs.length-(iWidth-ec));}
     return pn(flags,arg,rs);
@@ -299,8 +299,8 @@ const Sprintf =
   { return Sprintf.converters.i(flags,width,precision,Math.abs(arg));
   }
   ,i:  function(flags,width,precision,arg)
-  { var iPrecision=parseInt(precision,10);
-    var rs = ((Math.abs(arg)).toString().split('.'))[0];
+  { const iPrecision=parseInt(precision,10);
+    let rs = ((Math.abs(arg)).toString().split('.'))[0];
     if(rs.length<iPrecision){ rs=Sprintf.pad(rs,' ',iPrecision - rs.length);}
     return Sprintf.processFlags(flags,width,rs,arg);
   }
@@ -308,16 +308,16 @@ const Sprintf =
   { return (Sprintf.converters.e(flags,width,precision,arg)).toUpperCase();
   }
   ,e:  function(flags,width,precision,arg)
-  { var iPrecision = parseInt(precision,10);
+  { let iPrecision = parseInt(precision,10);
     if(isNaN(iPrecision)) {iPrecision = 6;}
-    var rs = (Math.abs(arg)).toExponential(iPrecision);
+    let rs = (Math.abs(arg)).toExponential(iPrecision);
     if(rs.indexOf('.')<0 && flags.indexOf('#')>=0){ rs = rs.replace(/^(.*)(e.*)$/,'$1.$2');}
     return Sprintf.processFlags(flags,width,rs,arg);
   }
   ,f: function(flags,width,precision,arg)
-  { var iPrecision = parseInt(precision,10);
+  { let iPrecision = parseInt(precision,10);
     if(isNaN(iPrecision)) {iPrecision = 6;}
-    var rs = (Math.abs(arg)).toFixed(iPrecision);
+    let rs = (Math.abs(arg)).toFixed(iPrecision);
     if(rs.indexOf('.')<0 && flags.indexOf('#')>=0) {rs = rs + '.';}
     return Sprintf.processFlags(flags,width,rs,arg);
   }
@@ -325,24 +325,24 @@ const Sprintf =
   { return (Sprintf.converters.g(flags,width,precision,arg)).toUpperCase();
   }
   ,g: function(flags,width,precision,arg)
-  { var iPrecision = parseInt(precision,10);
-    var absArg = Math.abs(arg);
-    var rse = absArg.toExponential();
-    var rsf = absArg.toFixed(6);
+  { const iPrecision = parseInt(precision,10);
+    const absArg = Math.abs(arg);
+    let rse = absArg.toExponential();
+    let rsf = absArg.toFixed(6);
     if(!isNaN(iPrecision))
-    { var rsep = absArg.toExponential(iPrecision);
+    { const rsep = absArg.toExponential(iPrecision);
       rse = rsep.length < rse.length ? rsep : rse;
-      var rsfp = absArg.toFixed(iPrecision);
+      const rsfp = absArg.toFixed(iPrecision);
       rsf = rsfp.length < rsf.length ? rsfp : rsf;
     }
     if(rse.indexOf('.')<0 && flags.indexOf('#')>=0) {rse = rse.replace(/^(.*)(e.*)$/,'$1.$2');}
     if(rsf.indexOf('.')<0 && flags.indexOf('#')>=0) {rsf = rsf + '.';}
-    var rs = rse.length<rsf.length ? rse : rsf;
+    const rs = rse.length<rsf.length ? rse : rsf;
     return Sprintf.processFlags(flags,width,rs,arg);
   }
   ,o: function(flags,width,precision,arg)
-  { var iPrecision=parseInt(precision,10);
-    var rs = Math.round(Math.abs(arg)).toString(8);
+  { const iPrecision=parseInt(precision,10);
+    let rs = Math.round(Math.abs(arg)).toString(8);
     if(rs.length<iPrecision){ rs=Sprintf.pad(rs,' ',iPrecision - rs.length);}
     if(flags.indexOf('#')>=0) {rs='0'+rs;}
     return Sprintf.processFlags(flags,width,rs,arg);
@@ -351,23 +351,23 @@ const Sprintf =
   { return (Sprintf.converters.x(flags,width,precision,arg)).toUpperCase();
   }
   ,x: function(flags,width,precision,arg)
-  { var iPrecision=parseInt(precision,10);
+  { const iPrecision=parseInt(precision,10);
     arg = Math.abs(arg);
-    var rs = Math.round(arg).toString(16);
+    let rs = Math.round(arg).toString(16);
     if(rs.length<iPrecision) {rs=Sprintf.pad(rs,' ',iPrecision - rs.length);}
     if(flags.indexOf('#')>=0) {rs='0x'+rs;}
     return Sprintf.processFlags(flags,width,rs,arg);
   }
   ,s: function(flags,width,precision,arg)
-  { var iPrecision=parseInt(precision,10);
-    var rs = arg;
+  { const iPrecision=parseInt(precision,10);
+    let rs = arg;
     if(rs.length > iPrecision){ rs = rs.substring(0,iPrecision);}
     return Sprintf.processFlags(flags,width,rs,0);
   }
   ,z: function(flags,width,precision,arg)
   {
-    var iPrecision=parseInt(precision,10);
-    var rs = serialize(arg);
+    const iPrecision=parseInt(precision,10);
+    let rs = serialize(arg);
     if(rs.length > iPrecision) {rs = rs.substring(0,iPrecision);}
     return Sprintf.processFlags(flags,width,rs,0);
   }
@@ -380,12 +380,12 @@ function sprintf(fstring) {
       throw new Error("sprintf(fmtstr): fmtstr not a string");
     }
     try {
-      var farr = fstring.split('%');
-      var retstr = farr[0];
-      var fpRE = /^([-+ #]*)(\d*)\.?(\d*)([cdieEfFgGosuxXz])(.*)$/;
-      var fps;
+      const farr = fstring.split('%');
+      let retstr = farr[0];
+      const fpRE = /^([-+ #]*)(\d*)\.?(\d*)([cdieEfFgGosuxXz])(.*)$/;
+      let fps;
 
-      for (var i = 1; i < farr.length; i++) {
+      for (let i = 1; i < farr.length; i++) {
         fps = fpRE.exec(farr[i]);
         if (!fps) {
           continue;
@@ -416,9 +416,9 @@ function sprintf(fstring) {
  */
 function extractFuncName(o)
 {
-  var s = o.toString();  // just incase it isn't already a string
-  var re   = /^\s*function\s+([A-Za-z0-9_]+\s*\([^)]*\))/;
-  var anon = /^\s*function\s*(\([^)]*\))/;
+  const s = o.toString();  // just incase it isn't already a string
+  const re   = /^\s*function\s+([A-Za-z0-9_]+\s*\([^)]*\))/;
+  const anon = /^\s*function\s*(\([^)]*\))/;
   if(re.test(s)) {
     return re.exec(s)[1];
   } else if(anon.test(s)) {
@@ -433,7 +433,7 @@ function iterateF(p, f)
 {
   if(p !== undefined){
     if(p.splice) { //p.constructor === Array) {
-      for(var i = 0, len = p.length; i < len; ++i) {
+      for(let i = 0, len = p.length; i < len; ++i) {
         f(p[i]);
       }
     } else {
@@ -445,10 +445,10 @@ function iterateF(p, f)
 // iterate F with a break after first function to return something other than undefined
 function iterateFB(p, f)
 {
-  var r;
+  let r;
   if(p !== undefined){
     if(p.splice) { //if(p.constructor === Array) {
-      for(var i = 0, len = p.length; i < len; ++i) {
+      for(let i = 0, len = p.length; i < len; ++i) {
         r = f(p[i]);
         if(r !== undefined) {break;}
       }
@@ -462,11 +462,11 @@ function iterateFB(p, f)
 
 function stacktrace() {
 
-  var stack = [];
-  var text = [];
+  const stack = [];
+  const text = [];
 
-  var t = arguments.callee.caller;
-  var i = 0;
+  let t = arguments.callee.caller;
+  let i = 0;
 
   do  {
     if(t) {
@@ -491,11 +491,11 @@ function stacktrace() {
 function assert(expr, more)
 {
   if(!expr) {
-    var trace = stacktrace(arguments.callee.caller);
-    var details = '';
+    const trace = stacktrace(arguments.callee.caller);
+    let details = '';
     if(more) {
-      var args = [];
-      for(var i = 1; i < arguments.length; ++i)
+      const args = [];
+      for(let i = 1; i < arguments.length; ++i)
         args.push(arguments[i]);
 
       details = sprintf.apply(this, args);     // 'this' used to read 'window'
@@ -508,7 +508,7 @@ function assert(expr, more)
 
 //========== minimal logger functionality, just maps to modern console.log ======
 
-var Logger = new function()
+const Logger = new function()
 {
   this.ts = true; //??? try this
   this.start = new Date();
@@ -536,8 +536,8 @@ var Logger = new function()
 
   this.dump = function(o)
   {
-    var str = '';
-    var sepstr =  "\n";
+    let str = '';
+    const sepstr =  "\n";
     str += 'object dump of type:' + typename(o) + sepstr;
 
     for (let i in o)
@@ -559,7 +559,7 @@ var Logger = new function()
  AOPAdvice.before(Foo, print, func);
  should be more like:
 
- var advice =
+ const advice =
  {
  before:
  {
@@ -582,7 +582,7 @@ var Logger = new function()
  */
 
 // aspect system
-var Asbestos = {
+const Asbestos = {
 
   // force existence of an asbestos property
   // the purpose of recordAdvice is only to know whether advice has already been run once (and what type)
@@ -605,7 +605,7 @@ var Asbestos = {
   },
 
   before: function(o, method, bf) {
-    var orig = o[method];
+    const orig = o[method];
     assert(orig, "Asbestos cannot find method %s to add advice", method);
 
     o[method] = function() {
@@ -615,10 +615,10 @@ var Asbestos = {
   }, // end around
 
   after: function(o, method, af) {
-    var orig = o[method];
+    const orig = o[method];
     assert(orig, "Asbestos cannot find method %s to add advice", method);
     o[method] = function() {
-      var result = orig.apply(this,arguments); // what if it throws an exception, what is good advice semantics
+      const result = orig.apply(this,arguments); // what if it throws an exception, what is good advice semantics
       af.apply(this, arguments); // perform the after advice
       return result; // cannot tamper with result
     };
