@@ -1,6 +1,6 @@
 {
   "name": "fizbin",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "finite state machine",
   "keywords": [
     "fsm",
@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/therious/fizbin",
   "dependencies": {
-    "th-utils": "^0.2.1"
+    "th-utils": "^0.2.2"
   },
   "devDependencies": {
     "chai": "^3.0.0",
