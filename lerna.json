@@ -1,7 +1,7 @@
 {
   "packages": [
-    "packages/*",
-    "apps/*"
+    "apps/*",
+    "libs/*"
   ],
   "version": "independent",
   "command": {
