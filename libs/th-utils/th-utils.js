@@ -67,17 +67,17 @@ function nodeIdentity(node)
     desc += node.tagName;
   }
   if(node.id) {
-    desc += ' id="'  + node.id + '"';
+    desc += ` id="${node.id}"`;
   }
   if(node.className) {
-    desc += ' class="' + node.className + '"';
+    desc += ` class="${node.className}"`;
   }
   desc += '/>';
   if(desc.length > 3)         { return desc;    }
   if(node === document)       { return '(html)';}
   if(node === document.body)  { return '(body)';}
   if(node === document.header){ return '(head)';}
-  return '(type=' + node.nodeType+')';
+  return `(type=${node.nodeType})`;
 }
 
 function serialized(arg) {
@@ -96,7 +96,8 @@ function serialized(arg) {
       case 'object':
         if(arg) {
           if(arg.nodeType){
-            return '"*' + nodeIdentity(arg) + '*"' ;}
+            return `"*${nodeIdentity(arg)}*"`;
+          }
 
           if (arg.splice) {
             o.push('[');
@@ -205,7 +206,7 @@ function failNil(val, msg) { if(!val) { throw new Error(msg + failContext()); }}
 function failType(val, expected) {
   const actual = typename(val);
   if(actual !== expected) {
-    throw new Error('Typecheck Error. Expected: ' + expected   + ' Actual: ' + actual + '.' + failContext());
+    throw new Error(`Typecheck Error. Expected: ${expected} Actual: ${actual}.${failContext()}`);
   }
 }
 
@@ -501,7 +502,7 @@ function assert(expr, more)
       details = sprintf.apply(this, args);     // 'this' used to read 'window'
     }
 
-    throw new Error('assertion violation: ' + details + '. \n'+ trace);
+    throw new Error(`assertion violation: ${details}. \n ${trace}`);
   }
 
 }
@@ -515,9 +516,10 @@ const Logger = new function()
 
   this.loguf = function(str /*, logclass*/)
   {
-    if (this.ts)
-      str = '' + (new Date() - this.start) + ':' + str;
-
+    if (this.ts) {
+      const t = new Date() - this.start;
+      str = `${t}:${str}`;
+    }
 
     console.log.call(console.log, str);
   };
@@ -536,16 +538,15 @@ const Logger = new function()
 
   this.dump = function(o)
   {
-    let str = '';
     const sepstr =  "\n";
-    str += 'object dump of type:' + typename(o) + sepstr;
+
+    let str = `object dump of type: ${typename(o)}${sepstr}`;
 
     for (let i in o)
     {
       if (!isFunction(o[i]))
       {
-        str += '{type: ' + typename(o[i]) + '} ';
-        str += (i + ': ' + o[i] + sepstr);
+        str += `{type: ${typename(o[i])}} ${i}: ${o[i]}${sepstr}`;
       }
     }
     this.log(str);
