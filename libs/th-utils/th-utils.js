@@ -27,14 +27,14 @@ function inherits(o) {
  * @returns string with the Classname where it can be determined
  */
 
-var $classRegEx = /^\s*function\s+([A-Za-z0-9_]+)/;
+const $classRegEx = /^\s*function\s+([A-Za-z0-9_]+)/;
 function classname(o)
 {
-  var ctor = null;
+  let ctor = null;
 
   if(o && o.constructor) {ctor = o.constructor;}
   if(!ctor)              {return "~NotAClass~"; }
-  var s = ctor.toString();
+  const s = ctor.toString();
 
   if($classRegEx.test(s)) {
     return $classRegEx.exec(s)[1];
@@ -50,19 +50,19 @@ function classname(o)
  */
 function typename(x)
 {
-  var t=typeof(x);            // try typeof first
-  if(t != 'object'){ return t;} // if not generic, use it
+  const t=typeof(x);            // try typeof first
+  if(t !== 'object'){ return t;} // if not generic, use it
   return classname(x);        // try classname
 }
 
 //------------------------------------------------------------------------------
-var $jsident = new RegExp("^[A-Za-z][A-Za-z0-9_]*$", '');
-var $serdepth = 0;
+const $jsident = new RegExp("^[A-Za-z][A-Za-z0-9_]*$", '');
+let $serdepth = 0;
 
 // return a string identifying node based on id, if available, or certain famous nodes
 function nodeIdentity(node)
 {
-  var desc = '<';
+  let desc = '<';
   if(node.tagName){
     desc += node.tagName;
   }
@@ -81,17 +81,17 @@ function nodeIdentity(node)
 }
 
 function serialized(arg) {
-  var ret = '"*default*"';
+  let ret = '"*default*"';
   try {
 
     if(++$serdepth > 6) {
       return '"*recurse*"';
     }
 
-    var i, v;
-    var o = [];
+    let i, v;
+    const o = [];
 
-    var argt = typeof arg;
+    const argt = typeof arg;
     switch (argt) {
       case 'object':
         if(arg) {
@@ -102,7 +102,7 @@ function serialized(arg) {
             o.push('[');
             for (i = 0; i < arg.length; ++i) {
               v = serialized(arg[i]);
-              if (v !== undefined && v != '"function"') {
+              if (v !== undefined && v !== '"function"') {
                 o.push(v);
               }
               o.push(',');
@@ -166,7 +166,7 @@ function serialize(arg) {
  */
 function deserialize(s)
 {
-  var result;
+  let result;
   return eval("result = " + s);
 }
 
@@ -177,10 +177,10 @@ function deserialize(s)
 // has no net effect if function named was already an instance function
 function instantize(obj, methodArray)
 {
-  var undone = [];
-  var f;
-  for(var i = 0, len = methodArray.length; i < len; ++i) {
-    var m = methodArray[i];
+  const undone = [];
+  let f;
+  for(let i = 0, len = methodArray.length; i < len; ++i) {
+    const m = methodArray[i];
     f = obj[m];
     if(f) { // SIC single =
       obj[m] = f;
@@ -194,7 +194,7 @@ function instantize(obj, methodArray)
 
 // to extract the function name from the resulting code.
 function funcname(f) {
-  var s = f.toString().match(/function (\w*)/)[1];
+  const s = f.toString().match(/function (\w*)/)[1];
   if ((s === null) || (s.length === 0)){ return "~anonymous~";}
   return s;
 }
@@ -203,8 +203,8 @@ function funcname(f) {
 function failContext() { return " [Failure context-- window: '" + self.name + "', location: '" + self.location + "']"; }
 function failNil(val, msg) { if(!val) { throw new Error(msg + failContext()); }}
 function failType(val, expected) {
-  var actual = typename(val);
-  if(actual != expected) {
+  const actual = typename(val);
+  if(actual !== expected) {
     throw new Error('Typecheck Error. Expected: ' + expected   + ' Actual: ' + actual + '.' + failContext());
   }
 }
@@ -212,13 +212,13 @@ function failType(val, expected) {
 // example exists(window, 'gfi.gui.Message.add') tests whole property chain safely
 function exists(root, s, alt)
 {
-  var chain = s.split(/\./);
+  const chain = s.split(/\./);
   alt = alt || null;
-  var p = root;
-  var len = chain.length;
+  let p = root;
+  const len = chain.length;
 
-  for(var i= 0; i< len; ++i) {
-    var t = p? p[chain[i]]: undefined;
+  for(let i= 0; i< len; ++i) {
+    const t = p? p[chain[i]]: undefined;
     if(t === undefined) // property non existant
       return alt;
     p = t;
@@ -246,18 +246,18 @@ String.prototype.trim=function()
 
 
 //------------------------------------------------------------------------------
-var Sprintf =
+const Sprintf =
 {
   pad: function(str,ch,len)
-  { var ps='';
-    var l2 = Math.abs(len);
+  { let ps='';
+    const l2 = Math.abs(len);
     for(var i=0; i<l2; ++i) {ps+=ch;}
     return len>0?str+ps:ps+str;
   }
 
   ,processFlags: function(flags,width,rs,arg)
 {
-  var pn = function(flags,arg,rs) {
+  const pn = function(flags,arg,rs) {
     if(arg>=0){
       if(flags.indexOf(' ')>=0){
         rs = ' ' + rs;
@@ -270,7 +270,7 @@ var Sprintf =
     return rs;
   };
   var iWidth = parseInt(width,10);
-  if(width.charAt(0) == '0')
+  if(width.charAt(0) === '0')
   { var ec=0;
     if(flags.indexOf(' ')>=0 || flags.indexOf('+')>=0) {ec++;}
     if(rs.length<(iWidth-ec)){ rs = Sprintf.pad(rs,'0',rs.length-(iWidth-ec));}
@@ -471,7 +471,7 @@ function stacktrace() {
   do  {
     if(t) {
       // prevent cycles
-      if(iterateFB(stack, function(p) {if(p == t)return true;})) {
+      if(iterateFB(stack, function(p) {if(p === t)return true;})) {
         break;
       }
       stack.push(t);
@@ -540,7 +540,7 @@ var Logger = new function()
     var sepstr =  "\n";
     str += 'object dump of type:' + typename(o) + sepstr;
 
-    for (var i in o)
+    for (let i in o)
     {
       if (!isFunction(o[i]))
       {
@@ -628,16 +628,15 @@ var Asbestos = {
   advise: function(o, advice)
   {
     o = o.prototype? o.prototype: o;
-    var method;
 
     if(advice.before) {
-      for(method in advice.before)
+      for(let method in advice.before)
       {
         this.before(o, method, advice.before[method]);
       }
     }
     if(advice.after) {
-      for(method in advice.after)
+      for(let method in advice.after)
       {
         this.after(o, method, advice.after[method]);
       }
