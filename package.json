@@ -9,7 +9,11 @@
     "craco-babel-loader": "^0.1.4"
   },
   "scripts": {
-    "start": "lerna exec --scope @therious/zclient -- npm start"
+    "start": "lerna exec --scope @therious/zclient -- yarn start"
   },
-  "workspaces": [ "libs/*", "apps/*"]
+  "workspaces": {
+    "packages": [ "libs/*", "apps/*"],
+    "nohoist": []
+  }
+
 }

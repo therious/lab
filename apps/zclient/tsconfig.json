@@ -31,9 +31,10 @@
   "include": [
     "src"
   ],
-  "baseUrl": ".",
+  "baseUrl": "./",
   "paths": {
-    "@therious/fizbin": "../libs/fizbin",
-    "@therious/th-utils": "../libs/th-utils"
+    "@therious/fizbin": "../../libs/fizbin",
+    "@therious/th-utils": "../../libs/th-utils",
+    "@therious/boot": "../../libs/boot/src"
   }
 }
