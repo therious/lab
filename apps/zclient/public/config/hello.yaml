@@ -16,7 +16,6 @@ sequence:
 tokens:
   - stateMachines.subscription
   - stateMachines.subscription.states
-  - non.existent
   - stateMachines.subscription.context
 
 stateMachines:
