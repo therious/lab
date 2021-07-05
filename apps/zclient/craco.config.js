@@ -1,12 +1,6 @@
 const {BundleAnalyzerPlugin} = require("webpack-bundle-analyzer");
 const path = require('path')
-const fs = require('fs')
-const cracoBabelLoader = require('craco-babel-loader')
-
-// Handle relative paths to sibling packages
-const appDirectory = fs.realpathSync(process.cwd())
-const resolvePackage = relativePath => path.resolve(appDirectory, relativePath)
-
+const {getLoader, loaderByName} = require('@craco/craco');
 
 
 const {env: {REACT_APP_INTERACTIVE_ANALYZE}} = process;
@@ -19,26 +13,30 @@ const webpackPlugins = [
   new BundleAnalyzerPlugin({ analyzerMode:'server' })
 ];
 
-const includes = [
-  'fizbin',
-  'th-utils'
-].map(fn=>resolvePackage(`../../libs/${fn}`));
+
+/*>>>> new stuff here>>>>*/
+const packages=[];
+packages.push(path.join(__dirname, '../../libs'));
+
+const configure = (webpackConfig,arg) => {
+  const {isFound,match} = getLoader(webpackConfig, loaderByName('babel-loader'));
+  if(isFound) {
+    const include = Array.isArray(match.loader.include)?
+      match.loader.include:[match.loader.include];
+    match.loader.include = include.concat(packages);
+  }
+  return webpackConfig;
+};
+
+// end new stuff
 
 module.exports = {
   webpack: {
-    plugins: webpackPlugins,
-    alias: {
-      "@lib": path.resolve(__dirname, "src/lib/")
-    }
+    configure,
+    plugins: webpackPlugins
   },
   babel: {
     plugins: [
-      {
-        plugin: cracoBabelLoader,
-        options: {
-          includes,
-        },
-      },
       "babel-plugin-transform-typescript-metadata",
       ["@babel/plugin-proposal-decorators", {legacy: true}],
       ["@babel/plugin-proposal-class-properties", { "loose": true }],

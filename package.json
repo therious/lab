@@ -2,7 +2,11 @@
   "name": "@therious/root",
   "private": true,
   "devDependencies": {
-    "lerna": "4.0.0"
+    "lerna": "4.0.0",
+    "@craco/craco": "~6.2.0",
+    "@babel/plugin-proposal-decorators": "^7.14.5",
+    "babel-plugin-transform-typescript-metadata": "^0.3.2",
+    "craco-babel-loader": "^0.1.4"
   },
   "scripts": {
     "start": "lerna exec --scope @therious/zclient -- yarn start"
