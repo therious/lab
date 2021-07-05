@@ -28,6 +28,7 @@
     "@types/react-redux": "~7.1.16",
     "@types/styled-components": "~5.1.10",
     "babel-plugin-transform-typescript-metadata": "^0.3.2",
+    "craco-babel-loader": "^0.1.4",
     "redux-devtools-extension": "~2.13.8",
     "reselect": "~4.0.0",
     "typescript": "^4.3.4",
