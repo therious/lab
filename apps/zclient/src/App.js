@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import {Ladom} from "./Ladom";
+import {Ladom} from "@therious/components";
 import {MyGrid} from "./MyGrid";
 import {columnDefsMap} from "./xform/columndefs";
 import {StateForm} from "@therious/components";
@@ -122,6 +122,7 @@ const  App = props => {
 
    return  (
         <Layout left={left} right={right}>
+          <Ladom content={'HelloThere'}/>
             <Navbar>There is text here
                 // put some buttons here to switch the grid
                 <button onClick={()=>{pickGrid('Trades');  clearInterval(interval);setInterval(omsTradeList, 1000)}}>Trades</button>
