@@ -6,14 +6,14 @@ const solidBorder =css`
 `;
 
 const elementText = css`
-    font-size: 12px;
-    font-weight: normal;
-    color: black;
-    padding: 3px;
+  font-size: 12px;
+  font-weight: normal;
+  color: black;
+  padding: 3px;
 `;
 
 const containerPadding =css`
- padding: 2px;
+  padding: 2px;
 `;
 
 const FsmTag = styled.div`
@@ -54,7 +54,7 @@ const EvtTag = styled.button`
   margin:2px;
   background-color: #abf;
   :hover {
-    background-color: aqua; 
+    background-color: aqua;
   }
   ${elementText};
 `;
@@ -67,13 +67,13 @@ const ContextTag = styled.div`
 `;
 
 const ContextPair = styled.span`
-    display:inline-block;
-    margin-right: 3px;
+  display:inline-block;
+  margin-right: 3px;
 
   :not(:last-child) {
-      padding-right: 10px;
-      border-right: 1px dotted #aaa; 
-    }
+    padding-right: 10px;
+    border-right: 1px dotted #aaa;
+  }
 `;
 
 const ContextVarName = styled.span`
@@ -109,49 +109,49 @@ const SectionLabel = styled.span`
   ::after {content: ":"}
 `
 const PaddedDiv = styled.div`
-${containerPadding};
+  ${containerPadding};
 `;
 
 
 const ContextVars = ({context}) =>
-<ContextTag>
+  <ContextTag>
     <SectionLabel>Context</SectionLabel>
     {Object.entries(context).map(([k,v],i)=><ContextPair key={i}><ContextVarName>{k}</ContextVarName><ContextVarValue>{v.toString()}</ContextVarValue></ContextPair>)}
-</ContextTag>;
+  </ContextTag>;
 
 
 const extractEventTokens = (stConfig) => {
-    const {states} = stConfig;
-    const tokenSet = new Set();
+  const {states} = stConfig;
+  const tokenSet = new Set();
 
-    Object.values(states).forEach((sob)=>{
-        Object.keys(sob.on || {}).forEach(k=>tokenSet.add(k))
-    })
-    return [...tokenSet];
+  Object.values(states).forEach((sob)=>{
+    Object.keys(sob.on || {}).forEach(k=>tokenSet.add(k))
+  })
+  return [...tokenSet];
 }
 export const  StateForm = ({expanded, stConfig}) => {
 
-    const {id:machineName,states={},context={}} = stConfig;
+  const {id:machineName,states={},context={}} = stConfig;
 
-    const stateList = Object.keys(states);
-    const evtTokens = extractEventTokens(stConfig);
+  const stateList = Object.keys(states);
+  const evtTokens = extractEventTokens(stConfig);
 
-    const height = expanded? 'auto': '50px';
+  const height = expanded? 'auto': '50px';
   return(
-      <FsmTag style={{height}}>
-          <MachineName>{machineName}</MachineName>
-          <hr/>
-          <PaddedDiv>
-              <SectionLabel>States</SectionLabel>
-            {stateList.map((stName,i)=>(<StTag key={i}>{stName}</StTag>))}
-          </PaddedDiv>
-          <hr/>
-          <ContextVars context={context}/>
-          <hr/>
-          <PaddedDiv>
-              <SectionLabel>Events</SectionLabel>
-              {evtTokens.map((evtName,i)=>(<EvtTag key={i}>{evtName}</EvtTag>))}
-          </PaddedDiv>
-      </FsmTag>
+    <FsmTag style={{height}}>
+      <MachineName>{machineName}</MachineName>
+      <hr/>
+      <PaddedDiv>
+        <SectionLabel>States</SectionLabel>
+        {stateList.map((stName,i)=>(<StTag key={i}>{stName}</StTag>))}
+      </PaddedDiv>
+      <hr/>
+      <ContextVars context={context}/>
+      <hr/>
+      <PaddedDiv>
+        <SectionLabel>Events</SectionLabel>
+        {evtTokens.map((evtName,i)=>(<EvtTag key={i}>{evtName}</EvtTag>))}
+      </PaddedDiv>
+    </FsmTag>
   )
 }
