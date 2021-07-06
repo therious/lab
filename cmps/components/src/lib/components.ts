@@ -1,3 +1,3 @@
 export function components():string {
-  return 'components 4';
+  return 'components 5';
 }
