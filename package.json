@@ -11,5 +11,5 @@
   "scripts": {
     "start": "lerna exec --scope @therious/zclient -- npm start"
   },
-  "workspaces": [ "libs/*", "apps/*"]
+  "workspaces": [ "libs/*", "cmps/*", "apps/*"]
 }

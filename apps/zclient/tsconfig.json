@@ -35,6 +35,7 @@
   "paths": {
     "@therious/fizbin": "../../libs/fizbin",
     "@therious/th-utils": "../../libs/th-utils",
-    "@therious/boot": "../../libs/boot/src"
+    "@therious/boot": "../../libs/boot/src",
+    "@therious/components": "../../libs/components/src"
   }
 }

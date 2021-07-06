@@ -113,22 +113,29 @@ ${containerPadding};
 `;
 
 
+// @ts-ignore
+
 const ContextVars = ({context}) =>
 <ContextTag>
     <SectionLabel>Context</SectionLabel>
-    {Object.entries(context).map(([k,v],i)=><ContextPair key={i}><ContextVarName>{k}</ContextVarName><ContextVarValue>{v.toString()}</ContextVarValue></ContextPair>)}
+  {Object.entries(context).map(([k,v],i)=>
+    <ContextPair key={i}>
+      <ContextVarName>{k}</ContextVarName>
+      <ContextVarValue>{(v as any).toString()}</ContextVarValue>
+    </ContextPair>)}
 </ContextTag>;
 
-
+// @ts-ignore
 const extractEventTokens = (stConfig) => {
     const {states} = stConfig;
     const tokenSet = new Set();
 
-    Object.values(states).forEach((sob)=>{
+    Object.values(states).forEach((sob:any)=>{
         Object.keys(sob.on || {}).forEach(k=>tokenSet.add(k))
     })
     return [...tokenSet];
 }
+// @ts-ignore
 export const  StateForm = ({expanded, stConfig}) => {
 
     const {id:machineName,states={},context={}} = stConfig;
@@ -150,7 +157,7 @@ export const  StateForm = ({expanded, stConfig}) => {
           <hr/>
           <PaddedDiv>
               <SectionLabel>Events</SectionLabel>
-              {evtTokens.map((evtName,i)=>(<EvtTag key={i}>{evtName}</EvtTag>))}
+              {evtTokens.map((evtName,i)=>(<EvtTag key={i}>{evtName as string}</EvtTag>))}
           </PaddedDiv>
       </FsmTag>
   )

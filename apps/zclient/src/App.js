@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import {Ladom} from "./Ladom";
 import {MyGrid} from "./MyGrid";
 import {columnDefsMap} from "./xform/columndefs";
-import {StateForm} from "./StateForm";
+import {StateForm} from "@therious/components";
 import { securityLightConfig, sec2, securityLightPlantUml} from "./fsm-configs/security-light";
 import {glassMachineConfig} from "./fsm-configs/glass";
 import {umlHeartbeatSubscription,heartbeatXStateConfig} from './fsm-configs/subscription';

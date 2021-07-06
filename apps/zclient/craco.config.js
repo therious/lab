@@ -10,19 +10,20 @@ const {env: {REACT_APP_INTERACTIVE_ANALYZE}} = process;
 //   : "json"
 
 const webpackPlugins = [
-  new BundleAnalyzerPlugin({ analyzerMode:'server' })
+  // new BundleAnalyzerPlugin({ analyzerMode:'server' })
 ];
 
 
-/*>>>> new stuff here>>>>*/
-const packages=[];
-packages.push(path.join(__dirname, '../../libs'));
+const packageDirs = ['libs', 'cmps'];
 
-const configure = (webpackConfig,arg) => {
+const packages = packageDirs.map(d=>path.join(__dirname, `../../${d}`));
+
+const guaranteedArray = v => Array.isArray(v)?v:[v];
+
+const configure = (webpackConfig /*,arg*/) => {
   const {isFound,match} = getLoader(webpackConfig, loaderByName('babel-loader'));
   if(isFound) {
-    const include = Array.isArray(match.loader.include)?
-      match.loader.include:[match.loader.include];
+    const include = guaranteedArray(match.loader.include);
     match.loader.include = include.concat(packages);
   }
   return webpackConfig;

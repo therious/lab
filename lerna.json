@@ -4,6 +4,7 @@
   "registry": "https://registry.npmjs.org/",
   "packages": [
     "apps/*",
+    "cmps/*",
     "libs/*"
   ],
   "version": "independent",

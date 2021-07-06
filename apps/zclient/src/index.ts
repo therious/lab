@@ -1,11 +1,12 @@
 import "reflect-metadata";
 import {Config, Inflate} from "@therious/boot";
+import {components} from '@therious/components';
+
 // get the relevant classes registered for injection with an import
 import './fsm-utils/test-class';
 import {connectApp} from "./connect-app";
 
-
-
+console.log(`components=${components()}`);
 
 (async ()=>{
     try {
