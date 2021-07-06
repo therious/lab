@@ -2,6 +2,8 @@
   "name": "@therious/zclient",
   "version": "0.3.0",
   "private": true,
+  "author": "Haim Zamir <hzamir@gmail.com>",
+  "license": "MIT",
   "dependencies": {
     "ag-grid-community": "^25.3.0",
     "ag-grid-enterprise": "^25.3.0",

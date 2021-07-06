@@ -1,6 +1,8 @@
 {
   "name": "@therious/root",
   "private": true,
+  "author": "Haim Zamir <hzamir@gmail.com>",
+  "license": "MIT",
   "devDependencies": {
     "lerna": "4.0.0",
     "@craco/craco": "~6.2.0",
