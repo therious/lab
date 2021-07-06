@@ -1,6 +1,7 @@
 {
   "name": "@therious/th-utils",
   "version": "0.2.3",
+  "private": true,
   "description": "provides compatible utility functions to other th- modules in progress",
   "main": "th-utils.js",
   "scripts": {
