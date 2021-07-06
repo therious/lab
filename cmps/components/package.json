@@ -5,6 +5,11 @@
   "author": "Haim Zamir <hzamir@gmail.com>",
   "license": "MIT",
   "main": "src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com:therous/zmono.git",
+    "directory": "cmps/components"
+  },
   "dependencies": {
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -24,5 +29,5 @@
   "browserslist": [
     "since 2021"
   ],
-  "gitHead": "c73f2e782bf795fde42ad59340cea3498000d284"
+  "gitHead": "676e8a28c30e4dece7e6a31cbd5047726b19ba8e"
 }
