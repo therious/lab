@@ -9,7 +9,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/therious/th-utils.git"
+    "url": "ssh://git@github.com:therious/zmono.git",
+    "directory": "libs/th-utils"
   },
   "author": "Haim Zamir <hzamir@gmail.com>",
   "license": "MIT",

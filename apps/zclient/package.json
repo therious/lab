@@ -4,6 +4,11 @@
   "private": true,
   "author": "Haim Zamir <hzamir@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com:therious/zmono.git",
+    "directory": "apps/zclient"
+  },
   "dependencies": {
     "ag-grid-community": "^25.3.0",
     "ag-grid-enterprise": "^25.3.0",

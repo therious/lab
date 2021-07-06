@@ -14,7 +14,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/therious/fizbin.git"
+    "url": "ssh://git@github.com:therious/zmono.git",
+    "directory": "libs/fizbin"
   },
   "author": "Haim Zamir <hzamir@gmail.com>",
   "license": "MIT",

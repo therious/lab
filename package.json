@@ -3,6 +3,10 @@
   "private": true,
   "author": "Haim Zamir <hzamir@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com:therious/zmono.git"
+  },
   "devDependencies": {
     "lerna": "4.0.0",
     "@craco/craco": "~6.2.0",

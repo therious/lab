@@ -7,7 +7,7 @@
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
-    "url": "ssh://git@github.com:therous/zmono.git",
+    "url": "ssh://git@github.com:therious/zmono.git",
     "directory": "libs/boot"
   },
   "dependencies": {
