@@ -20,22 +20,17 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+
+    "sourceMap": true,
+    "declaration": true,
+    "declarationDir": "dist/types",
+    "outDir": "dist/lib",
+    "typeRoots": [
+      "node_modules/@types"
+    ]
   },
-  "exclude": [
-    "node_modules",
-    "build",
-    "scripts",
-    "jest"
-  ],
   "include": [
     "src"
-  ],
-  "baseUrl": "./",
-  "paths": {
-    "@therious/fizbin": "../../libs/fizbin",
-    "@therious/th-utils": "../../libs/th-utils",
-    "@therious/boot": "../../libs/boot/src",
-    "@therious/components": "../../libs/components/src"
-  }
+  ]
 }
