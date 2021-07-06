@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import {Ladom} from "@therious/components";
+import {Modal} from "@therious/components";
 import {MyGrid} from "./MyGrid";
 import {columnDefsMap} from "./xform/columndefs";
 import {StateForm} from "@therious/components";
@@ -120,8 +120,11 @@ const  App = props => {
 
    console.info(`props for grid are ${rowDataProp}`, columnDefs, rowData);
 
+   const modalContent = `hello`;
+
    return  (
         <Layout left={left} right={right}>
+          {/*<Modal content={modalContent}/>*/}
             <Navbar>There is text here
                 // put some buttons here to switch the grid
                 <button onClick={()=>{pickGrid('Trades');  clearInterval(interval);setInterval(omsTradeList, 1000)}}>Trades</button>
