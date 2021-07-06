@@ -1,12 +1,18 @@
 {
   "npmClient": "npm",
-  "registry": "https://registry.npmjs.org/",
+  "version": "independent",
+  "useWorkspaces": true,
   "packages": [
     "apps/*",
+    "cmps/*",
     "libs/*"
   ],
-  "version": "independent",
   "command": {
+    "publish": {
+      "ignoreChanges": ["ignored-file", "*.md"],
+      "message": "chore(release): publish",
+      "registry": "https://npm.pkg.github.com"
+    },
     "init": {
       "exact": true
     }

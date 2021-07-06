@@ -1,7 +1,8 @@
 {
-  "name": "fizbin",
+  "name": "@therious/fizbin",
   "version": "0.8.3",
   "description": "finite state machine",
+  "private": true,
   "keywords": [
     "fsm",
     "state machine",

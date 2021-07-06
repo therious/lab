@@ -34,11 +34,11 @@ async function fetchConfig(url:string):Promise<any>
 
 export let promisedConfig:ConfigSingleton|null = null;
 
-
 export class Config
 {
   public static queryParams(): Record<string, any>
   {
+    // @ts-ignore
     return Object?.fromEntries([...new URLSearchParams(globalThis?.location?.search)]);
   }
   public static async fetch(explictUrl?:string): Promise<ConfigSingleton>
