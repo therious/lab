@@ -5,6 +5,11 @@
   "license": "MIT",
   "private": false,
   "main": "./src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com:therous/zmono.git",
+    "directory": "libs/boot"
+  },
   "dependencies": {
     "axios": "~0.21.1",
     "js-yaml": "~4.1.0",
