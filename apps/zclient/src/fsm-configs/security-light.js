@@ -1,4 +1,3 @@
-import { createMachine, assign } from 'xstate';
 import {createXStateConfiguration} from "../fsm-utils/convert";
 import {fizbinToPlantUml} from "../fsm-utils/fsm-visualization";
 
