@@ -116,7 +116,12 @@ const PaddedDiv = styled.div`
 const ContextVars = ({context}) =>
   <ContextTag>
     <SectionLabel>Context</SectionLabel>
-    {Object.entries(context).map(([k,v],i)=><ContextPair key={i}><ContextVarName>{k}</ContextVarName><ContextVarValue>{v.toString()}</ContextVarValue></ContextPair>)}
+    {
+      Object.entries(context).map(([k,v],i)=>
+      <ContextPair key={i}>
+        <ContextVarName>{k}</ContextVarName>
+        <ContextVarValue>{v?.toString()||v}</ContextVarValue></ContextPair>)
+    }
   </ContextTag>;
 
 
@@ -135,6 +140,8 @@ export const  StateForm = ({expanded, stConfig}) => {
 
   const stateList = Object.keys(states);
   const evtTokens = extractEventTokens(stConfig);
+
+  console.warn(`Stateform`, stConfig);
 
   const height = expanded? 'auto': '50px';
   return(
