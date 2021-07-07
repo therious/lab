@@ -7,7 +7,7 @@
           <value>
             <SchemaInfo>
               <option name="name" value="new-fizbin-schema" />
-              <option name="relativePathToSchema" value="apps/zclient/docs/new-fizbin-schema.json" />
+              <option name="relativePathToSchema" value="schemas/new-fizbin-schema.json" />
               <option name="schemaVersion" value="JSON Schema version 7" />
             </SchemaInfo>
           </value>
@@ -31,7 +31,7 @@
           <value>
             <SchemaInfo>
               <option name="name" value="zconfig-schema" />
-              <option name="relativePathToSchema" value="apps/zclient/docs/zconfig-schema.json" />
+              <option name="relativePathToSchema" value="schemas/zconfig-schema.json" />
               <option name="patterns">
                 <list>
                   <Item>
