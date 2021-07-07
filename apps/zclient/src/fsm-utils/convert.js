@@ -14,18 +14,33 @@ function oReduce(a,f,o={})
   }, o);
 }
 
+function wrapGuard(guardName)
+{
+  return function(context,event,condMeta)
+  {
+    
+
+    console.warn(`guard wrapper ${guardName} returns false`,context, event, condMeta);
+    return false;
+  }
+}
 
 function convertTransition(transSource, fromState)
 {
 
-  const {/*from,*/ to:target,cond=null,evt=null,after=null} = transSource;
+  const {/*from,*/ to:target,cond:icond=null,evt=null,after=null} = transSource;
 
-  const prop = evt? 'on': after? 'after': cond? 'always': undefined;
+  const prop = evt? 'on': after? 'after': icond? 'always': undefined;
 
   if(!prop) {
     console.error('illegal transition', transSource);
     throw new Error('illegal transition');
   }
+
+  // convert condition to canonical xstate type object, since condition is always a string
+  const cond = icond? {type:icond}: undefined;
+
+  // fromState has appriopriate transition added to it from transSource
   switch(prop) {
     case 'on':
     case 'after':
@@ -39,16 +54,22 @@ function convertTransition(transSource, fromState)
   }
 }
 
+
 export function createXStateConfiguration(cfg, behavior) {
-  const {name:id, start: initial, io: context} = cfg;
+  const {name:id, start: initial, context, transitions } = cfg;
   const states = {};
   const xs = {id, initial, context, states};
 
   // create an entry for each state
   cfg.states.forEach(s => states[s] = {});
 
-  cfg.transitions.forEach(t => {
-    const {from} = t;
+  xs.guards = oReduce(
+    transitions.map(t=>t.cond).filter(Boolean),
+    cond=>[cond,wrapGuard(cond)]
+  );
+
+  transitions.forEach(t => {
+    const {from, cond} = t;
     if (typeof from === 'string') {
       if (from === '*')
         Object.values(states).forEach(f => convertTransition(t, f)); // all states have this transition

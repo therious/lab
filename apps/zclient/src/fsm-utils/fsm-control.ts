@@ -33,7 +33,9 @@ export class FsmControl
   static define(config:FsmConfig, behavior:any): FsmDefinition
   {
      const xstateConfig = createXStateConfiguration(config,behavior) as MachineConfig<any,any,any>;
-     const fsm = createMachine(xstateConfig);
+     console.warn(`!!! xstateConfig`, xstateConfig);
+
+     const fsm = createMachine(xstateConfig, (xstateConfig as any).guards?{guards:(xstateConfig as any).guards}:{});
      return fsm;
   }
 
