@@ -15,13 +15,17 @@ function oReduce(a,f,o={})
 }
 
 
-function convertTransition({/*from,*/ to:target,when:cond=null,evt=null,timer:after=null}, fromState)
+function convertTransition(transSource, fromState)
 {
+
+  const {/*from,*/ to:target,cond=null,evt=null,after=null} = transSource;
+
   const prop = evt? 'on': after? 'after': cond? 'always': undefined;
 
-  if(!prop)
+  if(!prop) {
+    console.error('illegal transition', transSource);
     throw new Error('illegal transition');
-
+  }
   switch(prop) {
     case 'on':
     case 'after':

@@ -8,7 +8,7 @@ function convertMillisToLabel(millis)
 
   return nMillis.toLocaleString('en-us', fmtMillisAsSeconds) + ' secs';
 }
-function transitionToString({from, to, when:cond=null,evt=null,timer:after=null})
+function transitionToString({from, to, cond=null,evt=null,after=null})
 {
   let cause;
 
