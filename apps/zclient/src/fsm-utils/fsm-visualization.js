@@ -27,7 +27,7 @@ function transitionToString({from, to, cond=null,evt=null,after=null})
 
   const transition = `${from}-${arrowStyle}->${to}`;
   const result = `${transition} : ${cause}`;
-  console.warn('+uml+', result);
+  // console.warn('+uml+', result);
   return result;
 
 }
