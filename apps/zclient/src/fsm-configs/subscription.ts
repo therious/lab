@@ -111,9 +111,9 @@ const x = {
       {from: Current,         to: CorruptionError,  evt: 'exception'   },
       {from: Current,         to: Current,          evt: 'heartbeat'   },
 
-      {from: Current,         to: Stale,            timer: 1000 * hbSecs },
+      {from: Current,         to: Stale,            after: 1000 * hbSecs },
       {from: Stale,           to: Current,          evt: 'heartbeat'   },
-      {from: Stale,           to: Toast,            timer: 1000 * hbSecs * (hbMax-1) }
+      {from: Stale,           to: Toast,            after: 1000 * hbSecs * (hbMax-1) }
     ]
 
   ,options:{}

@@ -23,10 +23,10 @@ const x = {
   // and that all terms mentioned in condition expression (when) are declared as variables in the io section
   ,transitions:
     [
-      {from: Day,        to: Night,  when: 'dimlight'  } // transition on variable changes
-      ,{from: [Night,On], to: Day,    when: 'daylight'  }
+      {from: Day,        to: Night,  cond: 'dimlight'  } // transition on variable changes
+      ,{from: [Night,On], to: Day,    cond: 'daylight'  }
       ,{from: [Night,On], to: On,      evt: 'motion'    } // transition on receiving event tokens
-      ,{from: On,         to: Night, timer: 5000        } // fizbin generates timer based events
+      ,{from: On,         to: Night, after: 5000        } // fizbin generates timer based events
     ]
 
   ,options:{}

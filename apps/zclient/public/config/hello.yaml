@@ -15,13 +15,30 @@ sequence:
 
 tokens:
   - stateMachines.subscription
+  - stateMachines.securityLight
   - stateMachines.subscription.states
   - stateMachines.subscription.context
 
+
 stateMachines:
+  securityLight:
+    name: seclight
+    start: Night
+    states:
+      - Night
+      - Day
+      - On
+    context:
+        ambientLight: 0.1
+    transitions: [
+      {from: Day,        to: Night,   cond: dimlight  }, # transition on variable changes
+      {from: [Night, On], to: Day,    cond: daylight  },
+      {from: [Night, On], to: On,      evt: motion    }, # transition on receiving event tokens
+      {from: On,         to: Night,  after: 5000      } # fizbin generates timer based events
+    ]
   subscription:
     name: hello
-    target: yousd
+    target: Current
     states:
       - Startup
       - NoMemoryMaps
@@ -38,15 +55,14 @@ stateMachines:
       filePath:
       lastUicHb: -1
       lastUibHb: -1
-      lastUibUpdate: -1
 
     transitions: [
       { from: Startup,            to: NoMemoryMaps,     evt: nomaps     },
       { from: Startup,            to: Unmapped,         evt: keymissing },
       { from: Startup,            to: Mapped,           evt: keyfound   },
 
-      { from: [ Mapped, NoFile ], to: FileOpened,     evt: opensuccess  },
-      { from: [ Mapped, NoFile ], to: NoFile,         evt: exception    },
+      { from: [ Mapped, NoFile ], to: FileOpened,       evt: opensuccess  },
+      { from: [ Mapped, NoFile ], to: NoFile,           evt: exception    },
 
       { from: FileOpened,         to: Current,          evt: blah       },
       { from: FileOpened,         to: CorruptionError,  evt: exception  },
