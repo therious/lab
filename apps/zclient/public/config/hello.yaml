@@ -4,6 +4,7 @@ TestClassParams:
 
 bootSequence:
   - TestClass
+  - InjectedStateForms
 
 sequence:
   abc:
