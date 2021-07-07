@@ -1,4 +1,21 @@
-function fizbinToXStateTrans({from, to:target,when:cond=null,evt=null,timer:after=null}, fromState)
+/**
+ *
+ * @param a  array to reduce
+ * @param f  function that returns a map entry, returned key value pair will be added to a map
+ * @param o  optional starter object, defaults to empty object
+ * @returns object with the key value pairs created by the function passed into oreduce
+ */
+function oReduce(a,f,o={})
+{
+  return a.reduce((accum,v)=>{
+    const [k,nv]=f(v);
+    accum[k]= nv;
+    return accum;
+  }, o);
+}
+
+
+function convertTransition({/*from,*/ to:target,when:cond=null,evt=null,timer:after=null}, fromState)
 {
   const prop = evt? 'on': after? 'after': cond? 'always': undefined;
 
@@ -18,7 +35,7 @@ function fizbinToXStateTrans({from, to:target,when:cond=null,evt=null,timer:afte
   }
 }
 
-export function fizbinToXState(cfg,behavior) {
+export function createXStateConfiguration(cfg, behavior) {
   const {name:id, start: initial, io: context} = cfg;
   const states = {};
   const xs = {id, initial, context, states};
@@ -30,11 +47,11 @@ export function fizbinToXState(cfg,behavior) {
     const {from} = t;
     if (typeof from === 'string') {
       if (from === '*')
-        Object.values(states).forEach(f => fizbinToXStateTrans(t, f)); // all states have this transiton
+        Object.values(states).forEach(f => convertTransition(t, f)); // all states have this transition
       else
-        fizbinToXStateTrans(t, states[from]);  // one state has this transition
+        convertTransition(t, states[from]);  // one state has this transition
     } else {
-      from.forEach(f => fizbinToXStateTrans(t, states[f]));  // [s1,s2] have same transition
+      from.forEach(f => convertTransition(t, states[f]));  // [s1,s2] have same transition
     }
   });
 
@@ -47,21 +64,6 @@ export function fizbinToXState(cfg,behavior) {
 }
 
 
-/**
- *
- * @param a  array to reduce
- * @param f  function that returns a map entry, returned key value pair will be added to a map
- * @param o  optional starter object, defaults to empty object
- * @returns object with the key value pairs created by the function passed into oreduce
- */
-function oReduce(a,f,o={})
-{
-  return a.reduce((accum,v)=>{
-    const [k,nv]=f(v);
-    accum[k]= nv;
-    return accum;
-  }, o);
-}
 // takes an object with enterXXX, exitXXX, enter, and exit type entries (be they functions or strings and puts them into normalized form
 // behaviors[state][enter] = [], behabiors[state][exit] = [];
 export function normalizeBehavior(behavior, cfg)

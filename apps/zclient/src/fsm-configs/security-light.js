@@ -1,5 +1,5 @@
 import { createMachine, assign } from 'xstate';
-import {fizbinToXState} from "../fsm-utils/fizbin-utils";
+import {createXStateConfiguration} from "../fsm-utils/convert";
 import {fizbinToPlantUml} from "../fsm-utils/fsm-visualization";
 
 const On='On', Day='Day',Night='Night';
@@ -41,7 +41,7 @@ const y = {
 }
 
 
-export const sec2 = fizbinToXState(x);
+export const sec2 = createXStateConfiguration(x);
 export const securityLightPlantUml = fizbinToPlantUml(x);
 
 export const securityLightConfig = {

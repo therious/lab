@@ -1,4 +1,4 @@
-import {fizbinToXState} from "../fsm-utils/fizbin-utils";
+import {createXStateConfiguration} from "../fsm-utils/convert";
 import {fizbinToPlantUml} from "../fsm-utils/fsm-visualization";
 
 /*
@@ -134,5 +134,5 @@ const behaviors = {
   enterMapped:          'subscribe'
 }
 
-export const heartbeatXStateConfig    = fizbinToXState(x,behaviors);
+export const heartbeatXStateConfig    = createXStateConfiguration(x,behaviors);
 export const umlHeartbeatSubscription = fizbinToPlantUml(x, behaviors);

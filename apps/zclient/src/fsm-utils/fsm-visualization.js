@@ -1,4 +1,4 @@
-import {normalizeBehavior, splitTransitions} from "./fizbin-utils";
+import {normalizeBehavior, splitTransitions} from "./convert";
 
 const fmtMillisAsSeconds = {minimumIntegerDigits: 1, maximumFractionDigits: 3, minimumFractionDigits:0};
 
