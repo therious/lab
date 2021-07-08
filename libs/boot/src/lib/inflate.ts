@@ -103,16 +103,13 @@ export class Inflate {
     if(sequence) {
       sequence.forEach((fqToken:string)=>{
         const token = tokenToUse[fqToken];
-        console.warn(`+++bootstrapping toekn ${fqToken} using ${token}`);
         const value = container.resolve(token);
-        console.warn(`value`, value);
         const alreadyKnown = config[token];
         if(!alreadyKnown) {
+          console.warn(`+++bootstrapping token ${fqToken} using ${token} value`, value);
           // @ts-ignore
           config[token] = value;
-          console.log(`...added to config`);
         }
-
 
       });
     }
