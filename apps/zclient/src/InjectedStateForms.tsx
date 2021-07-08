@@ -1,9 +1,9 @@
 
 import {inject, injectable, container, singleton} from 'tsyringe';
 import { FsmControl, FsmDefinition, FsmInstance, FsmTransition} from './fsm-utils/fsm-control';
+import {createXStateConfiguration} from './fsm-utils/convert';
 import React from 'react';
 import {StateForm} from "@therious/components";
-import {heartbeatXStateConfig} from './fsm-configs/subscription';
 
 
 interface FsmConfig {
@@ -30,10 +30,12 @@ export class InjectedStateForms
 
   rendering()
   {
+    const convertedMachines = Object.values(this.fsmConfigs).map(fsmConfig=>createXStateConfiguration(fsmConfig,{}));
+
     return <React.Fragment>
       {
-        Object.values(this.fsmConfigs).map(
-          fsmConfig=> <StateForm key={fsmConfig.name} expanded={true} stConfig={fsmConfig}/>
+        convertedMachines.map(
+          xstateConfig=> <StateForm key={xstateConfig.id} expanded={true} stConfig={xstateConfig}/>
         )
       }
     </React.Fragment>
