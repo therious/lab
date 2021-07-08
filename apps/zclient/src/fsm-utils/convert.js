@@ -69,7 +69,7 @@ export function createXStateConfiguration(cfg, behavior) {
   );
 
   transitions.forEach(t => {
-    const {from, cond} = t;
+    const {from} = t;
     if (typeof from === 'string') {
       if (from === '*')
         Object.values(states).forEach(f => convertTransition(t, f)); // all states have this transition
