@@ -38,7 +38,8 @@ stateMachines:
       {from: On,         to: Night,  after: 5000      } # fizbin generates timer based events
     ]
   subscription:
-    name: hello
+    name: subscription
+    start: Startup
     target: Current
     states:
       - Startup
