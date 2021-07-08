@@ -1,5 +1,5 @@
 
-import {inject, injectable, container, singleton} from 'tsyringe';
+import {inject, container, singleton} from 'tsyringe';
 import { FsmControl, FsmDefinition, FsmInstance, FsmTransition} from './fsm-control';
 
 
@@ -10,6 +10,25 @@ import { FsmControl, FsmDefinition, FsmInstance, FsmTransition} from './fsm-cont
   context?:     Record<string,any>;
   target?:      string;
 }
+
+//todo some code that needs a home
+// export const securityLightGuards = {
+//   daylight: (ctx,evt)=>ctx.ambientLight > 0.5,
+//   dimlight: (ctx,evt)=>ctx.ambientLight < 0.5,
+// }
+//
+
+//todo some code that needs a home
+// const behaviors = {
+//   // enter:                'logEntry',
+//   // exit:                 'logExit',
+//   enterNoMemoryMaps:    errorAlert,
+//   enterUnmapped:        errorAlert,
+//   enterNoFile:          'retry subscribe after delay',
+//   enterCorruptionError: restartUic,
+//   enterToast:           restartUic,
+//   enterMapped:          'subscribe'
+// }
 
 
 @singleton()
