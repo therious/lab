@@ -4,8 +4,6 @@ import styled from 'styled-components';
 import {Modal} from "@therious/components";
 import {MyGrid} from "./MyGrid";
 import {columnDefsMap} from "./xform/columndefs";
-import { securityLightConfig, sec2, securityLightPlantUml} from "./fsm-configs/security-light";
-import {umlHeartbeatSubscription,heartbeatXStateConfig} from './fsm-configs/subscription';
 import {stateForms} from "./InjectedStateForms";
 
 const palette = {
