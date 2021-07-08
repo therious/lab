@@ -1,5 +1,25 @@
 import {normalizeBehavior, splitTransitions} from "./convert";
 
+/*
+  Aside from simple terminal vs non-terminal node visualization distinction
+  need a way to provide visualization hints for node to represent the following distinctions
+
+  terminal - no recovery
+  terminal - with automated action that restarts system
+  ideal state - one state is the target state, it should draw attention
+
+  stepping stone state        - all states leading in target state (if no target state then all states in line from start to terminal states)
+  ideal/target state          - one state we are trying to maintain
+  recoverable state           - not stepping, terminal, or ideal
+  terminal state, no recovery - a state that cannot fix itself
+  terminal rebooting state    - a terminal state in terms of machine, but one which restarts same machiune
+
+
+
+aside from automatically marking some states as terminal,
+need a way to hint to visualizations that some starts indicate an issue, other states are an ideal target state
+ */
+
 const fmtMillisAsSeconds = {minimumIntegerDigits: 1, maximumFractionDigits: 3, minimumFractionDigits:0};
 
 function convertMillisToLabel(millis)
