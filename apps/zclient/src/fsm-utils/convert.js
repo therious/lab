@@ -25,6 +25,58 @@ function wrapGuard(guardName)
   }
 }
 
+/*
+
+const x = {
+  name:    'sec2',
+  start:   Night                  // initial state
+  ,states: [Day,Night,On]     // our set of states
+
+  //---- io section defines signals (events are still union of those mentioned in transitions) ----
+  ,context: { ambientLight: 0.1 }
+
+  // all the possible ways to get from one state to another
+  // fsm compiler guarantees that all states mentioned are in the states array
+  // and that all terms mentioned in condition expression (when) are declared as variables in the io section
+  ,transitions:
+    [
+       {from: Day,        to: Night,  cond: 'dimlight'  } // transition on variable changes
+      ,{from: [Night,On], to: Day,    cond: 'daylight'  }
+      ,{from: [Night,On], to: On,      evt: 'motion'    } // transition on receiving event tokens
+      ,{from: On,         to: Night, after: 5000        } // fizbin generates timer based events
+    ]
+
+  ,options:{}
+};
+
+  conversion to xstate configuration format should produce something like this:
+
+ const securityLightConfig = {
+  id: 'seclight',
+  // the initial context (extended state) of the statechart
+  context: {
+    ambientLight: 0.1,
+  },
+  initial: Night,
+  states: {
+    Night: {
+      on: { motion: On },
+      always: { target: Day, cond: 'daylight' }
+    },
+    Day: {
+      always: { target: Day, cond: 'dimlight' }
+    },
+    On: {
+      on:     { motion: On },
+      after:  {   5000: { target: Night}      },
+      always: { target: Day, cond: 'daylight' }
+    }
+
+  }
+}
+
+ */
+
 function convertTransition(transSource, fromState)
 {
 
