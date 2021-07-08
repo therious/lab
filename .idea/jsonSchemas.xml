@@ -3,11 +3,44 @@
   <component name="JsonSchemaMappingsProjectConfiguration">
     <state>
       <map>
-        <entry key="new-fizbin-schema">
+        <entry key="JSON Schema version 7">
           <value>
             <SchemaInfo>
-              <option name="name" value="new-fizbin-schema" />
-              <option name="relativePathToSchema" value="schemas/new-fizbin-schema.json" />
+              <option name="name" value="JSON Schema version 7" />
+              <option name="relativePathToSchema" value="http://json-schema.org/draft-07/schema" />
+              <option name="schemaVersion" value="JSON Schema version 7" />
+              <option name="applicationDefined" value="true" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value="schemas/yaml-machine.yaml" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+        <entry key="schema-configuration">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="schema-configuration" />
+              <option name="relativePathToSchema" value="schemas/schema-configuration.json" />
+              <option name="schemaVersion" value="JSON Schema version 7" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value="apps/zclient/public/config/hello.yaml" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+        <entry key="schema-definitions">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="schema-definitions" />
+              <option name="relativePathToSchema" value="schemas/schema-definitions.json" />
               <option name="schemaVersion" value="JSON Schema version 7" />
             </SchemaInfo>
           </value>
@@ -27,15 +60,15 @@
             </SchemaInfo>
           </value>
         </entry>
-        <entry key="zconfig-schema">
+        <entry key="schema-statemachine">
           <value>
             <SchemaInfo>
-              <option name="name" value="zconfig-schema" />
-              <option name="relativePathToSchema" value="schemas/zconfig-schema.json" />
+              <option name="name" value="schema-statemachine" />
+              <option name="relativePathToSchema" value="schemas/yaml-machine.yaml" />
               <option name="patterns">
                 <list>
                   <Item>
-                    <option name="path" value="apps/zclient/public/config/hello.yaml" />
+                    <option name="path" value="apps/zclient/public/config/subscription.yaml" />
                   </Item>
                 </list>
               </option>

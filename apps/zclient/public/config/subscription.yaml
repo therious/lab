@@ -32,4 +32,3 @@ transitions: [
   {from: Stale,           to: Current,          evt: 'heartbeat'   },
   {from: Stale,           to: Toast,            after: 20000       }
 ]
-

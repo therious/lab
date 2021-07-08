@@ -1,11 +1,19 @@
 {
-  "$id": "http://therious.com/zconfig-schema.json",
+  "$id": "schema-configuration.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Therious Configuration Schema",
+  "title": "Configuration Schema",
   "required": ["bootSequence", "sequence"],
 
   "additionalProperties": true,
   "definitions": {
+    "uniqueListVarNameIdentifiers": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z][a-zA-Z_0-9]+$"
+      }
+    },
     "seq": {
       "type": "array",
       "items": {
@@ -13,7 +21,7 @@
       }
     },
     "stateMachine": {
-      "$ref": "http://therious.com/new-fizbin-schema.json"
+      "$ref": "schema-statemachine.yaml"
     }
   },
   "properties": {
