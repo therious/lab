@@ -47,11 +47,12 @@ stateMachines:
     context:
         ambientLight: 0.1
     transitions: [
-      {from: Day,        to: Night,   cond: dimlight  }, # transition on variable changes
-      {from: [Night, On], to: Day,    cond: daylight  },
+      {from: Day,        to: Night,   cond: (c)=>c.ambientLight < 0.5  }, # transition on variable changes
+      {from: [Night, On], to: Day,    cond: (c)=>c.ambientLight > 0.5  },
       {from: [Night, On], to: On,      evt: motion    }, # transition on receiving event tokens
       {from: On,         to: Night,  after: 5000      } # fizbin generates timer based events
     ]
+
   subscription:
     name: subscription
     start: Startup

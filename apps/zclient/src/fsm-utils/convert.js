@@ -14,15 +14,29 @@ function oReduce(a,f,o={})
   }, o);
 }
 
-function wrapGuard(guardName)
-{
-  return function(context,event,condMeta)
-  {
-    
+const arrowFuncRegex = /^.+=>.+/
 
-    console.warn(`guard wrapper ${guardName} returns false`,context, event, condMeta);
-    return false;
+const stringLooksLikeArrowFunction = s => {
+  const result = arrowFuncRegex.test(s);
+  console.info(`${result} = stringLooksLikeArrowFunction(${s})`);
+  return result;
+}
+
+//   daylight: (ctx,evt)=>ctx.ambientLight > 0.5,
+//   dimlight: (ctx,evt)=>ctx.ambientLight < 0.5,
+
+function wrapGuard(guardValue)
+{
+  // test guardValue to see if it looks like a function definition, this is a cheap test
+  // todo put in a better test for arrow functions
+  if(stringLooksLikeArrowFunction(guardValue)) {
+    const guardfunc = eval(guardValue);
+    return function() {
+      console.info(`!!! guardfunc`, guardfunc)
+      return guardfunc.apply(this, Array.from(arguments));
+    }
   }
+  throw new Error(`!!!guard definition '${guardValue}' doesn't look like the required arrow function`);
 }
 
 /*
@@ -89,8 +103,7 @@ function convertTransition(transSource, fromState)
     throw new Error('illegal transition');
   }
 
-  // convert condition to canonical xstate type object, since condition is always a string
-  const cond = icond? {type:icond}: undefined;
+  const cond = icond? wrapGuard(icond): undefined;
 
   // fromState has appriopriate transition added to it from transSource
   switch(prop) {
@@ -113,12 +126,10 @@ export function createXStateConfiguration(cfg, behavior) {
   const xs = {id, initial, context, states};
 
   // create an entry for each state
-  cfg.states.forEach(s => states[s] = {});
+  cfg.states.forEach(s => states[s] = {
+    entry: [(c,e,m)=>console.info(`!!! entering ${m.state.value}`)]
 
-  xs.guards = oReduce(
-    transitions.map(t=>t.cond).filter(Boolean),
-    cond=>[cond,wrapGuard(cond)]
-  );
+  });
 
   transitions.forEach(t => {
     const {from} = t;
