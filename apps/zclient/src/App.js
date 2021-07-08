@@ -4,10 +4,9 @@ import styled from 'styled-components';
 import {Modal} from "@therious/components";
 import {MyGrid} from "./MyGrid";
 import {columnDefsMap} from "./xform/columndefs";
-import {StateForm} from "@therious/components";
 import { securityLightConfig, sec2, securityLightPlantUml} from "./fsm-configs/security-light";
-import {glassMachineConfig} from "./fsm-configs/glass";
 import {umlHeartbeatSubscription,heartbeatXStateConfig} from './fsm-configs/subscription';
+import {stateForms} from "./InjectedStateForms";
 
 const palette = {
       plum: '#4b54a1',
@@ -44,6 +43,7 @@ const Layout = styled.div`
 Layout.defaultProps = {left:200, right:100};
 
 const Navbar = styled.section`
+    padding: 4px;
     grid-area: Navbar;
     background-color: ${palette.midnight};
     color: ${palette.drab};
@@ -73,6 +73,11 @@ const Right = styled.section`
     color: ${palette.midnight};
 `;
 
+const Button = styled.button`
+  padding-top: 2px;
+  padding-bottom: 2px;
+  margin: 2px 10px;
+`
 
 const somejsx = <div>Hello<br/>There</div>;
 
@@ -125,22 +130,20 @@ const  App = props => {
    return  (
         <Layout left={left} right={right}>
           {/*<Modal content={modalContent}/>*/}
-            <Navbar>There is text here
-                // put some buttons here to switch the grid
-                <button onClick={()=>{pickGrid('Trades');  clearInterval(interval);setInterval(omsTradeList, 1000)}}>Trades</button>
-                <button onClick={()=>{pickGrid('Quotes'); clearInterval(interval); interval = setInterval(omsQuoteList, 1000)}}>Quotes</button>
-                <button onClick={()=>{pickGrid('Parties'); clearInterval(interval);}}>Parties</button>
-                <button onClick={()=>{toggleLeft(100)}}>Left</button>
-                <button onClick={()=>{toggleRight(300)}}>Right</button>
+            <Navbar>
+                {/*<button onClick={()=>{pickGrid('Trades');  clearInterval(interval);setInterval(omsTradeList, 1000)}}>Trades</button>*/}
+                {/*<button onClick={()=>{pickGrid('Quotes'); clearInterval(interval); interval = setInterval(omsQuoteList, 1000)}}>Quotes</button>*/}
+                {/*<button onClick={()=>{pickGrid('Parties'); clearInterval(interval);}}>Parties</button>*/}
+                <Button onClick={()=>{toggleLeft(100)}}>Left</Button>
+                <Button onClick={()=>{toggleRight(300)}}>Right</Button>
 
             </Navbar>
             <Left>In left side bar?</Left>
             <CenterBody>
               <textarea readOnly={true} value={umlHeartbeatSubscription}/>
-              <StateForm expanded={true} stConfig={heartbeatXStateConfig}/>
-              <StateForm expanded={true} stConfig={securityLightConfig}/>
-              <StateForm expanded={true} stConfig={glassMachineConfig}/>
-                {/*<MyGrid rowData={rowData} columnDefs={columnDefs}/>*/}
+              {stateForms()}
+
+              {/*<MyGrid rowData={rowData} columnDefs={columnDefs}/>*/}
 
             </CenterBody>
             <Right>In right sidebar?</Right>
