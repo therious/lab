@@ -140,7 +140,6 @@ const  App = props => {
             </Navbar>
             <Left>In left side bar?</Left>
             <CenterBody>
-              <textarea readOnly={true} value={umlHeartbeatSubscription}/>
               {stateForms()}
 
               {/*<MyGrid rowData={rowData} columnDefs={columnDefs}/>*/}
