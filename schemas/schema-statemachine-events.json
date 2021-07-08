@@ -1,28 +1,38 @@
 {
-  "$id": "http://therious.com/new-fizbin-schema.json",
+  "$id": "schema-statemachine.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Fizbin Schema",
-  "required": ["name","states","context","transitions"],
+  "title": "Statemachine Events Schema",
+  "required": [],
   "additionalProperties": false,
-  "properties": {
-    "name": {
-      "type": "string"
-    },
-    "start": {
-      "type": "string"
-    },
-    "target": {
-      "type": "string"
-    },
-    "states": {
+  "definitions": {
+    "uniqueListVarNameIdentifiers": {
       "type": "array",
       "uniqueItems": true,
       "items": {
-        "type": "string"
+        "type": "string",
+        "pattern": "^[a-zA-Z][a-zA-Z_0-9]+$"
       }
     },
-    "context": {
-      "type": "object"
+    "sToken": {
+      "type": "string"
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-zA-Z][a-zA-Z_0-9]+$": {}
+      }
+    }
+
+  },
+
+  "properties": {
+    "tokens": {
+      "type": "array",
+      "uniqueItems": false,
+      "items": {
+        "anyOf": [{}]
+      }
     },
     "transitions": {
       "type": "array",
