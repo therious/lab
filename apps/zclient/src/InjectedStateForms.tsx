@@ -4,6 +4,8 @@ import { FsmControl, FsmDefinition, FsmInstance, FsmTransition} from './fsm-util
 import {createXStateConfiguration} from './fsm-utils/convert';
 import React from 'react';
 import {StateForm} from "@therious/components";
+import {umlHeartbeatSubscription} from './fsm-configs/subscription';
+import {fizbinToPlantUml} from './fsm-utils/fsm-visualization';
 
 
 interface FsmConfig {
@@ -30,9 +32,17 @@ export class InjectedStateForms
 
   rendering()
   {
-    const convertedMachines = Object.values(this.fsmConfigs).map(fsmConfig=>createXStateConfiguration(fsmConfig,{}));
+
+    const fsmConfigsArray = Object.values(this.fsmConfigs);
+    const convertedMachines = fsmConfigsArray.map(fsmConfig=>createXStateConfiguration(fsmConfig,{}));
+
+    const firstConfig = fsmConfigsArray[0];
+    const behavior = {};
+    const plantUml = firstConfig? fizbinToPlantUml(firstConfig, behavior): '** no machines **';
 
     return <React.Fragment>
+      <textarea readOnly={true} value={plantUml}/>
+
       {
         convertedMachines.map(
           xstateConfig=> <StateForm key={xstateConfig.id} expanded={true} stConfig={xstateConfig}/>
