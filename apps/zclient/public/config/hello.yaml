@@ -21,6 +21,21 @@ tokens:
   - stateMachines.subscription.context
 
 
+#  every possible state
+#Startup:        we know nothing
+#NoMemoryMaps!:  (terminal) the app environment does not even support mapping files
+#Unmapped!:      (terminal) requested file is not mapped
+#Mapped:         file was found will attempt to subscript
+#  the requested file is mapped, but the physical file cannot be found
+#  the physical file is found but it must be corrupt, since reading it produces an exception
+#  the file is successfully read, we are current as long as it updates on time
+#  it updates on time, but the status within the update says upstream UIB is not communicating
+#  no update has been received for a short while
+#  no update has been received for a long while
+#  const hbSecs = 10;
+#  const hbMax  = 3;
+
+
 stateMachines:
   securityLight:
     name: seclight
