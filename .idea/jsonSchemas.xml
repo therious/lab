@@ -15,6 +15,9 @@
                   <Item>
                     <option name="path" value="schemas/yaml-machine.yaml" />
                   </Item>
+                  <Item>
+                    <option name="path" value="schemas/schema-statemachine-events.yaml" />
+                  </Item>
                 </list>
               </option>
             </SchemaInfo>
@@ -64,11 +67,26 @@
           <value>
             <SchemaInfo>
               <option name="name" value="schema-statemachine" />
-              <option name="relativePathToSchema" value="schemas/yaml-machine.yaml" />
+              <option name="relativePathToSchema" value="schemas/schema-statemachine.yaml" />
               <option name="patterns">
                 <list>
                   <Item>
                     <option name="path" value="apps/zclient/public/config/subscription.yaml" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+        <entry key="schema-statemachine-events">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="schema-statemachine-events" />
+              <option name="relativePathToSchema" value="schemas/schema-statemachine-events.yaml" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value="apps/zclient/public/config/tokenlist.yaml" />
                   </Item>
                 </list>
               </option>
