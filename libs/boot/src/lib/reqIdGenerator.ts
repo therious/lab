@@ -80,8 +80,8 @@ export function reqIdDescribe(reqId:string) {
 export function reqIdGenerate()
 {
     const id =  `#${timeOrigin}+${formatNow(performance.now())}=${formatCtr(++requestCounter)}`;
-    const desc = reqIdDescribe(id);
-    console.warn(`id = ${id}`, desc);
+    // const desc = reqIdDescribe(id);
+    // console.warn(`id = ${id}`, desc);
 
     return id;
 }
