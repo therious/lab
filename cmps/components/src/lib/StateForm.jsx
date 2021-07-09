@@ -141,7 +141,7 @@ export const  StateForm = ({expanded, stConfig}) => {
   const stateList = Object.keys(states);
   const evtTokens = extractEventTokens(stConfig);
 
-  console.warn(`Stateform`, stConfig);
+  console.info(`Stateform ${stConfig.id} - `, stConfig);
 
   const height = expanded? 'auto': '50px';
   return(

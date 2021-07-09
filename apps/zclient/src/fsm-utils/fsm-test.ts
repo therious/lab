@@ -62,14 +62,14 @@ export class FsmTest
 
       const {since} = reqIdDescribe(reqIdGenerate());
       const p = fsmInst.state;
-      console.warn(`!!! ${since} advance:`,token)
+      console.warn(`!!! ${since} ${this.fsmConfig.name} - advance:`,token)
 
       if(typeof token === 'number')
         return sleep(token)
       // otherwise it is a bonafide event
       fsmInst.send(token);
       const s = fsmInst.state;
-      console.warn(`!!! ${since} pstate = ${p.value} state=${s.value}`, token, s.context);
+      console.warn(`!!! ${since} ${this.fsmConfig.name} - pstate = ${p.value} state=${s.value}`, token, s.context);
     };
 
     for await (let token of this.testEvents)
