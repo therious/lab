@@ -1,24 +1,45 @@
-TestClassParams:
-  alpha: 1
-  beta: 2
 
 bootSequence:
-  - TestClass
+  - SecurityTest
+  - SubscriptionTest
   - InjectedStateForms
 
 sequence:
-  abc:
-    - fdff
-    - sadfo
-  another:
-    - you
-    - me
+  nothing: []
 
 tokens:
   - stateMachines.subscription
   - stateMachines.securityLight
-  - stateMachines.subscription.states
-  - stateMachines.subscription.context
+  - testEvents.securityLight
+  - testEvents.subscription
+
+# this is just a convenient set of definitions for repeated events in a test
+eventDefinitions:
+  light:          &light
+    type:         update
+    ambientLight: 1.0
+  dark:           &dark
+    type:         update
+    ambientLight: 0
+
+# this provides some test parameters for different statemachines
+testEvents:
+  securityLight:
+    - motion
+    - 5500
+    - motion
+    - 1000
+    - *light
+    - motion
+    - 3000
+    - *dark
+    - motion
+  subscription:
+    - keyfound
+    - opensuccess
+    - blah
+    - 30000
+
 
 
 #  every possible state
@@ -45,7 +66,10 @@ stateMachines:
       - Day
       - On
     context:
+        type: #including type in context allows generic updates:update event to update context, it is overwritten by updates
         ambientLight: 0.1
+    updates:
+      update: (c,e)=>({...c, ...e})
     transitions: [
       {from: Day,        to: Night,   cond: (c)=>c.ambientLight < 0.5  }, # transition on variable changes
       {from: [Night, On], to: Day,    cond: (c)=>c.ambientLight > 0.5  },
@@ -57,6 +81,8 @@ stateMachines:
     name: subscription
     start: Startup
     target: Current
+    updates:
+      update: (c,e)=>({...c, ...e})
     states:
       - Startup
       - NoMemoryMaps
@@ -69,6 +95,7 @@ stateMachines:
       - Stale
       - Toast
     context:
+      type:       #including type in context allows generic updates:update event to update context
       fileKey:
       filePath:
       lastUicHb: -1

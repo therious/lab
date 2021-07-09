@@ -1,3 +1,4 @@
+import {assign} from 'xstate';
 /**
  *
  * @param a  array to reduce
@@ -22,9 +23,22 @@ const stringLooksLikeArrowFunction = s => {
   return result;
 }
 
+
+function wrapUpdate(s)
+{
+  if(stringLooksLikeArrowFunction(s)) {
+    const f = eval(s);
+    return function() {
+      // console.info(`!!! update func`, f)
+      return f.apply(this, Array.from(arguments));
+    }
+  }
+  throw new Error(`!!!update definition ${s}' doesn't look like the required arrow function`);
+
+}
+
 //   daylight: (ctx,evt)=>ctx.ambientLight > 0.5,
 //   dimlight: (ctx,evt)=>ctx.ambientLight < 0.5,
-
 function wrapGuard(guardValue)
 {
   // test guardValue to see if it looks like a function definition, this is a cheap test
@@ -32,7 +46,7 @@ function wrapGuard(guardValue)
   if(stringLooksLikeArrowFunction(guardValue)) {
     const guardfunc = eval(guardValue);
     return function() {
-      console.info(`!!! guardfunc`, guardfunc)
+      // console.info(`!!! guardfunc`, guardfunc)
       return guardfunc.apply(this, Array.from(arguments));
     }
   }
@@ -121,9 +135,34 @@ function convertTransition(transSource, fromState)
 
 
 export function createXStateConfiguration(cfg, behavior) {
-  const {name:id, start: initial, context, transitions } = cfg;
+  const {name:id, start: initial, context, updates, transitions } = cfg;
   const states = {};
-  const xs = {id, initial, context, states};
+
+  let on = {};
+
+  if(updates) {
+    on = oReduce(Object.entries(updates), ([k,v])=>[k, {actions: assign(wrapUpdate(v))}])
+  }
+  const xs = {id, initial, context, states, on};
+
+  /*
+      https://xstate.js.org/docs/guides/transitions.html#internal-transitions
+
+      To make xstate accept events regardless of current state, they must belong to xs.on (rather than xs.states[state].on)
+      each property under xs.on is describes an event for an 'internal' transition, we provide them without target
+      so state doesn't change, just the update happens, and if an eventless guard is satisfied it will then produce
+      an 'external' transition
+
+      IOW
+      xs = {
+        states:{},
+        on: {
+        brighter: {
+          actions: assign((context,event)=> { return {...context, val1:blah } }
+        } // end event name
+        } // end on
+      } // end config
+   */
 
   // create an entry for each state
   cfg.states.forEach(s => states[s] = {

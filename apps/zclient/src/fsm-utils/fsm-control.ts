@@ -11,18 +11,19 @@ export interface FsmTransition {
   after?: number;
 }
 
-export interface FsmConfig {
+export type FsmConfig = {
   name:         string;
   states:       string[];
   transitions:  FsmTransition[];
-  context?:     Record<string,any>;
+  context?:     Record<string, any>;
   target?:      string;
 }
 
-type FsmContext     = any;
-type FsmStateSchema = any;
-type FsmTypestate   = any;
-type FsmEvent       = EventObject;
+type FsmContext      = any;
+type FsmStateSchema  = any;
+// type FsmTypestate    = any;
+
+export type FsmEvent = EventObject;
 
 
 export type FsmDefinition = StateMachine<FsmContext, FsmStateSchema, FsmEvent>;
