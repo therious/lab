@@ -1,0 +1,18 @@
+eventDefinitions:
+  light: &light
+    type:         update
+    ambientLight: 1.0
+  dark: &dark
+    type:         update
+    ambientLight: 0
+
+testEvents:
+  - motion
+  - 5500
+  - motion
+  - 1000
+  - *light
+  - motion
+  - 3000
+  - *dark
+  - motion
