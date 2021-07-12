@@ -23,35 +23,30 @@ const stringLooksLikeArrowFunction = s => {
   return result;
 }
 
-
-function wrapUpdate(s)
+function wrapUpdatesOrGuards(s, logStr)
 {
   if(stringLooksLikeArrowFunction(s)) {
     const f = eval(s);
-    return function() {
-      // console.info(`!!! update func`, f)
-      return f.apply(this, Array.from(arguments));
-    }
+    return logStr?
+      function() {
+        const args = Array.from(arguments);
+        console.info(logStr, f, ...args);
+        return f.apply(this, args);
+      }
+      :
+      function() {
+        return f.apply(this, Array.from(arguments));
+      }
   }
-  throw new Error(`!!!update definition ${s}' doesn't look like the required arrow function`);
+  throw new Error(`${logStr} '${s}' doesn't look like the required arrow function`);
 
 }
 
+// guard examples:
 //   daylight: (ctx,evt)=>ctx.ambientLight > 0.5,
 //   dimlight: (ctx,evt)=>ctx.ambientLight < 0.5,
-function wrapGuard(guardValue)
-{
-  // test guardValue to see if it looks like a function definition, this is a cheap test
-  // todo put in a better test for arrow functions
-  if(stringLooksLikeArrowFunction(guardValue)) {
-    const guardfunc = eval(guardValue);
-    return function() {
-      // console.info(`!!! guardfunc`, guardfunc)
-      return guardfunc.apply(this, Array.from(arguments));
-    }
-  }
-  throw new Error(`!!!guard definition '${guardValue}' doesn't look like the required arrow function`);
-}
+const wrapUpdate = ({logUpdates},s) => wrapUpdatesOrGuards(s, logUpdates);
+const wrapGuard  = ({logGuards },s) => wrapUpdatesOrGuards(s, logGuards );
 
 /*
 
@@ -105,7 +100,7 @@ const x = {
 
  */
 
-function convertTransition(transSource, fromState)
+function convertTransition(transSource, fromState,{logGuards}={})
 {
 
   const {/*from,*/ to:target,cond:icond=null,evt=null,after=null} = transSource;
@@ -117,7 +112,7 @@ function convertTransition(transSource, fromState)
     throw new Error('illegal transition');
   }
 
-  const cond = icond? wrapGuard(icond): undefined;
+  const cond = icond? wrapGuard({logGuards}, icond): undefined;
 
   // fromState has appriopriate transition added to it from transSource
   switch(prop) {
@@ -134,14 +129,15 @@ function convertTransition(transSource, fromState)
 }
 
 
-export function createXStateConfiguration(cfg, behavior) {
+export function createXStateConfiguration(cfg, behavior,options) {
   const {name:id, start: initial, context, updates, transitions } = cfg;
   const states = {};
 
   let on = {};
+  const {logUpdates=''} = options || {};
 
   if(updates) {
-    on = oReduce(Object.entries(updates), ([k,v])=>[k, {actions: assign(wrapUpdate(v))}])
+    on = oReduce(Object.entries(updates), ([k,v])=>[k, {actions: assign(wrapUpdate({logUpdates},v))}])
   }
   const xs = {id, initial, context, states, on};
 
@@ -174,43 +170,53 @@ export function createXStateConfiguration(cfg, behavior) {
     const {from} = t;
     if (typeof from === 'string') {
       if (from === '*')
-        Object.values(states).forEach(f => convertTransition(t, f)); // all states have this transition
+        Object.values(states).forEach(f => convertTransition(t, f,options)); // all states have this transition
       else
-        convertTransition(t, states[from]);  // one state has this transition
+        convertTransition(t, states[from],options);  // one state has this transition
     } else {
-      from.forEach(f => convertTransition(t, states[f]));  // [s1,s2] have same transition
+      from.forEach(f => convertTransition(t, states[f], options));  // [s1,s2] have same transition
     }
   });
 
   if(behavior) {
-
-
+    normalizeAndApplyBehavior(behavior, cfg, xs);
+    console.info(`!!! normalized behavior for ${cfg.name}`, xs);
   }
 
   return xs;
 }
 
 
-// takes an object with enterXXX, exitXXX, enter, and exit type entries (be they functions or strings and puts them into normalized form
-// behaviors[state][enter] = [], behabiors[state][exit] = [];
+// takes an object with enterXXX, exitXXX, entry, and exit type entries (be they functions or strings and puts them into normalized form
+// behaviors[state][(c:any,e:any,m:any)] = [], behaviors[state][exit] = [];
 export function normalizeBehavior(behavior, cfg)
 {
-  // init results as an object with one key per state, value of each being an object with enter/exit arrays of functions
-  const normalized = oReduce(cfg.states, st=>[st, {enter:[], exit:[]}]);
+  // init results as an object with one key per state, value of each being an object with entry/exit arrays of functions
+  const normalized = oReduce(cfg.states, st=>[st, {entry:[], exit:[]}]);
 
-  Object.entries(behavior).forEach(([k,v])=>{
-    if(k === 'enter' || k === 'exit') {
-      Object.values(normalized).forEach(destValue=>destValue[k].push(v));
-    } else  {
-      // test for enter or exit to specific states
-      const results = k.match(/^(?<phase>enter|exit)(?<state>.+)$/);
-      const {phase=null,state=null} = results.groups;
-      if(phase && state)
-        normalized[state][phase].push(v);
-      else
-        throw new Error(`unexpected key ${k}`);
+  // todo better way to interate methods, what if methods are on the specific instance?
+  // or better to reverse query for the desired methods
+
+  const enterExit =  ['entry','exit'];
+
+  // if there are plain entry and exit methods, then bind them to all states as the first action
+  enterExit.forEach(k=>{
+    const fv = behavior[k];
+    if(fv) {
+      const wf = fv.bind(behavior);
+      Object.values(normalized).forEach(destValue => destValue[k].push(wf));
     }
-  });
+  })
+
+  // iterate through the states, if behavior contains an entry<State> or exit<State> method, then attach it
+  cfg.states.forEach(st=>{
+    enterExit.forEach(ee=>{
+      const fv = behavior[`${ee}${st}`];
+      if(fv)
+        normalized[st][ee].push(fv.bind(behavior));
+    })
+  })
+
   return normalized;
 }
 
