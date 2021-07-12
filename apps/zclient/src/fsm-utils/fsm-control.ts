@@ -29,11 +29,12 @@ export type FsmEvent = EventObject;
 export type FsmDefinition = StateMachine<FsmContext, FsmStateSchema, FsmEvent>;
 export type FsmInstance = Interpreter<FsmContext, FsmStateSchema, FsmEvent>;
 
+
 export class FsmControl
 {
-  static define(config:FsmConfig, behavior:any): FsmDefinition
+  static define(config:FsmConfig, behavior:any, options:any): FsmDefinition
   {
-     const xstateConfig = createXStateConfiguration(config,behavior) as MachineConfig<any,any,any>;
+     const xstateConfig = createXStateConfiguration(config,behavior,options) as MachineConfig<any,any,any>;
      console.warn(`!!! xstateConfig`, xstateConfig);
 
      const fsm = createMachine(xstateConfig, {});

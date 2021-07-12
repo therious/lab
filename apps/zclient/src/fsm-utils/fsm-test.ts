@@ -45,11 +45,12 @@ export class FsmTest
 
   constructor(
    readonly fsmConfig:FsmConfig,
-   readonly testEvents: FsmTestArray
+   readonly testEvents: FsmTestArray,
+   readonly behavior: any
   )
   {
     console.warn(`constructing TestClass with`, fsmConfig, testEvents);
-    this.fsmdef = FsmControl.define(fsmConfig,{});
+    this.fsmdef = FsmControl.define(fsmConfig,behavior,{logGuards:null, logUpdates:'@!!! update'});
     this.fsminst = FsmControl.instantiate(this.fsmdef);
     this.promise = this.test();
   }
@@ -72,9 +73,10 @@ export class FsmTest
       console.warn(`!!! ${since} ${this.fsmConfig.name} - pstate = ${p.value} state=${s.value}`, token, s.context);
     };
 
-    for await (let token of this.testEvents)
+    // for await is not working in some contexts, but this for statement should work due to no callbacks
+    // forEach would not work
+    for (let token of this.testEvents)
       await advance(token);
-
   }
 
 }

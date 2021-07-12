@@ -57,7 +57,7 @@ function actionStringize(normalized)
   const results = [];
 
   Object.entries(normalized).forEach(([k,v])=>{
-    v.enter.forEach(fn=>results.push(`state ${k} : enter / ${fn}`));
+    v.entry.forEach(fn=>results.push(`state ${k} : entry / ${fn}`));
     v.exit.forEach(fn=>results.push(`state ${k} : exit / ${fn}`));
   });
   return results;
