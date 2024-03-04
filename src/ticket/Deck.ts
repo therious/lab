@@ -18,4 +18,10 @@ export class Deck<T>
     this.cards = this.cards.slice(ncards);
     return result;
   }
+
+  remaining(): T[]
+  {
+    return this.cards.slice(0);
+  }
+
 }

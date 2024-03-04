@@ -1,24 +1,53 @@
-import React from 'react';
-import logo from './logo.svg';
+import React,  {useCallback, useState} from 'react';
 import './App.css';
 
+import {Color} from './ticket/Color';
+import {Game} from './ticket/Game';
+import {Ticket} from './ticket/Ticket';
+import {ColorCard} from './ColorCard';
+import {TicketCard} from './TicketCard';
+
+const game = new Game();
+
 function App() {
+  const [ccards, setCcards] = useState<Color[]>([]);
+  const [tcards, setTcards] = useState<Ticket[]>([]);
+  const getFive = useCallback(()=>{
+    setCcards([...ccards, ...game.colorDeck.deal(5)]);
+  },[ccards]);
+
+  const getTwo = useCallback(()=>{
+    setCcards([...ccards, ...game.colorDeck.deal(2)]);
+  },[ccards]);
+
+  const getTicket = useCallback(()=>{
+    setTcards([...tcards, ...game.ticketDeck.deal(1)]);
+  },[tcards]);
+
+
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <button onClick={getFive}>Deal colors</button>
+      <button onClick={getTwo}>Get Two more</button>
+      <button onClick={getTicket}>Get a ticket</button>
+
+      <div>
+        <p>Number of cards: {ccards.length}</p>
+
+        {ccards.map(col => <ColorCard color={col}/>)}
+        <hr/>
+        <p>Remaining cards: {game.colorDeck.remaining().length}</p>
+
+        {game.colorDeck.remaining().map(col => <ColorCard color={col}/>)}
+      </div>
+      <div>
+        <p>Number of cards: {tcards.length}</p>
+        {tcards.map(ticket => <TicketCard ticket={ticket}/>)}
+        <hr/>
+        <p>Remaining cards: {game.ticketDeck.remaining().length}</p>
+        {game.ticketDeck.remaining().map(ticket => <TicketCard ticket={ticket}/>)}
+      </div>
     </div>
   );
 }
