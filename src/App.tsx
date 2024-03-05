@@ -6,7 +6,7 @@ import {Game} from './ticket/Game';
 import {Ticket} from './ticket/Ticket';
 import {ColorCard} from './ColorCard';
 import {TicketCard} from './TicketCard';
-
+import {MapView} from './MapView';
 const game = new Game();
 
 function App() {
@@ -48,6 +48,7 @@ function App() {
         <p>Remaining cards: {game.ticketDeck.remaining().length}</p>
         {game.ticketDeck.remaining().map(ticket => <TicketCard ticket={ticket}/>)}
       </div>
+      <MapView/>
     </div>
   );
 }

@@ -19,3 +19,26 @@ export enum City {
   Washington   = 'Washington',
   Winnipeg     = 'Winnipeg',
 }
+
+export const Cities: Record<string, City> =
+{
+    Albuquerque:  City.Albuquerque,
+    Atlanta:      City.Atlanta,
+    Calgary:      City.Calgary,
+    Chicago:      City.Chicago,
+    Dallas:       City.Dallas,
+    Denver:       City.Denver,
+    Duluth:       City.Duluth,
+    Helena:       City.Helena,
+    KansasCity:   City.KansasCity,
+    LosAngeles:   City.LosAngeles,
+    Miami:        City.Miami,
+    Montreal:     City.Montreal,
+    NewOrleans:   City.NewOrleans,
+    NewYork:      City.NewYork,
+    SaltLakeCity: City.SaltLakeCity,
+    SanFrancisco: City.SanFrancisco,
+    Seattle:      City.Seattle,
+    Washington:   City.Washington,
+    Winnipeg:     City.Winnipeg,
+};

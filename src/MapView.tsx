@@ -1,27 +1,26 @@
 import React, {useCallback,  useState} from 'react';
 import Graph from 'react-vis-graph-wrapper';
 import 'vis-network/styles/vis-network.css';
-import {renderGraphData, toRender} from './vis/myvis.js';
+import {renderGraphData, MyNode} from './vis/myvis.js';
 import {defaultOptions} from './vis/options';
 
-toRender.graphableRows = [] //roots; // the full list
-const   defaultGraph = {nodes: [], edges: []};
+const   defaultGraph:{nodes:MyNode[], edges:any[]} = {nodes:[], edges: []};
 
 
 
 
+//
+// const events =  {
+//   select: ({ nodes, edges }) => {
+//     console.log('Selected nodes/edges:', nodes, edges);
+//   },
+//   doubleClick: ({ pointer: { canvas } }) => {
+//   }
+// }
 
-const events =  {
-  select: ({ nodes, edges }) => {
-    console.log('Selected nodes/edges:', nodes, edges);
-  },
-  doubleClick: ({ pointer: { canvas } }) => {
-  }
-}
 
 
-
-export const  RtStarView = ()=>{
+export const  MapView = ()=>{
 
   const [reset, setReset] = useState(false);
 
@@ -32,24 +31,20 @@ export const  RtStarView = ()=>{
   const [graph, setGraph] = useState(defaultGraph);
   const [options, setOptions] = useState(defaultOptions);
 
-  const chMaxNodes = useCallback((evt)=>{setMaxNodes(evt.target.value)},[]);
-  const chMaxEdges = useCallback((evt)=>{setMaxEdges(evt.target.value)},[]);
-
   const renderReset = useCallback(()=>setReset(true),[]);
-
 
   const render = useCallback(()=>{
 
-    const { data} = renderGraphData(toRender.graphableRows, mischalfim, otherChoices, maxNodes, maxEdges);
+    const data = renderGraphData();
     console.log(`new graphData`, data);
     setReset(false);
-    setGraph(data);
+    setGraph(data as any);
   }, [maxNodes, maxEdges]);
 
 
 
   const graphing = reset? (<></>):  (<div style={{  backgroundColor: 'midnightblue', height: '100%', width:'100%'}}>
-    <Graph events={events} graph={graph} options={options} style={{  backgroundColor: 'midnightblue'}} />
+    <Graph  graph={graph} options={options} style={{  backgroundColor: 'midnightblue'}} />
   </div>);
 
 //heading, active, name, choices,  setChoice
