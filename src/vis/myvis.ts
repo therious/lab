@@ -25,7 +25,7 @@ function populateNodes(cities:Record<string, City>/*, nodeMax*/):MyNode[]
       const idstr = `${s}-${d}-${c}-${i}`;
       const label =`${c}-${i}`;
 
-      const n:MyNode = {id:`${s}-${d}-${c}-${i}`, label, title:idstr, shape:'circle', color:{background:ColorStyle[route.color]}};
+      const n:MyNode = {id:`${s}-${d}-${c}-${i}`, label, title:idstr, shape:'circle', color:{background:ColorStyle[route.color]}, font:{size:30}};
       costNodes.push(n);
     }
 
@@ -50,12 +50,14 @@ function populateEdges(routes:Route[]) {
     // there is a node for each element of cost, rather just segments between cost
     // because otherwise we cant have two color single cost routes with vis.js easily
 
-    edges.push({from: s, to: interId + 0, length, color, width:10});
+    const width = 15;
+
+    edges.push({from: s, to: interId + 0, length, color, width});
     // just do the connections between costs 0-1, 1-2, etc.
     for(let i = 0; i < route.cost - 1; ++i)
-      edges.push({ from: interId + i, to: interId + (i + 1), length, color, width:10});
+      edges.push({ from: interId + i, to: interId + (i + 1), length, color, width});
 
-    edges.push({from: interId + (route.cost - 1), to: d, length, color, width:10});
+    edges.push({from: interId + (route.cost - 1), to: d, length, color, width});
     });
 
   edges.forEach((edge)=>console.log(edge));
