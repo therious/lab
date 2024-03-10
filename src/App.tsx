@@ -36,17 +36,17 @@ function App() {
         <p>Number of cards: {ccards.length}</p>
 
         {ccards.map(col => <ColorCard color={col}/>)}
-        <hr/>
-        <p>Remaining cards: {game.colorDeck.remaining().length}</p>
+        {/*<hr/>*/}
+        {/*<p>Remaining cards: {game.colorDeck.remaining().length}</p>*/}
 
-        {game.colorDeck.remaining().map(col => <ColorCard color={col}/>)}
+        {/*{game.colorDeck.remaining().map(col => <ColorCard color={col}/>)}*/}
       </div>
       <div>
         <p>Number of cards: {tcards.length}</p>
         {tcards.map(ticket => <TicketCard ticket={ticket}/>)}
-        <hr/>
-        <p>Remaining cards: {game.ticketDeck.remaining().length}</p>
-        {game.ticketDeck.remaining().map(ticket => <TicketCard ticket={ticket}/>)}
+        {/*<hr/>*/}
+        {/*<p>Remaining cards: {game.ticketDeck.remaining().length}</p>*/}
+        {/*{game.ticketDeck.remaining().map(ticket => <TicketCard ticket={ticket}/>)}*/}
       </div>
       <MapView/>
     </div>

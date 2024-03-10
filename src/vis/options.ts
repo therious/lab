@@ -17,20 +17,20 @@ export type VisNetworkOptions = {width:Size, height:Size, nodes:NodeOptions, edg
 
 export const defaultOptions:VisNetworkOptions = {
 
-  width: '2000px',
-  height: '2000px',
+  width: '1200px',
+  height: '900px',
   nodes: {
     color: {
       background: 'white',
-      border: 'cyan',
+      border: 'black',
       highlight: {
         background: 'pink',
         border: 'red'
       }
     },
-    shape: 'circle'
+    shape: 'box'
   },
-  edges: { color:'yellow', width: 0, arrows: {to:{enabled:false}, from:{enabled:false}}},
+  edges: { color:'yellow', width: 10, arrows: {to:{enabled:false}, from:{enabled:false}}},
   interaction: {
     keyboard: {
       speed: {
