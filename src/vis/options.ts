@@ -17,8 +17,8 @@ export type VisNetworkOptions = {width:Size, height:Size, nodes:NodeOptions, edg
 
 export const defaultOptions:VisNetworkOptions = {
 
-  width: '1200px',
-  height: '900px',
+  width: '1800px',
+  height: '1000px',
   nodes: {
     color: {
       background: 'white',

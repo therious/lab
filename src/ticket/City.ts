@@ -46,23 +46,23 @@ export const Cities: Record<string, City> =
 export type Coords = {x:number, y:number};
 export const Locations: Record<City, Coords> =
   {
-    [City.Albuquerque]: {x:-106.6504, y:35.0844},
-    [City.Atlanta]:     {x: -84.3877, y:33.7400},
-    [City.Calgary]:     {x:-114.0719, y:51.0447},
-    [City.Chicago]:     {x: -87.6298, y:41.8781},
-    [City.Dallas]:      {x: -96.7970, y:32.7767},
-    [City.Denver]:      {x:-104.9903, y:39.7392},
-    [City.Duluth]:      {x: -92.1005, y:46.7867},
-    [City.Helena]:      {x:-112.0391, y:46.5891},
-    [City.KansasCity]:  {x: -94.5786, y:39.0997},
-    [City.LosAngeles]:  {x:-118.2426, y:34.0549},
-    [City.Miami]:       {x: -80.1918, y:25.7617},
-    [City.Montreal]:    {x: -73.5674, y:45.5019},
-    [City.NewOrleans]:  {x: -90.0715, y:29.9511},
-    [City.NewYork]:     {x: -74.0060, y:40.7128},
-    [City.SaltLakeCity]:{x:-111.8910, y:40.7608},
-    [City.SanFrancisco]:{x:-122.4194, y:37.7749},
-    [City.Seattle]:     {x:-122.3328, y:47.6061},
-    [City.Washington]:  {x: -77.0369, y:38.9072},
-    [City.Winnipeg]:    {x: -97.1385, y:49.8954},
+    [City.Albuquerque]: {x:1343, y:1374},      //1343, 1374
+    [City.Atlanta]:     {x:2610, y:1467},       //2610, 1467
+    [City.Calgary]:     {x:921, y:121},           //921,121
+    [City.Chicago]:     {x: 2426, y:880},          //2426, 880
+    [City.Dallas]:      {x: 1905, y:1533},         //1905, 1533
+    [City.Denver]:      {x:1439, y:1041},        //1439, 1041
+    [City.Duluth]:      {x:2172, y:495},       //2172, 495
+    [City.Helena]:      {x:1008, y:555},        //1008, 555
+    [City.KansasCity]:  {x:2031, y:1088},         //2031, 1088
+    [City.LosAngeles]:  {x:685, y:1446},      // 685, 1446
+    [City.Miami]:       {x:2849, y:1991},        //2849, 1991
+    [City.Montreal]:    {x:3226, y:595},         //3226, 595
+    [City.NewOrleans]:  {x:2287, y:1721},          //2287, 1721
+    [City.NewYork]:     {x:3201, y:968},      //3201, 968
+    [City.SaltLakeCity]:{x:1046, y:965},        //1046, 965
+    [City.SanFrancisco]:{x:448, y:1185 },     //448, 1185
+    [City.Seattle]:     {x:451, y:421  },    //451, 421
+    [City.Washington]:  {x: 3029, y:1102},       //3029, 1102
+    [City.Winnipeg]:    {x: 1885, y:223},       //1885, 223
   };

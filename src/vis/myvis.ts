@@ -9,8 +9,8 @@ function populateNodes(cities:Record<string, City>/*, nodeMax*/):MyNode[]
   const arr = Object.entries(cities);
   const cityNodes =  arr.map(([key, value],i)=>
   ({id:value, label:value, title:key,
-      x: Locations[value].x * 85 + 8_400,
-      y: Locations[value].y * -85 + 3_200,
+      x: Locations[value].x * 1.65 - 3060,
+      y: Locations[value].y * 1.65 - 1700,
       fixed: {x:true, y:true}
   }));
 
