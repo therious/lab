@@ -1,13 +1,18 @@
-import {Cities, City } from '../ticket/City'
+import {Cities, City, Locations } from '../ticket/City'
 import {Routes, Route} from "../ticket/Route";
 import {ColorStyle} from '../ticket/Color';
 
-export type MyNode = {id:string, label:string, title:string, hidden?:boolean, shape?:string, color?:any};
+export type MyNode = {id:string, label:string, title:string, hidden?:boolean, shape?:string, color?:any, x?:number, y?:number};
 
 function populateNodes(cities:Record<string, City>/*, nodeMax*/):MyNode[]
 {
   const arr = Object.entries(cities);
-  const cityNodes =  arr.map(([key, value],i)=>({id:value, label:value, title:key}));
+  const cityNodes =  arr.map(([key, value],i)=>
+  ({id:value, label:value, title:key,
+      x: Locations[value].x * 30,
+      y: Locations[value].y * -30,
+      fixed: {x:true, y:true}
+  }));
 
   const costNodes:MyNode[] = [];
 
@@ -23,6 +28,7 @@ function populateNodes(cities:Record<string, City>/*, nodeMax*/):MyNode[]
       const n:MyNode = {id:`${s}-${d}-${c}-${i}`, label, title:idstr, shape:'circle', color:{background:ColorStyle[route.color]}};
       costNodes.push(n);
     }
+
 
   });
   return [...cityNodes, ...costNodes];
