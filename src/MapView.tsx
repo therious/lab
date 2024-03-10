@@ -44,12 +44,16 @@ export const  MapView = ()=>{
 
 
   const graphing = reset? (<></>):  (<div style={{  height: '900px', width:'1200px'}}>
-    <Graph  graph={graph} options={options} style={{  backgroundColor: '#777'}} />
+    <Graph  graph={graph} options={options} style={{
+      backgroundImage:`url('/us-canada.png')`,
+      backgroundRepeat: 'no-repeat',
+      backgroundSize: 'cover'
+    }} />
   </div>);
 
 //heading, active, name, choices,  setChoice
   return  (
-    <div key={`ticket`} style={{marginTop:'30px'}}>
+    <div key={`ticket`} style={{marginTop: '30px'}}>
       <h1>Map View</h1>
       <hr/>
       <button disabled={!reset} onClick={render}>Show results</button>
