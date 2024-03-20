@@ -1,11 +1,10 @@
 import {Color} from './Color';
 import {City} from './City';
+import {Player} from './Player';
 
 type Cost = 1|2|3|4;                 // cost is integer from 1 - 4 inclusive
 type CityPair = [City,City];         // always two cities connected by route
-type RouteColors = [Color, Color?];  // only one or two colors per route
-export type Route = { cost:Cost, color:Color, cities:CityPair };
-
+export type Route = { cost:Cost, color:Color, cities:CityPair, occupiedBy?: Player };
 
 export const Routes: Route[] = [
   {cities: [City.Albuquerque, City.Dallas],        cost: 2, color:Color.Black},

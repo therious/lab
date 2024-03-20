@@ -1,15 +1,16 @@
 import {Routes, Route} from './Route';
 import {ColorDeck} from './ColorDeck';
 import {TicketDeck} from './Ticket';
+import {Player} from './Player';
 
 export class Game {
-  readonly players: string[];
+  readonly players: Player[];
   readonly colorDeck: ColorDeck;
   readonly ticketDeck:TicketDeck;
   readonly routes:Route[] = Routes;
 
   constructor() {
-    this.players = ["Rivka", "Zaidy"]; // hard coded for now
+    this.players = [{name:"Rivka", color:'limegreen'}, {name: "Zaidy", color:'cyan' }]; // hard coded for now
     this.colorDeck = new ColorDeck();
     this.ticketDeck = new TicketDeck();
 
