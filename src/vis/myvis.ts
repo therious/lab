@@ -1,20 +1,21 @@
 import {Cities, City, Locations } from '../ticket/City'
 import {Routes, Route} from "../ticket/Route";
 import {ColorStyle} from '../ticket/Color';
+import {Edge, Node} from "vis-network/standalone/esm/vis-network";
 
-export type MyNode = {id:string, label:string, title:string, hidden?:boolean, shape?:string, color?:any, x?:number, y?:number};
+export const stdEdgeWidth = 15;
 
-function populateNodes(cities:Record<string, City>/*, nodeMax*/):MyNode[]
+function populateNodes(cities:Record<string, City>):Node[]
 {
   const arr = Object.entries(cities);
-  const cityNodes =  arr.map(([key, value],i)=>
+  const cityNodes =  arr.map(([key, value])=>
   ({id:value, label:value, title:key,
       x: Locations[value].x * 1.65 - 3060,
       y: Locations[value].y * 1.65 - 1700,
       fixed: {x:true, y:true}
   }));
 
-  const costNodes:MyNode[] = [];
+  const costNodes:Node[] = [];
 
   Routes.forEach(route=> {
     for (let i = 0; i < route.cost; ++i)
@@ -25,21 +26,20 @@ function populateNodes(cities:Record<string, City>/*, nodeMax*/):MyNode[]
       const idstr = `${s}-${d}-${c}-${i}`;
       const label =`${c}-${i}`;
 
-      const n:MyNode = {id:`${s}-${d}-${c}-${i}`, label, title:idstr, shape:'circle', color:{background:ColorStyle[route.color]}, font:{size:30}};
+      const n:Node = {id:`${s}-${d}-${c}-${i}`, label, title:idstr, shape:'circle', color:{background:ColorStyle[route.color]}, font:{size:30}};
       costNodes.push(n);
     }
-
 
   });
   return [...cityNodes, ...costNodes];
 }
 
 
-function populateEdges(routes:Route[]) {
+function populateEdges(routes:Route[]):Edge[] {
   const edges:any[] = [];
 
-  routes.forEach((route)=>{
-
+  routes.forEach((route)=>
+  {
     const s= route.cities[0];
     const d= route.cities[1];
     const c= route.color;
@@ -50,7 +50,7 @@ function populateEdges(routes:Route[]) {
     // there is a node for each element of cost, rather just segments between cost
     // because otherwise we cant have two color single cost routes with vis.js easily
 
-    const width = 15;
+    const width = stdEdgeWidth;
 
     edges.push({from: s, to: interId + 0, length, color, width});
     // just do the connections between costs 0-1, 1-2, etc.
@@ -60,31 +60,17 @@ function populateEdges(routes:Route[]) {
     edges.push({from: interId + (route.cost - 1), to: d, length, color, width});
     });
 
-  edges.forEach((edge)=>console.log(edge));
-
   return  edges;
 }
 
-function diagram(cities:Record<string,City>)
+function diagram(cities:Record<string,City>): { nodes:Node[], edges:Edge[] }
 {
   let nodes = populateNodes(cities);
-  console.log(`nodes`, nodes);
-
   let edges = populateEdges(Routes);
 
-
-  const data= {
-    nodes: nodes,
-    edges: edges
-  };
   // const network = new vis.Network(container, data, options);
-  return  data;
+  return  {nodes, edges};
 
 }
 
-
-export function renderGraphData()
-{
-  return diagram(Cities);
-}
-
+export const renderGraphData = ()=>diagram(Cities);
