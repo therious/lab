@@ -10,12 +10,13 @@ import {coverageMiddleware, coverageMiddlewareInit} from './coverage-middleware'
 
 // -- app specific slices --
 import {sliceConfig as localSlice, LocalState} from "./local-slice";
+import {sliceConfig as ticketSlice,TicketState} from './ticket-slice';
 
 
 //-- app specific middlewares
 
 
-export const allSlices = [requestSlice, notifySlice, coverageSlice, localSlice, ];
+export const allSlices = [requestSlice, notifySlice, coverageSlice, localSlice, ticketSlice];
 export const allMiddlewares = [ fatalMiddleware, coverageMiddleware, loggingMiddleware];
 export const middlewareInits = [  coverageMiddlewareInit];
 
@@ -28,5 +29,6 @@ export type TotalState = {
     notify: NotifyState;
   coverage: CoverageState;
      local: LocalState;
+     ticket:TicketState;
 }
 

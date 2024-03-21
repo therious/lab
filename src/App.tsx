@@ -7,9 +7,15 @@ import {Ticket} from './ticket/Ticket';
 import {ColorCard} from './ColorCard';
 import {TicketCard} from './TicketCard';
 import {MapView} from './MapView';
+import {actions, useSelector} from './actions-integration';
+import {TotalState} from './actions/combined-slices';
+import {TicketState} from './actions/ticket-slice';
+
 const game = new Game();
 
 function App() {
+  const {players, turn, whoPlaysNow} = useSelector<TicketState>(s=>s.ticket);
+
   const [ccards, setCcards] = useState<Color[]>([]);
   const [tcards, setTcards] = useState<Ticket[]>([]);
   const getFive = useCallback(()=>{
@@ -31,6 +37,7 @@ function App() {
       <button onClick={getFive}>Deal colors</button>
       <button onClick={getTwo}>Get Two more</button>
       <button onClick={getTicket}>Get a ticket</button>
+      <p>Players {players.length}</p>
 
       <div>
         <p>Number of cards: {ccards.length}</p>
