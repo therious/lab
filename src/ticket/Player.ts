@@ -5,13 +5,13 @@ import {Route} from './Route';
 
 export type CardsInHand =
   {
-    [Color.Red]:    number;
-    [Color.Green]:  number;
     [Color.Black]:  number;
+    [Color.Red]:    number;
+    [Color.Yellow]: number;
+    [Color.Green]:  number;
     [Color.Blue]:   number;
     [Color.White]:  number;
     [Color.Wild]:   number;
-    [Color.Yellow]: number;
   };
 
 
@@ -20,7 +20,7 @@ export type Player = {
   color:            string;
   colorCardsInHand: CardsInHand;
   ticketsInHand:    Ticket[];
-  completedTickets: Ticket[];
+  ticketsCompleted: Ticket[];
   routesOwned:      Route[];
 }
 
@@ -36,7 +36,7 @@ export const playerTemplate:Omit<Player, 'name'|'color'>  = {
     [Color.Wild]:   0,
   },
   ticketsInHand:[],
-  completedTickets:[],
+  ticketsCompleted:[],
   routesOwned:[],
 } ;
 

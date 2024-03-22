@@ -78,7 +78,7 @@ const reducers:TicketReducers = {
       if(isTicketComplete(player.routesOwned, ticket)) {
         const completed = ticket;
         player.ticketsInHand =  player.ticketsInHand.filter(t=>t!==completed);  // remove from in hand to completed
-        player.completedTickets.push(ticket);
+        player.ticketsCompleted.push(ticket);
       }
     });
     ++draft.turn;

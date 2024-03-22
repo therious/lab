@@ -2,7 +2,6 @@ import {Cities, City, Locations } from '../ticket/City'
 import {Routes, Route} from "../ticket/Route";
 import {ColorStyle} from '../ticket/Color';
 import {Edge, Node} from "vis-network/standalone/esm/vis-network";
-
 export const stdEdgeWidth = 15;
 
 function populateNodes(cities:Record<string, City>):Node[]
@@ -17,6 +16,7 @@ function populateNodes(cities:Record<string, City>):Node[]
 
   const costNodes:Node[] = [];
 
+  const trains = ['./icons/car-red.png', './icons/car-green.png', './icons/car-orange.png', './icons/car-blue.png'];
   Routes.forEach(route=> {
     for (let i = 0; i < route.cost; ++i)
     {
@@ -26,7 +26,11 @@ function populateNodes(cities:Record<string, City>):Node[]
       const idstr = `${s}-${d}-${c}-${i}`;
       const label =`${c}-${i}`;
 
-      const n:Node = {id:`${s}-${d}-${c}-${i}`, label, title:idstr, shape:'circle', color:{background:ColorStyle[route.color]}, font:{size:30}};
+      const n:Node = {id:`${s}-${d}-${c}-${i}`, label, title:idstr,
+      shape: 'circle',
+ //     shape:'image', image: trains[i%4],
+
+      color:{background:ColorStyle[route.color]}, font:{size:30}};
       costNodes.push(n);
     }
 
