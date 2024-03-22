@@ -99,3 +99,41 @@ export const Routes: Route[] = [
 
 ];
 
+// little brute force network checker
+export class Nettie
+{
+  //@ts-ignore
+  protected r: Record<City, City[]> = {};
+  protected visited:Set<City> = new Set();
+
+  constructor(routes:Route[])
+  {
+    routes.forEach(route=>{
+      const x = route.cities[0];
+      const y = route.cities[1];
+      this.addDirection(x, y);
+      this.addDirection(y, x);
+    });
+  }
+  addDirection(a:City, b:City):void
+  {
+    const r = this.r;
+
+    const xs = r[a];
+    if(!xs) r[a] = [b];
+    else r[a] = [...r[a], b];
+  }
+
+  containsBoth(a:City, b:City): boolean
+  {
+    return !!this.r[a] && !!this.r[b];
+  }
+  connects(a:City, b:City): boolean
+  {
+    const xs = this.r[a];
+    if(xs.indexOf(b) >= 0)
+      return true;
+    this.visited.add(a);  // track what cities we've tested
+    return xs.some(c =>!this.visited.has(c) && this.connects(c, b));
+  }
+}
