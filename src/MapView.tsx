@@ -6,7 +6,7 @@ import {Network, Options, Data, Edge, Node, DataSet, IdType} from "vis-network/s
 import {useVisNetwork} from './vis/useVisNetwork';
 import {actions, useSelector} from './actions-integration';
 import {TicketState} from './actions/ticket-slice';
-import {Color} from './ticket/Color';
+import {Color, ColorStyle} from './ticket/Color';
 
 // const   graphData:Data = renderGraphData();
 const {nodes:rawnodes, edges:rawedges} = renderGraphData();
@@ -20,6 +20,33 @@ type VisClick = {nodes:Node[], edges:Edge[], pointer:any, previousSelection: { n
 
 const somecolors = ['#f00', '#f70', '#ff0', '#0f0', '#0ff',  '#00f', '#f0f',];
 const ticketActions = actions.ticket;
+
+
+function getNode(index:number): Node
+{
+  const id = rawnodes[index].id;
+  const node = nodes.get(id as IdType);
+  if(node !== null)
+    return node;
+  throw new Error(`Node ${id} not found`)
+}
+function getNodeById(id:IdType): Node
+{
+  const node = nodes.get(id);
+  if(node !== null)
+    return node;
+  throw new Error(`Node ${id} not found`)
+}
+
+function getEdge(index:number): Edge
+{
+  const id = rawedges[index].id;
+  const edge = edges.get(id as IdType);
+  if(edge !== null)
+    return edge;
+  throw new Error(`Edge ${id} not found`)
+}
+
 
 export const MapView = ()=>
 {
@@ -44,12 +71,31 @@ export const MapView = ()=>
           const sameToUse = (sameColorCount >= route.cost)?  route.cost: sameColorCount;
           const wildToUse = (sameToUse === route.cost)? 0: route.cost - wildColorCount;
           ticketActions.claimRoute(route, {[route.color]: sameToUse, [Color.Wild]: wildToUse});
+
+          //...todo put in graphic effect here on the route
+          // like make it thicker, put the correct color trains on it
+
+          //...find all the edges belonging to the route
+
+          //...find all the nodes belonging to the route and put trains on them
+        for (let i = 0; i < route.cost; ++i)
+        for (let i = 0; i < route.cost; ++i)
+        {
+          const id = NodeToRouteMapper.registerRouteCreateId(route, i);
+
+          const node = getNodeById(id);
+
+          node.shape = 'image';
+          node.image = `./icons/car-${player.color}.png`;
+          nodes.update(node);
+        }
+
       } else {
         alert(`You don't have enough to claim route, you need ${route.cost} cards of color ${route.color}`);
       }
     }
 
-  },[network]);
+  },[network, whoPlaysNow]);
 
   // useEffect(() => {
   //   let currentNodeIndex = 0;
