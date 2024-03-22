@@ -8,7 +8,6 @@ import {MapView} from './MapView';
 import {actions, useSelector} from './actions-integration';
 import {TicketState} from './actions/ticket-slice';
 import {ColorCard} from './ColorCard';
-import {Color} from './ticket/Color';
 
 const game = new Game();
 
@@ -16,9 +15,9 @@ type PlayerViewProps = { player:Player }
 function PlayerView({player}:PlayerViewProps) {
   const {players, turn, whoPlaysNow} = useSelector<TicketState>(s=>s.ticket);
 
+  const itsMyTurn = players[whoPlaysNow] === player;
 
-// ... check if its this players turn
-  return <div style={{border: '1px solid black'}}>
+  return <div style={{display:'inline-block', width:'40%', border: '1px solid black', backgroundColor: itsMyTurn? 'cornsilk':'white'}}>
     Player: {player.name}
     <div>
       Colors in Hand:

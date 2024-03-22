@@ -1,4 +1,4 @@
-import {Player, playerTemplate} from '../ticket/Player';
+import { Player, playerTemplate} from '../ticket/Player';
 import {Color} from '../ticket/Color';
 import {Route, Nettie} from '../ticket/Route';
 import {Ticket} from '../ticket/Ticket';
@@ -51,7 +51,7 @@ const creators:TicketCreators = {
   addPlayer: (player)=>({player}),
   drawColors:(cards)=>({cards}),     // giving a player his initial cards is done this way too
   drawTicket:(ticket)=>({ticket}),
-  claimRoute:(route)=>({route}),
+  claimRoute:(route, cards)=>({route, cards}),
 };
 
 const reducers:TicketReducers = {
@@ -69,10 +69,17 @@ const reducers:TicketReducers = {
     const player:Player = draft.players[playerIndex];
     player.ticketsInHand.push(ticket);
   }),
-  claimRoute:(s:TicketState, {route})=>produce(s, draft=>{
+  claimRoute:(s:TicketState, {route, cards})=>produce(s, draft=>{
     const playerIndex = draft.whoPlaysNow;
     const player:Player = draft.players[playerIndex];
     player.routesOwned.push(route);
+
+    //  remove from cards in hand
+    Object.entries(cards).forEach(([k,v])=>{
+      //@ts-ignore
+      player.colorCardsInHand[k] -= v;
+    });
+
     // does this complete any tickets?
     [...player.ticketsInHand].forEach(ticket=>{
       if(isTicketComplete(player.routesOwned, ticket)) {

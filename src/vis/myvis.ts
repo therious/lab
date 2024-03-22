@@ -4,6 +4,25 @@ import {ColorStyle} from '../ticket/Color';
 import {Edge, Node} from "vis-network/standalone/esm/vis-network";
 export const stdEdgeWidth = 15;
 
+export class NodeToRouteMapper
+{
+  protected static map:Map<string, Route> = new Map();
+
+  public static registerRouteCreateId(route:Route, i:number):string
+  {
+    const s = route.cities[0];
+    const d =route.cities[1];
+    const c = route.color;
+    const idstr = `${s}-${d}-${c}-${i}`;
+    this.map.set(idstr, route);
+    return idstr;
+  }
+  public static costNodeIdToRouteInfo(id:string) {
+    return this.map.get(id);
+  }
+}
+
+
 function populateNodes(cities:Record<string, City>):Node[]
 {
   const arr = Object.entries(cities);
@@ -23,10 +42,10 @@ function populateNodes(cities:Record<string, City>):Node[]
       const s = route.cities[0];
       const d =route.cities[1];
       const c = route.color;
-      const idstr = `${s}-${d}-${c}-${i}`;
+      const id = NodeToRouteMapper.registerRouteCreateId(route, i);
       const label =`${c}-${i}`;
 
-      const n:Node = {id:`${s}-${d}-${c}-${i}`, label, title:idstr,
+      const n:Node = {id, label, title:id,
       shape: 'circle',
  //     shape:'image', image: trains[i%4],
 
