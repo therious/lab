@@ -1,6 +1,5 @@
 import {Cities, City, Locations } from '../ticket/City'
 import {Routes, Route} from "../ticket/Route";
-import {ColorStyle} from '../ticket/Color';
 import {Edge, Node} from "vis-network/standalone/esm/vis-network";
 export const stdEdgeWidth = 15;
 
@@ -43,13 +42,9 @@ function populateNodes(cities:Record<string, City>):Node[]
       const d =route.cities[1];
       const c = route.color;
       const id = NodeToRouteMapper.registerRouteCreateId(route, i);
-      const label =`${c}-${i}`;
-
-      const n:Node = {id, label, title:id,
-      shape: 'circle',
- //     shape:'image', image: trains[i%4],
-
-      color:{background:ColorStyle[route.color]}, font:{size:30}};
+      const n:Node = {id, title:id,
+      shape: 'square', size:30,
+      color:{background:route.color}, font:{size:30}};
       costNodes.push(n);
     }
 
@@ -68,7 +63,7 @@ function populateEdges(routes:Route[]):Edge[] {
     const c= route.color;
     const interId = `${s}-${d}-${c}-`;
 
-    const color = ColorStyle[route.color];
+    const color = route.color;
     const length = 50;
     // there is a node for each element of cost, rather just segments between cost
     // because otherwise we cant have two color single cost routes with vis.js easily

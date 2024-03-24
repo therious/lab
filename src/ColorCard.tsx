@@ -1,4 +1,4 @@
-import {Color, ColorStyle} from './ticket/Color';
+import {Color} from './ticket/Color';
 
 type ColorCardProps = {color:Color, count:number}
 
@@ -10,5 +10,5 @@ const cardstyle = {
 
 export function ColorCard({color, count}:ColorCardProps)
 {
-  return <div style={{...cardstyle, backgroundColor: ColorStyle[color]}}>{count}</div>
+  return <div style={{...cardstyle, backgroundColor: color}}>{count}</div>
 }

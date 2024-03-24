@@ -6,7 +6,7 @@ import {Network, Options, Data, Edge, Node, DataSet, IdType} from "vis-network/s
 import {useVisNetwork} from './vis/useVisNetwork';
 import {actions, useSelector} from './actions-integration';
 import {TicketState} from './actions/ticket-slice';
-import {Color, ColorStyle} from './ticket/Color';
+import {Color} from './ticket/Color';
 
 // const   graphData:Data = renderGraphData();
 const {nodes:rawnodes, edges:rawedges} = renderGraphData();
@@ -69,7 +69,7 @@ export const MapView = ()=>
       if(sameColorCount + wildColorCount >= route.cost)
       {
           const sameToUse = (sameColorCount >= route.cost)?  route.cost: sameColorCount;
-          const wildToUse = (sameToUse === route.cost)? 0: route.cost - wildColorCount;
+          const wildToUse = (sameToUse === route.cost)? 0:  (route.cost - sameToUse);
           ticketActions.claimRoute(route, {[route.color]: sameToUse, [Color.Wild]: wildToUse});
 
           //...todo put in graphic effect here on the route

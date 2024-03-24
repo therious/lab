@@ -1,3 +1,1 @@
-export enum Color { Red, Green, Yellow, Blue, White, Black, Wild}
-
-export const ColorStyle:string[] = [ 'red', 'green', 'yellow', 'blue', 'white', 'black', 'purple' ] ;
+export enum Color { Red = 'red', Green ='green', Yellow = 'yellow', Blue = 'blue', White = 'white', Black = 'black', Wild = 'purple'}

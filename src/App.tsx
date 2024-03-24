@@ -2,6 +2,7 @@ import React,  {useCallback, useState} from 'react';
 import './App.css';
 
 import {Game} from './ticket/Game';
+import {Color} from './ticket/Color';
 import {Player} from './ticket/Player';
 import {TicketCard} from './TicketCard';
 import {MapView} from './MapView';
@@ -22,7 +23,7 @@ function PlayerView({player}:PlayerViewProps) {
     <div>
       Colors in Hand:
       {Object.entries(player.colorCardsInHand).filter(([k,v])=>v).map(([k,v])=>{
-        return <ColorCard color={Number(k)} count={v}/>
+        return <ColorCard color={k as Color} count={v}/>
       })}
 
     </div>
