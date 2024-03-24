@@ -5,9 +5,6 @@ disable buttons when appropriate e.g. dealing five cards, dealing cards when emp
 implement coast to coast
 implement sound effects
 implement log of who did what
-prevent graph from scaling off of the map
-make graph scale when page does
-disable zoom
 
 pass your turn
 

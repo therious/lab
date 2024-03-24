@@ -1,19 +1,7 @@
+import {Options as VisNetworkOptions} from "vis-network/standalone/esm/vis-network";
 
-type ShapeInnies = 'ellipse'|'circle'|'database'|'box'|'text';
-type ShapeOuties = 'image'|'circularImage'|'diamond'|'dot'|'star'|'triangle'|'hexagon'|'square'|'icon'|'custom';
-type Shape = ShapeInnies | ShapeOuties;
-type Color = {background: string; border: string, highlight: {background:string, border:string}};
-
-type Size = `${number}px`;
-
-type  NodeOptions = {shape:Shape, color:Color};
 type ArrowEndOptions = {enabled:boolean};
 export type EdgeOptions = {color:string, width:number, arrows: {to: ArrowEndOptions, from: ArrowEndOptions}};
-
-type InteractionOptions = {keyboard: {speed: {x:number, y:number, zoom: number}}};
-
-export type VisNetworkOptions = {width:Size, height:Size, nodes:NodeOptions, edges:EdgeOptions, interaction: InteractionOptions}
-
 
 export const defaultOptions:VisNetworkOptions = {
 
@@ -32,7 +20,11 @@ export const defaultOptions:VisNetworkOptions = {
   },
   edges: { color:'yellow', width: 10, arrows: {to:{enabled:false}, from:{enabled:false}}},
   interaction: {
+    dragView: false,
+    multiSelect: false,
+    zoomView:false,
     keyboard: {
+      enabled:false,
       speed: {
         x: 10,
         y: 10,
