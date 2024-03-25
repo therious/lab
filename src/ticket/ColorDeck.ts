@@ -16,5 +16,18 @@ export class ColorDeck extends Deck<Color>
       ...new Array(colorCount).fill(Color.Black),
       ...new Array(wildCount).fill(Color.Wild)]);
   }
+  public override shuffle() {
+    super.shuffle();
+
+    const array1 = [...this.cards];
+    super.shuffle();
+    const array2 = [...this.cards];
+    super.shuffle();
+    const array3 = [...this.cards];
+    super.shuffle();
+    const array4 = [...this.cards];
+
+    this.cards = [...array1, ...array2, ...array3, ...array4]; // make an ample supply of color cards, as if we reshuffled after running out
+  }
 }
 

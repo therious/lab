@@ -1,42 +1,11 @@
-import React,  {useCallback, useState} from 'react';
+import React,  {useCallback, useState, useEffect} from 'react';
 import './App.css';
 
-import {Game} from './ticket/Game';
-import {Color} from './ticket/Color';
-import {Player} from './ticket/Player';
-import {TicketCard} from './TicketCard';
+import {game} from './ticket/Game';
 import {MapView} from './MapView';
 import {actions, useSelector} from './actions-integration';
 import {TicketState} from './actions/ticket-slice';
-import {ColorCard} from './ColorCard';
-
-const game = new Game();
-
-type PlayerViewProps = { player:Player }
-function PlayerView({player}:PlayerViewProps) {
-  const {players, turn, whoPlaysNow} = useSelector<TicketState>(s=>s.ticket);
-
-  const itsMyTurn = players[whoPlaysNow] === player;
-
-  return <div style={{display:'inline-block', width:'40%', border: '1px solid black', backgroundColor: itsMyTurn? 'cornsilk':'white'}}>
-    Player: {player.name}
-    <div>
-      Colors in Hand:
-      {Object.entries(player.colorCardsInHand).filter(([k,v])=>v).map(([k,v])=>{
-        return <ColorCard color={k as Color} count={v}/>
-      })}
-
-    </div>
-    <div>
-      Tickets in Hand:
-      {player.ticketsInHand.map(ticket => <TicketCard ticket={ticket}/>)}
-    </div>
-    <div>
-      Tickets completed:
-      {player.ticketsCompleted.map(ticket => <TicketCard ticket={ticket}/>)}
-    </div>
-  </div>
-}
+import {PlayerView} from './PlayerView';
 
 const ta = actions.ticket;
 
@@ -48,7 +17,10 @@ function App() {
 
   return (
     <div className="App">
-      <button onClick={ta.resetGame}>Reset Game</button>
+      <button onClick={()=>{
+      const sound = new Audio('/sounds/96130__bmaczero__shuffle.wav');
+      sound.play();
+      ta.resetGame()}}>Reset Game</button>
       <button onClick={() => ta.addPlayer({name: 'Zaidy', color: 'red'})}>Add first player</button>
       <button onClick={() => ta.addPlayer({name: 'Rivka', color: 'blue'})}>Add second player</button>
       <hr/>
