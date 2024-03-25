@@ -1,4 +1,4 @@
-import React,  {useCallback, useState, useEffect} from 'react';
+import React,  {useCallback} from 'react';
 import './App.css';
 
 import {game} from './ticket/Game';
@@ -10,7 +10,7 @@ import {PlayerView} from './PlayerView';
 const ta = actions.ticket;
 
 const dealSound = new Audio('sounds/571577__el_boss__playing-card-deal-variation-1.wav')
-
+dealSound.playbackRate = 2.5;
 const playerColors = ['red', 'blue', 'green', 'orange'];
 const playerOrdinals = ['first', 'second', 'third', 'fourth'];
 
@@ -20,7 +20,6 @@ function App() {
     let clippedCount = Math.min(game.colorDeck.remaining().length, count);
 
       const dealOne = () =>{
-
         if(clippedCount) {
           --clippedCount;
           ta.drawColors(game.colorDeck.deal(1));
@@ -28,8 +27,6 @@ function App() {
           if(!clippedCount)
             ta.nextPlayer();
         }
-
-
       };
       dealOne();
       dealSound.addEventListener('ended', dealOne);
@@ -62,8 +59,6 @@ function App() {
       <div>
         {players.map(((player,index) => <PlayerView key={index} player={player}/>))}
       </div>
-
-
       <hr/>
       <MapView/>
     </div>
