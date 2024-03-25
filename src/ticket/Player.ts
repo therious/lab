@@ -19,6 +19,7 @@ export type Player = {
   name:             string;
   color:            string;
   colorCardsInHand: CardsInHand;
+  colorCardsCount: number;
   ticketsInHand:    Ticket[];
   ticketsCompleted: Ticket[];
   routesOwned:      Route[];
@@ -35,6 +36,7 @@ export const playerTemplate:Omit<Player, 'name'|'color'>  = {
     [Color.White]:  0,
     [Color.Wild]:   0,
   },
+  colorCardsCount: 0,
   ticketsInHand:[],
   ticketsCompleted:[],
   routesOwned:[],

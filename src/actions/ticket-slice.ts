@@ -62,7 +62,10 @@ const reducers:TicketReducers = {
   drawColors:(s:TicketState, {cards})=>produce(s, draft=>{
     const playerIndex = draft.whoPlaysNow;
     const player:Player = draft.players[playerIndex];
-    cards.forEach((card:Color)=>player.colorCardsInHand[card]++);
+    cards.forEach((card:Color)=>{
+      player.colorCardsCount++;
+      player.colorCardsInHand[card]++
+    });
   }),
   drawTicket:(s:TicketState, {ticket})=>produce(s, draft=>{
     const playerIndex = draft.whoPlaysNow;
@@ -78,6 +81,7 @@ const reducers:TicketReducers = {
     Object.entries(cards).forEach(([k,v])=>{
       //@ts-ignore
       player.colorCardsInHand[k] -= v;
+      player.colorCardsCount--;
     });
 
     // does this complete any tickets?
