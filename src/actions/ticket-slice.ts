@@ -49,20 +49,20 @@ const isTicketComplete = (routes:Route[], ticket:Ticket)=>
 const creators:TicketCreators = {
   resetGame: ()=>({}),
   addPlayer: (player)=>({player}),
+  nextPlayer: ()=>({}),
   drawColors:(cards)=>({cards}),     // giving a player his initial cards is done this way too
   drawTicket:(ticket)=>({ticket}),
   claimRoute:(route, cards)=>({route, cards}),
 };
 
 const reducers:TicketReducers = {
-  resetGame: (s)=>({...initialState}),
+  resetGame: (/*s*/)=>({...initialState}),
   addPlayer: (s, {player})=>({...s, players: [...s.players, {...playerTemplate, ...player} ]}),
+  nextPlayer: (s)=>({...s, turn:s.turn+1, whoPlaysNow: (s.turn+1) % s.players.length}),
   drawColors:(s:TicketState, {cards})=>produce(s, draft=>{
     const playerIndex = draft.whoPlaysNow;
     const player:Player = draft.players[playerIndex];
     cards.forEach((card:Color)=>player.colorCardsInHand[card]++);
-    ++draft.turn;
-    draft.whoPlaysNow = draft.turn % draft.players.length;
   }),
   drawTicket:(s:TicketState, {ticket})=>produce(s, draft=>{
     const playerIndex = draft.whoPlaysNow;

@@ -5,7 +5,7 @@ import {Player} from './ticket/Player';
 import {TicketCard} from './TicketCard';
 import {actions, useSelector} from './actions-integration';
 import {TicketState} from './actions/ticket-slice';
-import {ColorCard} from './ColorCard';
+import {CardHand } from './ColorCard';
 
 
 type PlayerViewProps = { player:Player }
@@ -32,14 +32,10 @@ export function PlayerView({player}:PlayerViewProps) {
   const itsMyTurn = players[whoPlaysNow] === player;
 
   return <div style={{display:'inline-block', paddingTop:'10px', width:'40%', border: '1px solid black', backgroundColor: itsMyTurn? 'cornsilk':'white'}}>
-    Player: {player.name} <img width={'50px'} src={`./icons/car-${player.color}.png`}/>
-    <div>
-      Colors in Hand:
-      {Object.entries(player.colorCardsInHand).filter(([k,v])=>v).map(([k,v])=>{
-        return <ColorCard color={k as Color} count={v}/>
-      })}
 
-    </div>
+    <CardHand player={player}/>
+    Player: {player.name} <img width={'50px'} src={`./icons/car-${player.color}.png`}/>
+
     <div>
       Tickets in Hand:
       {player.ticketsInHand.map(ticket => <TicketCard ticket={ticket}/>)}

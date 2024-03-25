@@ -9,10 +9,32 @@ import {PlayerView} from './PlayerView';
 
 const ta = actions.ticket;
 
+const dealSound = new Audio('sounds/571577__el_boss__playing-card-deal-variation-1.wav')
+
 function App() {
   const {players, turn, whoPlaysNow} = useSelector<TicketState>(s => s.ticket);
-  const getFive   = useCallback(()=>ta.drawColors(game.colorDeck.deal(5)),[]);
-  const getTwo    = useCallback(()=>ta.drawColors(game.colorDeck.deal(2)),[]);
+  const dealColorCards = useCallback((count:number)=>{
+    let clippedCount = Math.min(game.colorDeck.remaining().length, count);
+
+      const dealOne = () =>{
+
+        if(clippedCount) {
+          --clippedCount;
+          ta.drawColors(game.colorDeck.deal(1));
+          dealSound.play();
+          if(!clippedCount)
+            ta.nextPlayer();
+        }
+
+
+      };
+      dealOne();
+      dealSound.addEventListener('ended', dealOne);
+
+  },[])
+
+  const getFive   = useCallback(()=>dealColorCards(5),[]);
+  const getTwo    = useCallback(()=>dealColorCards(2),[]);
   const getTicket = useCallback(()=>ta.drawTicket(game.ticketDeck.deal(1)[0]),[]);
 
   return (

@@ -7,6 +7,7 @@ export const defaultOptions:VisNetworkOptions = {
 
   width: '1800px',
   height: '1000px',
+  // physics: {enabled: false},
   nodes: {
     color: {
       background: 'white',
@@ -21,7 +22,7 @@ export const defaultOptions:VisNetworkOptions = {
   edges: { color:'yellow', width: 10, arrows: {to:{enabled:false}, from:{enabled:false}}},
   interaction: {
     dragView: false,
-    multiSelect: false,
+    multiselect: false,
     zoomView:false,
     keyboard: {
       enabled:false,
