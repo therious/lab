@@ -12,7 +12,6 @@ type PlayerViewProps = { player:Player }
 export function PlayerView({player}:PlayerViewProps) {
   const {players, turn, whoPlaysNow} = useSelector<TicketState>(s=>s.ticket);
   const [prevCompleted, setPrevCompleted] = useState<number>(player.ticketsCompleted.length);
-
   useEffect(()=>{
     const completed = player.ticketsCompleted.length;
     if(prevCompleted < completed)
@@ -32,8 +31,8 @@ export function PlayerView({player}:PlayerViewProps) {
   }, [prevCompleted, turn])
   const itsMyTurn = players[whoPlaysNow] === player;
 
-  return <div style={{display:'inline-block', width:'40%', border: '1px solid black', backgroundColor: itsMyTurn? 'cornsilk':'white'}}>
-    Player: {player.name}
+  return <div style={{display:'inline-block', paddingTop:'10px', width:'40%', border: '1px solid black', backgroundColor: itsMyTurn? 'cornsilk':'white'}}>
+    Player: {player.name} <img width={'50px'} src={`./icons/car-${player.color}.png`}/>
     <div>
       Colors in Hand:
       {Object.entries(player.colorCardsInHand).filter(([k,v])=>v).map(([k,v])=>{
