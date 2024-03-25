@@ -134,8 +134,10 @@ export const MapView = ()=>
   },[network, nodeSelect]);
 
 
-  return <><div style={{
-      // marginTop: '30px',
+  return <div style={{
+      position:'absolute',
+      left: '0px',
+      display:'inline-block',
       width:'1800px', height:'1000px',
       backgroundImage:`url('/map-us-again.png')`,
       backgroundRepeat: 'no-repeat',
@@ -143,5 +145,5 @@ export const MapView = ()=>
       backgroundPositionX: '17px',
       backgroundPositionY: '-6px',
 
-    overflow: 'auto'}} ref={ref} /></>;
+    overflow: 'auto'}} ref={ref} />;
 }

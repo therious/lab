@@ -47,26 +47,24 @@ function App() {
 
   return (
     <div className="App">
-      <button onClick={()=>{
-      const sound = new Audio('/sounds/96130__bmaczero__shuffle.wav');
-      sound.play();
-      ta.resetGame()}}>Reset Game</button>
-      <button disabled={turn > 1 || players.length >= playerColors.length} onClick={addPlayer}>Add {playerOrdinals[players.length]} player</button>
-      <hr/>
+      <button onClick={() => {
+        const sound = new Audio('/sounds/96130__bmaczero__shuffle.wav');
+        sound.play();
+        ta.resetGame()
+      }}>Reset Game
+      </button>
+      <button disabled={turn > 1 || players.length >= playerColors.length}
+              onClick={addPlayer}>Add {playerOrdinals[players.length]} player
+      </button>
       <button disabled={turn >= players.length} onClick={getFive}>Get initial color cards</button>
       <button onClick={getTwo}>Get two color cards</button>
       <button disabled={players[whoPlaysNow]?.ticketsInHand.length >= 2} onClick={getTicket}>Get a ticket</button>
-      <hr/>
-      <p>Players {players.length} Turn: {turn}, Whose
-        turn: {players.length ? players[whoPlaysNow]?.name : 'no players yet'}</p>
-
       <div>
         {players.map(((player,index) => <PlayerView key={index} player={player}/>))}
       </div>
-      <div>
-        <p>Number of remaining color cards: {game.colorDeck.remaining().length}</p>
-        <p>Number of remaing tickets: {game.ticketDeck.remaining().length}</p>
-      </div>
+
+
+      <hr/>
       <MapView/>
     </div>
   );
