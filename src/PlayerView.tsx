@@ -2,10 +2,10 @@ import React,  {useCallback, useState, useEffect} from 'react';
 
 import {Color} from './ticket/Color';
 import {Player} from './ticket/Player';
-import {TicketCard} from './TicketCard';
 import {actions, useSelector} from './actions-integration';
 import {TicketState} from './actions/ticket-slice';
 import {CardHand } from './ColorCard';
+import {TicketCard} from './TicketCard';
 
 
 type PlayerViewProps = { player:Player }
@@ -38,11 +38,11 @@ export function PlayerView({player}:PlayerViewProps) {
 
     <div>
       Tickets in Hand:
-      {player.ticketsInHand.map(ticket => <TicketCard ticket={ticket}/>)}
+      {player.ticketsInHand.map((ticket,i)=> <TicketCard key={i} ticket={ticket}/>)}
     </div>
     <div>
       Tickets completed:
-      {player.ticketsCompleted.map(ticket => <TicketCard ticket={ticket}/>)}
+      {player.ticketsCompleted.map((ticket,i)=> <TicketCard key={i} ticket={ticket}/>)}
     </div>
   </div>
 }

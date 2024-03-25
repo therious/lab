@@ -31,7 +31,7 @@ export const CardHand = ({player}:CardHandProps) =>
   <div style={cardHand} >
     {Object.entries(player.colorCardsInHand).filter(([_, v]) => v).map(([k, v], index, array) => {
       const offIndex = array.slice(0, index).reduce((accum: number, [_, vv]) => accum + vv, 0);
-      return <ColorCard color={k as Color} count={v} offIndex={offIndex} totalCards={player.colorCardsCount}/>
+      return <ColorCard key={offIndex+v} color={k as Color} count={v} offIndex={offIndex} totalCards={player.colorCardsCount}/>
     })}
   </div>;
 
@@ -50,7 +50,7 @@ function ColorCard({color, count, offIndex, totalCards}: ColorCardProps) {
 
 
   return (<>
-    {cards.map((_, index) => <div style={{
+    {cards.map((_, index) => <div key={index + offIndex} style={{
       ...style,
       zIndex: (index + offIndex) + 1,
       backgroundColor: color,
