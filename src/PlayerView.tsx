@@ -25,18 +25,13 @@ export function PlayerView({player}:PlayerViewProps) {
 
   const itsMyTurn = players[whoPlaysNow] === player;
 
-  return <div style={{display:'inline-block', paddingTop:'10px', width:`${(100 / players.length)-5}%`, border: '1px solid black', backgroundColor: itsMyTurn? 'cornsilk':'white'}}>
-
+  return <div style={{flex:1, paddingTop:'10px', width:`${(100 / players.length)-5}%`, border: '1px solid black', backgroundColor: itsMyTurn? 'cornsilk':'white'}}>
+    {player.name} <img alt={`${player.color} train`} width={'50px'} src={`./icons/car-${player.color}.png`}/>
+    <hr/>
     <CardHand player={player}/>
-    Player: {player.name} <img alt={`${player.color} train`} width={'50px'} src={`./icons/car-${player.color}.png`}/>
-
     <div>
-      Tickets in Hand:
-      {player.ticketsInHand.map((ticket,i)=> <TicketCard key={i} ticket={ticket}/>)}
-    </div>
-    <div>
-      Tickets completed:
-      {player.ticketsCompleted.map((ticket,i)=> <TicketCard key={i} ticket={ticket}/>)}
+      {player.ticketsCompleted.map((ticket,i)=> <TicketCard key={`c-${i}`} completed={true} ticket={ticket}/>)}
+      {player.ticketsInHand.map((ticket,i)=> <TicketCard key={i} completed={false} ticket={ticket}/>)}
     </div>
   </div>
 }

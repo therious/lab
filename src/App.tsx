@@ -42,7 +42,7 @@ function App() {
       <button disabled={turn >= players.length} onClick={getFive}>Get initial color cards</button>
       <button onClick={getTwo}>Get two color cards</button>
       <button disabled={players[whoPlaysNow]?.ticketsInHand.length >= 2} onClick={getTicket}>Get a ticket</button>
-      <div>
+      <div style={{display:'flex'}}>
         {players.map(((player,index) => <PlayerView key={index} player={player}/>))}
       </div>
       <hr/>
