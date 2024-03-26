@@ -37,7 +37,7 @@ export function PlayerView({player}:PlayerViewProps) {
     <hr/>
     <CardHand player={player}/>
     <hr/>
-    {player.ticketsCompleted.map((ticket,i)=> <TicketCard key={`c-${i}`} completed={true} ticket={ticket}/>)}
-    {player.ticketsInHand.map((ticket,i)=> <TicketCard key={i} completed={false} ticket={ticket}/>)}
+    {player.ticketsCompleted.map((ticket,i)=> <TicketCard key={`c-${i}`} player={player} completed={true} ticket={ticket}/>)}
+    {player.ticketsInHand.map((ticket,i)=> <TicketCard key={i} player={player} completed={false} ticket={ticket}/>)}
   </PlayerDiv>
 }

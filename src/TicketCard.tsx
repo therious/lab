@@ -1,8 +1,10 @@
+import {useState, useEffect} from 'react';
 import {Ticket} from './ticket/Ticket';
 
-type TicketCardProps = {ticket:Ticket, completed:boolean }
+type TicketCardProps = {ticket:Ticket, player:Player, completed:boolean }
 
 import styled from 'styled-components';
+import {Player} from './ticket/Player';
 
 const TicketDiv = styled.div<{$url:string}>`
   display: inline-block;
@@ -53,15 +55,17 @@ function randomValue<T>(arr:T[]):T                  { return arr[randomRange(0, 
 
 
 const map:Map<Ticket, string> = new Map();
-export function TicketCard({ticket, completed}:TicketCardProps)
+export function TicketCard({ticket, player, completed}:TicketCardProps)
 {
+  const [completedNum, setCompletedNum] = useState<number>(0);
+  useEffect(()=>{setCompletedNum(player.ticketsCompleted.length);}, [completed]);
 
   if(!map.has(ticket))  map.set(ticket,randomValue(ticketSvgs) );
   const url = map.get(ticket);
 
   return <TicketDiv $url={url!} className={completed? 'completed':''}>
     <div style={{position:'absolute', top:5, left:12}}>{ticket[0]}</div>
-    {completed? <div style={{fontSize:'46px', color:'limegreen', fontStyle:'bold', position:'absolute', top:10, right: 30}}>&#x2713;</div>:null}
+    {completed? <div style={{fontSize:'46px', color:'limegreen', fontStyle:'bold', position:'absolute', top:10, right: 30}}>{completedNum?completedNum:''}&#x2713;</div>:null}
     <div style={{position:'absolute', bottom:5, right:12}}>{ticket[1]}</div>
   </TicketDiv>
 }
