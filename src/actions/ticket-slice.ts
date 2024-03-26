@@ -70,7 +70,10 @@ const reducers:TicketReducers = {
   drawTicket:(s:TicketState, {ticket})=>produce(s, draft=>{
     const playerIndex = draft.whoPlaysNow;
     const player:Player = draft.players[playerIndex];
-    player.ticketsInHand.push(ticket);
+    if(isTicketComplete(player.routesOwned, ticket))  // is this ticket already completed?
+      player.ticketsCompleted.push(ticket);
+    else
+      player.ticketsInHand.push(ticket);
   }),
   claimRoute:(s:TicketState, {route, cards})=>produce(s, draft=>{
     const playerIndex = draft.whoPlaysNow;
