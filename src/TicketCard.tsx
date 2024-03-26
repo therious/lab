@@ -24,7 +24,7 @@ const TicketDiv = styled.div<{$url:string}>`
     animation-iteration-count: infinite;
   }
 
-  &.completed {
+  &.completed:not(:hover) {
     animation: shake 0.5s;
     animation-iteration-count: 6;
   }
