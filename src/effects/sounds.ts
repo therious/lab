@@ -5,7 +5,7 @@ const clickSounds:string[]   = Object.values(import.meta.glob('../sounds/clicks/
 
 
 function randomRange(min:number, max:number):number { return Math.floor(Math.random() * (max - min + 1) + min); }
-function randomValue<T>(arr:T[]):T                  { return arr[randomRange(0, arr.length)] }
+function randomValue<T>(arr:T[]):T                  { return arr[randomRange(0, arr.length-1)] }
 
 export function dealCardsSoundEffect(count:number, beforeAction:Function, completeAction:Function)
 {
@@ -39,7 +39,7 @@ export async function playClick():Promise<void>
 }
 export async function playError():Promise<void>
 {
-  const sound = randomValue<string>(errorSounds);;
+  const sound = randomValue<string>(errorSounds);
   const audio = new Audio(sound);
   return audio.play();
 }
