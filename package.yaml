@@ -18,17 +18,17 @@ devDependencies:
   "@testing-library/react":       ^13.4.0
   "@testing-library/user-event":  ^13.5.0
   "@types/jest":                  ^27.5.2
-  "@types/node":                  ^16.18.86
+  "@types/node":                  ^18.17.1
   "@types/react":                 ^18.2.61
   "@types/react-dom":             ^18.2.19
   "@types/react-redux":           ~7.1.25
-  "@vitejs/plugin-react-swc":     ~3.3.2
+  "@vitejs/plugin-react-swc":     ~3.6.0
   redux-devtools-extension:       ~2.13.9
-  vite:                           ~4.5.2
-  vite-bundle-visualizer:         ~0.8.1
+  vite:                           ~5.2.6
+  vite-bundle-visualizer:         ~1.1.0
 
 scripts:
-  start:   vite
+  start:   VITE_CJS_IGNORE_WARNING=true vite  #it looks like react-swc plugin might be cause of the warning I am turning off?
   build:   tsc && vite build
   preview: vite preview
 

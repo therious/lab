@@ -16,7 +16,7 @@ export function PlayerView({player}:PlayerViewProps) {
     const completed = player.ticketsCompleted.length;
     if(prevCompleted < completed)
     {
-      playSoundCompleteTicket(turn);
+      playSoundCompleteTicket();
       if(completed === 1) playFanfare();
     }
     setPrevCompleted(completed);
