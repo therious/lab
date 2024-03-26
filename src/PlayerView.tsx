@@ -25,7 +25,7 @@ export function PlayerView({player}:PlayerViewProps) {
 
   const itsMyTurn = players[whoPlaysNow] === player;
 
-  return <div style={{flex:1, paddingTop:'10px', width:`${(100 / players.length)-5}%`, border: '1px solid black', backgroundColor: itsMyTurn? 'cornsilk':'white'}}>
+  return <div style={{flex:1, margin: '5px', paddingTop:'10px', width:`${(100 / players.length)-5}%`, border: '1px solid black', backgroundColor: itsMyTurn? 'cornsilk':'white'}}>
     {player.name} <img alt={`${player.color} train`} width={'50px'} src={`./icons/car-${player.color}.png`}/>
     <hr/>
     <CardHand player={player}/>
