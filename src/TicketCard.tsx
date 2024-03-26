@@ -46,14 +46,7 @@ const TicketDiv = styled.div<{$url:string}>`
 `;
 
 // ticket svgs from https://www.svgrepo.com/vectors/ticket/3
-const ticketSvgs = [
-  // '/tickets/black.svg',
-  '/tickets/blue.svg',
-  '/tickets/orange.svg',
-  '/tickets/otheryellow.svg',
-  '/tickets/pink.svg',
-  '/tickets/yellow.svg'
-];
+const ticketSvgs:string[]   = Object.values(import.meta.glob('./assets/tickets/*',  {query: '?url', import: 'default', eager: true}));
 
 function randomRange(min:number, max:number):number { return Math.floor(Math.random() * (max - min + 1) + min); }
 function randomValue<T>(arr:T[]):T                  { return arr[randomRange(0, arr.length-1)] }
