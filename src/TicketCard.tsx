@@ -19,7 +19,7 @@ const TicketDiv = styled.div<{$url:string}>`
   &:hover {
     /* Start the shake animation and make the animation last for 0.5 seconds */
     animation: shake 0.5s;
-
+   
     /* When the animation is finished, start again */
     animation-iteration-count: infinite;
   }
@@ -30,17 +30,17 @@ const TicketDiv = styled.div<{$url:string}>`
   }
 
   @keyframes shake {
-    0%   { transform: scale(125%) translate( 1px,  1px) rotate( 0deg); }
-    10%  { transform: scale(150%) translate(-1px, -2px) rotate(-2deg); }
-    20%  { transform: scale(175%) translate(-3px,  0px) rotate(-4deg); }
-    30%  { transform: scale(200%) translate( 3px,  2px) rotate(-6deg); }
-    40%  { transform: scale(225%) translate( 1px, -1px) rotate(-4deg); }
-    50%  { transform: scale(250%) translate(-1px,  2px) rotate(-2deg); }
-    60%  { transform: scale(225%) translate(-3px,  1px) rotate(0deg); }
-    70%  { transform: scale(200%) translate( 3px,  1px) rotate(2deg); }
-    80%  { transform: scale(175%) translate(-1px, -1px) rotate(4deg); }
-    90%  { transform: scale(150%) translate( 1px,  2px) rotate(6deg); }
-    100% { transform: scale(125%) translate( 1px, -2px) rotate(4deg); }
+    0%   { transform: scale(125%) translate( 1px,  1px) rotate( 0deg); z-index: 1000}
+    10%  { transform: scale(150%) translate(-1px, -2px) rotate(-2deg); z-index: 1000}
+    20%  { transform: scale(175%) translate(-3px,  0px) rotate(-4deg); z-index: 1000}
+    30%  { transform: scale(200%) translate( 3px,  2px) rotate(-6deg); z-index: 1000}
+    40%  { transform: scale(225%) translate( 1px, -1px) rotate(-4deg); z-index: 1000}
+    50%  { transform: scale(250%) translate(-1px,  2px) rotate(-2deg); z-index: 1000}
+    60%  { transform: scale(225%) translate(-3px,  1px) rotate( 0deg); z-index: 1000}
+    70%  { transform: scale(200%) translate( 3px,  1px) rotate( 2deg); z-index: 1000}
+    80%  { transform: scale(175%) translate(-1px, -1px) rotate( 4deg); z-index: 1000}
+    90%  { transform: scale(150%) translate( 1px,  2px) rotate( 6deg); z-index: 1000}
+    100% { transform: scale(125%) translate( 1px, -2px) rotate( 4deg); z-index: 1000}
   }
   
 `;
