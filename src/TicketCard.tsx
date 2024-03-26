@@ -24,18 +24,23 @@ const TicketDiv = styled.div<{$url:string}>`
     animation-iteration-count: infinite;
   }
 
+  &.completed {
+    animation: shake 0.5s;
+    animation-iteration-count: 6;
+  }
+
   @keyframes shake {
-    0%   { transform: translate( 1px,  1px) rotate( 0deg); }
-    10%  { transform: translate(-1px, -2px) rotate(-1deg); }
-    20%  { transform: translate(-3px,  0px) rotate( 1deg); }
-    30%  { transform: translate( 3px,  2px) rotate( 0deg); }
-    40%  { transform: translate( 1px, -1px) rotate( 1deg); }
-    50%  { transform: translate(-1px,  2px) rotate(-1deg); }
-    60%  { transform: translate(-3px,  1px) rotate( 0deg); }
-    70%  { transform: translate( 3px,  1px) rotate(-1deg); }
-    80%  { transform: translate(-1px, -1px) rotate( 1deg); }
-    90%  { transform: translate( 1px,  2px) rotate( 0deg); }
-    100% { transform: translate( 1px, -2px) rotate(-1deg); }
+    0%   { transform: scale(125%) translate( 1px,  1px) rotate( 0deg); }
+    10%  { transform: scale(150%) translate(-1px, -2px) rotate(-2deg); }
+    20%  { transform: scale(175%) translate(-3px,  0px) rotate(-4deg); }
+    30%  { transform: scale(200%) translate( 3px,  2px) rotate(-6deg); }
+    40%  { transform: scale(225%) translate( 1px, -1px) rotate(-4deg); }
+    50%  { transform: scale(250%) translate(-1px,  2px) rotate(-2deg); }
+    60%  { transform: scale(225%) translate(-3px,  1px) rotate(0deg); }
+    70%  { transform: scale(200%) translate( 3px,  1px) rotate(2deg); }
+    80%  { transform: scale(175%) translate(-1px, -1px) rotate(4deg); }
+    90%  { transform: scale(150%) translate( 1px,  2px) rotate(6deg); }
+    100% { transform: scale(125%) translate( 1px, -2px) rotate(4deg); }
   }
   
 `;
@@ -61,7 +66,7 @@ export function TicketCard({ticket, completed}:TicketCardProps)
   if(!map.has(ticket))  map.set(ticket,randomValue(ticketSvgs) );
   const url = map.get(ticket);
 
-  return <TicketDiv $url={url!}>
+  return <TicketDiv $url={url!} className={completed? 'completed':''}>
     <div style={{position:'absolute', top:5, left:12}}>{ticket[0]}</div>
     {completed? <div style={{fontSize:'46px', color:'limegreen', fontStyle:'bold', position:'absolute', top:10, right: 30}}>&#x2713;</div>:null}
     <div style={{position:'absolute', bottom:5, right:12}}>{ticket[1]}</div>
