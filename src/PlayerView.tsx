@@ -6,7 +6,16 @@ import {Player} from './ticket/Player';
 import {useSelector} from './actions-integration';
 import {TicketState} from './actions/ticket-slice';
 import {playFanfare, playSoundCompleteTicket} from './effects/sounds';
+import styled from 'styled-components';
 
+const PlayerDiv = styled.div<{$players:unknown[], $myTurn:boolean}>`
+  flex: 1;
+  margin: 5px;
+  padding-top: 10px;
+  width: ${p=>(100 / p.$players.length) - 5}%;
+  border: 1px solid black;
+  background-color: ${p=>p.$myTurn ? '#cff': '#ccc'};
+`;
 
 type PlayerViewProps = { player:Player }
 export function PlayerView({player}:PlayerViewProps) {
@@ -22,16 +31,13 @@ export function PlayerView({player}:PlayerViewProps) {
     setPrevCompleted(completed);
   }, [prevCompleted, turn]);
 
-
-  const itsMyTurn = players[whoPlaysNow] === player;
-
-  return <div style={{flex:1, margin: '5px', paddingTop:'10px', width:`${(100 / players.length)-5}%`, border: '1px solid black', backgroundColor: itsMyTurn? 'cornsilk':'white'}}>
+  return <PlayerDiv
+  $players={players} $myTurn={players[whoPlaysNow] === player}>
     {player.name} <img alt={`${player.color} train`} width={'50px'} src={`./icons/car-${player.color}.png`}/>
     <hr/>
     <CardHand player={player}/>
-    <div>
-      {player.ticketsCompleted.map((ticket,i)=> <TicketCard key={`c-${i}`} completed={true} ticket={ticket}/>)}
-      {player.ticketsInHand.map((ticket,i)=> <TicketCard key={i} completed={false} ticket={ticket}/>)}
-    </div>
-  </div>
+    <hr/>
+    {player.ticketsCompleted.map((ticket,i)=> <TicketCard key={`c-${i}`} completed={true} ticket={ticket}/>)}
+    {player.ticketsInHand.map((ticket,i)=> <TicketCard key={i} completed={false} ticket={ticket}/>)}
+  </PlayerDiv>
 }
