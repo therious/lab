@@ -1,11 +1,11 @@
-import React,  {useCallback, useState, useEffect} from 'react';
-
-import {Color} from './ticket/Color';
-import {Player} from './ticket/Player';
-import {actions, useSelector} from './actions-integration';
-import {TicketState} from './actions/ticket-slice';
-import {CardHand } from './ColorCard';
+import React,  {useState, useEffect} from 'react';
+import {CardHand} from './ColorCard';
 import {TicketCard} from './TicketCard';
+
+import {Player} from './ticket/Player';
+import {useSelector} from './actions-integration';
+import {TicketState} from './actions/ticket-slice';
+import {playFanfare, playSoundCompleteTicket} from './effects/sounds';
 
 
 type PlayerViewProps = { player:Player }
@@ -16,25 +16,19 @@ export function PlayerView({player}:PlayerViewProps) {
     const completed = player.ticketsCompleted.length;
     if(prevCompleted < completed)
     {
-      const sounds = [
-        '/sounds/89590__cgeffex__human_human-train-whistle-vers1.mp3',
-        '/sounds/94216__benboncan__steam-train-1.wav',
-        '/sounds/170848__eliasheuninck__steam-train-horn-02.wav',
-        '/sounds/224002__secretmojo__blues-harmonica-train-whistles.flac',
-        '/sounds/170848__eliasheuninck__steam-train-horn-02.wav',
-        '/sounds/345905__basoap__train-whistle.wav'
-      ];
-      const audio = new Audio(sounds[turn % sounds.length])
-      audio.play();
+      playSoundCompleteTicket(turn);
+      if(completed === 1) playFanfare();
     }
     setPrevCompleted(completed);
-  }, [prevCompleted, turn])
+  }, [prevCompleted, turn]);
+
+
   const itsMyTurn = players[whoPlaysNow] === player;
 
-  return <div style={{display:'inline-block', paddingTop:'10px', width:'40%', border: '1px solid black', backgroundColor: itsMyTurn? 'cornsilk':'white'}}>
+  return <div style={{display:'inline-block', paddingTop:'10px', width:`${(100 / players.length)-5}%`, border: '1px solid black', backgroundColor: itsMyTurn? 'cornsilk':'white'}}>
 
     <CardHand player={player}/>
-    Player: {player.name} <img width={'50px'} src={`./icons/car-${player.color}.png`}/>
+    Player: {player.name} <img alt={`${player.color} train`} width={'50px'} src={`./icons/car-${player.color}.png`}/>
 
     <div>
       Tickets in Hand:

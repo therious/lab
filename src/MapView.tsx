@@ -7,6 +7,7 @@ import {useVisNetwork} from './vis/useVisNetwork';
 import {actions, useSelector} from './actions-integration';
 import {TicketState} from './actions/ticket-slice';
 import {Color} from './ticket/Color';
+import {playClick} from './effects/sounds';
 
 // const   graphData:Data = renderGraphData();
 const {nodes:rawnodes, edges:rawedges} = renderGraphData();
@@ -71,14 +72,9 @@ export const MapView = ()=>
           const sameToUse = (sameColorCount >= route.cost)?  route.cost: sameColorCount;
           const wildToUse = (sameToUse === route.cost)? 0:  (route.cost - sameToUse);
           ticketActions.claimRoute(route, {[route.color]: sameToUse, [Color.Wild]: wildToUse});
-
+          playClick();
           //...todo put in graphic effect here on the route
-          // like make it thicker, put the correct color trains on it
-
-          //...find all the edges belonging to the route
-
-          //...find all the nodes belonging to the route and put trains on them
-        for (let i = 0; i < route.cost; ++i)
+          // like make it thicker
         for (let i = 0; i < route.cost; ++i)
         {
           const id = NodeToRouteMapper.registerRouteCreateId(route, i);
