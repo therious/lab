@@ -66,3 +66,18 @@ export function playClick()
   const sound = new Audio(randomValue<string>(clicks));
   sound.play();
 }
+
+const errors = [
+  '/sounds/errors/372197__original_sound__error-bleep-4.mp3',
+  '/sounds/errors/423166__plasterbrain__minimalist-sci-fi-ui-error.flac',
+  '/sounds/errors/500759__xpoki__synth_error2.mp3',
+  '/sounds/errors/672085__saha213131__error.mp3',
+  '/sounds/errors/697442__gamer500__error.wav',
+  '/sounds/errors/713179__veinadams__user-interface-beep-error-404-glitch.wav',
+  '/sounds/errors/722377__qubodup__error-3.wav',
+];
+export function playError()
+{
+  const sound = new Audio(randomValue<string>(errors));
+  sound.play();
+}

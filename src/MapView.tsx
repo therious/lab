@@ -7,7 +7,7 @@ import {useVisNetwork} from './vis/useVisNetwork';
 import {actions, useSelector} from './actions-integration';
 import {TicketState} from './actions/ticket-slice';
 import {Color} from './ticket/Color';
-import {playClick} from './effects/sounds';
+import {playClick, playError} from './effects/sounds';
 
 // const   graphData:Data = renderGraphData();
 const {nodes:rawnodes, edges:rawedges} = renderGraphData();
@@ -87,7 +87,7 @@ export const MapView = ()=>
         }
 
       } else {
-        alert(`You don't have enough to claim route, you need ${route.cost} cards of color ${route.color}`);
+        playError();
       }
     }
 
