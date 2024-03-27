@@ -12,6 +12,32 @@ waiting behind the original so there is no shortage of cards, and order determin
 * make tickets come out of a vending machine, animation that ends up at layout position for ticket. That way we eliminate the intro animation on the ticket itself, and put it on a temporary impostor, an Intro, ticket.
 
 [Original Ticket to Ride Rules](https://ncdn0.daysofwonder.com/tickettoride/fr/img/tt_rules_2015_en.pdf)
+* different topology
+* 144 color cards color cards are 8 purple white blue, yellow, orange, black, red, green, wild
+  * 12 each of box, passenger, tanker, reefer, freight, hopper, coal, cabbose
+  * 14 locomotives (wild)
+* 45 train cars for each player color: blue, red, green, yellow, black
+* 2 or 3 players, playing one route CLOSES the parallel route
+* more players same player still not allowed to claim parallel routes
+* score points completing routes
+* lose points holding uncompleted routes
+* draw 3 destinations from deck, must keep at least one of them (discard allowed to not be caught holding too many?)
+* grey routes may be claimed with any color train cards!
+* point scoring table
+  * 1 pt for cost 1
+  * 2 points to cost 2
+  * 4 points for cost 3
+  * 7 points for cost 4
+  * 10 points for cost 5
+  * 15 points for cost 6!
+* always draw 3 cards and keep at least one when drawing destination cards
+* each ticket lists an amount of points awarded for completing ticket
+* game ends after first player is down to 2 or fewer train car markers to place, from that point each player gets one more turn
+* players reveal completing destinations only at end of game
+* player with longest continuous path get a 10 point bonus
+* winner has most points, if points tied, more destinations completed is a tie-breaker, last tie-breaker is having the longest path
+* tied players for longest continuous path both get bonus
+* subtract points for holding uncompleted destinations (face value on the ticket)
 
 ## [ticket to ride, first journey rules](https://cdn.svc.asmodee.net/production-daysofwonder/uploads/2023/11/tk_rules_en_2018.pdf ) notes: 
 * only 20 train cars can be placed by any player
