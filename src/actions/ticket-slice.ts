@@ -1,14 +1,15 @@
-import { Player, playerTemplate} from '../ticket/Player';
+import {Player, playerTemplate} from '../ticket/Player';
 import {Color} from '../ticket/Color';
-import {Route, Nettie} from '../ticket/Route';
+import {Nettie, Route} from '../ticket/Route';
 import {Ticket} from '../ticket/Ticket';
 import {City} from '../ticket/City';
 import {produce} from 'immer';
 
 export interface TicketState {
-  players:     Player[];
-  whoPlaysNow: number; // index of player to play next
-  turn:        number;         // absolute count of turns
+  coastToCoast: Ticket[];  // all the coast to coast permutations, as tickets available to any player at any time
+  players:      Player[];
+  whoPlaysNow:  number;    // index of player to play next
+  turn:         number;         // absolute count of turns
 }
 
 type TicketCreator = (s:TicketState,...rest: any)=>unknown;
@@ -22,10 +23,14 @@ interface SliceConfig {
   creators: TicketCreators;
   initialState: TicketState;
 }
+
 const initialState:TicketState = {
   players:[],
   whoPlaysNow: 0,
-  turn:0
+  turn:0,
+  coastToCoast: [City.Seattle, City.SanFrancisco, City.LosAngeles]
+        .map(a=>[City.NewYork, City.Washington, City.Miami].map(b=>[a, b]))
+        .flat() as Ticket[]
 };
 
 // utility functions
@@ -78,6 +83,8 @@ const reducers:TicketReducers = {
   claimRoute:(s:TicketState, {route, cards})=>produce(s, draft=>{
     const playerIndex = draft.whoPlaysNow;
     const player:Player = draft.players[playerIndex];
+    const c2c = draft.coastToCoast;
+
     player.routesOwned.push(route);
 
     //  remove from cards in hand
@@ -95,6 +102,16 @@ const reducers:TicketReducers = {
         player.ticketsCompleted.push(ticket);
       }
     });
+
+    // does this complete any coast to coasts tickets
+    [...c2c].forEach(ticket=>{
+      if(isTicketComplete(player.routesOwned, ticket)) {
+        const completed = ticket;
+        draft.coastToCoast =  draft.coastToCoast.filter(t=>t!==completed);  // remove from in hand to completed
+        player.ticketsCompleted.push(ticket);
+      }
+    });
+
     ++draft.turn;
     draft.whoPlaysNow = draft.turn % draft.players.length;
   }),
