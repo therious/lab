@@ -2,6 +2,7 @@ const errorSounds:string[]   = Object.values(import.meta.glob('../sounds/errors/
 const fanfareSounds:string[] = Object.values(import.meta.glob('../sounds/fanfare/*', {query: '?url', import: 'default', eager: true}));
 const ticketSounds:string[]  = Object.values(import.meta.glob('../sounds/trains/*',  {query: '?url', import: 'default', eager: true}));
 const clickSounds:string[]   = Object.values(import.meta.glob('../sounds/clicks/*',  {query: '?url', import: 'default', eager: true}));
+const vendSounds:string[]    = Object.values(import.meta.glob('../sounds/vend/*',    {query: '?url', import: 'default', eager: true}));
 
 
 function randomRange(min:number, max:number):number { return Math.floor(Math.random() * (max - min + 1) + min); }
@@ -31,27 +32,17 @@ export async function playShuffleSound():Promise<void>
   return sound.play();
 }
 
-export async function playClick():Promise<void>
+function genRandomSoundPlayer(soundUrls:string[]):()=>Promise<void>
 {
-  const sound =  randomValue<string>(clickSounds);
-  const audio = new Audio(sound);
-  return audio.play();
+  return async ()=>{
+    const sound = randomValue<string>(soundUrls);
+    const audio = new Audio(sound);
+    return audio.play();
+  }
 }
-export async function playError():Promise<void>
-{
-  const sound = randomValue<string>(errorSounds);
-  const audio = new Audio(sound);
-  return audio.play();
-}
-export async function playFanfare()
-{
-  const sound = randomValue<string>(fanfareSounds);
-  const audio = new Audio(sound);
-  return audio.play();
-}
-export async function playSoundCompleteTicket():Promise<void>
-{
-  const sound = randomValue<string>(ticketSounds);
-  const audio = new Audio(sound);
-  return audio.play();
-}
+export const playClick = genRandomSoundPlayer(clickSounds);
+export const playError = genRandomSoundPlayer(errorSounds);
+export const playFanfare = genRandomSoundPlayer(fanfareSounds);
+export const playSoundCompleteTicket = genRandomSoundPlayer(ticketSounds);
+export const playVend = genRandomSoundPlayer(vendSounds);
+
