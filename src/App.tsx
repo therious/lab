@@ -6,7 +6,7 @@ import {MapView} from './MapView';
 import {actions, useSelector} from './actions-integration';
 import {TicketState} from './actions/ticket-slice';
 import {PlayerView} from './PlayerView';
-import {dealCardsSoundEffect, playShuffleSound} from './effects/sounds';
+import {dealCardsSoundEffect, playShuffleSound, playVend} from './effects/sounds';
 
 const ta = actions.ticket;
 
@@ -22,7 +22,7 @@ function App() {
 
   const getFive   = useCallback(()=>dealColorCards(5),[]);
   const getTwo    = useCallback(()=>dealColorCards(2),[]);
-  const getTicket = useCallback(()=>ta.drawTicket(game.ticketDeck.deal(1)[0]),[]);
+  const getTicket = useCallback(()=>{playVend(); ta.drawTicket(game.ticketDeck.deal(1)[0])},[]);
 
   const addPlayer = useCallback(() =>{
     const name = prompt(`What is player ${playerOrdinals[players.length]} name?`);
