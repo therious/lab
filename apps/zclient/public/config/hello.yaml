@@ -1,0 +1,122 @@
+
+bootSequence:
+  - SecurityTest
+  - SubscriptionTest
+  - InjectedStateForms
+
+sequence:
+  nothing: []
+
+tokens:
+  - stateMachines.subscription
+  - stateMachines.securityLight
+  - testEvents.securityLight
+  - testEvents.subscription
+
+# this is just a convenient set of definitions for repeated events in a test
+eventDefinitions:
+  light:          &light
+    type:         update
+    ambientLight: 1.0
+  dark:           &dark
+    type:         update
+    ambientLight: 0
+
+# this provides some test parameters for different statemachines
+testEvents:
+  securityLight:
+    - motion
+    - 5500
+    - motion
+    - 1000
+    - *light
+    - motion
+    - 3000
+    - *dark
+    - motion
+  subscription:
+    - keyfound
+    - opensuccess
+    - blah
+    - 30000
+
+
+
+#  every possible state
+#Startup:        we know nothing
+#NoMemoryMaps!:  (terminal) the app environment does not even support mapping files
+#Unmapped!:      (terminal) requested file is not mapped
+#Mapped:         file was found will attempt to subscript
+#  the requested file is mapped, but the physical file cannot be found
+#  the physical file is found but it must be corrupt, since reading it produces an exception
+#  the file is successfully read, we are current as long as it updates on time
+#  it updates on time, but the status within the update says upstream UIB is not communicating
+#  no update has been received for a short while
+#  no update has been received for a long while
+#  const hbSecs = 10;
+#  const hbMax  = 3;
+
+
+stateMachines:
+  securityLight:
+    name: seclight
+    start: Night
+    states:
+      - Night
+      - Day
+      - On
+    context:
+        type: #including type in context allows generic updates:update event to update context, it is overwritten by updates
+        ambientLight: 0.1
+    updates:
+      update: (c,e)=>({...c, ...e})
+    transitions: [
+      {from: Day,        to: Night,   cond: (c)=>c.ambientLight < 0.5  }, # transition on variable changes
+      {from: [Night, On], to: Day,    cond: (c)=>c.ambientLight > 0.5  },
+      {from: [Night, On], to: On,      evt: motion    }, # transition on receiving event tokens
+      {from: On,         to: Night,  after: 5000      } # fizbin generates timer based events
+    ]
+
+  subscription:
+    name: subscription
+    start: Startup
+    target: Current
+    updates:
+      update: (c,e)=>({...c, ...e})
+    states:
+      - Startup
+      - NoMemoryMaps
+      - Unmapped
+      - Mapped
+      - NoFile
+      - FileOpened
+      - CorruptionError
+      - Current
+      - Stale
+      - Toast
+    context:
+      type:       #including type in context allows generic updates:update event to update context
+      fileKey:
+      filePath:
+      lastUicHb: -1
+      lastUibHb: -1
+
+    transitions: [
+      { from: Startup,            to: NoMemoryMaps,     evt: nomaps     },
+      { from: Startup,            to: Unmapped,         evt: keymissing },
+      { from: Startup,            to: Mapped,           evt: keyfound   },
+
+      { from: [ Mapped, NoFile ], to: FileOpened,       evt: opensuccess  },
+      { from: [ Mapped, NoFile ], to: NoFile,           evt: exception    },
+
+      { from: FileOpened,         to: Current,          evt: blah       },
+      { from: FileOpened,         to: CorruptionError,  evt: exception  },
+      { from: Current,            to: CorruptionError,  evt: exception  },
+      { from: Current,            to: Current,          evt: heartbeat  },
+
+      { from: Stale,              to: Current,          evt: heartbeat  },
+      { from: Current,            to: Stale,            after: 10000    },
+      { from: Stale,              to: Toast,            after: 20000    },
+    ]
+
+

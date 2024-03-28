@@ -1,0 +1,48 @@
+@startuml
+
+skinparam State {
+  AttributeFontSize 9
+  BackgroundColor #CFF
+  EndColor Red
+  ArrowColor Blue
+  BorderColor Black
+}
+
+
+state SecurityLight {
+[*]-->Night
+Night-->Day : [ambientLight > 0.5]
+Day-->Night : [ambientLight < 0.5]
+Night-->On :  motion
+On-->On :     motion
+On-->Night:   5 seconds
+}
+
+state UicConnection {
+
+state Subscription {
+
+[*]-->Unmapped2
+Unmapped2-->Mapped2
+Mapped2-[#red,bold]->NoFile2   : subscribe failure
+Mapped2-->File2     : subscribed
+}
+||
+state HS as "HeartBeat Subscription" {
+
+[*]-->Unmapped
+Unmapped-->Mapped
+Mapped-[#red,bold]->NoFile   : subscribe failure
+Mapped-->File     : subscribed
+File-->Current    : heartbeat
+Current-->Current : heartbeat
+Current-[#blue,dotted]->Stale   : delay
+Stale-->Current   : heartbeat
+Stale-[#blue,dotted]->Toast      : 5 seconds
+
+Note left of Toast : Enter:Restart UIC
+Toast-->Mapped
+}
+}
+
+@enduml

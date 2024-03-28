@@ -1,0 +1,36 @@
+
+@startuml
+skinparam State {
+  AttributeFontSize 9
+  BackgroundColor #CFF
+  EndColor Red
+  ArrowColor Blue
+  BorderColor Black
+}
+
+skinparam Note {
+  AttributeFontSize 9
+  BackgroundColor white
+  BorderColor Black
+}
+
+
+state sec2 {
+
+note as Context
+  **Context:**
+  --
+  ambientLight: //0.1//
+end note
+
+
+
+  [*]-->Night
+  Day-->Night : [dimlight]
+  Night-->Day : [daylight]
+  On-->Day : [daylight]
+  Night-->On : motion
+  On-->On : motion
+  On-[#blue,dotted]->Night : 5 secs
+}
+@enduml
