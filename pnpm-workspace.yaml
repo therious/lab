@@ -1,0 +1,5 @@
+packages:
+  - "apps/**"      # applications
+  - "cmps/**"      # components
+  - "libs/**"      # libraries (aside from components)
+  - '!**/test/**'  # exclude packages that are inside test directories
