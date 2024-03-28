@@ -9,7 +9,7 @@ import {roots} from '../roots/roots';
 import {toRender} from "../roots/myvis.js";
 
 const getRowNodeId = data=>data.id
-const gridstyle = {height: '700px', width: '100%'};
+const gridstyle = {height: '96%', width: '100%'};
 
 const rowData= roots;
 
