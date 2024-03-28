@@ -73,7 +73,6 @@ function parseReqId(reqId)
 
 }
 
-
 export function reqIdDescribe(reqId) {
 
     const {nNowMicros,  nCounter, mOrigin, mRequest} = parseReqId(reqId);
@@ -100,14 +99,12 @@ export function elapsedSinceReqId(tsMicros, reqId)
 }
 export function reqIdGenerate()
 {
-    const id =  `#${timeOrigin}+${formatNow(performance.now())}=${formatCtr(++requestCounter)}`;
-    return id;
+    return `#${timeOrigin}+${formatNow(performance.now())}=${formatCtr(++requestCounter)}`;
 }
 
 // use internal identifiers to track async operations not sent as external requests
 // these differ only in the prefix @ vs #
 export function internalIdGenerate()
 {
-    const id =  `@${timeOrigin}+${formatNow(performance.now())}=${formatCtr(++requestCounter)}`;
-    return id;
+    return `@${timeOrigin}+${formatNow(performance.now())}=${formatCtr(++requestCounter)}`;
 }

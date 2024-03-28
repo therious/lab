@@ -1,4 +1,4 @@
-import {describeReqId, minisession} from "../utils/reqIdGenerator";
+import {reqIdDescribe, minisession} from "../utils/reqIdGenerator";
 
 interface When {
   'req#': number;
@@ -103,7 +103,7 @@ const reducers:Reducers = {
   openRequest:     (state:RequestState, {type, reqId, url}:OpenRequestP)=> ({
     ...state,
     openRequestCount: state.openRequestCount+1,
-    openRequests: {...state.openRequests, [reqId]: {reqId, type, url, when: describeReqId(reqId)}},
+    openRequests: {...state.openRequests, [reqId]: {reqId, type, url, when: reqIdDescribe(reqId)}},
     maxOpenRequestCount: Math.max(state.maxOpenRequestCount, state.openRequestCount+1)
   }),
 };
