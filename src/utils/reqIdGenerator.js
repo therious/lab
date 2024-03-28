@@ -74,7 +74,7 @@ function parseReqId(reqId)
 }
 
 
-export function describeReqId(reqId) {
+export function reqIdDescribe(reqId) {
 
     const {nNowMicros,  nCounter, mOrigin, mRequest} = parseReqId(reqId);
     const originStr   = mOrigin.toFormat(dateTimeFmt);
