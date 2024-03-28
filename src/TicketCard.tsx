@@ -74,7 +74,10 @@ export function TicketCard({ticket, player, completed}:TicketCardProps)
   const [completedNum, setCompletedNum] = useState<number>(0);
   const [hoveredAtLeastOnce, setHoveredAtLeastOnce] = useState<boolean>(false);
 
-  useEffect(()=>{setCompletedNum(player.ticketsCompleted.length);}, [completed]);
+  useEffect(()=>{
+    const index = player.ticketsCompleted.indexOf(ticket);
+    if(index >= 0) setCompletedNum(index+1);
+  }, [completed]);
   const cancelIntro = useCallback(()=>setHoveredAtLeastOnce(true),[hoveredAtLeastOnce]);
 
   if(!map.has(ticket))  map.set(ticket,randomValue(ticketSvgs) );
