@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JsonSchemaMappingsProjectConfiguration">
+    <state>
+      <map>
+        <entry key="JSON Schema version 7">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="JSON Schema version 7" />
+              <option name="relativePathToSchema" value="http://json-schema.org/draft-07/schema" />
+              <option name="schemaVersion" value="JSON Schema version 7" />
+              <option name="applicationDefined" value="true" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value="schemas/yaml-machine.yaml" />
+                  </Item>
+                  <Item>
+                    <option name="path" value="schemas/schema-statemachine-events.yaml" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+        <entry key="schema-configuration">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="schema-configuration" />
+              <option name="relativePathToSchema" value="schemas/schema-configuration.json" />
+              <option name="schemaVersion" value="JSON Schema version 7" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value="apps/zclient/public/config/hello.yaml" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+        <entry key="schema-definitions">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="schema-definitions" />
+              <option name="relativePathToSchema" value="schemas/schema-definitions.json" />
+              <option name="schemaVersion" value="JSON Schema version 7" />
+            </SchemaInfo>
+          </value>
+        </entry>
+        <entry key="schema-eslintrc">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="schema-eslintrc" />
+              <option name="relativePathToSchema" value="schemas/schema-eslintrc.json" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value="eslintrc.yaml" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+        <entry key="schema-statemachine">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="schema-statemachine" />
+              <option name="relativePathToSchema" value="schemas/schema-statemachine.yaml" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value="apps/zclient/public/config/subscription.yaml" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+        <entry key="schema-statemachine-events">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="schema-statemachine-events" />
+              <option name="relativePathToSchema" value="schemas/schema-statemachine-events.yaml" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value="apps/zclient/public/config/tokenlist.yaml" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+      </map>
+    </state>
+  </component>
+</project>

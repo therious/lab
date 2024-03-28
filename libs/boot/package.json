@@ -1,0 +1,22 @@
+{
+  "name": "@therious/boot",
+  "version": "0.2.4",
+  "author": "Haim Zamir <hzamir@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "main": "./src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com:therious/zmono.git",
+    "directory": "libs/boot"
+  },
+  "dependencies": {
+    "axios": "~0.21.1",
+    "js-yaml": "~4.1.0",
+    "tsyringe": "^4.5.0"
+  },
+  "devDependencies": {
+    "typescript": "~4.3.4"
+  },
+  "scripts": {}
+}
