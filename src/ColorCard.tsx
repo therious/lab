@@ -1,7 +1,6 @@
 import {Color} from './ticket/Color';
-import {useState, useEffect} from 'react';
+import {CSSProperties, useEffect, useState} from 'react';
 import {Player} from './ticket/Player';
-import {CSSProperties} from 'react';
 
 const cardHand = {
   display: 'inline-block',
@@ -46,14 +45,16 @@ function ColorCard({color, count, offIndex, totalCards}: ColorCardProps) {
     setCards((new Array(count)).fill(0));
   }, [count]);
 
-  const style = (color === 'white' || color === 'yellow') ? cardLight : cardDark;
+  const style = (color === 'white' || color === 'yellow' || color === 'purple') ? cardLight : cardDark;
 
-
+const grad =  `conic-gradient(in hsl longer hue, red, red)`
   return (<>
     {cards.map((_, index) => <div key={index + offIndex} style={{
       ...style,
       zIndex: (index + offIndex) + 1,
       backgroundColor: color,
+      background:  color !== Color.Wild? color: grad,
+
       rotate: '' + ((index + offIndex) - (totalCards/2)) * 5 + 'deg',
       marginLeft: `${(index + offIndex)? style.marginLeft: '0px'}`,
     }}/>)}
