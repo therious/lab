@@ -10,6 +10,7 @@
     "directory": "apps/zclient"
   },
   "dependencies": {
+    "@therious/boot": "workspace:*",
     "ag-grid-community": "^25.3.0",
     "ag-grid-enterprise": "^25.3.0",
     "ag-grid-react": "^25.3.0",
