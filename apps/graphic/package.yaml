@@ -1,0 +1,49 @@
+name: graphic
+version: 0.1.0
+private: true
+
+dependencies:
+  '@therious/boot':               'workspace:*'
+  immer:                          ~10.0.4
+  react:                          ^18.2.0
+  react-dom:                      ^18.2.0
+  redux:                          ~4.2.1
+  react-redux:                    ~7.2.9
+  reselect:                       ~4.1.7
+  reflect-metadata:               ~0.1.13 #needed for tsyringe, and fancy decorator stuff
+  styled-components:              ~6.1.8
+  stylis:                         ~4.3.1  # a dependency of styled-components, apparently is it necessary to pull directly
+  typescript:                     ^4.9.5  # upgrade this when react 19 available?
+  vis-network:                    ~9.1.9  # used to plot railroad track network
+  xstate:                         4.28.1  # or maybe 4.28.1 or 4.23.1 is last one latest= 5.9.1 I have actually successfully used?
+
+devDependencies:
+  "@testing-library/jest-dom":    ^5.17.0
+  "@testing-library/react":       ^13.4.0
+  "@testing-library/user-event":  ^13.5.0
+  "@types/jest":                  ^27.5.2
+  "@types/node":                  ^18.17.1
+  "@types/react":                 ^18.2.61
+  "@types/react-dom":             ^18.2.19
+  "@types/react-redux":           ~7.1.25
+  "@types/stylis":                ~4.2.5   # unsure if even stylis is needed, is there benefit to stylis types also
+  "@vitejs/plugin-react-swc":     ~3.6.0
+  redux-devtools-extension:       ~2.13.9
+  vite:                           ~5.2.6
+  vite-bundle-visualizer:         ~1.1.0
+
+scripts:
+  start:   VITE_CJS_IGNORE_WARNING=true vite  #it looks like react-swc plugin might be cause of the warning I am turning off?
+  build:   tsc && vite build
+  preview: vite preview
+
+eslintConfig:
+  extends:
+    - react-app
+    - react-app/jest
+
+browserslist:   # vite ignores this ,uses fine grained js targets (esnext, es2021, etc) but its postCss does exploit it
+  production:  &prod ["Chrome >= 112", "Edge >= 112", "Firefox >= 112", "Safari >= 16.4"]
+  development: *prod # use same targets for dev and prod
+
+
