@@ -22,9 +22,13 @@ async function fetchConfig(url:string):Promise<any>
   console.info(`fetching configuration at ${url}`);
   let result;
   try {
-    result = (await axios.get(url)).data;
+    const response = await axios.get(url);
+    if(response.status !== 200) throw new Error(`OnlyAcceptStatus200, not ${response.status}`);
+    result = response.data;
     if(url.endsWith(".yaml"))
       result = jsYaml.load(result);
+   if(typeof result !== 'object') throw new Error(`Loaded Config should be an object`);
+
   } catch(err) {
     console.error(`Could not load configuration from ${url}`, err);
     throw err;
