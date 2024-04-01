@@ -1,5 +1,5 @@
 
-import {inject, container, singleton} from 'tsyringe';
+import {inject, container, singleton} from '@therious/boot';
 import { FsmControl, FsmDefinition, FsmInstance, FsmTransition} from './fsm-utils/fsm-control';
 import {createXStateConfiguration} from './fsm-utils/convert';
 import React from 'react';
