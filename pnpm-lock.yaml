@@ -224,6 +224,9 @@ importers:
       '@therious/boot':
         specifier: workspace:*
         version: link:../../libs/boot
+      '@therious/components':
+        specifier: workspace:*
+        version: link:../../cmps/components
       immer:
         specifier: ~10.0.4
         version: 10.0.4
@@ -309,6 +312,9 @@ importers:
       '@therious/boot':
         specifier: workspace:*
         version: link:../../libs/boot
+      '@therious/components':
+        specifier: workspace.*
+        version: link:../../cmps/components
       ag-grid-community:
         specifier: ^25.3.0
         version: 25.3.0
