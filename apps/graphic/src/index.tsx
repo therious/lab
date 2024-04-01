@@ -1,7 +1,7 @@
 import React from 'react';
 import {createRoot} from 'react-dom/client';
 import './index.css';
-import App from './App';
+import GraphicApp from './GraphicApp';
 import {connectRootComponent} from './actions-integration';
 import "reflect-metadata";
 import {Config, Inflate} from "@therious/boot";
@@ -16,7 +16,7 @@ import './fsm/some-tests';
     console.warn(`extendedConfig `,extendedConfig);
 
 
-    const RootComponent = connectRootComponent(App) as unknown as React.FunctionComponent;
+    const RootComponent = connectRootComponent(GraphicApp) as unknown as React.FunctionComponent;
     const root = createRoot(document.getElementById('root')!); // createRoot(container!) if you use TypeScript
     root.render(<RootComponent/>);
   } catch(e) {
