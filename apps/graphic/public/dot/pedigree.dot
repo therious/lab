@@ -1,7 +1,7 @@
 # http://www.graphviz.org/content/cluster
 
 digraph G {
-
+size=10
 rankdir=LR;
 
 
