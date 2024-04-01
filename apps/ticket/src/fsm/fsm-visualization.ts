@@ -1,5 +1,5 @@
 import {normalizeBehavior, splitTransitions} from "./fsm-convert";
-import {FsmConfig, FsmNormalizedTransition} from './fsm-types';
+import {FsmConfig, FsmNormalizedTransition, ee} from './fsm-types';
 import {FsmControl} from './fsm-control';
 
 
@@ -50,8 +50,9 @@ function actionStringize(normalized:any):string[]
   const results:string[] = [];
 
   Object.entries(normalized).forEach(([k,v])=>{
-    v.enter.forEach(fn=>results.push(`state ${k} : enter / ${fn}`));
-    v.exit.forEach(fn=>results.push(`state ${k} : exit / ${fn}`));
+  const e = v as ee;
+    e.entry.forEach(fn=>results.push(`state ${k} : enter / ${fn}`));
+    e.exit.forEach(fn=>results.push(`state ${k} : exit / ${fn}`));
   });
   return results;
 }

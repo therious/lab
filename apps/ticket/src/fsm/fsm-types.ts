@@ -5,14 +5,14 @@ export interface FsmTransition {
   to: string;
   evt?: string;   // todo, make at least one of these properties mandatory so they cannot all be left out
   cond?: string;
-  after?: string;
+  after?: number;
 }
 export interface FsmNormalizedTransition {
   from: string;
   to: string;
   evt?: string;   // todo, make at least one of these properties mandatory so they cannot all be left out
   cond?: string;
-  after?: string;
+  after?: number;
 }
 
 
