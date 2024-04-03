@@ -1,5 +1,6 @@
 import {useState, useEffect, useCallback} from 'react';
 import {Ticket} from './ticket/Ticket';
+import {Random} from '@therious/random';
 
 type TicketCardProps = {ticket:Ticket, player:Player, completed:boolean }
 
@@ -64,11 +65,13 @@ const TicketDiv = styled.div<{$url:string}>`
 // ticket svgs from https://www.svgrepo.com/vectors/ticket/3
 const ticketSvgs:string[]   = Object.values(import.meta.glob('./assets/tickets/*',  {query: '?url', import: 'default', eager: true}));
 
-function randomRange(min:number, max:number):number { return Math.floor(Math.random() * (max - min + 1) + min); }
-function randomValue<T>(arr:T[]):T                  { return arr[randomRange(0, arr.length-1)] }
+
+
 
 
 const map:Map<Ticket, string> = new Map();
+const rc:Random<string> = new Random(5,5);
+
 export function TicketCard({ticket, player, completed}:TicketCardProps)
 {
   const [completedNum, setCompletedNum] = useState<number>(0);
@@ -80,7 +83,7 @@ export function TicketCard({ticket, player, completed}:TicketCardProps)
   }, [completed]);
   const cancelIntro = useCallback(()=>setHoveredAtLeastOnce(true),[hoveredAtLeastOnce]);
 
-  if(!map.has(ticket))  map.set(ticket,randomValue(ticketSvgs) );
+  if(!map.has(ticket))  map.set(ticket, rc.random(ticketSvgs) );
   const url = map.get(ticket);
 
   const classNames = `${completed? 'completed':''} ${hoveredAtLeastOnce? 'postIntro': ''}`;
