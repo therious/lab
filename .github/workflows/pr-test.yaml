@@ -41,6 +41,6 @@ jobs:
           # see https://github.com/reviewdog/reviewdog#filter-mode
           reporter: github-pr-check
           filter_mode: file
-          eslint_flags: '. src --ext .js,.jsx,.ts,.tsx'
+          eslint_flags: 'apps/**/src libs/**/src cmps/**/src --ext .js,.jsx,.ts,.tsx'
 
 
