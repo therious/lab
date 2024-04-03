@@ -54,4 +54,6 @@ public:
       - any-glob-to-any-file: [ '**/Dockerfile' ]
 
 🔄 ci:
-  - .github/**
+  - changed-files:
+      - any-glob-to-any-file:
+        - .github/**
