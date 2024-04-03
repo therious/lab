@@ -1,0 +1,46 @@
+name: PR ESLint
+on:
+  pull_request:
+    paths-ignore:  # lets not run this if just updating documentation
+      - '**.md'
+      - '**.MD'
+      - 'docs/**'
+jobs:
+  eslint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      - name: Use Node.js ${{ matrix.node.version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version:  ${{ matrix.node.version }}
+          cache: 'pnpm'
+      - name: Install modules
+        run: pnpm install --frozen-lockfile
+      #        - name: Run Bare ESLint
+      #          run:  yarn lint:report
+      - name: ReviewDog Eslint Changes Only as github-pr-review
+        uses: reviewdog/action-eslint@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          filter_mode: added
+          eslint_flags: '. src --ext .js,.jsx,.ts,.tsx'
+      - name: ReviewDog Reviews Entire Modified Files as github-pr-check
+        uses: reviewdog/action-eslint@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          # if using filtermode: file, use github-pr-check as reporter
+          # prefer reporter github-pr-review for filter-modes added or diff_context
+          # see https://github.com/reviewdog/reviewdog#filter-mode
+          reporter: github-pr-check
+          filter_mode: file
+          eslint_flags: '. src --ext .js,.jsx,.ts,.tsx'
+
+
