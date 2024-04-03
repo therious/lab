@@ -9,11 +9,11 @@ public:
 ⛲source:
   - changed-files:
     - any-glob-to-any-file: '**/src/**'
-    - all-globs-to-all-files: ['!**/*.test.*', '!**/*.spec.*' '!**/test/**']
+    - all-globs-to-all-files: ['!**/*.test.*', '!**/*.spec.*', '!**/test/**']
 
 🧪 test:
   - changed-files:
-    - any-glob-to-any-file: ['**/*.test.*', '**/*.spec.*' '**/test/**']
+    - any-glob-to-any-file: ['**/*.test.*', '**/*.spec.*', '**/test/**']
 
 🇹typescript:
   - changed-files:
