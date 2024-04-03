@@ -227,6 +227,9 @@ importers:
       '@therious/components':
         specifier: workspace:*
         version: link:../../cmps/components
+      '@therious/random':
+        specifier: workspace:*
+        version: link:../../libs/random
       immer:
         specifier: ~10.0.4
         version: 10.0.4
@@ -448,6 +451,8 @@ importers:
       mocha:
         specifier: ^9.0.0
         version: 9.2.2
+
+  libs/random: {}
 
   libs/th-utils:
     devDependencies:

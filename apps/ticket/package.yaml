@@ -4,6 +4,7 @@ private: true
 
 dependencies:
   '@therious/boot':               'workspace:*'
+  '@therious/random':             'workspace:*'
   '@therious/components':         'workspace:*'
   immer:                          ~10.0.4
   react:                          ^18.2.0
