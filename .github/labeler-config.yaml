@@ -1,0 +1,57 @@
+🌵root:
+  - changed-files:
+      - any-glob-to-any-file: '*'
+
+public:
+  - changed-files:
+    - any-glob-to-any-file: '**/public/**'
+
+⛲source:
+  - changed-files:
+    - any-glob-to-any-file: '**/src/**'
+    - all-globs-to-all-files: ['!**/*.test.*', '!**/*.spec.*' '!**/test/**']
+
+🧪 test:
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.test.*', '**/*.spec.*' '**/test/**']
+
+🇹typescript:
+  - changed-files:
+      - any-glob-to-any-file:
+        - '**/*.ts'
+        - '**/*.tsx'
+
+🇯javascript:
+  - changed-files:
+      - any-glob-to-any-file:
+        - '**/*.js'
+        - '**/*.jsx'
+
+🈸 app:
+  - changed-files:
+      - any-glob-to-any-file: ['apps/**']
+
+📚 library:
+  - changed-files:
+      - any-glob-to-any-file: ['libs/**', 'cmps/**']
+
+🧱 component:
+  - changed-files:
+      - any-glob-to-any-file:
+        - '**/*.jsx'
+        - '**/*.tsx'
+
+📦 packaging:
+  - changed-files:
+      - any-glob-to-any-file: ['**/package.json', '**/package.yaml', '**/pnpm-lock.yaml', '**/package-lock.lock','**/yarn.lock']
+
+📜 documentation:
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.md', '**/*.MD', '**/docs/*']
+
+🐳 docker:
+  - changed-files:
+      - any-glob-to-any-file: [ '**/Dockerfile' ]
+
+🔄 ci:
+  - .github/**
