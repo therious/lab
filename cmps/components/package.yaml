@@ -1,18 +1,18 @@
-name:   @therious/components
+name:   '@therious/components'
 version: 0.0.11
 private: false,
-author: Haim Zamir <hzamir@gmail.com>
+author:  Haim Zamir <hzamir@gmail.com>
 license: MIT
-main: src/index.ts
+main:    src/index.ts
 
 repository:
-  type: git
-  url: ssh://git@github.com:therious/lab.git
-  directory: cmps/components
+  type:               git
+  url:                ssh://git@github.com:therious/lab.git
+  directory:          cmps/components
 
 dependencies:
   react:                ^17.0.2
-  "react-dom":          ^17.0.2
+  react-dom:            ^17.0.2
 peerDependencies:
   styled-components:    5.x
 
@@ -23,7 +23,7 @@ devDependencies:
   "@types/styled-components":   ~5.1.10
   typescript:                   ^4.9.5
 
-scripts: {},
+scripts: {}
 eslintConfig:
   extends:  react-app
 
