@@ -48,6 +48,9 @@ importers:
       '@therious/boot':
         specifier: workspace:*
         version: link:../../libs/boot
+      '@therious/components':
+        specifier: workspace:*
+        version: link:../../cmps/components
       '@viz-js/viz':
         specifier: ~3.4.0
         version: 3.4.0
@@ -392,14 +395,14 @@ importers:
   cmps/components:
     dependencies:
       react:
-        specifier: ^17.0.2
-        version: 17.0.2
+        specifier: 18.x
+        version: 18.2.0
       react-dom:
-        specifier: ^17.0.2
-        version: 17.0.2(react@17.0.2)
+        specifier: 18.x
+        version: 18.2.0(react@18.2.0)
       styled-components:
-        specifier: ^5.3.0
-        version: 5.3.11(@babel/core@7.24.3)(react-dom@17.0.2)(react-is@18.2.0)(react@17.0.2)
+        specifier: 6.x
+        version: 6.1.8(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@types/jest':
         specifier: ^26.0.23
