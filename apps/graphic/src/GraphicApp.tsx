@@ -1,13 +1,13 @@
-import React,  {useCallback, useRef, useEffect} from 'react';
+import React,  {useState, useCallback, useRef, useEffect} from 'react';
 import './App.css';
 import { instance, RenderError,RenderOptions, RenderResult } from "@viz-js/viz";
 import {actions, useSelector} from './actions-integration';
-
 import {
   QueryClient,
   QueryClientProvider,
   useQuery,
 } from '@tanstack/react-query'
+import {NeueModal} from '@therious/components';
 
 const queryClient = new QueryClient();
 
@@ -40,6 +40,10 @@ function AdaptSvgSvg({svgsvg}:AdapstSvgSvgProps)
 
 function Example()
 {
+  const [modal, setModal] = useState<boolean>(false);
+  const closeModal = useCallback(()=>setModal(false),[]);
+  const openModal = useCallback(()=>setModal(true),[]);
+
   const { isPending, isError, data, error }  = useQuery({
     queryKey: ['diagram1'],
     queryFn: diagramFetcher
@@ -48,15 +52,24 @@ function Example()
     console.log(`svg data received = `, data);
 
   return (
-      <div className="App">
-        <button onClick={() => {alert('hi')}}>Reset Game</button>
-        <hr/>
-        <div style={{display:'block', width:'800px', height:'800px', border:'5px dotted red', overflowY:'clip', overflowX: 'clip'}}>
-          {isPending ? <span>Loading...</span> : isError ? <span>Error: {error.message}</span> :
-            <AdaptSvgSvg svgsvg={data}/>
-            }
-        </div>
+    <div className="App">
+      <button disabled={modal} onClick={openModal}>Trigger modal</button>
+      <NeueModal openIt={modal} close={closeModal}><h1>Wow</h1><p>Hello this is an extensive message</p><button onClick={closeModal}>Close me</button></NeueModal>
+
+      <hr/>
+      <div style={{
+        display: 'block',
+        width: '800px',
+        height: '800px',
+        border: '5px dotted red',
+        overflowY: 'clip',
+        overflowX: 'clip'
+      }}>
+        {isPending ? <span>Loading...</span> : isError ? <span>Error: {error.message}</span> :
+          <AdaptSvgSvg svgsvg={data}/>
+        }
       </div>
+    </div>
   );
 
 }
@@ -64,9 +77,9 @@ function Example()
 //... todo add a query client provide
 function GraphicApp() {
   return (
-  <QueryClientProvider client={queryClient}>
-  <Example/>
-  </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <Example/>
+    </QueryClientProvider>
   );
 }
 
