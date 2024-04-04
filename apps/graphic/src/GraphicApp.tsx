@@ -24,7 +24,7 @@ const fetcher = (url:string)=>async()=>{
   return svg;
 }
 
-const diagramFetcher = fetcher('/dot/pedigree.dot')
+const diagramFetcher = fetcher('/dot/physics.dot')
 
 type AdapstSvgSvgProps = {svgsvg:SVGSVGElement}
 function AdaptSvgSvg({svgsvg}:AdapstSvgSvgProps)
@@ -33,7 +33,7 @@ function AdaptSvgSvg({svgsvg}:AdapstSvgSvgProps)
   useEffect(()=>{svg.current?.appendChild?.(svgsvg)},[]);
 
   return (
-    <div style={{maxWidth:'1fr', maxHeight:'1fr', overflow: 'clip'}} ref={svg}/>
+    <div style={{maxWidth:'fit-content', maxHeight:'fit-content'}} ref={svg}/>
   );
 
 }
@@ -59,11 +59,9 @@ function Example()
       <hr/>
       <div style={{
         display: 'block',
-        width: '800px',
-        height: '800px',
+        width: 'fit-content',
+        height: 'fit-content',
         border: '5px dotted red',
-        overflowY: 'clip',
-        overflowX: 'clip'
       }}>
         {isPending ? <span>Loading...</span> : isError ? <span>Error: {error.message}</span> :
           <AdaptSvgSvg svgsvg={data}/>
