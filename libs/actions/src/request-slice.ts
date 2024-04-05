@@ -1,4 +1,4 @@
-import {reqIdDescribe, minisession} from "../utils/reqIdGenerator";
+import {reqIdDescribe, minisession} from "@therious/boot";
 
 interface When {
   'req#': number;
@@ -55,7 +55,7 @@ export const initialState:RequestState = {
 
 
 type Creator = (...rest: any)=>unknown;
-type Creators = Record<string, Creator|{}>;
+type Creators = Record<string, Creator>;
 type Reducer = (s:RequestState,...rest: any)=>RequestState;
 type Reducers = Record<string, Reducer>;
 
@@ -105,7 +105,7 @@ const reducers:Reducers = {
     openRequestCount: state.openRequestCount+1,
     openRequests: {...state.openRequests, [reqId]: {reqId, type, url, when: reqIdDescribe(reqId)}},
     maxOpenRequestCount: Math.max(state.maxOpenRequestCount, state.openRequestCount+1)
-  }),
+  }) as RequestState,
 };
 
 
