@@ -20,14 +20,13 @@ const formatNow    = (v:number)=>v.toLocaleString('en-US', fmtNow);
 const formatCtr    = (v:number)=>v.toLocaleString('en-US', fmtCtr);
 
 const timeOrigin = formatOrigin(performance.timeOrigin);
-
-const dateTimeFmt = "yyyy-MM-dd HH:mm:ss.SSS";
+export const minisession = timeOrigin;
 
 let pNowMicros = 0;
 
 const reqIdRegEx:RegExp = /(?<prefix>[#@])(?<origin>[0-9a-z]{11})\+(?<now>[0-9,.]{15})=(?<counter>[0-9,]{7})/;
 
-const ignoreRegex = /(,|\.)/g;
+const ignoreRegex = /([,.])/g;
 
 const parseIgnore = (s:string) => {
     const ss = s.replace(ignoreRegex, '')
@@ -77,11 +76,14 @@ export function reqIdDescribe(reqId:string) {
 }
 
 
-export function reqIdGenerate()
+export function reqIdGenerate():string
 {
-    const id =  `#${timeOrigin}+${formatNow(performance.now())}=${formatCtr(++requestCounter)}`;
-    // const desc = reqIdDescribe(id);
-    // console.warn(`id = ${id}`, desc);
+    return `#${timeOrigin}+${formatNow(performance.now())}=${formatCtr(++requestCounter)}`;
+}
 
-    return id;
+// use internal identifiers to track async operations not sent as external requests
+// these differ only in the prefix @ vs #
+export function reqIdGenerateInternal():string
+{
+    return `@${timeOrigin}+${formatNow(performance.now())}=${formatCtr(++requestCounter)}`;
 }
