@@ -11,7 +11,10 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "chokidar": "~3.6.0",
+    "glob": "~10.3.12",
     "lerna": "^8.1.2",
+    "minimist": "~1.2.8",
     "typescript": "^4.9.5",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -21,5 +24,9 @@
     "@types/react": "^18.2.61",
     "@types/react-dom": "^18.2.19",
     "@types/react-redux": "~7.1.25"
+  },
+  "scripts": {
+    "indexOnce": "node ./scripts/library-index-generator.js",
+    "indexWatch": "node ./scripts/library-index-generator.js --watch"
   }
 }
