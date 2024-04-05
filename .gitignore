@@ -23,3 +23,7 @@ dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# generated indices
+libs/actions/index.ts
+libs/utils/index.ts
