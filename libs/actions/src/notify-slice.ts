@@ -1,4 +1,4 @@
-import {internalIdGenerate} from '../utils/reqIdGenerator';
+import {reqIdGenerateInternal} from '@therious/boot';
 
 // Remedy, what should user do with the message?
 /*
@@ -69,10 +69,10 @@ const initialState:NotifyState = {
 
 // type value will be added automatically to creators to match the key, or better yet to match the slice/key
 const creators /*todo :NotifyCreators small issue with this type */ = {
-  fatal: (pn: PNoticeNoKey) => ({...pn, level:'fatal', key:internalIdGenerate()}),
-  error: (pn: PNoticeNoKey) => ({...pn, level:'error', key:internalIdGenerate()}),
-  warn:  (pn: PNoticeNoKey) =>  ({...pn, level:'warn',  key:internalIdGenerate()}),
-  info:  (pn: PNoticeNoKey) =>  ({...pn, level:'fatal', key:internalIdGenerate()}),
+  fatal: (pn: PNoticeNoKey) => ({...pn, level:'fatal',  key:reqIdGenerateInternal()}),
+  error: (pn: PNoticeNoKey) => ({...pn, level:'error',  key:reqIdGenerateInternal()}),
+  warn:  (pn: PNoticeNoKey) =>  ({...pn, level:'warn',  key:reqIdGenerateInternal()}),
+  info:  (pn: PNoticeNoKey) =>  ({...pn, level:'fatal', key:reqIdGenerateInternal()}),
   dismiss: (key: Notice['key']) =>({key})
 };
 
@@ -112,5 +112,5 @@ const reducers:NotifyReducers = {
   dismiss: (s,{key})=>({...s, notices: dismissNotice(key,s.notices)})
 };
 
-export const sliceConfig:SliceConfig = {name: 'notify', creators: creators as NotifyCreators, initialState, reducers};
+export const notifySlice:SliceConfig = {name: 'notify', creators: creators as NotifyCreators, initialState, reducers};
 

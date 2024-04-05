@@ -49,6 +49,6 @@ const reducers:CoverageReducers = {
 };
 
 
-export const sliceConfig = {name: "coverage", initialState, creators, reducers};
+export const coverageSlice = {name: "coverage", initialState, creators, reducers};
 
 
