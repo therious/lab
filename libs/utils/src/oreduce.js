@@ -13,3 +13,4 @@ export function oReduce(a,f,o={})
     return accum;
   }, o);
 }
+
