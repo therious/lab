@@ -1,12 +1,6 @@
 // -- standard slices --
-import {sliceConfig as requestSlice,RequestState} from "./request-slice";
-import {sliceConfig as notifySlice,NotifyState} from "./notify-slice";
+import {requestSlice,RequestState, notifySlice,NotifyState, loggingMiddleware, fatalMiddleware} from "@therious/actions";
 import {sliceConfig as optionsSlice,OptionsState} from "./options-slice";
-
-
-//-- standard middlewares
-import {loggingMiddleware} from "./logging-middleware";
-import {fatalMiddleware} from './fatal-middleware';
 
 // -- app specific slices --
 import {sliceConfig as localSlice, LocalState} from "./local-slice";

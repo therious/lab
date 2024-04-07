@@ -11,9 +11,8 @@ import {
 import {composeWithDevTools} from "redux-devtools-extension";
 import {Provider, TypedUseSelectorHook, useSelector as reduxUseSelector} from "react-redux";
 import React from "react";
-import {identicalKeys} from '../utils/commonKeys';
-import {oReduce} from '../utils/oreduce';
-import {SliceConfig} from './types';
+import {oReduce, identicalKeys} from '@therious/utils';
+import {SliceConfig} from  '@therious/actions';
 
 import {allSlices, allMiddlewares, middlewareInits, TotalState} from "../actions/combined-slices";
 

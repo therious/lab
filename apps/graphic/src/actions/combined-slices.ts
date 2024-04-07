@@ -1,12 +1,10 @@
-// -- standard slices --
-import {sliceConfig as requestSlice,RequestState} from "./request-slice";
-import {sliceConfig as notifySlice,NotifyState} from "./notify-slice";
-import {sliceConfig as coverageSlice,CoverageState} from './coverage-slice';
-
-//-- standard middlewares
-import {loggingMiddleware} from "./logging-middleware";
-import {fatalMiddleware} from './fatal-middleware';
-import {coverageMiddleware, coverageMiddlewareInit} from './coverage-middleware';
+// -- standard slices& middlewares --
+import {
+  requestSlice,RequestState,
+  notifySlice, NotifyState,
+  coverageSlice,CoverageState,coverageMiddleware, coverageMiddlewareInit,
+  loggingMiddleware, fatalMiddleware
+} from "@therious/actions";
 
 // -- app specific slices --
 import {sliceConfig as localSlice, LocalState} from "./local-slice";

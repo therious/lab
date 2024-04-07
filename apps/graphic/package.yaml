@@ -3,6 +3,8 @@ version: 0.1.0
 private: true
 
 dependencies:
+  '@therious/actions':            'workspace:*'
+  '@therious/utils':              'workspace:*'
   '@therious/boot':               'workspace:*'
   '@therious/components':         'workspace:*'
   immer:                          ~10.0.4
