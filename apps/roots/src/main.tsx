@@ -5,14 +5,12 @@ import { createRoot } from 'react-dom/client';
 import {Config} from "@therious/boot";
 import {actions, connectRootComponent} from './actions-integration';
 import {AboveApp} from './react/AboveApp';
-import {deprecate} from './decorators/decorators';
-
+import {deprecate, ThrowsIf, Log} from '@therious/utils';
 
 class TestMe
 {
-  constructor() {
-  }
 
+  @Log({before:true, after:true})
   mymethod() {
     console.log("I'm a deprecated method");
   }
@@ -29,9 +27,10 @@ x.mymethod();
 
     const config = await Config.fetch('/config/testconfig.yaml');
     actions.local.ingestConfig(config);
-    const RootComponent = connectRootComponent(AboveApp) as unknown as React.FunctionComponent;
+    const RootComponent = connectRootComponent(AboveApp);
     const container = document.getElementById('root');
     const root = createRoot(container!); // createRoot(container!) if you use TypeScript
+    // @ts-ignore
     root.render(<RootComponent/>);
   } catch(e) {
     console.error(e);
