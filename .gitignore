@@ -27,3 +27,5 @@ yarn-error.log*
 # generated indices
 libs/actions/index.ts
 libs/utils/index.ts
+libs/fsm/index.ts
+

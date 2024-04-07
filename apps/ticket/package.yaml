@@ -3,11 +3,12 @@ version: 0.1.0
 private: true
 
 dependencies:
-  '@therious/boot':               'workspace:*'
-  '@therious/random':             'workspace:*'    #todo get rid of random in favor of utils?
-  '@therious/components':         'workspace:*'
   '@therious/utils':              'workspace:*'
-  '@therious/actions':            'workspace:*'   # common set of reduxy-type actions (pure functions, not redux)
+  '@therious/random': 'workspace:*'    #todo get rid of random in favor of utils?
+  '@therious/boot':               'workspace:*'
+  '@therious/fsm':                'workspace:*'
+  '@therious/actions': 'workspace:*'   # common set of reduxy-type actions (pure functions, not redux)
+  '@therious/components':         'workspace:*'
   immer:                          ~10.0.4
   react:                          ~18.2.0
   react-dom:                      ~18.2.0
