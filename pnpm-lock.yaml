@@ -466,6 +466,12 @@ importers:
       axios:
         specifier: ~1.6.8
         version: 1.6.8
+      redux:
+        specifier: ~4.x
+        version: 4.2.1
+      redux-devtools-extension:
+        specifier: ~2.13.9
+        version: 2.13.9(redux@4.2.1)
     devDependencies:
       typescript:
         specifier: ~4.9.5
@@ -16149,7 +16155,6 @@ packages:
       redux: ^3.1.0 || ^4.0.0
     dependencies:
       redux: 4.2.1
-    dev: true
 
   /redux@4.1.2:
     resolution: {integrity: sha512-SH8PglcebESbd/shgf6mii6EIoRM0zrQyjcuQ+ojmfxjTtE0z9Y8pa62iA/OJ58qjP6j27uyW4kUF4jl/jd6sw==}
