@@ -1,6 +1,6 @@
 
 import {inject, container, singleton} from '@therious/boot';
-import { FsmTest } from './fsm-test';
+import { FsmTest } from '@therious/fsm';
 
 // todo come up with a way to instantiate multiples directly from configuration without need for subclassing
 

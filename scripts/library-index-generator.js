@@ -3,7 +3,7 @@ const minimist = require('minimist'); // a minimist argument processing lib
 const indexGenerate = require('./index-generator');
 
 
-const shortLibNames = ['actions', 'utils'];  // todo generate this list
+const shortLibNames = ['actions', 'fsm', 'utils'];  // todo generate this list
 const libFolders = shortLibNames.map(s=>`libs/${s}`);
 const libSrcFolders = libFolders.map(path=>`${path}/src`);
 
