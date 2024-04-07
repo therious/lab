@@ -1,7 +1,8 @@
-import React from 'react'
-import './main.css'
+import 'reflect-metadata';
+import React from 'react';
+import './main.css';
 import { createRoot } from 'react-dom/client';
-import {Config} from "./utils/config";
+import {Config} from "@therious/boot";
 import {actions, connectRootComponent} from './actions-integration';
 import {AboveApp} from './react/AboveApp';
 import {deprecate} from './decorators/decorators';
