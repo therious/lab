@@ -1,0 +1,16 @@
+{
+  "name": "@therious/fsm",
+  "version": "0.1.0",
+  "author": "Haim Zamir <hzamir@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "main": "./index.ts",
+  "devDependencies": {
+    "typescript": "~4.9.5"
+  },
+  "peerDependencies": {
+    "xstate": "4.28.1",
+    "@therious/utils": "workspace:*"
+  },
+  "scripts": {}
+}

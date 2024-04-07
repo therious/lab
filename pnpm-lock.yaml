@@ -65,6 +65,9 @@ importers:
       '@therious/components':
         specifier: workspace:*
         version: link:../../cmps/components
+      '@therious/fsm':
+        specifier: workspace:*
+        version: link:../../libs/fsm
       '@therious/utils':
         specifier: workspace:*
         version: link:../../libs/utils
@@ -259,6 +262,9 @@ importers:
       '@therious/components':
         specifier: workspace:*
         version: link:../../cmps/components
+      '@therious/fsm':
+        specifier: workspace:*
+        version: link:../../libs/fsm
       '@therious/random':
         specifier: workspace:*
         version: link:../../libs/random
@@ -499,6 +505,19 @@ importers:
       mocha:
         specifier: ^9.0.0
         version: 9.2.2
+
+  libs/fsm:
+    dependencies:
+      '@therious/utils':
+        specifier: workspace:*
+        version: link:../utils
+      xstate:
+        specifier: 4.28.1
+        version: 4.28.1
+    devDependencies:
+      typescript:
+        specifier: ~4.9.5
+        version: 4.9.5
 
   libs/random: {}
 
