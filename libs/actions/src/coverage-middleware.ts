@@ -1,6 +1,6 @@
 import {SliceInfo} from './coverage-slice';
 import {oReduce} from '@therious/utils';
-import {Action, NextF} from '../actions-integration/types';
+import {Action, NextF} from './types';
 
 type SliceActions = Record<string, unknown>;
 type AllSliceActions = Record<string, SliceActions>;

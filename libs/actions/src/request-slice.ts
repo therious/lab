@@ -1,4 +1,5 @@
-import {reqIdDescribe, minisession} from "@therious/boot";
+import {reqIdDescribe, minisession} from "@therious/utils";
+import {ErrorMeta, ResponseMeta} from './types';
 
 interface When {
   'req#': number;
@@ -17,22 +18,12 @@ export interface OpenRequest extends OpenRequestP {
   when: When;
 }
 
-export interface ResponseMeta {
-  reqId: string;
-  elapsed: string;
-  elapsedMicros: number;
-}
-
-export interface ErrorMeta extends ResponseMeta {
-  name: string;
-  message: string;
-  stack: string
-}
 
 export interface ClosedRequest extends OpenRequest {
   elapsed: string;
   elapsedMicros: number;
 }
+
 
 
 export interface RequestState {
@@ -109,5 +100,5 @@ const reducers:Reducers = {
 };
 
 
-export const sliceConfig:SliceConfig = {name: 'request', initialState, creators, reducers};
+export const requestSlice:SliceConfig = {name: 'request', initialState, creators, reducers};
 

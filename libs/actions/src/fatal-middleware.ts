@@ -1,3 +1,5 @@
+import {Action, NextF} from './types';
+
 const errorActionStyle = `
     padding: 2px 8px;
     border: 1px solid black;
@@ -6,7 +8,7 @@ const errorActionStyle = `
     `;
 
 let stop = false;
-export const fatalMiddleware = store => next => action => {
+export const fatalMiddleware =  (store:unknown) => (next:NextF) => (action:Action) => {
   if(stop)
     return;
   const aType = action.type || '';
