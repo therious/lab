@@ -1,4 +1,4 @@
-import {oReduce} from '../utils/oreduce';
+import {oReduce} from '@therious/utils';
 // these are arrays of associated letters that each one can be interchanged for any of the others
 // this will be used to build the mischalfim map
 

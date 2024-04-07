@@ -2,7 +2,7 @@ import {FsmControl } from './fsm-control';
 import {FsmEvent, FsmConfig, FsmDefinition, FsmInstance} from './fsm-types';
 import {fsmConfigToPlantUml } from './fsm-visualization';
 
-import {internalIdGenerate as reqIdGenerateInternal, reqIdDescribe} from '../utils/reqIdGenerator';
+import {reqIdGenerateInternal, reqIdDescribe} from '@therious/utils';
 
 export type FsmTestArray = Array<string|number|{type:string}>
 

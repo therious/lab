@@ -12,6 +12,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@therious/actions": "workspace:*",
+    "@therious/boot": "workspace:*",
+    "@therious/utils": "workspace:*",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "react-json-tree": "~0.18.0",

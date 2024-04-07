@@ -1,5 +1,5 @@
 import {assign} from 'xstate';
-import {oReduce} from '../utils/oreduce';
+import {oReduce} from '@therious/utils';
 import {FsmTransition, ee, FsmConfig, FsmNormalizedTransition} from './fsm-types';
 
 const arrowFuncRegex = /^.+=>.+/;
