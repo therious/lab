@@ -1,4 +1,4 @@
-import {reqIdGenerateInternal} from '@therious/boot';
+import {reqIdGenerateInternal} from '@therious/utils';
 
 // Remedy, what should user do with the message?
 /*

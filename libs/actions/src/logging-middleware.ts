@@ -1,3 +1,5 @@
+import {Action, NextF} from './types';
+
 const actionStyle = `
     padding: 2px 8px;
     border: 1px solid black;
@@ -12,7 +14,7 @@ const errorActionStyle = `
     color: black;
     `;
 
-export const loggingMiddleware = store => next => action => {
+export const loggingMiddleware = (store:unknown) => (next:NextF) => (action:Action) => {
   const aType = action.type || '';
   const style = aType? actionStyle: errorActionStyle;
   console[aType?'log':'error'](`%c +action - ${action.type}`, style, action);

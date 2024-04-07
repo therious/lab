@@ -5,6 +5,9 @@
   "license": "MIT",
   "private": true,
   "main": "./index.ts",
+  "dependencies": {
+    "base64-js": "~1.5.1"
+  },
   "devDependencies": {
     "typescript": "~4.9.5"
   },
