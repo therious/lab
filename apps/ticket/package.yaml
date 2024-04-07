@@ -4,18 +4,20 @@ private: true
 
 dependencies:
   '@therious/boot':               'workspace:*'
-  '@therious/random':             'workspace:*'
+  '@therious/random':             'workspace:*'    #todo get rid of random in favor of utils?
   '@therious/components':         'workspace:*'
+  '@therious/utils':              'workspace:*'
+  '@therious/actions':            'workspace:*'   # common set of reduxy-type actions (pure functions, not redux)
   immer:                          ~10.0.4
-  react:                          ^18.2.0
-  react-dom:                      ^18.2.0
+  react:                          ~18.2.0
+  react-dom:                      ~18.2.0
   redux:                          ~4.2.1
   react-redux:                    ~7.2.9
   reselect:                       ~4.1.7
   reflect-metadata:               ~0.1.13 #needed for tsyringe, and fancy decorator stuff
   styled-components:              ~6.1.8
   stylis:                         ~4.3.1  # a dependency of styled-components, apparently is it necessary to pull directly
-  typescript:                     ^4.9.5  # upgrade this when react 19 available?
+  typescript:                     ^4.9.5  # upgrade this when react 19 available?  todo why isn't this a dev dependency?
   vis-network:                    ~9.1.9  # used to plot railroad track network
   web-vitals:                     ^2.1.4
   xstate:                         4.28.1  # or maybe 4.28.1 or 4.23.1 is last one latest= 5.9.1 I have actually successfully used?
