@@ -1,5 +1,5 @@
-import axios from 'axios';
-import {reqIdGenerate} from '@therious/boot';
+// import axios from 'axios';
+// import {reqIdGenerate} from '@therious/utils';
 
 const middlestyle = `
     padding: 2px 8px;
