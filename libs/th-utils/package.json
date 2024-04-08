@@ -1,27 +1,10 @@
 {
   "name": "@therious/th-utils",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "private": true,
   "description": "provides compatible utility functions to other th- modules in progress",
   "main": "th-utils.js",
-  "scripts": {
-    "test": "mocha test/ --reporter spec"
-  },
-  "repository": {
-    "type": "git",
-    "url": "ssh://git@github.com:therious/zmono.git",
-    "directory": "libs/th-utils"
-  },
+  "scripts": {},
   "author": "Haim Zamir <hzamir@gmail.com>",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/therious/th-utils/issues"
-  },
-  "homepage": "https://github.com/therious/th-utils",
-  "devDependencies": {
-    "chai": "^3.0.0",
-    "gulp": "^4.0.2",
-    "gulp-mocha": "^8.0.0",
-    "mocha": "^9.0.0"
-  }
+  "license": "MIT"
 }

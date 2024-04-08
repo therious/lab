@@ -7,15 +7,23 @@ const ignoredByDefault = [
 '**/node_modules/**',
 '**/.git/**',
 '**/dist/**',
+'**/build/**',
 '**/docs/**',
 'webpack*\.js/**', // this glob looks wrong
-'package\.json',
-'package.yaml',
-'index\.js',
-'index\.ts',
+'index\.(js|jsx|ts|tsx)',
 '**/*\.d\.ts',
 'index-generator.js',
 '**/__mocks__/**',
+'**/__tests__/**',
+  '**/*\.spec\.js',
+  '**/*\.spec\.ts',
+  '**/*\.spec\.jsx',
+  '**/*\.spec\.tsx',
+  '**/*\.test\.js',
+  '**/*\.test\.ts',
+  '**/*\.test\.jsx',
+  '**/*\.test\.tsx',
+
 'coverage/**',
 ];
 

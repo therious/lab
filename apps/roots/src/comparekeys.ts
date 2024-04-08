@@ -106,80 +106,14 @@ function compareAb(index:number, a:srec, b:srec) {
 }
 
 
-
-const profiles:any = [];
-const followers:any = [];
-const following:any = [];
-
-
-export function fetchFollowersAndFollowing(list:srec[])
-{
-  //@ts-ignore
-  window.zzfollowers = followers;
-
-  //@ts-ignore
-  window.zzfollowing = following;
-
-  list.forEach((rec,index)=>{
-    const userId = rec._id;
-    axios.get(`http://localhost:3000/api/v1/users/followers?userId=${userId}&limit=1000`).then((resp)=>{
-      const {data=null, status} = resp;
-      followers.push({userId, status, data});
-    }).catch((err)=>{
-      console.error(`!!! [${index}] Exception`, err);
-      followers.push({userId, err})
-    });
-
-  })
-
-
-  list.forEach((rec,index)=>{
-    const userId = rec._id;
-    axios.get(`http://localhost:3000/api/v1/users/following?userId=${userId}&limit=1000`).then((resp)=>{
-      const {data=null, status} = resp;
-      following.push({userId, status, data});
-    }).catch((err)=>{
-      console.error(`!!! [${index}] Exception`, err);
-      following.push({userId, err})
-    });
-
-  })
-
-
-}
-
-
-export function fetchProfiles(list:srec[])
-{
-  //@ts-ignore
-  window.zzprofiles = profiles;
-
-  list.forEach((rec,index)=>{
-    const userId = rec._id;
-    axios.get(`http://localhost:3000/api/v1/users/${userId}/profile`, ).then((resp)=>{
-      const {data=null, status} = resp;
-      profiles.push({userId, status, data});
-    }).catch((err)=>{
-      console.error(`!!! [${index}] Exception`, err);
-      profiles.push({userId, err})
-    });
-
-  })
-
-}
-
-
 export function compareList(list:srec[])
 {
-    const src  = list[0]
-    list.slice(1).forEach((dest, index)=>compareAb(index+1, src,dest));
+  const src  = list[0]
+  list.slice(1).forEach((dest, index)=>compareAb(index+1, src,dest));
 
-    console.warn(`These keys are always present`, Object.keys(always));
+  console.warn(`These keys are always present`, Object.keys(always));
   console.table(always);
   console.table(sometimes);
-
-
-  fetchFollowersAndFollowing(list);
 
 }
 

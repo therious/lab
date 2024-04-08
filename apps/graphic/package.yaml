@@ -24,10 +24,6 @@ dependencies:
   xstate:                         4.28.1  # or maybe 4.28.1 or 4.23.1 is last one latest= 5.9.1 I have actually successfully used?
 
 devDependencies:
-  "@testing-library/jest-dom":    ^5.17.0
-  "@testing-library/react":       ^13.4.0
-  "@testing-library/user-event":  ^13.5.0
-  "@types/jest":                  ^27.5.2
   "@types/node":                  ^18.17.1
   "@types/react":                 ^18.2.61
   "@types/react-dom":             ^18.2.19
@@ -46,7 +42,6 @@ scripts:
 eslintConfig:
   extends:
     - react-app
-    - react-app/jest
 
 browserslist:   # vite ignores this ,uses fine grained js targets (esnext, es2021, etc) but its postCss does exploit it
   production:  &prod ["Chrome >= 112", "Edge >= 112", "Firefox >= 112", "Safari >= 16.4"]
