@@ -11,5 +11,7 @@
   "devDependencies": {
     "typescript": "~4.9.5"
   },
-  "scripts": {}
+  "scripts": {
+    "test": "vitest --globals --disable-console-intercept "
+  }
 }
