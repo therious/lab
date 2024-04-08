@@ -1,10 +1,12 @@
 
 import {inject, container, singleton} from '@therious/boot';
-import { FsmControl, FsmDefinition, FsmInstance, FsmTransition} from './fsm-utils/fsm-control';
-import {createXStateConfiguration} from './fsm-utils/convert';
+import {
+  createXStateConfiguration,
+  fsmConfigToPlantUml as fizbinToPlantUml,
+  FsmTransition
+} from '@therious/fsm';
 import React from 'react';
 import {StateForm} from "@therious/components";
-import {fizbinToPlantUml} from './fsm-utils/fsm-visualization';
 
 
 interface FsmConfig {
@@ -33,7 +35,7 @@ export class InjectedStateForms
   {
 
     const fsmConfigsArray = Object.values(this.fsmConfigs);
-    const convertedMachines = fsmConfigsArray.map(fsmConfig=>createXStateConfiguration(fsmConfig,{}));
+    const convertedMachines = fsmConfigsArray.map(fsmConfig=>createXStateConfiguration(fsmConfig,{}, {}));
 
     const firstConfig = fsmConfigsArray[0];
     const behavior = {};
