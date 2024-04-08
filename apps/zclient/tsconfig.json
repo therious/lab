@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es2020",
+    "experimentalDecorators": true,
+    "types": ["vite/client", "jest"],
+    "target": "esnext",
     "lib": [
       "dom",
       "dom.iterable",
@@ -10,32 +12,17 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx",
-    "noFallthroughCasesInSwitch": false
+    "jsx": "react-jsx"
   },
-  "exclude": [
-    "node_modules",
-    "build",
-    "scripts",
-    "jest"
-  ],
   "include": [
     "src"
-  ],
-  "baseUrl": "./",
-  "paths": {
-    "@therious/fizbin": "../../libs/fizbin",
-    "@therious/th-utils": "../../libs/th-utils",
-    "@therious/boot": "../../libs/boot/src",
-    "@therious/components": "../../libs/components/src"
-  }
+  ]
 }

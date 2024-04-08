@@ -1,7 +1,6 @@
 
 bootSequence:
   - SecurityTest
-  - SubscriptionTest
   - InjectedStateForms
 
 sequence:

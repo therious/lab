@@ -7,8 +7,8 @@ import {createSelector} from "reselect";
 import * as actionCreators from "./action-creators";
 import {connect, Provider} from "react-redux";
 import App from "./App";
-import {render} from "react-dom";
 import React from "react";
+import {createRoot} from "react-dom/client";
 
 import './index.css';
 
@@ -72,11 +72,8 @@ const ConnectedApp =  connect(
 
 export function connectApp()
 {
-  render(
-    <Provider store={store}>
-      <ConnectedApp/>
-    </Provider>,
-    document.getElementById('root')
-  );
+  const root = createRoot(document.getElementById('root')); // createRoot(container!) if you use TypeScript
+
+  root.render(<Provider store={store}><ConnectedApp/></Provider>);
 }
 
