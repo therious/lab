@@ -1,4 +1,3 @@
-import {type} from '@testing-library/user-event/dist/type';
 
 export function deprecate(target: any, context:any):any {
   if (context.kind === "method") {
