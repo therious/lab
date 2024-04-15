@@ -38,7 +38,9 @@ class SecLightBehavior {
 export class SecurityTest extends FsmTest
 {
   constructor(
+    // @ts-ignore
     @inject('stateMachines.securityLight') readonly fsmConfig: any,
+    // @ts-ignore
     @inject('testEvents.securityLight') readonly testEvents: any,
   )
   {

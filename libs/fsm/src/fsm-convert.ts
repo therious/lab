@@ -30,14 +30,14 @@ function wrapUpdatesOrGuards(s:string, logStr:string|undefined)
 
 // guard examples:
 // daylight: (ctx, evt)=>ctx.ambientLight > 0.5
-const wrapUpdate = ({logUpdates}:localDefOptions, s)=> wrapUpdatesOrGuards(s, logUpdates);
-const wrapGuard = ({logGuards}:localDefOptions, s)=> wrapUpdatesOrGuards(s, logGuards);
+const wrapUpdate = ({logUpdates}:localDefOptions, s:string)=> wrapUpdatesOrGuards(s, logUpdates);
+const wrapGuard = ({logGuards}:localDefOptions, s:string)=> wrapUpdatesOrGuards(s, logGuards);
 
-function convertTransition(transSource:FsmTransition, fromState, {logGuards})
+function convertTransition(transSource:FsmTransition, fromState: any, {logGuards}:localDefOptions)
 {
   const {/*from,*/ to, cond:icond=null, evt=null, after=null} = transSource;
 
-  // al;low using a non-string (eg emppty array, to identify same target as source)
+  // al;low using a non-string (eg empty array, to identify same target as source)
   const target = (typeof to === 'string')? to: fromState;
   const prop = evt? 'on': after? 'after': icond? 'always': undefined;
 
@@ -54,7 +54,7 @@ function convertTransition(transSource:FsmTransition, fromState, {logGuards})
     case 'on':
     case 'after':
     {
-      const prop2:string = prop === 'on'? evt!: after!;
+      const prop2 = prop === 'on'? evt!: after!;
       const value = cond? {target, cond}: target;
       fromState[prop] = fromState[prop] || {} ;  // ??=
       const curValue = fromState[prop][prop2]; // is there already a transition 'like' this one?
@@ -76,7 +76,7 @@ function convertTransition(transSource:FsmTransition, fromState, {logGuards})
 
 }
 
-export function createXStateConfiguration(cfg, behavior, options) {
+export function createXStateConfiguration(cfg:any, behavior:any, options:any) {
   const {name:id, start: initial, context, updates, transitions } = cfg;
   const states = {};
   let on = {};
@@ -105,19 +105,24 @@ export function createXStateConfiguration(cfg, behavior, options) {
     } // end config
    */
   // create an entry for each state
+  // @ts-ignore
   cfg.states.forEach(s=> states[s] = {
+    // @ts-ignore
     entry: [(c,e,m)=>console.info(`!!! entering ${m.state.value}`)]
   });
 
-  transitions.forEach(t=> {
+  transitions.forEach((t: FsmTransition)=> {
     const {from} = t;
     if(typeof from === 'string') {
       if(from === '*')
         Object.values(states).forEach(f=>convertTransition(t,f,options)); // all states have this transition
       else
-        convertTransition(t, states[from], options); // one state has this transition
+        { // @ts-ignore
+          convertTransition(t, states[from], options);
+        } // one state has this transition
 
     } else {
+      // @ts-ignore
       from.forEach(f=>convertTransition(t, states[f], options)); // [s1,s2] have same trasnsition
     }
   });
@@ -141,6 +146,7 @@ export function normalizeBehavior(behavior:any, cfg:{states:string[]})
     const fv = behavior[k];
     if(fv) {
       const wf = fv.bind(behavior);
+      // @ts-ignore
       Object.values(normalized).forEach((destValue:ee)=>destValue[k].push(wf));
     }
 
@@ -150,14 +156,16 @@ export function normalizeBehavior(behavior:any, cfg:{states:string[]})
     enterExit.forEach(ee=>{
       const fv = behavior[`${ee}$st}`];
       if(fv)
-        normalized[st][ee].push(fv.bind(behavior));
+        { // @ts-ignore
+          normalized[st][ee].push(fv.bind(behavior));
+        }
     });
   });
   return normalized;
 }
 // interface ee { entry:any; exit:any; }
 
-export function normalizeAndApplyBehavior(behavior:any, cfg:{states:string[]}, xs)
+export function normalizeAndApplyBehavior(behavior:any, cfg:{states:string[]}, xs:any)
 {
   const normalized = normalizeBehavior(behavior, cfg);
   const {states} = xs;
@@ -177,7 +185,7 @@ export function splitTransitions(cfg:FsmConfig)
       if(from === '*')
         return cfg.states.forEach(s=>results.push({...t, from: s})); // what does returning a foreach do?
       else
-        results.push(t);
+        results.push(t as FsmNormalizedTransition);
 
     } else { // assume an array
       from.forEach(f=> results.push({...t, from: f})); // [s1,s2] have same transition
@@ -186,7 +194,9 @@ export function splitTransitions(cfg:FsmConfig)
 
   // now mark which states are terminal
   const nonTerminalStates = {};
-  results.forEach(r=>{nonTerminalStates[r.from] = -1;});
+  results.forEach(r=>{ // @ts-ignore
+    nonTerminalStates[r.from] = -1;});
+  // @ts-ignore
   const terminal = cfg.states.filter(st=>nonTerminalStates[st]===undefined);
   return {transitions:results, terminal};
 
