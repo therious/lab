@@ -9,7 +9,7 @@
     "axios": "~1.6.8"
   },
   "devDependencies": {
-    "typescript": "~4.9.5"
+    "typescript": "~5.4.5"
   },
   "peerDependencies": {
     "@therious/utils": "workspace:*",
