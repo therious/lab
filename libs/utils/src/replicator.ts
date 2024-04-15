@@ -1,5 +1,6 @@
 import {TopicBus, TopicBusMessage} from './topic-bus';
 import {reqIdGenerate} from './reqIdGenerator';
+import {CreateExternalPromise, ExternalPromise} from './external-promise';
 
 type regType = string;
 type regId = string;
@@ -131,6 +132,8 @@ export class ReplicatorHub extends Replicator {
   public constructor() {
     super();
     Replicator.hub = this;
+    this.map.set("ReplicatorHub-","I am here");
+
     //@ts-ignore
     globalThis.Hub = this;
 
@@ -168,10 +171,12 @@ export class ReplicatorHub extends Replicator {
 export class ReplicatorSpoke extends Replicator {
   private readonly snapshotTopic:string;
 
+  public readonly synced: ExternalPromise<void> = CreateExternalPromise<void>();
+
   public constructor() {
     super();
     this.snapshotTopic = this.createSnapshotTopic();
-    this.bus.addTopicListener(this.snapshotTopic, this.onUpdate);
+    this.bus.addTopicListener(this.snapshotTopic, this.onSnapshot);
     this.bus.addTopicListener(Topic.Update, this.onUpdate);
     if(!Replicator.Spoke) {
       (Replicator as any).spoke = this;
@@ -186,6 +191,12 @@ export class ReplicatorSpoke extends Replicator {
     const {key,value}= message.value;
     this.map.set(key,value);
     this.forwarder.forwardUpdate(message.value);
+  }
+  private onSnapshot = (message:TopicBusMessage<ReplicatorMessage<unknown>>) =>
+  {
+    this.onUpdate(message);
+    this.bus.clearTopic(this.snapshotTopic);
+    this.synced.resolve();
   }
 
 }
