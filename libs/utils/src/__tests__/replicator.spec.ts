@@ -5,9 +5,9 @@ import {expect,describe, test, beforeAll} from 'vitest'
 const info = console.info;
 
 type TestGlobals = {
- hub: Replicator;
- satellite1: Replicator;
- satellite2: Replicator;
+ hub: ReplicatorHub;
+ spoke1: ReplicatorSpoke;
+ spoke2: ReplicatorSpoke;
 };
 
 //@ts-ignore
@@ -23,8 +23,8 @@ const compare = async <T extends unknown>(spec:ReplicatorSpec, value:T)=>
 {
   await sleep(0);
   const itemA = testGlobals.hub.getItem(spec);
-  const itemB = testGlobals.satellite1.getItem(spec);
-  const itemC = testGlobals.satellite2.getItem(spec);
+  const itemB = testGlobals.spoke1.getItem(spec);
+  const itemC = testGlobals.spoke2.getItem(spec);
 
   info(`compare the value ${value}`);
   expect(itemA).toEqual(itemB);
@@ -33,11 +33,20 @@ const compare = async <T extends unknown>(spec:ReplicatorSpec, value:T)=>
 }
 
 
-describe('GlobalRegistry', async () => {
+describe('Replicator', async () => {
   beforeAll(async ()=>{
     testGlobals.hub = new ReplicatorHub();
-    testGlobals.satellite1 = new ReplicatorSpoke();
-    testGlobals.satellite2 = new ReplicatorSpoke();
+    await sleep(0);
+    testGlobals.spoke1 = new ReplicatorSpoke();
+    await sleep(0);
+
+    // await testGlobals.spoke1.synced;
+
+    testGlobals.spoke2 = new ReplicatorSpoke();
+    await sleep(0);
+
+    // await testGlobals.spoke2.synced;
+
   });
 
   test('replication', async ()=>{
