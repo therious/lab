@@ -8,4 +8,5 @@
 * animate the state machines by modding diagram after event (to change colors or parameters of attributes)
 * animate the state machines by modding diagram after event (to change colors or parameters of attributes)
 * proxyable pattern with sharedworker (put hub into a shared worker so the lifetime can exceed page that launches it)
-* 
+* pattern to persist any subset of state to localstorage, and recover it
+* persistent theme, with most immediate possible application (before page loads)
