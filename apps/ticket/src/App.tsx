@@ -16,12 +16,12 @@ const playerOrdinals = ['first', 'second', 'third', 'fourth'];
 function App() {
   const {players, turn, whoPlaysNow} = useSelector<TicketState>(s => s.ticket);
   const dealColorCards = useCallback((count:number)=>{
-    let clippedCount = Math.min(game.colorDeck.remaining().length, count);
+    const clippedCount = Math.min(game.colorDeck.remaining().length, count);
     dealCardsSoundEffect(clippedCount, ()=>ta.drawColors(game.colorDeck.deal(1)), ta.nextPlayer);
   },[]);
 
-  const getFive   = useCallback(()=>dealColorCards(5),[]);
-  const getTwo    = useCallback(()=>dealColorCards(2),[]);
+  const getFive   = useCallback(()=>dealColorCards(5),[dealColorCards]);
+  const getTwo    = useCallback(()=>dealColorCards(2),[dealColorCards]);
   const getTicket = useCallback(()=>{playVend(); ta.drawTicket(game.ticketDeck.deal(1)[0])},[]);
 
   const addPlayer = useCallback(() =>{

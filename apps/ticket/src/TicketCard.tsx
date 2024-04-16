@@ -81,7 +81,7 @@ export function TicketCard({ticket, player, completed}:TicketCardProps)
     const index = player.ticketsCompleted.indexOf(ticket);
     if(index >= 0) setCompletedNum(index+1);
   }, [completed]);
-  const cancelIntro = useCallback(()=>setHoveredAtLeastOnce(true),[hoveredAtLeastOnce]);
+  const cancelIntro = useCallback(()=>setHoveredAtLeastOnce(true),[]);
 
   if(!map.has(ticket))  map.set(ticket, rc.random(ticketSvgs) );
   const url = map.get(ticket);

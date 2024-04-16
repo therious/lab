@@ -55,7 +55,7 @@ export function Modal(props:ModalProps) {
   const {content, outsideClose=false, close=nada} = props;
   const ref = useRef<HTMLDivElement>(null);
   const closeIt   = useCallback(()=>{ if(ref.current) ref.current.style.display = 'none';},[]);
-  const modalKeys = useCallback((evt)=>{if(evt.keyCode === 27) closeIt()},[]);
+  const modalKeys = useCallback((evt:KeyboardEvent)=>{if(evt.keyCode === 27) closeIt()},[]);
 
   useEffect(()=>
   {

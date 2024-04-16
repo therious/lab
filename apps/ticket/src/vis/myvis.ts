@@ -83,8 +83,8 @@ function populateEdges(routes:Route[]):Edge[] {
 
 function diagram(cities:Record<string,City>): { nodes:Node[], edges:Edge[] }
 {
-  let nodes = populateNodes(cities);
-  let edges = populateEdges(Routes);
+  const nodes = populateNodes(cities);
+  const edges = populateEdges(Routes);
 
   // const network = new vis.Network(container, data, options);
   return  {nodes, edges};

@@ -53,8 +53,7 @@ export const MapView = ()=>
 {
   const {players, whoPlaysNow} = useSelector<TicketState>(s=>s.ticket);
 
-  const { ref, network } =
-  useVisNetwork({options:defaultOptions, edges:edges as any, nodes:nodes as any});
+  const { ref, network } = useVisNetwork({options:defaultOptions, edges:edges as any, nodes:nodes as any});
 
   const nodeSelect = useCallback((event:VisClick)=>{
 
@@ -91,7 +90,7 @@ export const MapView = ()=>
       }
     }
 
-  },[network, whoPlaysNow]);
+  },[network, whoPlaysNow, players]);
 
   // useEffect(() => {
   //   let currentNodeIndex = 0;
