@@ -5,7 +5,7 @@ import './index.css';
 import GraphicApp from './GraphicApp';
 import {connectRootComponent} from './actions-integration';
 import {Config, Inflate} from "@therious/boot";
-import {sleep} from '@therious/utils';
+import {hasAll, hasAny, sleep} from '@therious/utils';
 import * as Proxyable from '@therious/utils';
 
 import './fsm/some-tests';
@@ -47,14 +47,17 @@ import {
     const extendedConfig = inflate.intializeSequence('bootSequence');
     console.warn(`extendedConfig `,extendedConfig);
 
-    if('main' in config.queryParams)
+
+
+    if(hasAll(config.queryParams, ['main']))
     {
       new ReplicatorHub();
-      new ReplicatorSpoke();
-
-    } else if('side' in config.queryParams)
+    }
+    if(hasAny(config.queryParams, ['main', 'side']))
     {
-      new ReplicatorSpoke();
+      const spoke = new ReplicatorSpoke();
+      await spoke.synced;
+
     }
 
     const proxyable = Replicator.Spoke? new ExampleProxyable(!!Replicator.Hub): null;
