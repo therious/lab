@@ -1,11 +1,11 @@
 import React, {useEffect} from "react";
 import {SnackbarAction, useSnackbar, VariantType} from "notistack";
 import {actions, useSelector} from '../actions-integration';
-import {NotifyState, Notice} from '../actions/notify-slice'
+import {NotifyState, Notice} from '@therious/actions'
 import {Btn} from './Btn';
 
 // adapting from Humza, recall items that we have on display
-let displayed: Record<Notice['key'],Notice> = {};
+const displayed: Record<Notice['key'],Notice> = {};
 
 const levelToSnackbarVariant = (level:Notice['level']):VariantType => {
   // being typescript, we know everything is mapped and no cases are missing
@@ -21,12 +21,14 @@ export const NotifyWrapper = () => {
   const notify:NotifyState = useSelector((s:any)=>s.notify );  // todo change from DefaultRootState to correct state
 
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-  const {dismiss} = actions.notify;
-  const notifierAction = (key:Notice['key']) =><Btn onClick={() => closeSnackbar(key)}>Dismiss</Btn>
 
-  const {notices} = notify;
   useEffect(() => {
-      // reduce right processes items in reverse order
+
+    const {notices} = notify;
+
+    const notifierAction = (key:Notice['key']) =><Btn onClick={() => closeSnackbar(key)}>Dismiss</Btn>
+
+    // reduce right processes items in reverse order
       notices.filter(({remedy,key})=>remedy === 'Acknowledge' && !displayed[key]).reduceRight(
         (_:unknown, notice:Notice) => {
           const {level, key, msg}  = notice;
@@ -35,7 +37,7 @@ export const NotifyWrapper = () => {
           enqueueSnackbar(msg, {
               key, variant, action: notifierAction as unknown as SnackbarAction,
               onExited: (event, key) => {
-                dismiss(key);           // action removes it from list
+                actions.notify.dismiss(key);           // action removes it from list
                 delete displayed[key];  // from local tracking too (if necessary--  doubt it)
               },
             });
