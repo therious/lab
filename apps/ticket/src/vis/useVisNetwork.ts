@@ -10,15 +10,13 @@ export const useVisNetwork = (props: UseVisNetworkOptions) =>
   const [network, setNetwork] = useState<Network | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
-  const data: Data = { nodes, edges };
-
   useLayoutEffect(() => {
     if (ref.current) {
-      const instance = new Network(ref.current, data, options);
+      const instance = new Network(ref.current, {nodes, edges}, options);
       setNetwork(instance);
     }
     return () => network?.destroy();
-  }, []);
+  }, [nodes, edges]);
 
   return { network, ref };
 };

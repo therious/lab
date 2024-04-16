@@ -1,6 +1,4 @@
-// @ts-ignore
-import {oReduce} from './utils/oreduce';
-import axios from 'axios';
+import {oReduce} from '@therious/utils';
 
 //----- reducers and actions ----
 // reason to combine a console statement has to do with exceptions thrown while just loading a module
@@ -58,8 +56,8 @@ function compareKeys (a: srec, b: srec): [number, crComparison]  {
   const allKeys = Object.keys({ ...a, ...b }).sort();
   let errorCount = 0;
   const map = oReduce(allKeys, (k: string) => {
-    const creator = a.hasOwnProperty(k);
-    const reducer = b.hasOwnProperty(k);
+    const creator = Object.hasOwn(a, k);
+    const reducer = Object.hasOwn(b, k);
     const mismatch = creator !== reducer;
     if (mismatch) {
       ++errorCount;
