@@ -1,4 +1,4 @@
-name: ticket
+name:    ticket
 version: 0.1.0
 private: true
 
@@ -23,33 +23,14 @@ dependencies:
   web-vitals:                         ^2.1.4
   xstate:                             4.28.1  # or maybe 4.28.1 or 4.23.1 is last one latest= 5.9.1 I have actually successfully used?
 
-devDependencies:
-  "@types/node":                      ^18.17.1
-  "@types/react":                     ^18.2.61
-  "@types/react-dom":                 ^18.2.19
-  "@types/react-redux":               ~7.1.25
-  "@types/stylis":                    ~4.2.5   # unsure if even stylis is needed, is there benefit to stylis types also
-  "@vitejs/plugin-react-swc":         ~3.6.0
-  "@typescript-eslint/eslint-plugin": ~7.7.0
-  "@typescript-eslint/parser":        ~7.7.0
-  eslint:                             ~8.57.0
-  eslint-plugin-import:               ~2.29.1 # does this cause issues with vite?
-  eslint-plugin-react-hooks:          ~4.6.0
-  eslint-plugin-react-refresh:        ~0.4.6
-  eslint-plugin-react:                ~7.34.1
-  redux-devtools-extension:           ~2.13.9
-  vite:                               ~5.2.8
-  vite-bundle-visualizer:             ~1.1.0
-
 scripts:
   start:   VITE_CJS_IGNORE_WARNING=true vite  #it looks like react-swc plugin might be cause of the warning I am turning off?
   build:   tsc && vite build
   preview: vite preview
-  lint:    eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0
+  lint:    eslint . --ext js,jsx,ts,tsx
 
-
-browserslist:
-  production: [">0.2%","not dead", "not op_mini all"]
-  "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
+browserslist:   # vite ignores this ,uses fine grained js targets (esnext, es2021, etc) but its postCss does exploit it
+  production:  &prod ["Chrome >= 112", "Edge >= 112", "Firefox >= 112", "Safari >= 16.4"]
+  development: *prod # use same targets for dev and prod
 
 
