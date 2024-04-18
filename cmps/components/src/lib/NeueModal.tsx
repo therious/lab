@@ -16,7 +16,7 @@ type NeueModalProps = { children: ReactNode, openIt:boolean, close:()=>void };
 
 export function NeueModal({children, openIt, close}:NeueModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
-  useEffect(()=>{ ref?.current?.[openIt? 'showModal': 'close']()}, [openIt, ref.current]);
+  useEffect(()=>{ ref?.current?.[openIt? 'showModal': 'close']()}, [openIt]);
 
   return <ModalContent ref={ref} onCancel={close}>{children}</ModalContent>;
 }

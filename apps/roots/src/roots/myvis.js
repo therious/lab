@@ -100,20 +100,10 @@ function doubledLast(p,e,l, root)
 // maybe revise with option that first letter is identical, and not always connect because first letter is also mischalef
 function pairMischalef(p,e,l, cand)
 {
-return
-     if(
-         e === l            &&       // doubled src last letters
-         cand.E === cand.L  &&       // doubled dst last letters
-         (mischalef(e,cand.E)) &&    // pairs are interchangeable
-         (p === cand.P || mischalef(p, cand.P)) // first letter is same or interchangeable
-
-     )
-
-     {
-         return true;
-     } else {
-        return false;
-      }
+     return !!(e === l &&       // doubled src last letters
+       cand.E === cand.L &&       // doubled dst last letters
+       (mischalef(e, cand.E)) &&    // pairs are interchangeable
+       (p === cand.P || mischalef(p, cand.P)));
 }
 let  useVavToDoubled = true;
 let removeFree = false;
