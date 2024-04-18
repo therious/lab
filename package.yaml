@@ -3,7 +3,7 @@ private: true
 scripts:
   indexOnce:  node ./scripts/library-index-generator.js
   indexWatch: node ./scripts/library-index-generator.js --watch
-
+  lint:       eslint . --ext js,jsx,ts,tsx
 engines:
   node: ">=18.17.1"
   pnpm: ">=8.7.4"
