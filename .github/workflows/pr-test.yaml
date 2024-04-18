@@ -31,7 +31,7 @@ jobs:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review
           filter_mode: added
-          eslint_flags: '. src --ext .js,.jsx,.ts,.tsx'
+          eslint_flags: '. --ext js,jsx,ts,tsx'
       - name: ReviewDog Reviews Entire Modified Files as github-pr-check
         uses: reviewdog/action-eslint@v1
         with:
