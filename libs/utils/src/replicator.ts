@@ -45,7 +45,7 @@ class ObserverForwarder implements IObserverForwarder {
 
     const key = specToKey(spec);
     const value:ObserverHandlerPair = {observer, handler};
-    let handlerSet = this.observerHandlers.get(key);
+    const handlerSet = this.observerHandlers.get(key);
     if(handlerSet !== undefined) handlerSet.add(value);
     else this.observerHandlers.set(key, new Set([value]));
   }
@@ -105,8 +105,7 @@ export abstract class Replicator implements IObserverForwarder {
   public getItem<T>(spec:ReplicatorSpec):T
   {
     const key = specToKey(spec);
-    const item = this.map.get(key) as T
-    return item;
+    return this.map.get(key) as T
   }
 
   public setItem<T>(spec:ReplicatorSpec, value:T):void

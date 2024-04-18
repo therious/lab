@@ -28,7 +28,7 @@ interface LogOptions extends AsyncOptions {
 
 type SomeFunc = (...rest:any[]) => any;
 
-function throwEval(result:unknown, funcName:string, options:ThrowOptions)
+function throwEval<T>(result:T, funcName:string, options:ThrowOptions):T
 {
   const errorMessage = options.message ?? `${funcName}() returns invalid result`;
   const {succeedsIf, failsIf} = options;
@@ -42,6 +42,7 @@ function throwEval(result:unknown, funcName:string, options:ThrowOptions)
     // if neither failsIf nor succeedsIf is specified
    } else if((failsIf === result)  || ((typeof failsIf === 'function') && failsIf(result)))
       throw new Error(errorMessage);
+   return result;
 }
 
 function throwWrap(f:SomeFunc, funcName: string, options:ThrowOptions)
@@ -82,7 +83,8 @@ function logWrap(f:SomeFunc, funcName:string, options:LogOptions) {
   let resultf;
   const {async} = options;
 
-  let {before = false, after = false, prefix = '', level = 'log'} = options;
+  let   { before = false, prefix = ''  } = options;
+  const { after = false,  level = 'log'} = options;
   if(prefix) prefix += ' '; // add a space after prefix
   // if not specified if before or after, treat it as before
   // still possible to disable messages by explicitly making them both false, but leaving decorator in place

@@ -1,13 +1,13 @@
-export function hasAny<T extends Object>(o:Partial<T>, keys:(keyof T)[]):boolean
+export function hasAny<T extends object>(o:Partial<T>, keys:(keyof T)[]):boolean
 {
-  for(let k of keys)
+  for(const k of keys)
     if(k in o) return true;
   return false;
 }
 
-export function hasAll<T extends Object>(o:Partial<T>, keys:(keyof T)[]):boolean
+export function hasAll<T extends object>(o:Partial<T>, keys:(keyof T)[]):boolean
 {
-  for(let k of keys)
+  for(const k of keys)
     if(!(k in o)) return false;
   return true;
 }

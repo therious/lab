@@ -19,7 +19,7 @@ const info1  = {type:key2, id:'1'};
 const info2  = {type:key2, id:'2'};
 
 
-const compare = async <T extends unknown>(spec:ReplicatorSpec, value:T)=>
+const compare = async <T>(spec:ReplicatorSpec, value:T)=>
 {
   await sleep(0);
   const itemA = testGlobals.hub.getItem(spec);

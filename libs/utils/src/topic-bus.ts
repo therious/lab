@@ -40,7 +40,7 @@ export class TopicBus {
   }
 
   public addTopicListener<T>(topic: string, listener: TopicBusListener<T>) {
-    let handlers = this.listeners.get(topic);
+    const handlers = this.listeners.get(topic);
     if (!handlers) this.listeners.set(topic, [listener]);
     else handlers.push(listener);
   }
@@ -50,7 +50,7 @@ export class TopicBus {
   }
 
   public removeTopicListener<T>(topic: string, listener: TopicBusListener<T>) {
-    let listeners = this.listeners.get(topic);
+    const listeners = this.listeners.get(topic);
     if (!listeners) return;
 
     const nListeners = listeners.filter(v => v !== listener);
