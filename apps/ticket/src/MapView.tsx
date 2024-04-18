@@ -90,7 +90,7 @@ export const MapView = ()=>
       }
     }
 
-  },[network, whoPlaysNow, players]);
+  },[whoPlaysNow, players]);
 
   // useEffect(() => {
   //   let currentNodeIndex = 0;

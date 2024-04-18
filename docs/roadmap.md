@@ -1,6 +1,5 @@
 # Roadmap
 
-* get eslint github action working
 * move first state machine to the 'graphic' app
 * find an answer to vizjs scaling that can be standard to the control
 * make components/utilities for showing config/inflate results
