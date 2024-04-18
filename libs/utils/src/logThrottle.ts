@@ -3,7 +3,7 @@ const fmt = (n:number, digits:number) => n.toLocaleString('en-US', { useGrouping
 
 export function logThrottle(delay:number, f:Function) {
   type Cached = { count: number, args: unknown[] };
-  let messageCache: Map<unknown, Cached> = new Map();
+  const messageCache: Map<unknown, Cached> = new Map();
 
   const repeatedBoilerplate = `x repeat of the following message in the last ${fmt(delay / 1000,3)}s`;
 

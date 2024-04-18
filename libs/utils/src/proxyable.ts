@@ -41,7 +41,7 @@ function deserializeError(errorStr:JsonString):unknown
       error = tempError;
     }
 
-  } catch {}
+  } catch { /* empty */ }
   return error;
 }
 
