@@ -35,7 +35,7 @@ export const  RtFiles = () => {
         <hr/>
         Settings you uploaded:
         <ul>
-          {parseSettings(dataUploaded).map(it=><li>{it}</li>)}
+          {parseSettings(dataUploaded).map((it,index)=><li key={index}>{it}</li>)}
         </ul>
       </div>
     );
