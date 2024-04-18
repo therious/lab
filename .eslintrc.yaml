@@ -1,6 +1,6 @@
 env:
   browser: true
-ignorePatterns: ['**/__test__/**', '**/dist/**', '**/vite.config.ts', '**/vite-env-override.d.ts']
+ignorePatterns: ['scripts/**', '**/coverage/**', '**/__test__/**', '**/dist/**', '**/vite.config.ts', '**/vite-env-override.d.ts', 'libs/th-utils/**', 'libs/fizbin/**']
 #files: ['**/src/**/*.ts', '**/src/**/**.tsx']
 globals:
   performance: readonly
@@ -29,6 +29,8 @@ parserOptions:
 
 plugins: ["react", "@typescript-eslint",  "react-hooks", "react-refresh"]
 rules:
+  react/prop-types: off  #disabling for now while I have troublesome .jsx files to convert
+  react/no-unescaped-entities: warn
   react-hooks/rules-of-hooks:   error
   react-hooks/exhaustive-deps:  warn
   react-refresh/only-export-components: [
