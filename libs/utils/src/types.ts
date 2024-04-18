@@ -1,5 +1,6 @@
 export type StringKey<T extends Object> = Extract<keyof T, string>; // restrict type of only the keys that are strings in T
-
+export type NonEmptyString = string extends '' ? never : string;
+export type NonEmptyArray<T> = [T, ...T[]];
 //destination,source keymapping tuple type
 export type BindingPair<D extends Object,S extends Object> = [StringKey<D>, StringKey<S>];
 
@@ -13,8 +14,9 @@ export type PickKeysOfTypeV<T,V> = Pick<T, {[K in keyof T]: T[K] extends V? K: n
 export type KeyOfTypeV<T,V> = keyof PickKeysOfTypeV<T, V>;
 export type PickKeysNotInV<T,V> = keyof Omit<T, keyof V>;
 
-type UpperCaseLetter = 'A'|'B'; //...etc finish later
-type LowerCaseLetter = Uncapitalize<UpperCaseLetter>;
+export type UpperCaseLetter = 'A'|'B'|'C'|'D'|'E'|'F'|'G'|'H'|'J'|'K'|'L'|'M'|'N'|'O'|'P'|'Q'|'S'|'T'|'U'|'V'|'W'|'X'|'Y'|'Z';
+export type LowerCaseLetter = Uncapitalize<UpperCaseLetter>;
+export type Numeral = '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9';
 export type PascalCasedString = `${UpperCaseLetter}${string}`;
 export type CamelCasedString = `${LowerCaseLetter}${string}`;
 
