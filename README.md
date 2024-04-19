@@ -1,5 +1,5 @@
 
-# Therious<img alt="Lab Icon"  src="./docs/beaker.svg" width="64px" style="margin-bottom:-16px">Lab
+# Therious <img alt="Lab Icon"  src="./docs/beaker-drop.svg" width="64px" style="margin-bottom:-16px"> Lab
 
 A modest monorepo
 
