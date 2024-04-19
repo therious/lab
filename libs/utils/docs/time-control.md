@@ -1,14 +1,12 @@
 # Time Control
 
 ## Purpose:
-- provide a unified model for expressing flexible time controls
+- provide a unified model for expressing flexible (game) time controls
 - provide a compact, intelligible and hopefully intuitive notation for expressing controls
 - provide an intuitive clock visualization that accomodates all cases
 
-
 ## Our Notation
-Expressed compactly and similarly to popular notation used for Chess time control, expanded to accommodate
-Go controls
+Compactly and similar to popular notation Chess time control, expanded to accommodate Go controls
 
 ### Summary of Notation
     [Periods *] [[reset] Moves / ] [(Delay)] [reset] Time [..Cap] [+ [..]Bonus]
