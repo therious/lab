@@ -8,14 +8,17 @@
 ## Our Notation
 Compactly and similar to popular notation Chess time control, expanded to accommodate Go controls
 
+
 ### Summary of Notation
+Though presented first, its more intelligible after seeing the examples below:
+
     [Periods *] [[reset] Moves / ] [(Delay)] [reset] Time [..Cap] [+ [..]Bonus]
 
     Or more succinctly:  
     
     [P *] [[r]M / ] [(D)] [r]T[..C] [+ [..]B]
 
-Rules and principles of the notation:
+### Rules and principles of the notation:
 - The notation represents a configuration of the clock
 - A configuration may have multiple *stages*, delimited by *commas*
     - e.g. "60m, 10/r10m" has an initial absolute stage of 60 minutes, followed by another stage
@@ -31,7 +34,7 @@ Rules and principles of the notation:
     - e.g. "*/60m" is same as just "60m", and means absolute 60 minutes for any number of moves
 - Expiration of either number of moves or time may *reset* a period, as designated by an 'r' prefix on appropriate field
     - e.g. "r20/60m" 20 moves per 60 minutes, reset time to 60m when *completing 20th move* if time hasn't expired
-    - e.g. "20/r69m" 20 moves per 60 minutes, reset time to 60m when *time expires* if at least 20 moves have been played
+    - e.g. "20/r60m" 20 moves per 60 minutes, reset time to 60m when *time expires* if at least 20 moves have been played
 - A delay always *precedes* the allocated time and is shown as a time in parenthesis
     - effectively defaults to zero
     - delays precede the time to indicate that they are consumed first
