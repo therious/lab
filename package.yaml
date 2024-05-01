@@ -14,8 +14,8 @@ pnpm:
 
 devDependencies:
   "@types/node":                      ^18.17.1
-  "@types/react":                     ^18.2.61
-  "@types/react-dom":                 ^18.2.19
+  "@types/react":                     ~18.2.64
+  "@types/react-dom":                 ~18.2.21
   "@types/react-redux":               ~7.1.25
   "@types/styled-components":         ~5.1.26
 
@@ -37,4 +37,11 @@ devDependencies:
   vite:                               ~5.2.8
   vitest:                             ~1.4.0
   vite-bundle-visualizer:             ~1.1.0
+
+  # these are for electron app projects, e.g. lectro
+  electron:                           ~30.0.1
+  electron-builder:                   ~24.13.3
+  vite-plugin-electron:               ~0.28.7
+  vite-plugin-electron-renderer:      ~0.14.5
+
 
