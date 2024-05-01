@@ -1,10 +1,14 @@
 {
+  "//": [
+    "vite-plugin-electron (as of v 0.28.7) looks for package.json --never package.yaml",
+    "and if it doesn't find it, assumes type != module"
+  ],
   "name": "@therious/lectro",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "start": "vite",
     "build": "tsc && vite build && electron-builder",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
