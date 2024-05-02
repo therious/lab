@@ -3,13 +3,15 @@
     "vite-plugin-electron (as of v 0.28.7) looks for package.json --never package.yaml",
     "and if it doesn't find it, assumes type != module"
   ],
+  "author": "Haim Zamir <hzamir@gmail.com>",
+  "description": "Lectro - a sample electron shell",
   "name": "@therious/lectro",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "start": "vite",
-    "build": "tsc && vite build && electron-builder",
+    "build": "tsc && vite build && electron-builder -c.electronVersion=30.0.1",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
