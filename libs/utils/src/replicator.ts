@@ -1,5 +1,5 @@
 import {TopicBus, TopicBusMessage} from './topic-bus';
-import {reqIdGenerate} from './reqIdGenerator';
+import {reqIdGenerate} from './snowflake';
 import {CreateExternalPromise, ExternalPromise} from './external-promise';
 
 type regType = string;
