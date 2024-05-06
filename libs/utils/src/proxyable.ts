@@ -1,6 +1,6 @@
 import {Replicator, ReplicatorSpec, specToKey} from './replicator';
 import {TopicBus, TopicBusMessage, TopicBusListener} from './topic-bus';
-import {reqIdGenerateInternal} from './reqIdGenerator'
+import {reqIdGenerateInternal} from './snowflake'
 import {StringKey} from './types';
 
 type JsonString = string;
