@@ -1,9 +1,11 @@
 
 private: true
 scripts:
-  indexOnce:  node ./scripts/library-index-generator.js
-  indexWatch: node ./scripts/library-index-generator.js --watch
-  lint:       eslint . --ext js,jsx,ts,tsx
+  indexOnce:          node ./scripts/library-index-generator.js
+  indexWatch:         node ./scripts/library-index-generator.js --watch
+  lint:               eslint . --ext js,jsx,ts,tsx
+  mgStart:            docker compose -f scripts/docker-compose-memgraph.yaml up
+  mgStop:             docker compose -f scripts/docker-compose-memgraph.yaml down
 engines:
   node: ">=18.17.1"
   pnpm: ">=8.7.4"
@@ -13,6 +15,7 @@ pnpm:
     "marked@<4.10.10": ">=4.0.10"
 
 devDependencies:
+  "@hzamir/npm-run-all":              ~4.1.7
   "@types/node":                      ^18.17.1
   "@types/react":                     ~18.2.64
   "@types/react-dom":                 ~18.2.21
