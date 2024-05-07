@@ -55,6 +55,23 @@
             </SchemaInfo>
           </value>
         </entry>
+        <entry key="schema-ddd-message-spec">
+          <value>
+            <SchemaInfo>
+              <option name="generatedName" value="New Schema" />
+              <option name="name" value="schema-ddd-message-spec" />
+              <option name="relativePathToSchema" value="schemas/schema-ddd-message-spec.yaml" />
+              <option name="schemaVersion" value="JSON Schema version 7" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value="libs/utils/src/meta.yaml" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
         <entry key="schema-definitions">
           <value>
             <SchemaInfo>
