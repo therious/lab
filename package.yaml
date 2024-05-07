@@ -36,6 +36,7 @@ devDependencies:
   glob:                               ~10.3.12
   lerna:                              ~8.1.2  # if we use lerna, it will probably fail on top level package.yaml so will need script to generate package.json
   minimist:                           ~1.2.8
+  ts-node:                            ~10.9.1
   typescript:                         ~5.4.5
   vite:                               ~5.2.8
   vitest:                             ~1.4.0
