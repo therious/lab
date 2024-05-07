@@ -1,0 +1,48 @@
+$id:      ddd-message-spec.yaml
+$schema:  http://json-schema.org/draft-07/schema#
+title:    DDD Message Spec
+type:     object
+required:
+  - domain
+additionalProperties: false
+properties:
+  domain:
+    type: array
+    items:
+      type: object
+      properties:
+        name:
+          type: string
+          pattern: '^[A-Z][a-zA-Z]{2,14}$'
+          uniqueItems: true
+        messageTypes:
+          type: object
+          additionalProperties: false
+          patternProperties:
+            ^[a-zA-Z][a-zA-Z_0-9]+$:
+              type: object
+              required:
+                - description
+                - parameters
+                - projection
+              additionalProperties: false
+              properties:
+                description:
+                  type: string
+                projection:
+                  type: string
+                parameters:
+                  type: object
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        enum:
+                          - boolean
+                          - string
+                          - integer
+                          - float
+                          - datetime
+                          - date
+                          - time
