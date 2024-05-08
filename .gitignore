@@ -24,8 +24,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# generated indices
+# generated indices (Note: scripts/library-index-generator.js parses this .gitIgnore to determine which files to generate!)
 libs/actions/index.ts
 libs/utils/index.ts
 libs/fsm/index.ts
+libs/ddd/index.ts
 
