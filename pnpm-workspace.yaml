@@ -2,4 +2,5 @@ packages:
   - "apps/**"      # applications
   - "cmps/**"      # components
   - "libs/**"      # libraries (aside from components)
+  - "scripts"      # scripts
   - '!**/test/**'  # exclude packages that are inside test directories
