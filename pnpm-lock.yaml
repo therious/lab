@@ -445,6 +445,27 @@ importers:
         specifier: ~5.4.5
         version: 5.4.5
 
+  scripts:
+    devDependencies:
+      '@hzamir/npm-run-all':
+        specifier: ~4.1.7
+        version: 4.1.7
+      '@types/js-yaml':
+        specifier: ~4.0.9
+        version: 4.0.9
+      '@types/node':
+        specifier: ~20.12.10
+        version: 20.12.10
+      js-yaml:
+        specifier: ~4.1.0
+        version: 4.1.0
+      ts-node:
+        specifier: ~10.9.1
+        version: 10.9.2(@types/node@20.12.10)(typescript@5.4.5)
+      typescript:
+        specifier: ~5.4.5
+        version: 5.4.5
+
 packages:
 
   /7zip-bin@5.2.0:
@@ -2078,6 +2099,10 @@ packages:
 
   /@types/http-cache-semantics@4.0.4:
     resolution: {integrity: sha512-1m0bIFVc7eJWyve9S0RnuRgcQqF/Xd5QsUZAZeQFr1Q3/p9JWoQQEqmVy+DPTNpGXwhgIetAoYF8JSc33q29QA==}
+    dev: true
+
+  /@types/js-yaml@4.0.9:
+    resolution: {integrity: sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg==}
     dev: true
 
   /@types/json-schema@7.0.15:
