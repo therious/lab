@@ -1,0 +1,49 @@
+domain:
+  - name: Meta
+    messageTypes:
+      resetWorld:
+        description: reset the world, delete everything in the projection
+        parameters: {}
+        projection: |
+          MATCH (n);
+          DETACH DELETE n;
+      defineDomain:
+        description: define a new domain
+        parameters:
+            name: string         # provides a name for the domain
+            description: string  # describes the purpose of the d
+        projection: |
+          MATCH (n);   # replace this with your projection
+  - name: Bank
+    messageTypes:
+      createAccount:
+        description: create an account
+        projection: |
+          CREATE (a:Account {
+            accountId: "${accountId}",
+            customer: "${customer}",
+            balance: ${balance}
+          })
+        parameters:
+          accountId: string;
+          customer: string;
+          balance: int;
+      closeAccount:
+        description: close an account
+        parameters:
+          accountId: string;
+        projection: |
+          MATCH (a:Account {accountId: $accountid})-[b]->(c) DELETE b, c
+      deposit:
+        description: deposit money into an account
+        projection:
+        parameters:
+          accountid: string;
+          amount: int;
+      withdraw:
+        description: withdraw money from an accountpar
+        projection:
+        parameters:
+          accountid: string;
+          amount: int;
+
