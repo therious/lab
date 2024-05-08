@@ -22,7 +22,7 @@ jobs:
           node-version:  ${{ matrix.node.version }}
           cache: 'pnpm'
       - name: Install modules
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
       #        - name: Run Bare ESLint
       #          run:  yarn lint:report
       - name: ReviewDog Eslint Changes Only as github-pr-review
