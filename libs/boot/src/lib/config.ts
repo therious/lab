@@ -1,6 +1,5 @@
 import axios from "axios";
-// @ts-ignore
-import jsYaml from "js-yaml";
+import * as jsYaml from "js-yaml";
 
 
 export interface ConfigSingleton {
