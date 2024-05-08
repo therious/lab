@@ -113,6 +113,9 @@ importers:
       '@therious/components':
         specifier: workspace:*
         version: link:../../cmps/components
+      '@therious/ddd':
+        specifier: workspace:*
+        version: link:../../libs/ddd
       '@therious/fsm':
         specifier: workspace:*
         version: link:../../libs/fsm
@@ -403,10 +406,6 @@ importers:
         version: 4.8.0
 
   libs/ddd:
-    dependencies:
-      base64-js:
-        specifier: ~1.5.1
-        version: 1.5.1
     devDependencies:
       typescript:
         specifier: ~5.4.5

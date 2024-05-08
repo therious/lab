@@ -3,6 +3,7 @@ version: 0.1.0
 private: true
 type: module
 dependencies:
+  '@therious/ddd':                'workspace:*'
   '@therious/utils':              'workspace:*'
   '@therious/boot':               'workspace:*'
   '@therious/fsm':                'workspace:*'
@@ -11,23 +12,23 @@ dependencies:
   immer:                          ~10.0.4
   react:                          ^18.2.0
   react-dom:                      ^18.2.0
-  '@tanstack/react-query':       ~5.28.9  #trying out react-query, for now
+  '@tanstack/react-query':        ~5.28.9  # trying out react-query, for now
   redux:                          ~4.2.1
   react-redux:                    ~7.2.9
   reselect:                       ~4.1.7
-  reflect-metadata:               ~0.1.13 #needed for tsyringe, and fancy decorator stuff
+  reflect-metadata:               ~0.1.13 # needed for tsyringe, and fancy decorator stuff
   styled-components:              ~6.1.8
   stylis:                         ~4.3.1  # a dependency of styled-components, apparently is it necessary to pull directly
   typescript:                     ~5.4.5  # upgrade this when react 19 available?
   vis-network:                    ~9.1.9  # used to plot railroad track network
-  '@viz-js/viz':                   ~3.4.0  # (feb 2024)   viz-js wasm renderer for dot language
+  '@viz-js/viz':                  ~3.4.0  # (feb 2024)   viz-js wasm renderer for dot language
   xstate:                         4.28.1  # or maybe 4.28.1 or 4.23.1 is last one latest= 5.9.1 I have actually successfully used?
 
 scripts:
   start:   VITE_CJS_IGNORE_WARNING=true vite  #it looks like react-swc plugin might be cause of the warning I am turning off?
   build:   tsc && vite build
   preview: vite preview
-  lint: eslint . --ext js,jsx,ts,tsx
+  lint:    eslint . --ext js,jsx,ts,tsx
 
 
 browserslist:   # vite ignores this ,uses fine grained js targets (esnext, es2021, etc) but its postCss does exploit it
