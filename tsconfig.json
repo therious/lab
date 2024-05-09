@@ -23,7 +23,7 @@
     "jsx": "react-jsx"
   },
   "include": [
-    "apps/**/src", "cmps/**/src", "libs/**/src"
+    "apps/**/src", "servers/**/src","cmps/**/src", "libs/**/src"
   ],
   "exclude": [
     "docs/**", "deploy-scripts/**", "scripts", "**/coverage", "**/dist/", "libs/th-utils"

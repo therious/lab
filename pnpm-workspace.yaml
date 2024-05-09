@@ -1,6 +1,7 @@
 packages:
   - "apps/**"      # applications
+  - "servers/**"   # servers
   - "cmps/**"      # components
   - "libs/**"      # libraries (aside from components)
-  - "scripts"      # scripts
+  - "scripts"      # scripts (keeps IDE happy, allows typescript scripts that use internal libs)
   - '!**/test/**'  # exclude packages that are inside test directories

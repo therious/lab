@@ -1,0 +1,30 @@
+name: simple
+version: 0.1.0
+private: true
+type: module
+dependencies:
+  '@therious/ddd':                'workspace:*'
+  '@therious/utils':              'workspace:*'
+  '@therious/boot':               'workspace:*'
+  '@therious/fsm':                'workspace:*'
+  '@therious/actions':            'workspace:*'
+  '@therious/components':         'workspace:*'
+  fastify:                        ~4.27.0
+  immer:                          ~10.0.4
+  reflect-metadata:               ~0.1.13  # needed for tsyringe, and fancy decorator stuff
+  typescript:                     ~5.4.5   # upgrade this when react 19 available?
+devDependencies:
+  vite-plugin-node:               ~3.1.0   # for server projects
+
+scripts:
+  start:   VITE_CJS_IGNORE_WARNING=true vite  #it looks like react-swc plugin might be cause of the warning I am turning off?
+  build:   vite build
+  preview: vite preview
+  lint:    eslint . --ext js,jsx,ts,tsx
+
+
+browserslist:   # vite ignores this ,uses fine grained js targets (esnext, es2021, etc) but its postCss does exploit it
+  production:  &prod ["Chrome >= 112", "Edge >= 112", "Firefox >= 112", "Safari >= 16.4"]
+  development: *prod # use same targets for dev and prod
+
+
