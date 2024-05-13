@@ -7,6 +7,7 @@ scripts:
   lint:        eslint . --ext js,jsx,ts,tsx
   mgStart:     docker compose -f scripts/docker-compose-memgraph.yaml up
   mgStop:      docker compose -f scripts/docker-compose-memgraph.yaml down
+  toyserve:    ts-node ./scripts/toy-server.ts
 engines:
   node:        ">=18.17.1"
   pnpm:        ">=8.7.4"
@@ -19,13 +20,12 @@ pnpm:
     ejs:                              ">=3.1.10"  # dependency embedded in lerna
 
 devDependencies:
-  "@hzamir/npm-run-all":              ~4.1.7
+  "@hzamir/npm-run-all":              ~4.1.7     # package.yaml and audit-fixed (via pnpm overrides) version of npm-run-all
   "@types/node":                      ~20.12.10
   "@types/react":                     ~18.2.64
   "@types/react-dom":                 ~18.2.21
   "@types/react-redux":               ~7.1.25
   "@types/styled-components":         ~5.1.26
-
   "@types/stylis":                    ~4.2.5     # unsure if even stylis is needed, is there benefit to stylis types also
   "@vitejs/plugin-react-swc":         ~3.6.0
   "@typescript-eslint/eslint-plugin": ~7.7.0
@@ -35,16 +35,20 @@ devDependencies:
   eslint-plugin-react-hooks:          ~4.6.0
   eslint-plugin-react-refresh:        ~0.4.6
   eslint-plugin-react:                ~7.34.1
-  redux-devtools-extension:           ~2.13.9
-  chokidar:                           ~3.6.0     # for file-watching in build utilities
-  glob:                               ~10.3.12
-  lerna:                              ~8.1.2     # if we use lerna, it will probably fail on top level package.yaml so will need script to generate package.json
-  minimist:                           ~1.2.8     # lightweight lib for argument processing in nodejs scripts
-  ts-node:                            ~10.9.1    # simplifies using typescript for build scripts
+  redux-devtools-extension:           ~2.13.9    # need to transition if possible from less deprecated version than this
   typescript:                         ~5.4.5
   vite:                               ~5.2.8     # standardizing on vite for building libs and apps
   vitest:                             ~1.4.0     # a jest-like test runner for vite
-  vite-bundle-visualizer:             ~1.1.0
+  vite-bundle-visualizer:             ~1.1.0     # still need to plug this in correctly, or replace it
+
+  # primarily for stuff in scripts directory (build scripts and small experiments)
+  chokidar:                           ~3.6.0     # for file-watching in build utilities
+  glob:                               ~10.3.12   # file matching patterns
+  ws:                                 ~8.13.0    # for websockets in node apps
+  '@types/ws':                        ~8.5.3     # for types needed by fastify websocket
+  minimist: ~1.2.8                               # lightweight cli argument processing
+  ts-node:                            ~10.9.1    # no fuss run typescript directly without bundling
+  lerna:                              ~8.1.2     # lerna doesn't support package.yaml, so derive package.json first with script
 
   # these are for electron app projects, e.g. lectro
   electron:                           ~30.0.1
