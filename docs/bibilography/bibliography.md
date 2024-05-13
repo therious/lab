@@ -3,6 +3,7 @@
 
 
 ## Domain Driven Design, Event Sourcing and CQRS
+* [Domain Driven Design Reference](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf)
 * [The Dark Side of Event Sourcing: Managing Data Conversion](./dark-side-of-event-sourcing.pdf)
 
 ## Graph Databases
@@ -34,3 +35,15 @@ The alternative unwashed masses is to accidentally "choose" in an inconsistent f
 * [XState](https://github.com/statelyai/xstate/tree/main/packages/core#readme) - a full blown state chart system
 
 
+## Actor Model
+* [Actors can rule your DDD world](https://www.youtube.com/watch?v=lcGf2Txq92o)  - Very high level DDD, Event Sourcing, CQRS how it fits with the actor model
+* [Wide world of almost-actors: comparing Pony to BEAM languages](https://www.youtube.com/watch?v=_0m0_qtfzLs)
+  * Compares a true actor model, to what Erlang/Beam provided, and how an actor model implementation was never their goal
+  * Erlang/Beam were designed to solve Erickson's reliability problems, and violates the actor model
+  
+* [Hewitt, Meijer and Szyperski: The Actor Model](https://www.youtube.com/watch?v=7erJ1DV_Tlo) - This video gives a better 
+  idea of the orthodox actor model of computation
+  * be prepared to learn the difference between bounded nondeterminism and indeterminism, and how actor model is more 
+    faithful to physics than algrebraic equations
+  * how it differs from csp which has channels
+   
