@@ -1,4 +1,4 @@
-
+type: module
 private: true
 scripts:
   index:       node ./scripts/library-index-generator.js ${1:---watch=false}
