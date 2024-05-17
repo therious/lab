@@ -26,11 +26,11 @@ end note
 
 
   [*]-->Night
-  Day-->Night : [dimlight]
-  Night-->Day : [daylight]
-  On-->Day : [daylight]
-  Night-->On : motion
-  On-->On : motion
-  On-[#blue,dotted]->Night : 5 secs
+  Day-->Night : [ambientLight < 0.5]
+  Night-->Day : [ambientLight > 0.5]
+  On-->Day    : [ambientLight > 0.5]
+  Night-->On  : motion
+  On-->On     : motion
+  On-[#blue,dotted]->Night : 5 seconds
 }
 @enduml
