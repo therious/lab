@@ -1,0 +1,76 @@
+@startuml
+
+title Domain Designer
+skinparam actorStyle hollow
+
+:Developer: as U
+
+
+skinparam usecase {
+  BackgroundColor Cornsilk
+  ArrowColor Black
+}
+
+rectangle "Design Artifacts" as DA {
+ artifact "schema\n..\n(json or protobuf)" as Sch
+}
+
+rectangle "Execution Artifacts" as XA {
+ artifact "event stream\n..\n(Json or Protobuf)" as ES
+ database "Reference Projection" as RefP
+}
+
+
+rectangle MessageDesign as MD {
+
+
+  rectangle "Hi Level" as HLE {
+    (Browse/Select\nContext/Domain/Event) as mainbrowser
+    (Compare Versions)
+    ([re]Define\nDomain Event)    as defde  #palegreen
+    ([re]Define\nCommand/Request) as defcom #palegreen
+  }
+  rectangle "Discrete Edits" as DiscEd {
+      ([un]Create Context)          as defctx
+      ([un]Create Domain)           as defdom #pink
+    (Name Event) as nameit
+    ([un]Assign Parameter\n..\n[as part of specific event]) as ap
+    (Browse/Select Parameters) as bp
+    ([re]Define Parameter\n..\n[unique to bounded context]) as defparam
+  }
+
+  rectangle ReleaseProcess as Rel {
+    (Create Version) as crver
+  }
+
+}
+
+
+rectangle "Projection Design/Validation" as PDV {
+  (Associate Projection \nwith Event) as apwe
+  (Create Sample Domain Events) as cse
+  (Replay Events) as replaye
+
+}
+
+
+
+U -r-> MD
+mainbrowser .d->defde
+mainbrowser .d->defcom
+
+defde ..down-> DiscEd
+defcom .down-> DiscEd
+
+
+ap .d-> bp : may involve
+
+MD .d-> PDV
+
+
+DA .down->XA : describes
+DiscEd -right-> ES
+ES->RefP
+Rel .r-> Sch : produces
+
+@enduml

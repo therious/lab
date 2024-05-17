@@ -1,0 +1,75 @@
+digraph {
+    rankdir="LR"
+
+ node [style=filled shape=rect fillcolor=white]
+  Patterns
+  Idioms [label="Created idioms/\ncurated choices"]
+  Libraries
+  Products
+  Sum
+
+  Patterns->Idioms->Libraries->Products->Sum
+
+
+   /* for technology */
+   node [style=filled shape=rect fillcolor=yellow]
+   escqrs [label="event sourcing/cqrs"]
+   clientech [label="client tech"]
+   fsm [label="state machines & state charts"]
+   actors
+   vis [label="visualization"]
+   iac [label="IAC\ninfrastructure as code"]
+
+
+   /* for idioms/curation */
+
+   /* for libraries */
+   node [style=filled shape=box3d fillcolor=palegreen]
+   tickletcore [label="core implementation of tickets "]
+   vischoice [label="2..3 curated choices/\nutilities"]
+   fsmid [label="Idiom: StateMachine Design"]
+   iacchoice [label="IAC choices/patterns "]
+   esservers [label="es/cqrs\n'lab flavored'"]
+   clientflavor [label="e.g. react/redux"]
+    others [label="others..." fillcolor=white]
+
+  MessageDesignServer
+  MessageDesignClient
+
+   /* for products */
+   node [ fillcolor=cyan]
+
+  msgd [label="Message Protocol Design Tool"]
+  oodle [label="Oodle\n---\n(Capture Stakeholder knowledge)"]
+
+  ticklet [label="Product: Tickets for the masses\nMake tickets a convenient idiom"]
+  dddsys [label="DDD\n---\nA mythical complete system"]
+
+fsm->fsmid [label="enabled by"]
+  escqrs->esservers
+  clientech->clientflavor
+  fsm->actors [label="available as\n one decision making option"]
+
+  iac->iacchoice [label="as manifested by"]
+  actors->{tickletcore} [label="possible\n implementation"]
+  actors->{others} [style="dotted"]
+  tickletcore->ticklet
+  tickletcore->dddsys
+  vis->vischoice
+  {msgd,oodle}->dddsys
+
+
+  {MessageDesignServer, MessageDesignClient}->msgd
+
+
+  {rank=same;  Patterns; fsm; actors; escqrs;vis, iac}
+
+  {rank=same;  Idioms; fsmid; iacchoice; esservers}
+
+  {rank=same;  Libraries; vischoice; tickletcore; others; MessageDesignServer; MessageDesignClient}
+
+
+  {rank=same; oodle,ticklet,msgd}
+  {rank=same; Sum; dddsys}
+
+}

@@ -1,10 +1,17 @@
 # Bibliography
 
 
+## Infrastructure as Code
+
 
 ## Domain Driven Design, Event Sourcing and CQRS
+* _Domain-Driven Design: Tackling Complexity in the Heart of Software_, by Eric Evans
+* _Implementing Domain-Driven Design_, by Vaughn Vernon
 * [Domain Driven Design Reference](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf)
+  * [Annotated copy on google docs](https://docs.google.com/document/d/15wa5xl-cC01TAivoTMGObqEQjPBggQscoM7kDtFyacY)  Please read this one instead, and
+    add your own comments.
 * [The Dark Side of Event Sourcing: Managing Data Conversion](./dark-side-of-event-sourcing.pdf)
+
 
 ## Graph Databases
 
@@ -25,10 +32,12 @@ anyone can understand, and allowing them to effectively "pick their poison" and 
 The alternative unwashed masses is to accidentally "choose" in an inconsistent fashion, for each component 
 (and potentially their subequent refactors)/
 
+* [One excellent CAP theorem explanation](https://www.scylladb.com/glossary/cap-theorem)
 * "Distributed Systems: Concurrency and Consistency" ISTE Press 2017
  * [link on Google Books](https://www.google.com/books/edition/Distributed_Systems/8ksgDgAAQBAJ) 
  * [online presentation](./Presentation_Matthieu_PERRIN_en.pdf) ( also at https://matthieu-perrin.fr/data/Presentation_Matthieu_PERRIN_en.pdf)
- * [color diagrams for Distributed Systems](./Perrin-color-section.pdf) ( also online at www.iste.co.uk/perrin/distributed.zip)
+ * [color diagrams for Distributed Systems](./Perrin-color-section.pdf) 
+   * also online [zipfile](http://www.iste.co.uk/perrin/distributed.zip)
 
 ## State Machines and State Charts
 
@@ -47,3 +56,8 @@ The alternative unwashed masses is to accidentally "choose" in an inconsistent f
     faithful to physics than algrebraic equations
   * how it differs from csp which has channels
    
+## React/Redux
+
+These just point to interesting stuff, no implied endorsement (except in removing business logic from useEffect)
+
+* [Stop using useEffect with Redux](https://www.youtube.com/watch?v=I7g363Faxa4) 
