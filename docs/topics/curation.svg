@@ -1,0 +1,311 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1175pt" height="474pt" viewBox="0.00 0.00 1175.45 473.60">
+    <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 469.6)">
+        <polygon fill="white" stroke="none" points="-4,4 -4,-469.6 1171.45,-469.6 1171.45,4 -4,4"/>
+        <!-- Patterns -->
+        <g id="node1" class="node">
+            <title>Patterns</title>
+            <polygon fill="white" stroke="black" points="119.8,-38.8 58.7,-38.8 58.7,-2.8 119.8,-2.8 119.8,-38.8"/>
+            <text text-anchor="middle" x="89.25" y="-16.6" font-family="Times,serif" font-size="14.00">Patterns</text>
+        </g>
+        <!-- Idioms -->
+        <g id="node2" class="node">
+            <title>Idioms</title>
+            <polygon fill="white" stroke="black" points="449.58,-41.6 344.54,-41.6 344.54,0 449.58,0 449.58,-41.6"/>
+            <text text-anchor="middle" x="397.06" y="-25" font-family="Times,serif" font-size="14.00">Created idioms/</text>
+            <text text-anchor="middle" x="397.06" y="-8.2" font-family="Times,serif" font-size="14.00">curated choices</text>
+        </g>
+        <!-- Patterns&#45;&gt;Idioms -->
+        <g id="edge1" class="edge">
+            <title>Patterns-&gt;Idioms</title>
+            <path fill="none" stroke="black" d="M120.13,-20.8C169.18,-20.8 267.84,-20.8 332.91,-20.8"/>
+            <polygon fill="black" stroke="black" points="332.74,-24.3 342.74,-20.8 332.74,-17.3 332.74,-24.3"/>
+        </g>
+        <!-- Libraries -->
+        <g id="node3" class="node">
+            <title>Libraries</title>
+            <polygon fill="white" stroke="black" points="650.89,-38.8 584.36,-38.8 584.36,-2.8 650.89,-2.8 650.89,-38.8"/>
+            <text text-anchor="middle" x="617.63" y="-16.6" font-family="Times,serif" font-size="14.00">Libraries</text>
+        </g>
+        <!-- Idioms&#45;&gt;Libraries -->
+        <g id="edge2" class="edge">
+            <title>Idioms-&gt;Libraries</title>
+            <path fill="none" stroke="black" d="M449.86,-20.8C487.29,-20.8 537.29,-20.8 572.75,-20.8"/>
+            <polygon fill="black" stroke="black" points="572.67,-24.3 582.67,-20.8 572.67,-17.3 572.67,-24.3"/>
+        </g>
+        <!-- Products -->
+        <g id="node4" class="node">
+            <title>Products</title>
+            <polygon fill="white" stroke="black" points="884.68,-38.8 819.68,-38.8 819.68,-2.8 884.68,-2.8 884.68,-38.8"/>
+            <text text-anchor="middle" x="852.18" y="-16.6" font-family="Times,serif" font-size="14.00">Products</text>
+        </g>
+        <!-- Libraries&#45;&gt;Products -->
+        <g id="edge3" class="edge">
+            <title>Libraries-&gt;Products</title>
+            <path fill="none" stroke="black" d="M650.96,-20.8C691.95,-20.8 762.73,-20.8 808.22,-20.8"/>
+            <polygon fill="black" stroke="black" points="807.98,-24.3 817.98,-20.8 807.98,-17.3 807.98,-24.3"/>
+        </g>
+        <!-- Sum -->
+        <g id="node5" class="node">
+            <title>Sum</title>
+            <polygon fill="white" stroke="black" points="1106.55,-38.8 1052.55,-38.8 1052.55,-2.8 1106.55,-2.8 1106.55,-38.8"/>
+            <text text-anchor="middle" x="1079.55" y="-16.6" font-family="Times,serif" font-size="14.00">Sum</text>
+        </g>
+        <!-- Products&#45;&gt;Sum -->
+        <g id="edge4" class="edge">
+            <title>Products-&gt;Sum</title>
+            <path fill="none" stroke="black" d="M884.99,-20.8C926,-20.8 997.22,-20.8 1040.89,-20.8"/>
+            <polygon fill="black" stroke="black" points="1040.65,-24.3 1050.65,-20.8 1040.65,-17.3 1040.65,-24.3"/>
+        </g>
+        <!-- escqrs -->
+        <g id="node6" class="node">
+            <title>escqrs</title>
+            <polygon fill="yellow" stroke="black" points="151.87,-104.8 26.63,-104.8 26.63,-68.8 151.87,-68.8 151.87,-104.8"/>
+            <text text-anchor="middle" x="89.25" y="-82.6" font-family="Times,serif" font-size="14.00">event sourcing/cqrs</text>
+        </g>
+        <!-- esservers -->
+        <g id="node16" class="node">
+            <title>esservers</title>
+            <polygon fill="palegreen" stroke="black" points="441.21,-107.6 356.92,-107.6 352.92,-103.6 352.92,-66 437.21,-66 441.21,-70 441.21,-107.6"/>
+            <polyline fill="none" stroke="black" points="437.21,-103.6 352.92,-103.6"/>
+            <polyline fill="none" stroke="black" points="437.21,-103.6 437.21,-66"/>
+            <polyline fill="none" stroke="black" points="437.21,-103.6 441.21,-107.6"/>
+            <text text-anchor="middle" x="397.06" y="-91" font-family="Times,serif" font-size="14.00">es/cqrs</text>
+            <text text-anchor="middle" x="397.06" y="-74.2" font-family="Times,serif" font-size="14.00">'lab flavored'</text>
+        </g>
+        <!-- escqrs&#45;&gt;esservers -->
+        <g id="edge6" class="edge">
+            <title>escqrs-&gt;esservers</title>
+            <path fill="none" stroke="black" d="M152.13,-86.8C207.58,-86.8 288.13,-86.8 341.29,-86.8"/>
+            <polygon fill="black" stroke="black" points="341.01,-90.3 351.01,-86.8 341.01,-83.3 341.01,-90.3"/>
+        </g>
+        <!-- clientech -->
+        <g id="node7" class="node">
+            <title>clientech</title>
+            <polygon fill="yellow" stroke="black" points="126.21,-171.8 52.29,-171.8 52.29,-135.8 126.21,-135.8 126.21,-171.8"/>
+            <text text-anchor="middle" x="89.25" y="-149.6" font-family="Times,serif" font-size="14.00">client tech</text>
+        </g>
+        <!-- clientflavor -->
+        <g id="node17" class="node">
+            <title>clientflavor</title>
+            <polygon fill="palegreen" stroke="black" points="448.4,-171.8 349.73,-171.8 345.73,-167.8 345.73,-135.8 444.4,-135.8 448.4,-139.8 448.4,-171.8"/>
+            <polyline fill="none" stroke="black" points="444.4,-167.8 345.73,-167.8"/>
+            <polyline fill="none" stroke="black" points="444.4,-167.8 444.4,-135.8"/>
+            <polyline fill="none" stroke="black" points="444.4,-167.8 448.4,-171.8"/>
+            <text text-anchor="middle" x="397.06" y="-149.6" font-family="Times,serif" font-size="14.00">e.g. react/redux</text>
+        </g>
+        <!-- clientech&#45;&gt;clientflavor -->
+        <g id="edge7" class="edge">
+            <title>clientech-&gt;clientflavor</title>
+            <path fill="none" stroke="black" d="M126.53,-153.8C177.69,-153.8 271.75,-153.8 334.1,-153.8"/>
+            <polygon fill="black" stroke="black" points="333.85,-157.3 343.85,-153.8 333.85,-150.3 333.85,-157.3"/>
+        </g>
+        <!-- fsm -->
+        <g id="node8" class="node">
+            <title>fsm</title>
+            <polygon fill="yellow" stroke="black" points="178.5,-351.8 0,-351.8 0,-315.8 178.5,-315.8 178.5,-351.8"/>
+            <text text-anchor="middle" x="89.25" y="-329.6" font-family="Times,serif" font-size="14.00">state machines &amp; state charts</text>
+        </g>
+        <!-- actors -->
+        <g id="node9" class="node">
+            <title>actors</title>
+            <polygon fill="yellow" stroke="black" points="116.25,-263.8 62.25,-263.8 62.25,-227.8 116.25,-227.8 116.25,-263.8"/>
+            <text text-anchor="middle" x="89.25" y="-241.6" font-family="Times,serif" font-size="14.00">actors</text>
+        </g>
+        <!-- fsm&#45;&gt;actors -->
+        <g id="edge8" class="edge">
+            <title>fsm-&gt;actors</title>
+            <path fill="none" stroke="black" d="M89.25,-315.59C89.25,-304.03 89.25,-288.8 89.25,-275.52"/>
+            <polygon fill="black" stroke="black" points="92.75,-275.55 89.25,-265.55 85.75,-275.55 92.75,-275.55"/>
+            <text text-anchor="middle" x="69.45" y="-294" font-family="Times,serif" font-size="14.00">available as</text>
+            <text text-anchor="middle" x="69.45" y="-277.2" font-family="Times,serif" font-size="14.00"> one decision making option</text>
+        </g>
+        <!-- fsmid -->
+        <g id="node14" class="node">
+            <title>fsmid</title>
+            <polygon fill="palegreen" stroke="black" points="485.55,-351.8 312.58,-351.8 308.58,-347.8 308.58,-315.8 481.55,-315.8 485.55,-319.8 485.55,-351.8"/>
+            <polyline fill="none" stroke="black" points="481.55,-347.8 308.58,-347.8"/>
+            <polyline fill="none" stroke="black" points="481.55,-347.8 481.55,-315.8"/>
+            <polyline fill="none" stroke="black" points="481.55,-347.8 485.55,-351.8"/>
+            <text text-anchor="middle" x="397.06" y="-329.6" font-family="Times,serif" font-size="14.00">Idiom: StateMachine Design</text>
+        </g>
+        <!-- fsm&#45;&gt;fsmid -->
+        <g id="edge5" class="edge">
+            <title>fsm-&gt;fsmid</title>
+            <path fill="none" stroke="black" d="M178.7,-333.8C215.79,-333.8 259.07,-333.8 297.2,-333.8"/>
+            <polygon fill="black" stroke="black" points="296.82,-337.3 306.82,-333.8 296.82,-330.3 296.82,-337.3"/>
+            <text text-anchor="middle" x="243.54" y="-338" font-family="Times,serif" font-size="14.00">enabled by</text>
+        </g>
+        <!-- tickletcore -->
+        <g id="node12" class="node">
+            <title>tickletcore</title>
+            <polygon fill="palegreen" stroke="black" points="712.71,-276.8 526.55,-276.8 522.55,-272.8 522.55,-240.8 708.71,-240.8 712.71,-244.8 712.71,-276.8"/>
+            <polyline fill="none" stroke="black" points="708.71,-272.8 522.55,-272.8"/>
+            <polyline fill="none" stroke="black" points="708.71,-272.8 708.71,-240.8"/>
+            <polyline fill="none" stroke="black" points="708.71,-272.8 712.71,-276.8"/>
+            <text text-anchor="middle" x="617.63" y="-254.6" font-family="Times,serif" font-size="14.00">core implementation of tickets </text>
+        </g>
+        <!-- actors&#45;&gt;tickletcore -->
+        <g id="edge10" class="edge">
+            <title>actors-&gt;tickletcore</title>
+            <path fill="none" stroke="black" d="M116.71,-246.45C187.88,-248.21 386.35,-253.11 510.75,-256.19"/>
+            <polygon fill="black" stroke="black" points="510.58,-259.68 520.67,-256.43 510.76,-252.68 510.58,-259.68"/>
+            <text text-anchor="middle" x="397.06" y="-276.8" font-family="Times,serif" font-size="14.00">possible</text>
+            <text text-anchor="middle" x="397.06" y="-260" font-family="Times,serif" font-size="14.00"> implementation</text>
+        </g>
+        <!-- others -->
+        <g id="node18" class="node">
+            <title>others</title>
+            <polygon fill="white" stroke="black" points="647.99,-222.8 591.27,-222.8 587.27,-218.8 587.27,-186.8 643.99,-186.8 647.99,-190.8 647.99,-222.8"/>
+            <polyline fill="none" stroke="black" points="643.99,-218.8 587.27,-218.8"/>
+            <polyline fill="none" stroke="black" points="643.99,-218.8 643.99,-186.8"/>
+            <polyline fill="none" stroke="black" points="643.99,-218.8 647.99,-222.8"/>
+            <text text-anchor="middle" x="617.63" y="-200.6" font-family="Times,serif" font-size="14.00">others...</text>
+        </g>
+        <!-- actors&#45;&gt;others -->
+        <g id="edge11" class="edge">
+            <title>actors-&gt;others</title>
+            <path fill="none" stroke="black" stroke-dasharray="1,5" d="M116.71,-243.74C202.33,-237.07 472.23,-216.05 575.7,-207.99"/>
+            <polygon fill="black" stroke="black" points="575.69,-211.5 585.39,-207.23 575.15,-204.52 575.69,-211.5"/>
+        </g>
+        <!-- vis -->
+        <g id="node10" class="node">
+            <title>vis</title>
+            <polygon fill="yellow" stroke="black" points="133.02,-405.8 45.48,-405.8 45.48,-369.8 133.02,-369.8 133.02,-405.8"/>
+            <text text-anchor="middle" x="89.25" y="-383.6" font-family="Times,serif" font-size="14.00">visualization</text>
+        </g>
+        <!-- vischoice -->
+        <g id="node13" class="node">
+            <title>vischoice</title>
+            <polygon fill="palegreen" stroke="black" points="683.16,-408.6 556.1,-408.6 552.1,-404.6 552.1,-367 679.16,-367 683.16,-371 683.16,-408.6"/>
+            <polyline fill="none" stroke="black" points="679.16,-404.6 552.1,-404.6"/>
+            <polyline fill="none" stroke="black" points="679.16,-404.6 679.16,-367"/>
+            <polyline fill="none" stroke="black" points="679.16,-404.6 683.16,-408.6"/>
+            <text text-anchor="middle" x="617.63" y="-392" font-family="Times,serif" font-size="14.00">2..3 curated choices/</text>
+            <text text-anchor="middle" x="617.63" y="-375.2" font-family="Times,serif" font-size="14.00">utilities</text>
+        </g>
+        <!-- vis&#45;&gt;vischoice -->
+        <g id="edge14" class="edge">
+            <title>vis-&gt;vischoice</title>
+            <path fill="none" stroke="black" d="M133.32,-387.8C222.58,-387.8 428.72,-387.8 540.78,-387.8"/>
+            <polygon fill="black" stroke="black" points="540.47,-391.3 550.47,-387.8 540.47,-384.3 540.47,-391.3"/>
+        </g>
+        <!-- iac -->
+        <g id="node11" class="node">
+            <title>iac</title>
+            <polygon fill="yellow" stroke="black" points="157.5,-465.6 21,-465.6 21,-424 157.5,-424 157.5,-465.6"/>
+            <text text-anchor="middle" x="89.25" y="-449" font-family="Times,serif" font-size="14.00">IAC</text>
+            <text text-anchor="middle" x="89.25" y="-432.2" font-family="Times,serif" font-size="14.00">infrastructure as code</text>
+        </g>
+        <!-- iacchoice -->
+        <g id="node15" class="node">
+            <title>iacchoice</title>
+            <polygon fill="palegreen" stroke="black" points="465.71,-462.8 332.41,-462.8 328.41,-458.8 328.41,-426.8 461.71,-426.8 465.71,-430.8 465.71,-462.8"/>
+            <polyline fill="none" stroke="black" points="461.71,-458.8 328.41,-458.8"/>
+            <polyline fill="none" stroke="black" points="461.71,-458.8 461.71,-426.8"/>
+            <polyline fill="none" stroke="black" points="461.71,-458.8 465.71,-462.8"/>
+            <text text-anchor="middle" x="397.06" y="-440.6" font-family="Times,serif" font-size="14.00">IAC choices/patterns </text>
+        </g>
+        <!-- iac&#45;&gt;iacchoice -->
+        <g id="edge9" class="edge">
+            <title>iac-&gt;iacchoice</title>
+            <path fill="none" stroke="black" d="M157.74,-444.8C204.66,-444.8 267.37,-444.8 316.68,-444.8"/>
+            <polygon fill="black" stroke="black" points="316.44,-448.3 326.44,-444.8 316.44,-441.3 316.44,-448.3"/>
+            <text text-anchor="middle" x="243.54" y="-449" font-family="Times,serif" font-size="14.00">as manifested by</text>
+        </g>
+        <!-- ticklet -->
+        <g id="node23" class="node">
+            <title>ticklet</title>
+            <polygon fill="cyan" stroke="black" points="951.54,-279.6 756.82,-279.6 752.82,-275.6 752.82,-238 947.54,-238 951.54,-242 951.54,-279.6"/>
+            <polyline fill="none" stroke="black" points="947.54,-275.6 752.82,-275.6"/>
+            <polyline fill="none" stroke="black" points="947.54,-275.6 947.54,-238"/>
+            <polyline fill="none" stroke="black" points="947.54,-275.6 951.54,-279.6"/>
+            <text text-anchor="middle" x="852.18" y="-263" font-family="Times,serif" font-size="14.00">Product: Tickets for the masses</text>
+            <text text-anchor="middle" x="852.18" y="-246.2" font-family="Times,serif" font-size="14.00">Make tickets a convenient idiom</text>
+        </g>
+        <!-- tickletcore&#45;&gt;ticklet -->
+        <g id="edge12" class="edge">
+            <title>tickletcore-&gt;ticklet</title>
+            <path fill="none" stroke="black" d="M712.88,-258.8C722.19,-258.8 731.7,-258.8 741.14,-258.8"/>
+            <polygon fill="black" stroke="black" points="741.11,-262.3 751.11,-258.8 741.11,-255.3 741.11,-262.3"/>
+        </g>
+        <!-- dddsys -->
+        <g id="node24" class="node">
+            <title>dddsys</title>
+            <polygon fill="cyan" stroke="black" points="1167.45,-180 995.65,-180 991.65,-176 991.65,-121.6 1163.45,-121.6 1167.45,-125.6 1167.45,-180"/>
+            <polyline fill="none" stroke="black" points="1163.45,-176 991.65,-176"/>
+            <polyline fill="none" stroke="black" points="1163.45,-176 1163.45,-121.6"/>
+            <polyline fill="none" stroke="black" points="1163.45,-176 1167.45,-180"/>
+            <text text-anchor="middle" x="1079.55" y="-163.4" font-family="Times,serif" font-size="14.00">DDD</text>
+            <text text-anchor="middle" x="1079.55" y="-146.6" font-family="Times,serif" font-size="14.00">---</text>
+            <text text-anchor="middle" x="1079.55" y="-129.8" font-family="Times,serif" font-size="14.00">A mythical complete system</text>
+        </g>
+        <!-- tickletcore&#45;&gt;dddsys -->
+        <g id="edge13" class="edge">
+            <title>tickletcore-&gt;dddsys</title>
+            <path fill="none" stroke="black" d="M697.17,-240.36C775.37,-221.99 895.63,-193.75 980.16,-173.9"/>
+            <polygon fill="black" stroke="black" points="980.91,-177.32 989.84,-171.63 979.31,-170.51 980.91,-177.32"/>
+        </g>
+        <!-- MessageDesignServer -->
+        <g id="node19" class="node">
+            <title>MessageDesignServer</title>
+            <polygon fill="palegreen" stroke="black" points="688.22,-168.8 551.04,-168.8 547.04,-164.8 547.04,-132.8 684.22,-132.8 688.22,-136.8 688.22,-168.8"/>
+            <polyline fill="none" stroke="black" points="684.22,-164.8 547.04,-164.8"/>
+            <polyline fill="none" stroke="black" points="684.22,-164.8 684.22,-132.8"/>
+            <polyline fill="none" stroke="black" points="684.22,-164.8 688.22,-168.8"/>
+            <text text-anchor="middle" x="617.63" y="-146.6" font-family="Times,serif" font-size="14.00">MessageDesignServer</text>
+        </g>
+        <!-- msgd -->
+        <g id="node21" class="node">
+            <title>msgd</title>
+            <polygon fill="cyan" stroke="black" points="946.7,-168.8 761.67,-168.8 757.67,-164.8 757.67,-132.8 942.7,-132.8 946.7,-136.8 946.7,-168.8"/>
+            <polyline fill="none" stroke="black" points="942.7,-164.8 757.67,-164.8"/>
+            <polyline fill="none" stroke="black" points="942.7,-164.8 942.7,-132.8"/>
+            <polyline fill="none" stroke="black" points="942.7,-164.8 946.7,-168.8"/>
+            <text text-anchor="middle" x="852.18" y="-146.6" font-family="Times,serif" font-size="14.00">Message Protocol Design Tool</text>
+        </g>
+        <!-- MessageDesignServer&#45;&gt;msgd -->
+        <g id="edge17" class="edge">
+            <title>MessageDesignServer-&gt;msgd</title>
+            <path fill="none" stroke="black" d="M688.72,-150.8C706.72,-150.8 726.48,-150.8 745.83,-150.8"/>
+            <polygon fill="black" stroke="black" points="745.65,-154.3 755.65,-150.8 745.65,-147.3 745.65,-154.3"/>
+        </g>
+        <!-- MessageDesignClient -->
+        <g id="node20" class="node">
+            <title>MessageDesignClient</title>
+            <polygon fill="palegreen" stroke="black" points="687.06,-114.8 552.19,-114.8 548.19,-110.8 548.19,-78.8 683.06,-78.8 687.06,-82.8 687.06,-114.8"/>
+            <polyline fill="none" stroke="black" points="683.06,-110.8 548.19,-110.8"/>
+            <polyline fill="none" stroke="black" points="683.06,-110.8 683.06,-78.8"/>
+            <polyline fill="none" stroke="black" points="683.06,-110.8 687.06,-114.8"/>
+            <text text-anchor="middle" x="617.63" y="-92.6" font-family="Times,serif" font-size="14.00">MessageDesignClient</text>
+        </g>
+        <!-- MessageDesignClient&#45;&gt;msgd -->
+        <g id="edge18" class="edge">
+            <title>MessageDesignClient-&gt;msgd</title>
+            <path fill="none" stroke="black" d="M687.46,-112.78C710.46,-118.12 736.44,-124.16 760.82,-129.82"/>
+            <polygon fill="black" stroke="black" points="759.89,-133.19 770.42,-132.05 761.47,-126.38 759.89,-133.19"/>
+        </g>
+        <!-- msgd&#45;&gt;dddsys -->
+        <g id="edge15" class="edge">
+            <title>msgd-&gt;dddsys</title>
+            <path fill="none" stroke="black" d="M947.13,-150.8C957.97,-150.8 969.06,-150.8 979.96,-150.8"/>
+            <polygon fill="black" stroke="black" points="979.73,-154.3 989.73,-150.8 979.73,-147.3 979.73,-154.3"/>
+        </g>
+        <!-- oodle -->
+        <g id="node22" class="node">
+            <title>oodle</title>
+            <polygon fill="cyan" stroke="black" points="954.65,-115 753.71,-115 749.71,-111 749.71,-56.6 950.65,-56.6 954.65,-60.6 954.65,-115"/>
+            <polyline fill="none" stroke="black" points="950.65,-111 749.71,-111"/>
+            <polyline fill="none" stroke="black" points="950.65,-111 950.65,-56.6"/>
+            <polyline fill="none" stroke="black" points="950.65,-111 954.65,-115"/>
+            <text text-anchor="middle" x="852.18" y="-98.4" font-family="Times,serif" font-size="14.00">Oodle</text>
+            <text text-anchor="middle" x="852.18" y="-81.6" font-family="Times,serif" font-size="14.00">---</text>
+            <text text-anchor="middle" x="852.18" y="-64.8" font-family="Times,serif" font-size="14.00">(Capture Stakeholder knowledge)</text>
+        </g>
+        <!-- oodle&#45;&gt;dddsys -->
+        <g id="edge16" class="edge">
+            <title>oodle-&gt;dddsys</title>
+            <path fill="none" stroke="black" d="M954.99,-115.16C963.42,-117.6 971.94,-120.05 980.35,-122.48"/>
+            <polygon fill="black" stroke="black" points="979.29,-125.81 989.87,-125.22 981.23,-119.09 979.29,-125.81"/>
+        </g>
+    </g>
+</svg>
