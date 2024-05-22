@@ -129,18 +129,18 @@ const  App = props => {
         <Layout left={left} right={right}>
           {/*<Modal content={modalContent}/>*/}
             <Navbar>
-                {/*<button onClick={()=>{pickGrid('Trades');  clearInterval(interval);setInterval(omsTradeList, 1000)}}>Trades</button>*/}
-                {/*<button onClick={()=>{pickGrid('Quotes'); clearInterval(interval); interval = setInterval(omsQuoteList, 1000)}}>Quotes</button>*/}
-                {/*<button onClick={()=>{pickGrid('Parties'); clearInterval(interval);}}>Parties</button>*/}
+                <button onClick={()=>{pickGrid('Trades');  clearInterval(interval);setInterval(omsTradeList, 100)}}>Trades</button>
+                <button onClick={()=>{pickGrid('Quotes'); clearInterval(interval); interval = setInterval(omsQuoteList, 100)}}>Quotes</button>
+                <button onClick={()=>{pickGrid('Parties'); clearInterval(interval);}}>Parties</button>
                 <Button onClick={()=>{toggleLeft(100)}}>Left</Button>
                 <Button onClick={()=>{toggleRight(300)}}>Right</Button>
 
             </Navbar>
             <Left>In left side bar?</Left>
             <CenterBody>
-              {stateForms()}
+              {/*{stateForms()}*/}
 
-              {/*<MyGrid rowData={rowData} columnDefs={columnDefs}/>*/}
+              <MyGrid rowData={rowData} columnDefs={columnDefs}/>
 
             </CenterBody>
             <Right>In right sidebar?</Right>
