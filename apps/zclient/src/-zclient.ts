@@ -7,7 +7,7 @@ import {connectApp} from "./connect-app";
 
 (async ()=>{
     try {
-        const config = await Config.fetch('/config/hello.yaml');
+        const config = await Config.fetch('/config/-zclient.yaml');
         console.warn(`config loaded`,config);
         const inflate = new Inflate(config);
         const extendedConfig = inflate.intializeSequence('bootSequence');
