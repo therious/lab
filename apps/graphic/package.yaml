@@ -1,14 +1,16 @@
-name: graphic
-version: 0.1.0
-private: true
+name:                             '@therious/graphic'
+version:                          0.2.0
+private:                          true
+author:                           Haim Zamir <hzamir@gmail.com>
+license:                          MIT
 type: module
 dependencies:
-  '@therious/ddd':                'workspace:*'
-  '@therious/utils':              'workspace:*'
-  '@therious/boot':               'workspace:*'
-  '@therious/fsm':                'workspace:*'
-  '@therious/actions':            'workspace:*'
-  '@therious/components':         'workspace:*'
+  '@therious/ddd':                &ws 'workspace:*'
+  '@therious/utils':              *ws
+  '@therious/boot':               *ws
+  '@therious/fsm':                *ws
+  '@therious/actions':            *ws
+  '@therious/components':         *ws
   immer:                          ~10.0.4
   react:                          ^18.2.0
   react-dom:                      ^18.2.0
@@ -22,7 +24,11 @@ dependencies:
   typescript:                     ~5.4.5  # upgrade this when react 19 available?
   vis-network:                    ~9.1.9  # used to plot railroad track network
   '@viz-js/viz':                  ~3.4.0  # (feb 2024)   viz-js wasm renderer for dot language
+  '@sequencemedia/graphviz-react':  ~0.0.81  # (feb 2024)   d3 based graphviz
+  d3-graphviz:                    ~5.4.0  # (apr 2024) d3 based graphviz, also uses a (different) wasm renderer than viz-js, can animate changes to graph
   xstate:                         4.28.1  # or maybe 4.28.1 or 4.23.1 is last one latest= 5.9.1 I have actually successfully used?
+devDependencies:
+  '@types/d3-graphviz':          ~2.6.10  #if it sticks, move this to top package.yaml with other dev dependencies?
 
 scripts:
   start:   VITE_CJS_IGNORE_WARNING=true vite  #it looks like react-swc plugin might be cause of the warning I am turning off?

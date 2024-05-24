@@ -1,6 +1,7 @@
 
 bootSequence:
   - SecurityTest
+  - InjectedStateForms
 
 sequence:
   nothing: []

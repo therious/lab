@@ -113,7 +113,7 @@ const PaddedDiv = styled.div`
 `;
 
 
-const ContextVars = ({context}) =>
+const Context = ({context}) =>
   <ContextTag>
     <SectionLabel>Context</SectionLabel>
     {
@@ -134,9 +134,9 @@ const extractEventTokens = (stConfig) => {
   })
   return [...tokenSet];
 }
-export const  StateForm = ({expanded, stConfig}) => {
+export const  StateForm = ({expanded, stConfig, diagram}) => {
 
-  const {id:machineName,states={},context={}} = stConfig;
+  const {id:machineName,states={},context={} } = stConfig;
 
   const stateList = Object.keys(states);
   const evtTokens = extractEventTokens(stConfig);
@@ -147,17 +147,19 @@ export const  StateForm = ({expanded, stConfig}) => {
   return(
     <FsmTag style={{height}}>
       <MachineName>{machineName}</MachineName>
+      <textarea readOnly={true} value={diagram}/>
+
       <hr/>
       <PaddedDiv>
         <SectionLabel>States</SectionLabel>
-        {stateList.map((stName,i)=>(<StTag key={i}>{stName}</StTag>))}
+        {stateList.map((stName, i) => (<StTag key={i}>{stName}</StTag>))}
       </PaddedDiv>
       <hr/>
-      <ContextVars context={context}/>
+      <Context context={context}/>
       <hr/>
       <PaddedDiv>
         <SectionLabel>Events</SectionLabel>
-        {evtTokens.map((evtName,i)=>(<EvtTag key={i}>{evtName}</EvtTag>))}
+        {evtTokens.map((evtName, i) => (<EvtTag key={i}>{evtName}</EvtTag>))}
       </PaddedDiv>
     </FsmTag>
   )

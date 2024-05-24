@@ -48,7 +48,10 @@
               <option name="patterns">
                 <list>
                   <Item>
-                    <option name="path" value="apps/zclient/public/config/hello.yaml" />
+                    <option name="path" value="apps/zclient/public/config/-zclient.yaml" />
+                  </Item>
+                  <Item>
+                    <option name="path" value="apps/graphic/public/config/-graphic.yaml" />
                   </Item>
                 </list>
               </option>
