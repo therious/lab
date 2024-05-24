@@ -7,8 +7,13 @@ import {connectRootComponent} from './actions-integration';
 import {Config, Inflate} from "@therious/boot";
 import {hasAll, hasAny, sleep} from '@therious/utils';
 import * as Proxyable from '@therious/utils';
+import {bootmeta} from '@therious/ddd';
+
 
 import './fsm/some-tests';
+
+const cypher = bootmeta();
+console.log(cypher);
 
 class ExampleProxyable implements Proxyable.NamedInstance
 {
