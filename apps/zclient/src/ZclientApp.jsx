@@ -1,10 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import {Modal} from "@therious/components";
 import {MyGrid} from "./MyGrid";
 import {columnDefsMap} from "./xform/columndefs";
-import {stateForms} from "./InjectedStateForms";
 
 const palette = {
       plum: '#4b54a1',
@@ -111,7 +109,7 @@ const getData = nthTime(function(props){
 
 let interval;
 
-const  App = props => {
+const  ZclientApp = props => {
 
    getData(props);
 
@@ -123,11 +121,8 @@ const  App = props => {
 
    console.info(`props for grid are ${rowDataProp}`, columnDefs, rowData);
 
-   const modalContent = `hello`;
-
    return  (
         <Layout left={left} right={right}>
-          {/*<Modal content={modalContent}/>*/}
             <Navbar>
                 <button onClick={()=>{pickGrid('Trades');  clearInterval(interval);setInterval(omsTradeList, 100)}}>Trades</button>
                 <button onClick={()=>{pickGrid('Quotes'); clearInterval(interval); interval = setInterval(omsQuoteList, 100)}}>Quotes</button>
@@ -138,7 +133,6 @@ const  App = props => {
             </Navbar>
             <Left>In left side bar?</Left>
             <CenterBody>
-              {/*{stateForms()}*/}
 
               <MyGrid rowData={rowData} columnDefs={columnDefs}/>
 
@@ -150,4 +144,4 @@ const  App = props => {
 };
 
 
-export default App;
+export default ZclientApp;

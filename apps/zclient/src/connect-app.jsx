@@ -6,7 +6,7 @@ import {getMiddleware, init} from "./example-redux-middleware";
 import {createSelector} from "reselect";
 import * as actionCreators from "./action-creators";
 import {connect, Provider} from "react-redux";
-import App from "./App";
+import ZclientApp from "./ZclientApp";
 import React from "react";
 import {createRoot} from "react-dom/client";
 
@@ -67,7 +67,7 @@ const ConnectedApp =  connect(
   null,
   { forwardRef: true } // must be supplied for react/redux when using Ag-Grid GridOptions.reactNext
 
-)(App);
+)(ZclientApp);
 
 
 export function connectApp()
