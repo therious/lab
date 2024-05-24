@@ -1,7 +1,10 @@
 import React,  {useState, useCallback, useRef, useEffect} from 'react';
 import './App.css';
 import { instance, RenderError,RenderOptions, RenderResult } from "@viz-js/viz";
+import {DagViewer} from './components/DagViewer';
 import {actions, useSelector} from './actions-integration';
+import {stateForms} from "./InjectedStateForms";
+
 import {
   QueryClient,
   QueryClientProvider,
@@ -13,7 +16,7 @@ const queryClient = new QueryClient();
 
 
 // react-query compliant fetch function generator
-const fetcher = (url:string)=>async()=>{
+const fetcherSvg = (url:string)=>async()=>{
   const viz = await instance();
 
   const response = await fetch(url);
@@ -24,7 +27,17 @@ const fetcher = (url:string)=>async()=>{
   return svg;
 }
 
-const diagramFetcher = fetcher('/dot/physics.dot')
+const fetcherString =  (url:string)=>async()=>{
+  const viz = await instance();
+
+  const response = await fetch(url);
+  const exampleDoc = `digraph { could -> not -> find => "${url}" }`;
+
+  const dotDocument:string = await response.text() ?? exampleDoc;
+  return dotDocument;
+}
+
+const diagramFetcher = fetcherString('/dot/physics.dot');
 
 type AdapstSvgSvgProps = {svgsvg:SVGSVGElement}
 function AdaptSvgSvg({svgsvg}:AdapstSvgSvgProps)
@@ -63,9 +76,12 @@ function Example()
         height: 'fit-content',
         border: '5px dotted red',
       }}>
-        {isPending ? <span>Loading...</span> : isError ? <span>Error: {error.message}</span> :
-          <AdaptSvgSvg svgsvg={data}/>
-        }
+        {stateForms()}
+
+        {/*{isPending ? <span>Loading...</span> : isError ? <span>Error: {error.message}</span> :*/}
+        {/*  <DagViewer dot={data} height={"100vh"} width={"100vw"}/>*/}
+        {/*  // <AdaptSvgSvg svgsvg={data}/>*/}
+        {/*}*/}
       </div>
     </div>
   );
