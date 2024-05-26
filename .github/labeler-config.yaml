@@ -15,6 +15,12 @@ public:
   - changed-files:
     - any-glob-to-any-file: ['**/*.test.*', '**/*.spec.*', '**/test/**']
 
+💧elixir:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.ex'
+          - '**/*.exs'
+
 🇹typescript:
   - changed-files:
       - any-glob-to-any-file:
