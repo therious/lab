@@ -42,6 +42,7 @@ The alternative unwashed masses is to accidentally "choose" in an inconsistent f
 ## State Machines and State Charts
 
 * [XState](https://github.com/statelyai/xstate/tree/main/packages/core#readme) - a full blown state chart system
+* [SMC](https://smc.sourceforge.net/) - a state machine compiler generates code for multiple languages
 
 
 ## Actor Model
