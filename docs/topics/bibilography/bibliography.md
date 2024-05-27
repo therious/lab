@@ -40,10 +40,13 @@ The alternative unwashed masses is to accidentally "choose" in an inconsistent f
    * also online [zipfile](http://www.iste.co.uk/perrin/distributed.zip)
 
 ## State Machines and State Charts
-
 * [XState](https://github.com/statelyai/xstate/tree/main/packages/core#readme) - a full blown state chart system
 * [SMC](https://smc.sourceforge.net/) - a state machine compiler generates code for multiple languages
 
+## Functional Progamming
+* [Why Functional Programming Matters](https://www.cs.kent.ac.uk/people/staff/dat/miranda/whyfp90.pdf)
+  *[John Hughes Video Presentation 2016](https://www.youtube.com/watch?v=XrNdvWqxBvA)  
+* [History or Haskell](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/07/history.pdf)
 
 ## Actor Model
 * [Actors can rule your DDD world](https://www.youtube.com/watch?v=lcGf2Txq92o)  - Very high level DDD, Event Sourcing, CQRS how it fits with the actor model
