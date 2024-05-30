@@ -12,9 +12,17 @@
   },
   "dependencies": {},
   "peerDependencies": {
+  "@sequencemedia/graphviz-react": "~0.0.81",
+    "@therious/utils":"workspace:*",
+    "@therious/fsm": "workspace:*",
+    "d3-graphviz": ">=5.4.0",
     "styled-components": "5.x",
     "react": "18.x",
     "react-dom": "18.x"
+  },
+  "devDependencies": {
+    "@types/d3-graphviz": "~2.6.10"
+
   },
   "scripts": {},
   "browserslist": ["since 2023"]
