@@ -1,8 +1,10 @@
 # Bibliography
 
+## Security
+* [Curated list of vulnerabilities](https://github.com/askbuddie/vulnerabilities)
 
 ## Infrastructure as Code
-
+* winglang
 
 ## Domain Driven Design, Event Sourcing and CQRS
 * _Domain-Driven Design: Tackling Complexity in the Heart of Software_, by Eric Evans
@@ -11,7 +13,9 @@
   * [Annotated copy on google docs](https://docs.google.com/document/d/15wa5xl-cC01TAivoTMGObqEQjPBggQscoM7kDtFyacY)  Please read this one instead, and
     add your own comments.
 * [The Dark Side of Event Sourcing: Managing Data Conversion](./dark-side-of-event-sourcing.pdf)
-
+* Existing projects
+  * [Context Mapper](https://contextmapper.org/) Evolved from a student project, 
+    this  DSL based system has been evolving for a few years
 
 ## Graph Databases
 
@@ -20,6 +24,12 @@ observation that many relationships are temporal,
 (e.g. "when were you married to x", "where did you live at this time", "who was your insurance provider at that time")
   * this paper's approach goes a bit far proliferating node types, especiall to represent temporal edges, ostensibly to
 make the graph's more OLAP-friendly.
+
+
+## Visualization
+
+* [Dagviewer sandbox](https://codesandbox.io/p/sandbox/focused-morning-g4rgml?file=%2Fsrc%2FDAGViewer.js)
+
 
 ## Types of consistency
 
