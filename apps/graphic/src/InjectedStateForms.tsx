@@ -1,6 +1,6 @@
 
 import {inject, container, singleton} from '@therious/boot';
-import {createXStateConfiguration, fsmConfigToPlantUml, FsmConfig} from '@therious/fsm';
+import {createXStateConfiguration, fsmConfigToDot, FsmConfig} from '@therious/fsm';
 import {StateForm} from "@therious/components";
 import React from 'react';
 
@@ -24,7 +24,7 @@ export class InjectedStateForms
       const behavior      = {};
       const options       = {};
       const xstateConfig  = createXStateConfiguration(fsmConfig, behavior, options);
-      const diagram       = fsmConfigToPlantUml(fsmConfig, behavior);
+      const diagram       = fsmConfigToDot(fsmConfig, behavior);
      return <StateForm key={xstateConfig.id} expanded={true} stConfig={xstateConfig} diagram={diagram}/>
     });
     return <>{convertedMachines}</>
