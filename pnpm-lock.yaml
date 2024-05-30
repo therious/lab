@@ -149,6 +149,9 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
+      react-hook-signal:
+        specifier: ^0.0.1-rc
+        version: 0.0.1-rc.17(react-dom@18.2.0)(react@18.2.0)(signal-polyfill@0.1.1)
       react-redux:
         specifier: ~7.2.9
         version: 7.2.9(react-dom@18.2.0)(react@18.2.0)
@@ -161,6 +164,9 @@ importers:
       reselect:
         specifier: ~4.1.7
         version: 4.1.8
+      signal-polyfill:
+        specifier: ~0.1.0
+        version: 0.1.1
       styled-components:
         specifier: ~6.1.8
         version: 6.1.8(react-dom@18.2.0)(react@18.2.0)
@@ -384,6 +390,18 @@ importers:
 
   cmps/components:
     dependencies:
+      '@sequencemedia/graphviz-react':
+        specifier: ~0.0.81
+        version: 0.0.81(d3-graphviz@5.4.0)(react-dom@18.2.0)(react@18.2.0)
+      '@therious/fsm':
+        specifier: workspace:*
+        version: link:../../libs/fsm
+      '@therious/utils':
+        specifier: workspace:*
+        version: link:../../libs/utils
+      d3-graphviz:
+        specifier: '>=5.4.0'
+        version: 5.4.0(d3-selection@3.0.0)
       react:
         specifier: 18.x
         version: 18.2.0
@@ -393,6 +411,10 @@ importers:
       styled-components:
         specifier: 5.x
         version: 5.3.11(@babel/core@7.24.3)(react-dom@18.2.0)(react-is@18.2.0)(react@18.2.0)
+    devDependencies:
+      '@types/d3-graphviz':
+        specifier: ~2.6.10
+        version: 2.6.10
 
   libs/actions:
     dependencies:
@@ -7994,6 +8016,18 @@ packages:
       scheduler: 0.23.0
     dev: false
 
+  /react-hook-signal@0.0.1-rc.17(react-dom@18.2.0)(react@18.2.0)(signal-polyfill@0.1.1):
+    resolution: {integrity: sha512-n1TyBEMGV4eDK+gWVspiEhteAgtRaVZ518xwCIy9/dhccz8RDN78CvkbkfTWfiFj5idrEmX0gj5kYEJaYyPi8A==}
+    peerDependencies:
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      signal-polyfill: ^0.1.0
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+      signal-polyfill: 0.1.1
+    dev: false
+
   /react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
@@ -8645,6 +8679,10 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
     dev: true
+
+  /signal-polyfill@0.1.1:
+    resolution: {integrity: sha512-ZihPkMjiWOCZaYOb/vi1YLj+f0GTKVF7tQVNovtK32yjqcvRvjGPTwwX3Ad45mQ8v08kLUBagsOkuyJ6gpwhWA==}
+    dev: false
 
   /sigstore@1.9.0:
     resolution: {integrity: sha512-0Zjz0oe37d08VeOtBIuB6cRriqXse2e8w+7yIy2XSXjshRKxbc2KkhXjL229jXSxEm7UbcjS76wcJDGQddVI9A==}

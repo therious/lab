@@ -1,8 +1,6 @@
 import React,  {useState, useCallback, useRef, useEffect} from 'react';
 import './App.css';
-import { instance, RenderError,RenderOptions, RenderResult } from "@viz-js/viz";
-import {DagViewer} from './components/DagViewer';
-import {actions, useSelector} from './actions-integration';
+import {instance} from "@viz-js/viz";
 import {stateForms} from "./InjectedStateForms";
 
 import {
@@ -64,8 +62,13 @@ function Example()
   if(!isPending && !isError)
     console.log(`svg data received = `, data);
 
+  const contextMenu = useCallback((e:any) => {  // todo fix  type of event
+    e.preventDefault(); // prevent the default behaviour when right clicked
+    console.log("Right Click");
+  },[]);
+
   return (
-    <div className="App">
+    <div className="App" onContextMenu={contextMenu}>
       <button disabled={modal} onClick={openModal}>Trigger modal</button>
       <NeueModal openIt={modal} close={closeModal}><h1>Wow</h1><p>Hello this is an extensive message</p><button onClick={closeModal}>Close me</button></NeueModal>
 
