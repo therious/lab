@@ -1,4 +1,6 @@
 import fastify from 'fastify';
+import { secretsReport} from '@therious/utils/secrets';
+
 
 const app = async () => {
   const app = fastify();
@@ -14,6 +16,11 @@ const app = async () => {
   app.get('/pong', (req, reply) => {
     reply.send({ msg: 'ping' });
   });
+
+  app.get('/secrets', (req, reply) => {
+    reply.send(secretsReport());
+  });
+
 
   if (import.meta.env.PROD)
     app.listen(3000);
