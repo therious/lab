@@ -1,4 +1,4 @@
-import {RingBuffer} from './ringbuffer';
+import {SlidingBuffer} from './ringbuffer';
 
 export type StatSummary = {
   mean: number;
@@ -57,12 +57,12 @@ export class RunningStats implements Updater
 } //end class
 
 export class SlidingStats extends RunningStats {
-  #ring:RingBuffer<number>;
+  #ring:SlidingBuffer<number>;
   constructor(bufferSize:number) {
     super();
-    this.#ring = new RingBuffer(bufferSize);
+    this.#ring = new SlidingBuffer(bufferSize);
   }
-  override get count():number { return this.#ring.length }
+  override get count():number { return this.#ring.size }
   override update(val: number) {
    const oldVal = this.#ring.add(val);
    if(oldVal === undefined)
