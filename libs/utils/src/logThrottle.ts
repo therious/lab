@@ -37,7 +37,7 @@ export function logThrottle(delay:number, f:Function) {
 const reportError = logThrottle(10_000, (errmsg:string, error:any, event:any)=>console.error(errmsg, error ?? event));
 
 
-window.onerror = (event, source, lineno, colno, error)=>
+globalThis.onerror = (event, source, lineno, colno, error)=>
 {
   const errmsg = `Uncaught error: ${source}:${lineno}:${colno}`;
   reportError(errmsg, error, event);
