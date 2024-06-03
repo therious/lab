@@ -1,6 +1,7 @@
 import axios from "axios";
 import * as jsYaml from "js-yaml";
-
+//@ts-ignore
+import fs from "fs";
 
 export interface ConfigSingleton {
   queryParams: Record<string,string>;
@@ -15,12 +16,36 @@ function deepFreeze(o:any)
     .forEach(prop=>deepFreeze(o[prop]));
 }
 
+async function serverFetch(url:string):Promise<any>
+{
+  //@ts-ignore
+  const cwd = process.cwd();
+
+  //@ts-ignore
+  const prefix = import.meta?.env?.MODE !== "development"?  '' : '/public';
+
+  const nurl = `${cwd}${prefix}${url}`;
+
+  //@ts-ignore
+  console.log(`prefix: "${prefix}", cwd: "${cwd}" url:${url}, nurl: "${nurl}`, import.meta.env.MODE)
+
+
+  let result =  fs.readFileSync(nurl);
+  if(url.endsWith(".yaml"))
+    result = jsYaml.load(result);
+  if(typeof result !== 'object') throw new Error(`Loaded Config at ${nurl} should be an object`);
+
+  return result;
+
+}
 async function fetchConfig(url:string):Promise<any>
 {
-
   console.info(`fetching configuration at ${url}`);
   let result;
   try {
+    if(!globalThis?.window?.document)
+      return serverFetch(url);  // we are running in a server, not on browser
+
     const response = await axios.get(url);
     if(response.status !== 200) throw new Error(`OnlyAcceptStatus200, not ${response.status}`);
     result = response.data;
