@@ -7,8 +7,8 @@ export default defineConfig({
   //@ts-ignore  VitePluginNode may not be entirely compatible with latest vite version, but this is working
   plugins: [
     ...VitePluginNode({
-      adapter:       'fastify',              //options:'express', 'nest', 'koa' and 'fastify' (and apollo?) or function
-      appPath:       './app.ts',            // entry point of your app
+      adapter:       'fastify',             //options:'express', 'nest', 'koa' and 'fastify' (and apollo?) or function
+      appPath:       './simple-server.ts',  // entry point of your app
       exportName:    'simpleFastifyServer', // named export of your app from the appPath file
       initAppOnBoot:  false,                // to init your app on boot, set this to true, defaults to false
 
