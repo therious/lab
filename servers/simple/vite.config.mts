@@ -1,11 +1,21 @@
 import { defineConfig } from 'vite';
-///@ts-ignore
-import { VitePluginNode } from 'vite-plugin-node';
+import { VitePluginNode } from 'vite-plugin-node';         // supports hmr w/ rest servers (fastify), but dev server clashes w/ websockets
+import { viteStaticCopy } from 'vite-plugin-static-copy';  // used to copy assets neither public nor source code
+
+const outDir = '../../dist/simple';        // relative where the builds go, keep it out of source tree
 
 export default defineConfig({
-  server:  { port: 3737 },   // for details see [vite doc](https://vitejs.dev/config/#server-host)
-  //@ts-ignore  VitePluginNode may not be entirely compatible with latest vite version, but this is working
+  root: '.',                               // other paths are relative to root, which is relative to location of vite.config.mts
+  build: { outDir, emptyOutDir: true },    // all build artifacts go under a monorepo root relative dist directory
+  server:  { port: 3000 },                 // for details see [vite doc](https://vitejs.dev/config/#server-host)
   plugins: [
+    ...viteStaticCopy({
+      silent: false,
+      targets: [
+      {src: './deployment/**',                      dest: outDir},  // move all deployment files to dist
+      {src: './deployment/fly-deploy-package.json', dest: outDir, rename: 'package.json'}  // rename one file
+      ]}),
+
     ...VitePluginNode({
       adapter:       'fastify',             //options:'express', 'nest', 'koa' and 'fastify' (and apollo?) or function
       appPath:       './simple-server.ts',  // entry point of your app
@@ -35,10 +45,11 @@ export default defineConfig({
       // }
       // swc configs, see [swc doc](https://swc.rs/docs/configuration/swcrc)
       swcOptions: {}
-    })
+    }),
+
   ],
   optimizeDeps: {
-    // Vite does not work well with optionnal dependencies,
+    // Vite does not work well with optional dependencies,
     // you can mark them as ignored for now
     // eg: for nestjs, exlude these optional dependencies:
     // exclude: [

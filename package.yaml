@@ -1,5 +1,5 @@
-type: module
-private: true
+type:          module
+private:       true
 scripts:
   index:       node ./scripts/library-index-generator.js ${1:---watch=false}
   indexOnce:   node ./scripts/library-index-generator.js
@@ -41,6 +41,7 @@ devDependencies:
   vite:                               ~5.2.8     # standardizing on vite for building libs and apps
   vitest:                             ~1.4.0     # a jest-like test runner for vite
   vite-bundle-visualizer:             ~1.1.0     # still need to plug this in correctly, or replace it
+  vite-plugin-static-copy:            ~1.0.5     # copy files needed for builds, (e.g. fly.toml for deploying servers)
 
   # primarily for stuff in scripts directory (build scripts and small experiments)
   chokidar:                           ~3.6.0     # for file-watching in build utilities
