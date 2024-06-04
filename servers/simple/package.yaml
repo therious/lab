@@ -1,7 +1,7 @@
-name: simple
-version: 0.1.0
-private: true
-type: module
+name:                             simple
+version:                          0.1.0
+private:                          true
+type:                             module
 dependencies:
   '@therious/ddd':                'workspace:*'
   '@therious/utils':              'workspace:*'
@@ -15,11 +15,16 @@ dependencies:
   typescript:                     ~5.4.5   # upgrade this when react 19 available?
 devDependencies:
   vite-plugin-node:               ~3.1.0   # for server projects
-
+  vite-plugin-static-copy:        ~1.0.5   # copy fly.toml and other static assets to root of distribution
 scripts:
   start:    VITE_CJS_IGNORE_WARNING=true vite  #it looks like react-swc plugin might be cause of the warning I am turning off?
   secstart: doppler run -- vite
   build:   vite build
+  dbuild: >-
+    vite build 
+    && pushd ../../dist/simple 
+    && npx --yes @flydotio/dockerfile@latest --distroless --force
+    && popd
   preview: vite preview
   lint:    eslint . --ext js,jsx,ts,tsx
 
