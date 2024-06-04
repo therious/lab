@@ -1,0 +1,10 @@
+{
+  "name": "edgy-api-soup",
+  "private": true,
+  "scripts": {
+    "start": "node simple-service.js"
+  },
+  "devDependencies": {
+    "@flydotio/dockerfile": "^0.5.7"
+  }
+}

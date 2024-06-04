@@ -4,33 +4,13 @@ import {secretsReport} from '@therious/utils/src/secrets';
 import {reqIdGenerate, reqIdDescribe} from '@therious/utils/src/snowflake';
 import {Config, Inflate} from '@therious/boot';
 
-type MyConfig = {server?: {port?: number}};
+type MyConfig = Partial<{server: {port: number}, welcome: string}>;
 let config:MyConfig = {};
 const secrets = secretsReport();
-
-
-
-// (async ()=>{
-//   try {
-//
-//     const url = '/config/config.yaml';
-//     console.warn(`attempting to load config from`,url);
-//     config = await Config.fetch(url);
-//     console.warn(`config loaded`,config);
-//     // const inflate = new Inflate(config);
-//     // const extendedConfig = inflate.intializeSequence('bootSequence');
-//     // console.warn(`extendedConfig `,extendedConfig);
-//
-//
-//   } catch(e) {
-//     console.error(e);
-//   }
-// })();
 
 const app = async () => {
 
   try {
-
     const url = '/config/config.yaml';
     console.warn(`attempting to load config from`,url);
     config = await Config.fetch(url) as MyConfig;
@@ -39,7 +19,6 @@ const app = async () => {
     // const extendedConfig = inflate.intializeSequence('bootSequence');
     // console.warn(`extendedConfig `,extendedConfig);
 
-
   } catch(e) {
     console.error(e);
   }
@@ -47,7 +26,7 @@ const app = async () => {
   const app = fastify();
 
   app.get('/', (req, reply) => {
-    reply.send('welcome to simple server');
+    reply.send(config.welcome);
   });
 
   app.get('/ping', (req, reply) => {
