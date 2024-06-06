@@ -3,17 +3,13 @@ version:                          0.1.0
 private:                          true
 type:                             module
 dependencies:
-  '@therious/ddd':                'workspace:*'
   '@therious/utils':              'workspace:*'
   '@therious/boot':               'workspace:*'
-  '@therious/fsm':                'workspace:*'
-  '@therious/actions':            'workspace:*'
-  '@therious/components':         'workspace:*'
   fastify:                        ~4.27.0
-  immer:                          ~10.0.4
   reflect-metadata:               ~0.1.13  # needed for tsyringe, and fancy decorator stuff
-  typescript:                     ~5.4.5   # upgrade this when react 19 available?
 devDependencies:
+  typescript:                     ~5.4.5   # upgrade this when react 19 available?
+  vite:                           ~5.2.8   # standardizing on vite for building libs and apps
   vite-plugin-node:               ~3.1.0   # for server projects
   vite-plugin-static-copy:        ~1.0.5   # copy fly.toml and other static assets to root of distribution
 scripts:
