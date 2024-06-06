@@ -3,15 +3,22 @@ import fastify from 'fastify';
 import {secretsReport} from '@therious/utils/src/secrets';
 import {reqIdGenerate, reqIdDescribe} from '@therious/utils/src/snowflake';
 import {Config, Inflate} from '@therious/boot';
+import * as process from 'node:process';
 
 type MyConfig = Partial<{server: {port: number}, welcome: string}>;
 let config:MyConfig = {};
 const secrets = secretsReport();
 
+const args =  [...process.argv].slice(2);
+
+process.chdir(args[0]);
+
+
+
 const app = async () => {
 
   try {
-    const url = '/config/config.yaml';
+    const url = `/config/config.yaml`;
     console.warn(`attempting to load config from`,url);
     config = await Config.fetch(url) as MyConfig;
     console.warn(`config loaded`,config);
@@ -54,7 +61,7 @@ const app = async () => {
   console.log('import meta env', import.meta.env);
   console.log('config loaded is ', config);
   if (import.meta.env.PROD)
-    app.listen({port: config?.server?.port});
+    app.listen({host:'0.0.0.0', port: config?.server?.port});
 
   return app;
 };
