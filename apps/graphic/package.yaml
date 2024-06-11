@@ -12,6 +12,7 @@ dependencies:
   '@therious/actions':            *ws
   '@therious/components':         *ws
   immer:                          ~10.0.4
+  js-yaml:                        ~4.1.0
   react:                          ^18.2.0
   react-dom:                      ^18.2.0
   react-hook-signal:              ^0.0.1-rc # react hooks for signal polyfill
