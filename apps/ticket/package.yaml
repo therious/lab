@@ -10,6 +10,7 @@ dependencies:
   '@therious/actions':                'workspace:*'   # common set of reduxy-type actions (pure functions, not redux)
   '@therious/components':             'workspace:*'
   immer:                              ~10.0.4
+  js-yaml:                            ~4.1.0
   react:                              ~18.2.0
   react-dom:                          ~18.2.0
   redux:                              ~4.2.1
