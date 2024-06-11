@@ -1,5 +1,3 @@
-import {oReduce} from './oreduce';
-
 const reTimeD    = '\\s*((?<delay>\\d+)(?<delayUnits>d|h|m|s)?)\\s*';
 const reTimeB    = '\\s*((?<bonus>\\d+)(?<bonusUnits>d|h|m|s)?)\\s*';
 const reTimeT    = '\\s*((?<reserve>\\d+)(?<reserveUnits>d|h|m|s)?)\\s*';
@@ -29,12 +27,12 @@ function unitsToMultiplier(s:string, def:string):number
 }
 
 // given a unit tell which unit is less, until we get to seconds
-function lesserUnit(s:string, def:string):TimerUnit
+function lesserUnit(s:string, def:TimerUnit = 's'):TimerUnit
 {
   switch(s) {
     case 'd': return 'h'; // if days next less unit is hours
     case 'h': return 'm'; // if hours then, minutes
-    default : return 's'; // minutes, seconds, and anything else would be seconds
+    default : return def; // minutes, seconds, and anything else would be seconds
   }
 }
 
@@ -48,9 +46,9 @@ function multiplyIt(sval:number, unit:TimerUnit):number
   return 0;
 }
 
-export function cook(raw)
+export function cook(raw:any)
 {
-  const cooked = {};
+  const cooked = {} as any;
 
   const rMul = unitsToMultiplier(raw.reserveUnits, 'm'); // if no units for reserve, default to minutes (like Chess)
 
@@ -81,7 +79,7 @@ export function strToRaw(str:string):object|undefined
 
   const entries = Object
     .entries(match.groups)
-    .filter(([k,v])=>v !== undefined);
+    .filter(([_k,v])=>v !== undefined);
   return Object.fromEntries(entries);
 }
 
