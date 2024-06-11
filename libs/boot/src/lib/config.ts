@@ -28,12 +28,12 @@ async function serverFetch(url:string):Promise<any>
 
   //@ts-ignore
   console.log(`prefix: "${prefix}", cwd: "${cwd}" url:${url}, nurl: "${nurl}`, import.meta.env.MODE)
+  if(!url.endsWith(".yaml"))
+    throw new Error(` File at "${nurl}" should have a .yaml extension`);
 
-
-  let result =  fs.readFileSync(nurl);
-  if(url.endsWith(".yaml"))
-    result = jsYaml.load(result);
-  if(typeof result !== 'object') throw new Error(`Loaded Config at ${nurl} should be an object`);
+  const buffer =  fs.readFileSync(nurl, 'utf8');
+  const  result = jsYaml.load(buffer);
+  if(typeof result !== 'object') throw new Error(`Loaded Config at "${nurl}" should be an object`);
 
   return result;
 
