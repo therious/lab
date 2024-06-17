@@ -1,0 +1,12 @@
+# note, that .dockerignore syntax is not identical to .gitignore
+# it uses paths relative to the location of the file, and to match
+# same file or directory in multiple locations you must specific **/name
+**/node_modules/
+#**/.vite/
+# **/dist/
+**/.dockerignore
+**/.env
+/.git
+Dockerfile
+fly.toml
+fly-deploy-package.json
