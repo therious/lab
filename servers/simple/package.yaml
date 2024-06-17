@@ -5,6 +5,7 @@ type:                             module
 dependencies:
   '@therious/utils':              'workspace:*'
   '@therious/boot':               'workspace:*'
+  '@fastify/static':              '~7.0.4' # for static file serving from fastify
   fastify:                        ~4.27.0
   reflect-metadata:               ~0.1.13  # needed for tsyringe, and fancy decorator stuff
 devDependencies:
