@@ -25,6 +25,8 @@ observation that many relationships are temporal,
   * this paper's approach goes a bit far proliferating node types, especiall to represent temporal edges, ostensibly to
 make the graph's more OLAP-friendly.
 
+## React Libraries
+* [@atlaskit/pragmatic-drag-and-drop](https://atlassian.design/components/pragmatic-drag-and-drop/)
 
 ## Visualization
 
@@ -59,11 +61,14 @@ The alternative unwashed masses is to accidentally "choose" in an inconsistent f
 * [History or Haskell](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/07/history.pdf)
 
 ## Actor Model
+* [The Language of Actors](https://www.youtube.com/watch?v=KtRLIzG5c54) - Vaughn Vernon's talk
 * [Actors can rule your DDD world](https://www.youtube.com/watch?v=lcGf2Txq92o)  - Very high level DDD, Event Sourcing, CQRS how it fits with the actor model
 * [Wide world of almost-actors: comparing Pony to BEAM languages](https://www.youtube.com/watch?v=_0m0_qtfzLs)
   * Compares a true actor model, to what Erlang/Beam provided, and how an actor model implementation was never their goal
   * Erlang/Beam were designed to solve Erickson's reliability problems, and violates the actor model
-  
+* Quotes:
+  * ` Instead of a bit-grinding processor raping and plundering data structures, we have a universe of well-behaved objects that courteously ask each other to carry out their various desires. The transmission of messages is the only process that is carried on outside of objects and this is as it should be, since messages travel between objects.`
+    [Dan Ingall's Design Principles behind Smalltalk](https://www.cs.virginia.edu/~evans/cs655/readings/smalltalk.html)
 * [Hewitt, Meijer and Szyperski: The Actor Model](https://www.youtube.com/watch?v=7erJ1DV_Tlo) - This video gives a better 
   idea of the orthodox actor model of computation
   * be prepared to learn the difference between bounded nondeterminism and indeterminism, and how actor model is more 
