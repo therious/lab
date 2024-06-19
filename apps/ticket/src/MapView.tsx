@@ -130,8 +130,10 @@ export const MapView = ()=>
 
 
   return <div style={{
-      position:'absolute',
-      left: '0px',
+      // position:'absolute',
+      // left: '0px',
+      marginLeft: 'auto',
+      marginRight: 'auto',
       display:'inline-block',
       width:'1800px', height:'1000px',
       backgroundImage:`url('/map-us-again.png')`,
