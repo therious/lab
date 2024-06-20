@@ -21,6 +21,25 @@ public:
           - '**/*.ex'
           - '**/*.exs'
 
+🪰flyio:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/fly.toml'
+
+🐳docker:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/docker/**'
+          - '**/Dockerfile'
+          - '**/*.Dockerfile'
+          - '**/*.dockerfile'
+          - '**/.dockerignore'
+          - '**/*.Dockerfile.dockerignore'
+          - '**/*.dockerfile.dockerignore'
+          - '**/docker-compose.yml'
+          - '**/docker-compose.yaml'
+          - '**/*docker*'
+
 🇹typescript:
   - changed-files:
       - any-glob-to-any-file:
