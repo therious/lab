@@ -38,15 +38,15 @@ devDependencies:
   eslint-plugin-react:                ~7.34.1
   redux-devtools-extension:           ~2.13.9    # need to transition if possible from less deprecated version than this
   typescript:                         ~5.4.5
-  vite:                               ~5.2.8     # standardizing on vite for building libs and apps
+  vite:                               ~5.3.1     # standardizing on vite for building libs and apps
   vitest:                             ~1.4.0     # a jest-like test runner for vite
-  vite-bundle-visualizer:             ~1.1.0     # still need to plug this in correctly, or replace it
+  vite-bundle-visualizer:             ~1.2.1     # still need to plug this in correctly, or replace it
   vite-plugin-static-copy:            ~1.0.5     # copy files needed for builds, (e.g. fly.toml for deploying servers)
 
   # primarily for stuff in scripts directory (build scripts and small experiments)
   chokidar:                           ~3.6.0     # for file-watching in build utilities
   glob:                               ~10.3.12   # file matching patterns
-  ws:                                 ~8.13.0    # for websockets in node apps
+  ws:                                 ~8.17.0    # for websockets in node apps
   '@types/ws':                        ~8.5.3     # for types needed by fastify websocket
   minimist: ~1.2.8                               # lightweight cli argument processing
   ts-node:                            ~10.9.1    # no fuss run typescript directly without bundling
