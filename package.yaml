@@ -40,7 +40,7 @@ devDependencies:
   typescript:                         ~5.4.5
   vite:                               ~5.3.1     # standardizing on vite for building libs and apps
   vitest:                             ~1.4.0     # a jest-like test runner for vite
-  vite-bundle-visualizer:             ~1.2.1     # still need to plug this in correctly, or replace it
+  vite-bundle-analyzer:               ~0.10.3    # still need to plug this in correctly, or replace it
   vite-plugin-static-copy:            ~1.0.5     # copy files needed for builds, (e.g. fly.toml for deploying servers)
 
   # primarily for stuff in scripts directory (build scripts and small experiments)
