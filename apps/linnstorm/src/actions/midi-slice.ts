@@ -108,7 +108,7 @@ const reducers:MidiReducers = {
       const prevRecord = s.recordable[keyForRecordable];  // find if it was already in the device list it will remain whether connected
 
       // go with previous status when recording, otherwise check the item as recordable
-      const isRecordable = prevRecord === undefined? true: prevRecord;// preserve previous recordable status if it changed, regardless of whether connected
+      const isRecordable = prevRecord === undefined? false: prevRecord;// preserve previous recordable status if it changed, regardless of whether connected
 
       const recordable = {...s.recordable, [keyForRecordable]:isRecordable};
       return {...s, linnsConnected, connected, recordable};
