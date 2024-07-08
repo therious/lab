@@ -1,0 +1,27 @@
+name:         '@therious/angman'
+version:      0.0.1
+description:  Angular app
+main:         dist/index.js
+type:         module
+scripts:
+  start:      vite
+  build:      tsc && vite build
+  preview:    vite preview
+devDependencies:
+  autoprefixer: ~10.4.19
+  postcss:      ~8.4.39
+  tailwindcss:  ~3.4.4
+  typescript:   ~5.4.5
+  vite:         ~5.3.1
+
+# see https://stackoverflow.com/questions/78231143/angular-ng0912-warning-component-id-generation-collision-detected-after-upgradi
+# upgrading to version 17 or later generates this issue
+dependencies:
+  "@angular/common":            &angversion  ~18.0.6 #16.2.4
+  "@angular/compiler":          *angversion
+  "@angular/core":              *angversion
+  "@angular/platform-browser":  *angversion
+  "@angular/router":            *angversion
+  rxjs:                         ~7.5.7
+  zone.js:                      ~0.14.7
+
