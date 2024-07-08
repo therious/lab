@@ -1,6 +1,6 @@
 import { Route, provideRouter } from '@angular/router';
 
-const routes: Route[] = [
+const routeInfo: Route[] = [
   {
     path: '',
     loadComponent: () => import('./home.component').then(c => c.HomeComponent)
@@ -12,6 +12,6 @@ const routes: Route[] = [
 ];
 
 
-export const appRouting = [
-  provideRouter(routes)
+export const routes = [
+  provideRouter(routeInfo)
 ]
