@@ -6,7 +6,7 @@ import { AppComponent } from './app.component';
 // import { NgZone } from '@angular/core';
 
 import './index.css'
-import { appRouting } from "./app.routing";
+import { routes } from "./routes";
 
 
 bootstrapApplication(AppComponent, {
@@ -15,7 +15,7 @@ bootstrapApplication(AppComponent, {
     //     provide: NgZone,
     //     useValue: new NgZone({ shouldCoalesceEventChangeDetection: false })
     // },
-    ...appRouting
+    ...routes
   ]
 });
 
