@@ -3,6 +3,8 @@ type SecretsBag = {
   DOPPLER_PROJECT:      string,       // identifier of the project e.g. "lab" ( a generic top level, rather than app level project)
   DOPPLER_ENVIRONMENT:  string,       // e.g. dev, stg, prod or a decendent of one of those (in case you use decendent rather than $$$ more doppler projects)
   DOPPLER_CONFIG:       string,       // name of current config
+  WORKOS_CLIENT_ID:string,     // auth system account
+  WORKOS_API_KEY: string,
   EDGEDB_PERMAKEY_SU:   string,
   HARMLESS_SECRET:      string
 };
