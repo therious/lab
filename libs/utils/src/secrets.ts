@@ -3,10 +3,21 @@ type SecretsBag = {
   DOPPLER_PROJECT:      string,       // identifier of the project e.g. "lab" ( a generic top level, rather than app level project)
   DOPPLER_ENVIRONMENT:  string,       // e.g. dev, stg, prod or a decendent of one of those (in case you use decendent rather than $$$ more doppler projects)
   DOPPLER_CONFIG:       string,       // name of current config
-  WORKOS_CLIENT_ID:string,     // auth system account
-  WORKOS_API_KEY: string,
+  WORKOS_CLIENT_ID:     string,       // auth system account  (testing, might superceded with supabase auth system)
+  WORKOS_API_KEY:       string,
   EDGEDB_PERMAKEY_SU:   string,
-  HARMLESS_SECRET:      string
+  HARMLESS_SECRET:      string,
+
+  // SUPA_LAB refers to a supabase project "lab" under the Therious org
+
+  SUPA_ACCESS_TOKEN:    string,       // overall access to supabase account
+  SUPA_THERIOUS_SLUG:   string,       // supabase org, called Therious has a slug
+
+  SUPA_LAB_JWT:         string,       // what lab encodes/decodes jwt tokens with (for its auth module)
+  SUPA_LAB_API_KEY:     string,       // api access to the lab db accessed with RLS (row level security)
+  SUPA_LAB_API_KEY_SERVICE_ROLE: string,  // api key bypassing row level security
+  SUPA_LAB_DB_PWD:      string,       // password access to lab db
+  SUPA_LAB_URL:         string,       // access to supabase lab db via url
 };
 
 type SecretsKey = keyof SecretsBag;
@@ -16,7 +27,15 @@ type SecretsKey = keyof SecretsBag;
 // need an iterable form of SecretsBag keys
 export const expectedSecretsKeys:SecretsKey[] = [
 'HARMLESS_SECRET','EDGEDB_PERMAKEY_SU',
-'DOPPLER_PROJECT', 'DOPPLER_ENVIRONMENT','DOPPLER_CONFIG'];
+'WORKOS_CLIENT_ID', 'WORKOS_API_KEY',
+  'SUPA_ACCESS_TOKEN',
+  'SUPA_LAB_API_KEY',
+  'SUPA_LAB_API_KEY_SERVICE_ROLE',
+  'SUPA_LAB_DB_PWD',
+  'SUPA_LAB_JWT',
+  'SUPA_LAB_URL',
+  'SUPA_THERIOUS_SLUG'
+];
 
 const fakeSecretsValue = 'xxx';
 const expectedSecretsBag:SecretsBag = expectedSecretsKeys.reduce((accum, key:SecretsKey) => {
@@ -40,7 +59,7 @@ export function isSecretsBag(obj:object):obj is SecretsBag {
 }
 
 const list = (arr:string[], name:string) =>
-  `
+`
 =============================
 ${name}:
 -----------------------------
