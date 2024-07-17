@@ -1,12 +1,6 @@
 .App {
   text-align: center;
-}
-
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+  background: linear-gradient(180deg, #e2e9f6 0%, #2d4d76 100%);
 }
 
 .App-header {
@@ -18,13 +12,5 @@
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
-}
-
-button {
-  margin-left: 10px;
-  margin-right: 10px;
-  margin-top: 10px;
-  margin-bottom: 5px;
-
 }
 
