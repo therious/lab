@@ -3,29 +3,34 @@ version: 0.1.0
 private: true
 
 dependencies:
-  '@therious/utils':                  'workspace:*'
-  '@therious/random':                 'workspace:*'    #todo get rid of random in favor of utils?
-  '@therious/boot':                   'workspace:*'
-  '@therious/fsm':                    'workspace:*'
-  '@therious/actions':                'workspace:*'   # common set of reduxy-type actions (pure functions, not redux)
-  '@therious/components':             'workspace:*'
+  '@therious/utils':                  &ws      'workspace:*'
+  '@therious/random':                 *ws      # todo get rid of random in favor of utils?
+  '@therious/boot':                   *ws
+  '@therious/fsm':                    *ws
+  '@therious/actions':                *ws      # common set of reduxy-type actions (pure functions, not redux)
+  '@therious/components':             *ws
+  '@supabase/supabase-js':            ~2.44.3  # running a query directly from client
+  '@supabase/auth-ui-react':          ~0.4.7   # client-side auth component
+  '@supabase/auth-ui-shared':         ~0.1.8   # client-side auth
+  '@marsidev/react-turnstile':        ~0.7.2   # cloudflare's captcha
   immer:                              ~10.0.4
   js-yaml:                            ~4.1.0
   react:                              ~18.2.0
   react-dom:                          ~18.2.0
+  react-router-dom:                   ~6.24.0
   redux:                              ~4.2.1
   react-redux:                        ~7.2.9
   reselect:                           ~4.1.7
-  reflect-metadata:                   ~0.1.13 #needed for tsyringe, and fancy decorator stuff
+  reflect-metadata:                   ~0.1.13  # needed for tsyringe, and fancy decorator stuff
   styled-components:                  ~6.1.8
-  stylis:                             ~4.3.1  # a dependency of styled-components, apparently is it necessary to pull directly
-  typescript:                         ~5.4.5  # upgrade this when react 19 available?  todo why isn't this a dev dependency?
-  vis-network:                        ~9.1.9  # used to plot railroad track network
+  stylis:                             ~4.3.1   # a dependency of styled-components, apparently is it necessary to pull directly
+  typescript:                         ~5.4.5   # upgrade this when react 19 available?  todo why isn't this a dev dependency?
+  vis-network:                        ~9.1.9   # used to plot railroad track network
   web-vitals:                         ^2.1.4
-  xstate:                             4.28.1  # or maybe 4.28.1 or 4.23.1 is last one latest= 5.9.1 I have actually successfully used?
+  xstate:                             4.28.1   # or maybe 4.28.1 or 4.23.1 is last one latest= 5.9.1 I have actually successfully used?
 
 scripts:
-  start:   VITE_CJS_IGNORE_WARNING=true vite  #it looks like react-swc plugin might be cause of the warning I am turning off?
+  start:   VITE_CJS_IGNORE_WARNING=true vite   #it looks like react-swc plugin might be cause of the warning I am turning off?
   build:   tsc && vite build
   preview: vite preview
   lint:    eslint . --ext js,jsx,ts,tsx
