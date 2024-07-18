@@ -14,11 +14,15 @@
 |-------------|-------------------|------------------------------------------------------------------------|
 | Shell       | electron          | uses "channels" to plug in multiple clients and localized demo servers |
 
-| Backend Role   | Choice(s)        | Comments                                                                                                |
-|----------------|------------------|---------------------------------------------------------------------------------------------------------|
-| Graph database | Memgraph         | A Neo4J in memory graph database supporting cypher, other similar choices would be Neo4J, AWS Neptune   |
-| Secrets        | Doppler          | Capable and good enough for free tier                                                                   |
-| Devops         | Gitlab or Github | Github does not have a true merge-ff policy as Gitlab does, but Github has more other low cost features |   
+| Backend Role    | Choice(s)            | Comments                                                                                                |
+|-----------------|----------------------|---------------------------------------------------------------------------------------------------------|
+| Graph database  | Memgraph             | A Neo4J in memory graph database supporting cypher, other similar choices would be Neo4J, AWS Neptune   |
+| SQL database    | Supabase             | A Postgres database with a built in auth system, also has a realtime database, and storage.             |
+| Authentication  | via Supabase         | A Postgres database with a built in auth system, also has a realtime database, and storage.             |
+| Captcha         | Cloudflare Turnstile |                                                                                                         |
+| Email           | AWS SES              |                                                                                                         |
+| Secrets         | Doppler              | Capable and good enough for free tier                                                                   |
+| Devops          | Gitlab or Github     | Github does not have a true merge-ff policy as Gitlab does, but Github has more other low cost features |   
 
 # Other Technical choices/preferences
 * Sign in
