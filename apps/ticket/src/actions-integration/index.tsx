@@ -2,6 +2,7 @@
 import {Provider, TypedUseSelectorHook, useSelector as reduxUseSelector} from "react-redux";
 import React from "react";
 import {integrate} from '@therious/actions';
+import {BrowserRouter} from 'react-router-dom';
 
 import {allSlices, allMiddlewares, middlewareInits, TotalState} from "../actions/combined-slices";
 
@@ -10,7 +11,14 @@ export const {store, actions} = integrate(allSlices, allMiddlewares, middlewareI
 export function connectRootComponent(WrappedComponent: React.FunctionComponent):React.FunctionComponent {
   // Creating the inner component. The calculated Props type here is the where the magic happens.
   // @ts-ignore
-  const component = () => <Provider store={store}><WrappedComponent/></Provider>;
+  const component = () =>
+    <React.StrictMode>
+      <Provider store={store}>
+        <BrowserRouter>
+          <WrappedComponent/>
+        </BrowserRouter>
+      </Provider>
+    </React.StrictMode>;
   component.displayName = `ReduxConnected(${WrappedComponent.displayName || WrappedComponent.name || 'Component'})`;
   return component;
 }
