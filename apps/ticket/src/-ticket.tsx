@@ -8,6 +8,8 @@ import reportWebVitals from './reportWebVitals';
 import {connectRootComponent} from './actions-integration';
 import {Config, Inflate} from "@therious/boot";
 import './fsm/some-tests';
+import "@therious/utils"
+
 
 (async ()=>{
   try {

@@ -9,7 +9,6 @@ import {PlayerView} from './PlayerView';
 import {dealCardsSoundEffect, playShuffleSound, playVend} from './effects/sounds';
 import styled from 'styled-components';
 const ta = actions.ticket;
-import {useSession, signout} from './auth';
 
 const playerColors = ['red', 'blue', 'green', 'orange'];
 const playerOrdinals = ['first', 'second', 'third', 'fourth'];
@@ -23,19 +22,11 @@ const Button = styled.button`
 
 export const Game = () =>
 {
-  const [user, session] = useSession();
   const {players, turn, whoPlaysNow} = useSelector<TicketState>(s => s.ticket);
   const dealColorCards = useCallback((count:number)=>{
     const clippedCount = Math.min(game.colorDeck.remaining().length, count);
     dealCardsSoundEffect(clippedCount, ()=>ta.drawColors(game.colorDeck.deal(1)), ta.nextPlayer);
   },[]);
-  const signoutButtonHandler   = useCallback(()=>{
-    console.log(`dumping user & session info`, user,session)
-    signout();
-
-    },[]);
-
-
   const getFive   = useCallback(()=>dealColorCards(5),[dealColorCards]);
   const getTwo    = useCallback(()=>dealColorCards(2),[dealColorCards]);
   const getTicket = useCallback(()=>{playVend(); ta.drawTicket(game.ticketDeck.deal(1)[0])},[]);
@@ -57,7 +48,6 @@ export const Game = () =>
       <Button disabled={turn >= players.length} onClick={getFive}>Get initial color cards</Button>
       <Button onClick={getTwo}>Get two color cards</Button>
       <Button disabled={players[whoPlaysNow]?.ticketsInHand.length >= 2} onClick={getTicket}>Get a ticket</Button>
-      <Button onClick={signoutButtonHandler}>Dump user, session info</Button>
       <div style={{display:'flex'}}>
         {players.map(((player,index) => <PlayerView key={index} player={player}/>))}
       </div>

@@ -1,54 +1,75 @@
-import React,  {useCallback} from 'react';
-import './App.css';
+import { useState, useEffect, useCallback } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { Game } from './Game';
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa }  from '@supabase/auth-ui-shared';
+import {Modalize} from '@therious/components';
+import {useSession, providers, signout} from './auth';
+import {Countries} from './Countries';
 
-import {game} from './ticket/Game';
-import {MapView} from './MapView';
-import {actions, useSelector} from './actions-integration';
-import {TicketState} from './actions/ticket-slice';
-import {PlayerView} from './PlayerView';
-import {dealCardsSoundEffect, playShuffleSound, playVend} from './effects/sounds';
+import { useLocation, Route,Routes, useNavigate } from 'react-router-dom';
+import {Layout, CenterBody, MyNavLink, Navbar} from './Navbar';
 
-const ta = actions.ticket;
+const supabaseUrl = 'https://lkeoolxvzgdecjewboiz.supabase.co';
+const supabaseApiKey = import.meta.env.VITE_SUPA_LAB_API_KEY;
 
-const playerColors = ['red', 'blue', 'green', 'orange'];
-const playerOrdinals = ['first', 'second', 'third', 'fourth'];
+const supabase = createClient(supabaseUrl, supabaseApiKey);
 
-function App() {
-  const {players, turn, whoPlaysNow} = useSelector<TicketState>(s => s.ticket);
-  const dealColorCards = useCallback((count:number)=>{
-    const clippedCount = Math.min(game.colorDeck.remaining().length, count);
-    dealCardsSoundEffect(clippedCount, ()=>ta.drawColors(game.colorDeck.deal(1)), ta.nextPlayer);
-  },[]);
 
-  const getFive   = useCallback(()=>dealColorCards(5),[dealColorCards]);
-  const getTwo    = useCallback(()=>dealColorCards(2),[dealColorCards]);
-  const getTicket = useCallback(()=>{playVend(); ta.drawTicket(game.ticketDeck.deal(1)[0])},[]);
+// const PrivateRoute = ({ user, children, redirect }) => {
+//   const authenticate = localStorage.getItem('jwtToken') ? true : false;
+//   const location = useLocation();
+//   return authenticate ? (
+//     children
+//   ) : (
+//     <Navigate
+//       to={`/auth/login?redirect=${encodeURIComponent(redirect || location.pathname)}`}
+//     />
+//   );
+// };
 
-  const addPlayer = useCallback(() =>{
-    const name = prompt(`What is player ${playerOrdinals[players.length]} name?`);
-    ta.addPlayer({name: name, color: playerColors[players.length]});
-  }, [players]);
+const Profile = () => {
+ return <>profile here</>
+};
+
+const Signout = () => {
+  const navigate = useNavigate();
+  const cb = useCallback(async ()=>{await signout(); navigate('/')},[]);
 
   return (
-    <div className="App">
-      <button onClick={() => {
-      playShuffleSound();
-        ta.resetGame()
-      }}>Reset Game
-      </button>
-      <button disabled={turn > 1 || players.length >= playerColors.length}
-              onClick={addPlayer}>Add {playerOrdinals[players.length]} player
-      </button>
-      <button disabled={turn >= players.length} onClick={getFive}>Get initial color cards</button>
-      <button onClick={getTwo}>Get two color cards</button>
-      <button disabled={players[whoPlaysNow]?.ticketsInHand.length >= 2} onClick={getTicket}>Get a ticket</button>
-      <div style={{display:'flex'}}>
-        {players.map(((player,index) => <PlayerView key={index} player={player}/>))}
-      </div>
-      <hr/>
-      <MapView/>
-    </div>
-  );
+  <Modalize $maxWidth={"350px"}>
+  <h1>Signout?</h1>
+  <hr/>
+    <button onClick={cb}>Signout</button>
+  </Modalize>);
 }
 
-export default App;
+type SessionRec    = unknown;
+
+export default function App() {
+  const [session, _] = useSession();
+  const curPath = useLocation().pathname;
+
+  return session?
+  <Layout>
+    <Navbar>
+      <MyNavLink curPath={curPath} to="/"         >Game     </MyNavLink>
+      <MyNavLink curPath={curPath} to="/countries">Countries</MyNavLink>
+      <MyNavLink curPath={curPath} to="/profile"  >Profile  </MyNavLink>
+      <MyNavLink curPath={curPath} to="/signout"  >Signout  </MyNavLink>
+    </Navbar>
+    <CenterBody>
+      <Routes>
+        <Route path="/"          element={<Game/>     }/>
+        <Route path="/countries" element={<Countries/>}/>
+        <Route path="/profile"   element={<Profile/>  }/>
+        <Route path="/signout"   element={<Signout/>  }/>
+      </Routes>
+    </CenterBody>
+  </Layout>
+  :
+  <Modalize $maxWidth={"350px"}>
+    <Auth providers={providers} supabaseClient={supabase} appearance={{ theme: ThemeSupa }} />
+  </Modalize>
+  ;
+}
