@@ -1,6 +1,7 @@
 import {FsmControl } from './fsm-control';
 import {FsmEvent, FsmConfig, FsmDefinition, FsmInstance} from './fsm-types';
-import {fsmConfigToPlantUml } from './fsm-visualization';
+import {fsmConfigToPlantUml } from './fsm-visualization-plantuml';
+import {fsmConfigToDot} from './fsm-visualization-dot';
 
 import {reqIdGenerateInternal, reqIdDescribe} from '@therious/utils';
 
@@ -12,6 +13,7 @@ export class FsmTest
   private readonly fsminst:FsmInstance;
   private readonly promise: Promise<void>;
   private umlText: string;
+  private dotText: string;
   constructor(
   readonly fsmConfig:FsmConfig,
   readonly testEvents: FsmTestArray,
@@ -20,6 +22,7 @@ export class FsmTest
   {
     this.fsmdef = FsmControl.define(fsmConfig, behavior, {logGuard:null, logUpdates:'@!!! update'});
     this.umlText = fsmConfigToPlantUml(this.fsmConfig);
+    this.dotText = fsmConfigToDot(this.fsmConfig);
     this.fsminst = FsmControl.instantiate(this.fsmdef);
     this.promise = this.test();
 
