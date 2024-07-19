@@ -8,6 +8,7 @@ node_modules/
 
 # testing
 coverage/
+https/
 
 # production
 build/
@@ -28,6 +29,7 @@ libs/actions/index.ts
 libs/utils/index.ts
 libs/fsm/index.ts
 libs/ddd/index.ts
+**/nohup.out
 
 # docs folder may contain notes, works in progress, or files that are "dirty" with secrets
 # keep these in ignored exclude folder to prevent commit
