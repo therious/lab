@@ -1,19 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { useCallback } from 'react';
 import { Game } from './Game';
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa }  from '@supabase/auth-ui-shared';
 import {Modalize} from '@therious/components';
-import {useSession, providers, signout} from './auth';
+import {useSession, signout} from './auth';
 import {Countries} from './Countries';
 
 import { useLocation, Route,Routes, useNavigate } from 'react-router-dom';
 import {Layout, CenterBody, MyNavLink, Navbar} from './Navbar';
+import {Login} from './Login';
 
-const supabaseUrl = 'https://lkeoolxvzgdecjewboiz.supabase.co';
-const supabaseApiKey = import.meta.env.VITE_SUPA_LAB_API_KEY;
-
-const supabase = createClient(supabaseUrl, supabaseApiKey);
 
 
 // const PrivateRoute = ({ user, children, redirect }) => {
@@ -68,8 +62,6 @@ export default function App() {
     </CenterBody>
   </Layout>
   :
-  <Modalize $maxWidth={"350px"}>
-    <Auth providers={providers} supabaseClient={supabase} appearance={{ theme: ThemeSupa }} />
-  </Modalize>
+  <Modalize $maxWidth={"320px"}><Login/></Modalize>
   ;
 }

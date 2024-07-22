@@ -128,6 +128,9 @@ importers:
       '@angular/router':
         specifier: ~18.0.6
         version: 18.0.6(@angular/common@18.0.6)(@angular/core@18.0.6)(@angular/platform-browser@18.0.6)(rxjs@7.5.7)
+      '@workos-inc/js':
+        specifier: 0.0.23
+        version: 0.0.23
       rxjs:
         specifier: ~7.5.7
         version: 7.5.7
@@ -313,15 +316,9 @@ importers:
 
   apps/ticket:
     dependencies:
-      '@marsidev/react-turnstile':
-        specifier: ~0.7.2
-        version: 0.7.2(react-dom@18.2.0)(react@18.2.0)
-      '@supabase/auth-ui-react':
-        specifier: ~0.4.7
-        version: 0.4.7(@supabase/supabase-js@2.44.3)
-      '@supabase/auth-ui-shared':
-        specifier: ~0.1.8
-        version: 0.1.8(@supabase/supabase-js@2.44.3)
+      '@hcaptcha/react-hcaptcha':
+        specifier: ~1.0.0
+        version: 1.0.0(react-dom@18.2.0)(react@18.2.0)
       '@supabase/supabase-js':
         specifier: ~2.44.3
         version: 2.44.3
@@ -1537,6 +1534,16 @@ packages:
       glob: 10.3.12
     dev: false
 
+  /@hcaptcha/react-hcaptcha@1.0.0(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-YSxLVxwQ1ICZaCpKr3yQ2gSrPK/e1/K4+OpmVPq1kzoVbeJo+GCXOXiw8On1bbIYf8h6CifJeKl+EP/AD1eswg==}
+    peerDependencies:
+      react: '>= 16.3.0'
+      react-dom: '>= 16.3.0'
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
   /@hpcc-js/wasm@2.16.2:
     resolution: {integrity: sha512-THiidUMYR8/cIfFT3MVcWuRE7bQKh295nrFBxGvUNc4Nq8e2uU1LtiplHs7AUkJ0GxgvZoR+8TQ1/E3Qb/uE2g==}
     hasBin: true
@@ -1736,16 +1743,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
-
-  /@marsidev/react-turnstile@0.7.2(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-0jwLvAUkcLkaYaS6jBOZB3zzUiKi5dU3kZtlaeBX6yV7Y4CbFEtfHCY352ovphNz1v0ZjpOj6+3QUczJvD56VA==}
-    peerDependencies:
-      react: '>=16.8.0'
-      react-dom: '>=16.8.0'
-    dependencies:
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
 
   /@nodelib/fs.scandir@2.1.5:
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -2383,35 +2380,10 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /@stitches/core@1.2.8:
-    resolution: {integrity: sha512-Gfkvwk9o9kE9r9XNBmJRfV8zONvXThnm1tcuojL04Uy5uRyqg93DC83lDebl0rocZCfKSjUv+fWYtMQmEDJldg==}
-    dev: false
-
   /@supabase/auth-js@2.64.2:
     resolution: {integrity: sha512-s+lkHEdGiczDrzXJ1YWt2y3bxRi+qIUnXcgkpLSrId7yjBeaXBFygNjTaoZLG02KNcYwbuZ9qkEIqmj2hF7svw==}
     dependencies:
       '@supabase/node-fetch': 2.6.15
-    dev: false
-
-  /@supabase/auth-ui-react@0.4.7(@supabase/supabase-js@2.44.3):
-    resolution: {integrity: sha512-Lp4FQGFh7BMX1Y/BFaUKidbryL7eskj1fl6Lby7BeHrTctbdvDbCMjVKS8wZ2rxuI8FtPS2iU900fSb70FHknQ==}
-    peerDependencies:
-      '@supabase/supabase-js': ^2.21.0
-    dependencies:
-      '@stitches/core': 1.2.8
-      '@supabase/auth-ui-shared': 0.1.8(@supabase/supabase-js@2.44.3)
-      '@supabase/supabase-js': 2.44.3
-      prop-types: 15.8.1
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
-  /@supabase/auth-ui-shared@0.1.8(@supabase/supabase-js@2.44.3):
-    resolution: {integrity: sha512-ouQ0DjKcEFg+0gZigFIEgu01V3e6riGZPzgVD0MJsCBNsMsiDT74+GgCEIElMUpTGkwSja3xLwdFRFgMNFKcjg==}
-    peerDependencies:
-      '@supabase/supabase-js': ^2.21.0
-    dependencies:
-      '@supabase/supabase-js': 2.44.3
     dev: false
 
   /@supabase/functions-js@2.4.1:
@@ -9353,6 +9325,11 @@ packages:
     resolution: {integrity: sha512-sh8PWc/ftMqAAdFiBu6Fy6JUOYjqDJBJvIhpfDMyHrr0Rbp5liZqd4TjtQ/RgfLjKFZb+LMx5hpml5qOWy0qvg==}
     dev: true
 
+  /split-on-first@1.1.0:
+    resolution: {integrity: sha512-43ZssAJaMusuKWL8sKUBQXHWOpq8d6CfN/u1p4gUzfJkM05C8rxTmYrkIPTXapZpORA6LkkzcUulJ8FqA7Uudw==}
+    engines: {node: '>=6'}
+    dev: false
+
   /split2@3.2.2:
     resolution: {integrity: sha512-9NThjpgZnifTkJpzTZ7Eue85S49QwpNhZTq6GRJwObb6jnLFNGB7Qm73V5HewTROPyxD0C29xqmaI68bQtV+hg==}
     dependencies:
@@ -9409,6 +9386,11 @@ packages:
   /std-env@3.7.0:
     resolution: {integrity: sha512-JPbdCEQLj1w5GilpiHAx3qJvFndqybBysA3qUOnznweH4QbNYUsW/ea8QzSrnh0vNsezMMw5bcVool8lM0gwzg==}
     dev: true
+
+  /strict-uri-encode@2.0.0:
+    resolution: {integrity: sha512-QwiXZgpRcKkhTj2Scnn++4PKtWsH0kpzZ62L2R6c/LUVYv7hVnZqcg2+sMuT6R7Jusu1vviK/MFsu6kNJfWlEQ==}
+    engines: {node: '>=4'}
+    dev: false
 
   /string-width@4.2.3:
     resolution: {integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==}
