@@ -10,9 +10,7 @@ dependencies:
   '@therious/actions':                *ws      # common set of reduxy-type actions (pure functions, not redux)
   '@therious/components':             *ws
   '@supabase/supabase-js':            ~2.44.3  # running a query directly from client
-  '@supabase/auth-ui-react':          ~0.4.7   # client-side auth component
-  '@supabase/auth-ui-shared':         ~0.1.8   # client-side auth
-  '@marsidev/react-turnstile':        ~0.7.2   # cloudflare's captcha
+  '@hcaptcha/react-hcaptcha':         ~1.0.0   # a captcha supported by supabase auth
   immer:                              ~10.0.4
   js-yaml:                            ~4.1.0
   react:                              ~18.2.0
