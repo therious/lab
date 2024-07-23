@@ -10,7 +10,7 @@ const captchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITEKEY
 const redirectTo = import.meta.env.VITE_SUPA_REDIRECT_URL;
 const {auth} = createClient(supabaseUrl, supabaseAnonKey);
 
-const LoginDiv = styled.div`
+const LoginDiv = styled.form`
   display: flex;
   flex-direction: row;
   flex-grow: 1;
