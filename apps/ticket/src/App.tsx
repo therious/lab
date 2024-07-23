@@ -28,7 +28,7 @@ const Profile = () => {
 
 const Signout = () => {
   const navigate = useNavigate();
-  const cb = useCallback(async ()=>{await signout(); navigate('/')},[]);
+  const cb = useCallback(async ()=>{await signout(); navigate('/')},[navigate]);
 
   return (
   <Modalize $maxWidth={"350px"}>
