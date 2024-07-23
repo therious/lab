@@ -4,10 +4,10 @@ import { createClient, AuthResponse, AuthTokenResponsePassword, AuthUser, AuthEr
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import {styled} from 'styled-components'
 // Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPA_BASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPA_LAB_API_KEY;
-const captchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY
-
+const supabaseUrl = import.meta.env.VITE_SUPA_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPA_ANON_KEY;
+const captchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITEKEY
+const redirectTo = import.meta.env.VITE_SUPA_REDIRECT_URL;
 const {auth} = createClient(supabaseUrl, supabaseAnonKey);
 
 const LoginDiv = styled.div`
@@ -86,7 +86,7 @@ export const Login = () => {
   const signup = async (e:React.MouseEvent) => {
     if(handlerPrelude(e)) return;
 
-    const { error } = await auth.signUp({ email, password, options:{captchaToken}});
+    const { error } = await auth.signUp({ email, password, options:{captchaToken,emailRedirectTo:redirectTo}});
     if(error) advSetter([error.message,'error']);
     else advSetter(messages.goodSignup);
   };
@@ -94,7 +94,7 @@ export const Login = () => {
   const reset = async (e:React.MouseEvent) => {
     if(handlerPrelude(e)) return;
 
-    const { error } = await auth.resetPasswordForEmail(email, {captchaToken});
+    const { error } = await auth.resetPasswordForEmail(email, {captchaToken, redirectTo});
     if(error) advSetter([error.message,'error']);
     else advSetter(messages.goodReset);
   };
