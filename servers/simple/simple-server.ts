@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import fastify from 'fastify';
+import fastify, {FastifyListenOptions, } from 'fastify';
 import fstatic from '@fastify/static';
 import {secretsReport} from '@therious/utils/src/secrets';
 import {reqIdGenerate, reqIdDescribe} from '@therious/utils/src/snowflake';
@@ -8,6 +8,8 @@ import * as process from 'node:process';
 import path from 'node:path';
 import fs from 'node:fs';
 import {fileURLToPath} from 'node:url';
+
+import * as auth from './src/auth';
 
 type MyConfig = Partial<{server: {port: number}, welcome: string}>;
 
@@ -36,28 +38,70 @@ function staticServeDir():string
   return `${locationOfThisSourceFile}${suffix}`;
 }
 
-const app = async () => {
-
-  let config:MyConfig = {};
-  const secrets = secretsReport();
-
-  setCurrentDirectory();
-  const __dirname = staticServeDir();
+type MySetup = {
+  config:MyConfig,
+  host:string,
+  port:any,
+  key:Buffer,
+  cert:Buffer,
+  __dirname:string,
+  secrets:string,
+};
+const setup = async ()=>{
 
   try {
     const url = `/config/config.yaml`;
     console.warn(`attempting to load config from`,url);
-    config = await Config.fetch(url) as MyConfig;
+    const config:MyConfig = await Config.fetch(url) as MyConfig;
     console.warn(`config loaded`,config);
     // const inflate = new Inflate(config);
     // const extendedConfig = inflate.intializeSequence('bootSequence');
     // console.warn(`extendedConfig `,extendedConfig);
 
+    const secrets = secretsReport();
+
+    console.log(`secrets:`, secrets);
+
+    const host = import.meta.env.PROD? '0.0.0.0': 'localhost';
+    const port = import.meta.env.PROD ? config?.server?.port: 3000;
+
+    setCurrentDirectory();
+    const __dirname = staticServeDir();
+    const key  =  fs.readFileSync(path.join(__dirname, "..", "https", `${host}.key`));
+    const cert =  fs.readFileSync(path.join(__dirname, "..", "https", `${host}.cert`));
+
+    console.log(`__dirname: "${__dirname}"`);
+    console.log(`host: "${host}", port: ${port}`);
+    console.log(` key: "${key}"`);
+    console.log(`cert: "${cert}"`);
+    return {host,port,key,cert,secrets,__dirname,config};
   } catch(e) {
     console.error(e);
+    throw(e);
   }
 
-  const app = fastify();
+};
+
+
+
+
+
+
+const app = async () => {
+
+
+  const {host,port,key,cert,secrets,config,__dirname} = await setup();
+
+// newly added https support for localhost/0.0.0.0 __dirname might not be the right value
+// for one or both of dev and build use cases
+  const app = fastify(
+  // {
+  //   http2: true,
+  //   https: {   key, cert, allowHTTP1: true, /* fallback support for HTTP1 */}
+  // }
+  //
+  );
+
 // maybe move this down if we serve static files from public directory with '/' just slash
 // and it competes with /api/*
   app?.register(fstatic, {
@@ -93,10 +137,20 @@ const app = async () => {
   });
 
 
+  // authorization
+  const authCallbackRoute = '/authcb';
+  auth.setAuthRedirectUrl(`http://${host}:${port}${authCallbackRoute}`);
+
+  //@ts-ignore
+  app?.get(authCallbackRoute, auth.authCallbackResponder);
+  //@ts-ignore
+  app?.get('/auth', auth.authResponder);
+
+
   console.log('import meta env', import.meta.env);
   console.log('config loaded is ', config);
   if (import.meta.env.PROD)
-    app?.listen({host:'0.0.0.0', port: config?.server?.port});
+    app?.listen({host, port});
 
   return app;
 };
