@@ -7,7 +7,7 @@ import {Countries} from './Countries';
 import { useLocation, Route,Routes, useNavigate } from 'react-router-dom';
 import {Layout, CenterBody, MyNavLink, Navbar} from './Navbar';
 import {Login} from './Login';
-
+import {RtStorage} from './RtStorage';
 
 
 // const PrivateRoute = ({ user, children, redirect }) => {
@@ -44,10 +44,12 @@ export default function App() {
   const [session, _] = useSession();
   const curPath = useLocation().pathname;
 
-  return session?
+  return (session || true)?
   <Layout>
     <Navbar>
       <MyNavLink curPath={curPath} to="/"         >Game     </MyNavLink>
+      <MyNavLink curPath={curPath} to="/patches"  >Patches  </MyNavLink>
+
       <MyNavLink curPath={curPath} to="/countries">Countries</MyNavLink>
       <MyNavLink curPath={curPath} to="/profile"  >Profile  </MyNavLink>
       <MyNavLink curPath={curPath} to="/signout"  >Signout  </MyNavLink>
@@ -55,6 +57,7 @@ export default function App() {
     <CenterBody>
       <Routes>
         <Route path="/"          element={<Game/>     }/>
+        <Route path="/patches"   element={<RtStorage/>     }/>
         <Route path="/countries" element={<Countries/>}/>
         <Route path="/profile"   element={<Profile/>  }/>
         <Route path="/signout"   element={<Signout/>  }/>
