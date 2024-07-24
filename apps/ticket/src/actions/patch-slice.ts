@@ -185,7 +185,7 @@ const reducers:PatchReducers = {
     const filter  = filterText(cache);
     const patches = patchFilter(cache, filter);
     return {cache, patches, filter};
-    },
+  },
 
   saveFilter: (s, {text}) => {
     const cache   = saveAny(s.cache, text, '', 'filter','filter');
