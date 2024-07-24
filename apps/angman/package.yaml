@@ -24,4 +24,3 @@ dependencies:
   "@angular/router":            *angversion
   rxjs:                         ~7.5.7
   zone.js:                      ~0.14.7
-
