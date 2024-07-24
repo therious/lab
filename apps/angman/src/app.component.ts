@@ -9,7 +9,7 @@ import { RouterLink, RouterOutlet } from '@angular/router';
   template: `
   <p> hello, this is angular, avite </p>
   <a routerLink="/" href="#" class="text-xl font-bold no-underline hover:underline ...">Home | </a>
-  <a routerLink="/about-us" href="#" class="text-xl font-bold no-underline hover:underline ...">About us</a>
+  <a routerLink="/about-us" href="#" class="text-xl font-bold no-underline hover:underline ...">About</a>
   <hr>
   <router-outlet></router-outlet>
   `,
@@ -23,9 +23,7 @@ import { RouterLink, RouterOutlet } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
-  constructor() {
-    console.log("known issue: templateUrl not working on this version. You should try inline template which was commented")
-  }
+  constructor() {}
 
   ngOnInit(): void {}
 }
