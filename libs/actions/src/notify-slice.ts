@@ -9,8 +9,8 @@ import {reqIdGenerateInternal} from '@therious/utils';
 
 // Does
 */
-
-type Remedy = 'Nothing'|'Acknowledge'|'Restart'|'Call Support';
+// need to rethink, cull and document this list of remedies
+type Remedy = 'Nothing'|'Dismiss'|'Acknowledge'|'Log'|'Review'|'Login'|'EnableNetwork'|'Restart'|'ChangeSettings'|'Upgrade'|'Call Support';
 
 // what type of issue is it, if fatal, the application must stop immediately (all future actions are dead)
 type Level = 'info'|'warn'|'error'|'fatal';
