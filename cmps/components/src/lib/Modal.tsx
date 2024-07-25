@@ -46,13 +46,13 @@ const Close = styled.span`
 
 //        <Close>&times;</Close>
 
-export type ModalProps = {content:any, close:any, outsideClose?:boolean}
+export type ModalProps = {content:any, close?:any, outsideClose?:boolean, noclose?:boolean}
 // implemented as a class solely for the sake of the React Ref, per documentation
 
 const nada:MouseEventHandler<HTMLDivElement> = (evt)=>{evt.stopPropagation()};
 
 export function Modal(props:ModalProps) {
-  const {content, outsideClose=false, close=nada} = props;
+  const {content, outsideClose=false, close=nada, noclose=false} = props;
   const ref = useRef<HTMLDivElement>(null);
   const closeIt   = useCallback(()=>{ if(ref.current) ref.current.style.display = 'none';},[]);
   const modalKeys = useCallback((evt:KeyboardEvent)=>{if(evt.keyCode === 27) closeIt()},[]);
@@ -63,16 +63,13 @@ export function Modal(props:ModalProps) {
     return ()=> document.removeEventListener("keydown", modalKeys, false);
   }, []);
 
-
-
    if(!content)
     throw new Error('No content for modal');
 
-
     return(
-    <ModalBackdrop ref={ref} onClick={outsideClose?()=>{closeIt();close()}:nada}>
+    <ModalBackdrop ref={ref} onClick={(outsideClose || noclose)?()=>{closeIt();close()}:nada}>
       <ModalContent onClick={nada}>
-        <Close onClick={closeIt}>&times;</Close>
+        {noclose?null:<Close onClick={closeIt}>&times;</Close>}
         {content}
       </ModalContent>
     </ModalBackdrop>
