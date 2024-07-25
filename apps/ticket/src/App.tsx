@@ -1,14 +1,18 @@
-import { useCallback } from 'react';
-import { Game } from './Game';
+import {useCallback} from 'react';
+import {useLocation, Route,Routes, useNavigate } from 'react-router-dom';
+import {SnackbarProvider} from 'notistack';
+
 import {Modalize} from '@therious/components';
+import {useSelector} from './actions-integration';
 import {useSession, signout} from './auth';
 import {Countries} from './Countries';
+import {Game} from './Game';
 
-import { useLocation, Route,Routes, useNavigate } from 'react-router-dom';
 import {Layout, CenterBody, MyNavLink, Navbar} from './Navbar';
 import {Login} from './Login';
 import {RtStorage} from './RtStorage';
-
+import {NotifyWrapper} from "./react/NotifyWrapper";
+import {TotalState} from './actions/combined-slices';
 
 // const PrivateRoute = ({ user, children, redirect }) => {
 //   const authenticate = localStorage.getItem('jwtToken') ? true : false;
@@ -38,33 +42,39 @@ const Signout = () => {
   </Modalize>);
 }
 
-type SessionRec    = unknown;
-
 export default function App() {
+  const {
+    notify: { notices },
+  } = useSelector<TotalState>(s => s);
+
   const [session, _] = useSession();
   const curPath = useLocation().pathname;
 
-  return (session || true)?
-  <Layout>
-    <Navbar>
-      <MyNavLink curPath={curPath} to="/"         >Game     </MyNavLink>
-      <MyNavLink curPath={curPath} to="/patches"  >Patches  </MyNavLink>
-
-      <MyNavLink curPath={curPath} to="/countries">Countries</MyNavLink>
-      <MyNavLink curPath={curPath} to="/profile"  >Profile  </MyNavLink>
-      <MyNavLink curPath={curPath} to="/signout"  >Signout  </MyNavLink>
-    </Navbar>
-    <CenterBody>
-      <Routes>
-        <Route path="/"          element={<Game/>     }/>
-        <Route path="/patches"   element={<RtStorage/>     }/>
-        <Route path="/countries" element={<Countries/>}/>
-        <Route path="/profile"   element={<Profile/>  }/>
-        <Route path="/signout"   element={<Signout/>  }/>
-      </Routes>
-    </CenterBody>
-  </Layout>
-  :
-  <Modalize $maxWidth={"320px"}><Login/></Modalize>
-  ;
+  return (
+    <SnackbarProvider maxSnack={5} hideIconVariant anchorOrigin={{ vertical: "top", horizontal: "right", }}>
+      <NotifyWrapper />
+      {
+        !session?
+        <Modalize $maxWidth={"320px"}><Login/></Modalize>:
+        <Layout>
+          <Navbar>
+            <MyNavLink curPath={curPath} to="/">Game </MyNavLink>
+            <MyNavLink curPath={curPath} to="/patches">Patches </MyNavLink>
+            <MyNavLink curPath={curPath} to="/countries">Countries</MyNavLink>
+            <MyNavLink curPath={curPath} to="/profile">Profile </MyNavLink>
+            <MyNavLink curPath={curPath} to="/signout">Signout </MyNavLink>
+          </Navbar>
+          <CenterBody>
+            <Routes>
+              <Route path="/" element={<Game/>}/>
+              <Route path="/patches" element={<RtStorage/>}/>
+              <Route path="/countries" element={<Countries/>}/>
+              <Route path="/profile" element={<Profile/>}/>
+              <Route path="/signout" element={<Signout/>}/>
+            </Routes>
+          </CenterBody>
+        </Layout>
+      }
+    </SnackbarProvider>
+  );
 }

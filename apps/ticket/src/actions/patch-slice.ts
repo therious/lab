@@ -23,9 +23,9 @@ type Entry = {
 export type StorageBall = Record<string, Entry>;
 
 
-
+// PatchState is a misnomer, since it contains other types of data like prefs
 export type PatchState = {
-  cache:StorageBall;  // PatchState is a misnomer, since it contains other types of data like prefs
+  cache:StorageBall;
   patches:Entry[];    // these are entries that are patches, and that match the filter (interesting, a rename or saveas could cause the filter to 'disappear')
   filter:string;     // filter for patches
 }
@@ -43,30 +43,27 @@ interface SliceConfig {
 }
 
 // lists of reserved names for 'special' uneditable patch names, and reserved names for all storage keys
-const specialPatchNames:Record<string,1> = {current:1, default:1};
-const allSpecialNames:Record<string,1>  = { ...specialPatchNames, version:1, preferences:1, filter:1}
+const specialPatchNames:Set<string> = new Set<string>(['current', 'default']);
+const allSpecialNames:Set<string>   = new Set<string>( ['current', 'default', 'version', 'preferences', 'filter']);
 
-export function isSpecialName(s:string):boolean
-{
-  return allSpecialNames[s] !== undefined;
-}
-
-export function isSpecialPatchName(s:string):boolean
-{
-  return specialPatchNames[s] !== undefined;
-}
+export const isSpecialName      = (s:string)=>allSpecialNames.has(s);
+export const isSpecialPatchName = (s:string)=>specialPatchNames.has(s);
 
 function convertStorageToCache():StorageBall
 {
   // todo sanitize nonconforming objects in local storage and quarantine that data rather than throw an exception
   // test every key to make sure the data looks correct, and fixup local storage to reflect good stuf
-  let cache = oReduce(Object.entries({...localStorage}), ([k,v]:[string, string])=>{
+
+  const entries = Object.entries({...localStorage});
+
+  const reducer = ([k,v]:[string, string]):[any,any]=>{
     const vv = JSON.parse(v);
     if(typeof vv.data === 'object')
       vv.keys = Object.keys(vv.data).length;
+    return [k, vv];
+  };
 
-    return [k,vv];
-  }, {})
+  let cache = oReduce(entries, reducer, {})
 
   // create minimal data if missing, such as a starting text fil  ter
   if(cache?.filter === undefined)

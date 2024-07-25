@@ -69,7 +69,6 @@ function describePatch(patch:Record<number,number>):string
 }
 
 export const RtStorage = () => {
-  const [filter, setFilter] = useState('');
   const [currentPatchName, setCurrentPatchName] = useState('');
   const [currentPatchData, setCurrentPatchData] = useState(undefined);
   const {
