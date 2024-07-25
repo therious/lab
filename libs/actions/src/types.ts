@@ -19,7 +19,9 @@ export type NextF = BoundAction;
 
 
 
-export const noParamsCreator = {};
+export type EmptyObject = Record<string, never>
+export type Creator = Function | EmptyObject;
+export type Creators = Record<string, Creator>;
 
 export interface ErrorLike  {
   name: string;
@@ -47,6 +49,29 @@ interface Response {
 export interface ResponseAction extends Action {
   response: Response,
   respMeta: ResponseMeta,
+}
+
+export interface When {
+  'req#': number;
+  since: string;
+  reqts: string;
+  appts: string;
+}
+
+export interface OpenRequestP {
+  type: string;
+  url: string;
+  reqId: string;
+}
+
+export interface OpenRequest extends OpenRequestP {
+  when: When;
+}
+
+
+export interface ClosedRequest extends OpenRequest {
+  elapsed: string;
+  elapsedMicros: number;
 }
 
 
