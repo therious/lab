@@ -338,11 +338,11 @@ importers:
         specifier: workspace:*
         version: link:../../libs/utils
       ag-grid-community:
-        specifier: ~30.2.1
-        version: 30.2.1
+        specifier: ~32.0.2
+        version: 32.0.2
       ag-grid-react:
-        specifier: ~30.2.1
-        version: 30.2.1(ag-grid-community@30.2.1)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ~32.0.2
+        version: 32.0.2(react-dom@18.2.0)(react@18.2.0)
       date-fns:
         specifier: ~3.6.0
         version: 3.6.0
@@ -3102,8 +3102,18 @@ packages:
     resolution: {integrity: sha512-qQLMr+8o0WC4FZGQTcJiKBVC59JylcPSrTtk6usvmIDFUOCKegapy1VHQwRbFMOFyb/inzUVqHs+eMYKDM1YeQ==}
     dev: true
 
+  /ag-charts-types@10.0.2:
+    resolution: {integrity: sha512-Nxo5slHOXlaeg0gRIsVnovAosQzzlYfWJtdDy0Aq/VvpJru/PJ+5i2c9aCyEhgRxhBjImsoegwkgRj7gNOWV6Q==}
+    dev: false
+
   /ag-grid-community@30.2.1:
     resolution: {integrity: sha512-1slonXskJbbI9ybhTx//4YKfJpZVAEnHL8dui1rQJRSXKByUi+/f7XtvkLsbgBkawoWbqvRAySjYtvz80+kBfA==}
+    dev: false
+
+  /ag-grid-community@32.0.2:
+    resolution: {integrity: sha512-vLJJUjnsG9hNK41GNuW2EHu1W264kxA/poOpcX4kmyrjU5Uzvelsbj3HdKAO9POV28iqyRdKGYfAWdn8QzA7KA==}
+    dependencies:
+      ag-charts-types: 10.0.2
     dev: false
 
   /ag-grid-enterprise@30.2.1:
@@ -3118,6 +3128,18 @@ packages:
       react-dom: ^16.3.0 || ^17.0.0 || ^18.0.0
     dependencies:
       ag-grid-community: 30.2.1
+      prop-types: 15.8.1
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
+  /ag-grid-react@32.0.2(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-IWYsoyJ/Z763rWbE5/9SaT1n5xwIKrm/QzOG14l7i8z5J6JdJwfV0aQFATmEE8Xws2H48vlLcLdW1cv4hwV3eg==}
+    peerDependencies:
+      react: ^16.3.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.3.0 || ^17.0.0 || ^18.0.0
+    dependencies:
+      ag-grid-community: 32.0.2
       prop-types: 15.8.1
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)

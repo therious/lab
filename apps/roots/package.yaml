@@ -20,8 +20,8 @@ dependencies:
   react-dom:               ~18.2.0
   react-json-tree:         ~0.18.0
   styled-components:       ~5.3.6
-  ag-grid-community:       ~30.2.0
-  ag-grid-react:           ~30.2.0
+  ag-grid-community:       ~32.0.2
+  ag-grid-react:           ~32.0.2
   axios:                   ~1.6.8
   browser-fs-access:       ~0.33.0
   js-yaml:                 ~4.1.0
