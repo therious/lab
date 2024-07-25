@@ -10,7 +10,7 @@ dependencies:
   "@therious/components":     *ws
   "@therious/fsm":            *ws
   "@therious/utils":          *ws
-  ag-grid-community:          &ag ~30.2.0
+  ag-grid-community:          &ag ~32.0.2
   ag-grid-enterprise:         *ag
   ag-grid-react:              *ag
   axios:                      ~1.6.8
