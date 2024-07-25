@@ -11,8 +11,8 @@ dependencies:
   '@therious/components':             *ws
   '@supabase/supabase-js':            ~2.44.3  # running a query directly from client
   '@hcaptcha/react-hcaptcha':         ~1.0.0   # a captcha supported by supabase auth
-  ag-grid-community:                  ~30.2.1  # look to upgrade, first to 30.2.1 (used in lab), then  32.0.2 (latest)
-  ag-grid-react:                      ~30.2.1  # used by mygrid
+  ag-grid-community:                  ~32.0.2  # look to upgrade, first to 30.2.1 (used in lab), then  32.0.2 (latest)
+  ag-grid-react:                      ~32.0.2  # used by mygrid
   date-fns:                           ~3.6.0   # used by date rendering functions for grid
   immer:                              ~10.0.4
   js-yaml:                            ~4.1.0
