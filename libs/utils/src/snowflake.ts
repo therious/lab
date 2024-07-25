@@ -162,4 +162,18 @@ export function reqIdDescribe(reqId:string): SnowflakeDescFormatted {
          }
 }
 
+export interface ElapsedSince { elapsedMicros: number; elapsedStr: string; }
+
+export function elapsedSinceReqId(reqId: string): ElapsedSince
+{
+  // @ts-ignore todo fix this with reqId type
+  const {now:then}  = reqIdRegEx.exec(reqId).groups;
+  const reqTsMicros = parseIgnore(then);
+
+  const adjReqTsMicros = reqTsMicros * 0.001;
+  const tsMicros      = performance.now();
+  const elapsedMicros = parseFloat(((tsMicros - adjReqTsMicros)*100).toFixed(3));  // todo limit fractional part
+  const elapsedStr = ts(elapsedMicros)
+  return {elapsedMicros, elapsedStr};
+}
 
