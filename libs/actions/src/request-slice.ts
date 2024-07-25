@@ -1,29 +1,5 @@
 import {reqIdDescribe, minisession} from "@therious/utils";
-import {ErrorMeta, ResponseMeta} from './types';
-
-interface When {
-  'req#': number;
-  since: string;
-  reqts: string;
-  appts: string;
-}
-
-export interface OpenRequestP {
-  type: string;
-  url: string;
-  reqId: string;
-}
-
-export interface OpenRequest extends OpenRequestP {
-  when: When;
-}
-
-
-export interface ClosedRequest extends OpenRequest {
-  elapsed: string;
-  elapsedMicros: number;
-}
-
+import {ErrorMeta, ResponseMeta, OpenRequest, OpenRequestP, ClosedRequest} from './types';
 
 
 export interface RequestState {
