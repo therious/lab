@@ -317,6 +317,9 @@ importers:
       '@hcaptcha/react-hcaptcha':
         specifier: ~1.0.0
         version: 1.0.0(react-dom@18.2.0)(react@18.2.0)
+      '@supabase/realtime-js':
+        specifier: ~2.10.4
+        version: 2.10.4
       '@supabase/supabase-js':
         specifier: ~2.44.3
         version: 2.44.3
@@ -2420,6 +2423,18 @@ packages:
 
   /@supabase/realtime-js@2.10.2:
     resolution: {integrity: sha512-qyCQaNg90HmJstsvr2aJNxK2zgoKh9ZZA8oqb7UT2LCh3mj9zpa3Iwu167AuyNxsxrUE8eEJ2yH6wLCij4EApA==}
+    dependencies:
+      '@supabase/node-fetch': 2.6.15
+      '@types/phoenix': 1.6.5
+      '@types/ws': 8.5.10
+      ws: 8.17.1
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+    dev: false
+
+  /@supabase/realtime-js@2.10.4:
+    resolution: {integrity: sha512-ML8gZGxFfnx+gi7MLTAtuJdGkuwWBsNwImHF1mnNCPWE4rlVwSWXUoZvszA/S+6insOTddpnj/ZRpjZZbzOu/w==}
     dependencies:
       '@supabase/node-fetch': 2.6.15
       '@types/phoenix': 1.6.5
