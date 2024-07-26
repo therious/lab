@@ -1,13 +1,12 @@
 import React,  {useCallback} from 'react';
-import './App.css';
-
-import {game} from './ticket/Game';
-import {MapView} from './MapView';
-import {actions, useSelector} from './actions-integration';
-import {TicketState} from './actions/ticket-slice';
-import {PlayerView} from './PlayerView';
-import {dealCardsSoundEffect, playShuffleSound, playVend} from './effects/sounds';
 import styled from 'styled-components';
+
+import {PlayerView} from './PlayerView';
+import {MapView} from './MapView';
+import {game} from '../ticket/Game';
+import {actions, useSelector} from '../actions-integration';
+import {TicketState} from '../actions/ticket-slice';
+import {dealCardsSoundEffect, playShuffleSound, playVend} from '../effects/sounds';
 const ta = actions.ticket;
 
 const playerColors = ['red', 'blue', 'green', 'orange'];

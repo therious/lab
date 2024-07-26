@@ -5,8 +5,8 @@ import 'ag-grid-community/styles/ag-theme-balham.css';
 // import 'ag-grid-community/styles/ag-theme-balham-dark.css';
 import 'react-contexify/ReactContexify.css';
 
-import {PatchNameEditor, PatchCommentEditor} from "./aggrid/PatchEditors";
-import {UpdatedRenderer} from "./aggrid/UpdatedRenderer";
+import {PatchNameEditor, PatchCommentEditor} from "../aggrid/PatchEditors";
+import {UpdatedRenderer} from "../aggrid/UpdatedRenderer";
 
 export const  CheckboxRenderer = ({node, column, value}) => {
   const click = useCallback(e => node.setDataValue(column.colId, e?.target?.checked),[]);

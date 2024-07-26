@@ -1,6 +1,6 @@
-import {Color} from './ticket/Color';
 import {CSSProperties, useEffect, useState} from 'react';
-import {Player} from './ticket/Player';
+import {Color} from '../ticket/Color';
+import {Player} from '../ticket/Player';
 
 const cardHand = {
   display: 'inline-block',
