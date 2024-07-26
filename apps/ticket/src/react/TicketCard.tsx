@@ -1,11 +1,10 @@
 import {useState, useEffect, useCallback} from 'react';
-import {Ticket} from './ticket/Ticket';
+import styled from 'styled-components';
 import {Random} from '@therious/random';
+import {Ticket} from '../ticket/Ticket';
+import {Player} from '../ticket/Player';
 
 type TicketCardProps = {ticket:Ticket, player:Player, completed:boolean }
-
-import styled from 'styled-components';
-import {Player} from './ticket/Player';
 
 const TicketDiv = styled.div<{$url:string}>`
   display: inline-block;
@@ -63,7 +62,7 @@ const TicketDiv = styled.div<{$url:string}>`
 `;
 
 // ticket svgs from https://www.svgrepo.com/vectors/ticket/3
-const ticketSvgs:string[]   = Object.values(import.meta.glob('./assets/tickets/*',  {query: '?url', import: 'default', eager: true}));
+const ticketSvgs:string[]   = Object.values(import.meta.glob('../assets/tickets/*',  {query: '?url', import: 'default', eager: true}));
 
 
 

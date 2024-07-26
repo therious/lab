@@ -1,13 +1,14 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import 'vis-network/styles/vis-network.css';
-import {renderGraphData,stdEdgeWidth, NodeToRouteMapper } from './vis/myvis.js';
-import {defaultOptions} from './vis/options';
 import {Network, Options, Data, Edge, Node, DataSet, IdType} from "vis-network/standalone/esm/vis-network";
-import {useVisNetwork} from './vis/useVisNetwork';
-import {actions, useSelector} from './actions-integration';
-import {TicketState} from './actions/ticket-slice';
-import {Color} from './ticket/Color';
-import {playClick, playError} from './effects/sounds';
+
+import {renderGraphData,stdEdgeWidth, NodeToRouteMapper } from '../vis/myvis.js';
+import {defaultOptions} from '../vis/options';
+import {useVisNetwork} from '../vis/useVisNetwork';
+import {actions, useSelector} from '../actions-integration';
+import {TicketState} from '../actions/ticket-slice';
+import {Color} from '../ticket/Color';
+import {playClick, playError} from '../effects/sounds';
 
 // const   graphData:Data = renderGraphData();
 const {nodes:rawnodes, edges:rawedges} = renderGraphData();

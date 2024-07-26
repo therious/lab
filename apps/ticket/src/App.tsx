@@ -5,14 +5,14 @@ import {SnackbarProvider} from 'notistack';
 import {Modalize} from '@therious/components';
 import {useSelector} from './actions-integration';
 import {useSession, signout} from './auth';
-import {Countries} from './Countries';
-import {Game} from './Game';
+import {Countries} from './react/Countries';
+import {Game} from './react/Game';
 
-import {Layout, CenterBody, MyNavLink, Navbar} from './Navbar';
-import {Login} from './Login';
-import {RtStorage} from './RtStorage';
+import {Layout, CenterBody, MyNavLink, Navbar} from './react/Navbar';
+import {Login} from './react/Login';
 import {NotifyWrapper} from "./react/NotifyWrapper";
 import {TotalState} from './actions/combined-slices';
+import {RtStorage} from './RtStorage';
 
 // const PrivateRoute = ({ user, children, redirect }) => {
 //   const authenticate = localStorage.getItem('jwtToken') ? true : false;

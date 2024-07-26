@@ -3,7 +3,7 @@ import styled from 'styled-components';
 
 import {actions, useSelector} from "./actions-integration";
 import {PatchEditorsInit} from "./aggrid/PatchEditors";
-import {MyGrid} from './MyGrid';
+import {MyGrid} from './react/MyGrid';
 import {Menu, Item, Separator, useContextMenu} from 'react-contexify';
 import {Modalize} from '@therious/components';
 

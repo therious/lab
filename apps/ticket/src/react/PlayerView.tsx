@@ -1,12 +1,11 @@
 import React,  {useState, useEffect} from 'react';
+import styled from 'styled-components';
 import {CardHand} from './ColorCard';
 import {TicketCard} from './TicketCard';
-
-import {Player} from './ticket/Player';
-import {useSelector} from './actions-integration';
-import {TicketState} from './actions/ticket-slice';
-import {playFanfare, playSoundCompleteTicket} from './effects/sounds';
-import styled from 'styled-components';
+import {Player} from '../ticket/Player';
+import {useSelector} from '../actions-integration';
+import {TicketState} from '../actions/ticket-slice';
+import {playFanfare, playSoundCompleteTicket} from '../effects/sounds';
 
 const PlayerDiv = styled.div<{$players:unknown[], $myTurn:boolean}>`
   flex: 1;
