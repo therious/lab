@@ -2,9 +2,8 @@ import "reflect-metadata";
 
 import React from 'react';
 import {createRoot} from 'react-dom/client';
-import './index.css';
+import './-ticket.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
 import {connectRootComponent} from './actions-integration';
 import {Config, Inflate} from "@therious/boot";
 import './fsm/some-tests';
@@ -27,9 +26,3 @@ import "@therious/utils"
     console.error(e);
   }
 })();
-
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
