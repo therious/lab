@@ -37,7 +37,7 @@ dependencies:
 scripts:
   start:   VITE_CJS_IGNORE_WARNING=true vite   #it looks like react-swc plugin might be cause of the warning I am turning off?
   build:   tsc && vite build
-  preview: vite preview
+  preview: vite preview --port 5173
   lint:    eslint . --ext js,jsx,ts,tsx
 
 browserslist:   # vite ignores this ,uses fine grained js targets (esnext, es2021, etc) but its postCss does exploit it
