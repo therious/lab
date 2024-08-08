@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "allowJs": true,        // this should allow d.ts generation for legacy javascript code in library
+    "declaration": true,    // generate .d.ts files
+    "outDir": "dist",       // where to put the .d.ts files generated
+    "declarationMap": true, // helps with jumping to the actual function in IDEs
+    "moduleResolution": "node",
+    "target": "ESNext",
+    "module":"CommonJS",
+    "lib": ["es2020","dom"],
+    "strict": true,
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "declarationDir": "dist/types",
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+    "baseUrl": ".",
+    "noImplicitReturns": true,
+    "noImplicitAny": true,
+    "importHelpers": false,
+    "strictNullChecks": true,
+  }
+}

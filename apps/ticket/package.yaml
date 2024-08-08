@@ -5,6 +5,7 @@ private: true
 dependencies:
   '@therious/utils':                  &ws      'workspace:*'
   '@therious/random':                 *ws      # todo get rid of random in favor of utils?
+  '@therious/ag-grid':                *ws      # shareable ag-grid utilities
   '@therious/boot':                   *ws
   '@therious/fsm':                    *ws
   '@therious/actions':                *ws      # common set of reduxy-type actions (pure functions, not redux)
