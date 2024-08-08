@@ -29,6 +29,7 @@ libs/actions/index.ts
 libs/utils/index.ts
 libs/fsm/index.ts
 libs/ddd/index.ts
+libs/ag-grid/index.ts
 **/nohup.out
 
 # docs folder may contain notes, works in progress, or files that are "dirty" with secrets
