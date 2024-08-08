@@ -10,7 +10,10 @@ const ignoredByDefault = [
 '**/build/**',
 '**/docs/**',
 'webpack*\.js/**', // this glob looks wrong
-'index\.(js|jsx|ts|tsx)',
+'index.ts',
+'index.tsx',
+'index.js',
+'index.jsx',
 '**/*\.d\.ts',
 'index-generator.js',
 '**/__mocks__/**',
