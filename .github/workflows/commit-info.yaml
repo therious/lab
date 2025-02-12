@@ -1,17 +1,25 @@
 name: Update Commit Info
 
 on:
-  push:
-    branches:
-      - '**'  # Trigger on push to any branch
+  pull_request:
+    types: [closed]
 
 jobs:
   update-commit-info:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Delete existing commitInfo.json
+        run: |
+          if [ -f commitInfo.json ]; then
+            git rm commitInfo.json
+            git commit -m "Remove existing commitInfo.json to prevent conflicts"
+            git push origin ${{ env.BRANCH_NAME }}
+          fi
 
       - name: Get repository information
         id: repo-info
@@ -22,7 +30,8 @@ jobs:
           echo "COMMIT_MESSAGE=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
           echo "AUTHOR_NAME=$(git log -1 --pretty=%an)" >> $GITHUB_ENV
           echo "AUTHOR_EMAIL=$(git log -1 --pretty=%ae)" >> $GITHUB_ENV
-          echo "COMMIT_DATE=$(git log -1 --pretty=%cd)" >> $GITHUB_ENV
+          echo "COMMIT_DATE=$(git log -1 --pretty=format:'%Y-%m-%d %H:%M:%S' --date=utc)" >> $GITHUB_ENV
+
       - name: Update commitInfo.json
         run: |
           cat <<EOF > commitInfo.json
@@ -30,10 +39,10 @@ jobs:
             "repo": "${{ env.REPO_NAME }}",
             "branch": "${{ env.BRANCH_NAME }}",
             "commit": "${{ env.COMMIT_HASH }}",
-            "date": "${{ env.COMMIT_DATE }}"
+            "date": "${{ env.COMMIT_DATE }}",
             "message": "${{ env.COMMIT_MESSAGE }}",
-            "author": "${{ env.AUTHOR_NAME }}",
-            "email": "${{ env.AUTHOR_EMAIL }}"
+            "author_name": "${{ env.AUTHOR_NAME }}",
+            "author_email": "${{ env.AUTHOR_EMAIL }}"
           }
           EOF
 
