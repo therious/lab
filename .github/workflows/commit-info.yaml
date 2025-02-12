@@ -22,7 +22,7 @@ jobs:
           echo "COMMIT_MESSAGE=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
           echo "AUTHOR_NAME=$(git log -1 --pretty=%an)" >> $GITHUB_ENV
           echo "AUTHOR_EMAIL=$(git log -1 --pretty=%ae)" >> $GITHUB_ENV
-          echo "COMMIT_DATE=$(git log -1 --pretty=format:'%Y-%m-%d %H:%M:%S' --date=utc)" >> $GITHUB_ENV
+          echo "COMMIT_DATE=$(git log -1 --pretty=%cd)" >> $GITHUB_ENV
       - name: Update commitInfo.json
         run: |
           cat <<EOF > commitInfo.json
@@ -33,7 +33,7 @@ jobs:
             "date": "${{ env.COMMIT_DATE }}"
             "message": "${{ env.COMMIT_MESSAGE }}",
             "author": "${{ env.AUTHOR_NAME }}",
-            "author": "${{ env.AUTHOR_EMAIL }}",
+            "email": "${{ env.AUTHOR_EMAIL }}"
           }
           EOF
 
