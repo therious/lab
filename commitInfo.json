@@ -1,7 +1,7 @@
 {
   "repo": "lab",
   "branch": "merge-test",
-  "commit": "not a hash",
+  "commit": "really not a hash this time",
   "date": "",
   "message": "another commit-info.yaml attempt",
   "author_name": "Bogus",
