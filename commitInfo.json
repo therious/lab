@@ -1,9 +1,9 @@
 {
   "repo": "lab",
   "branch": "merge-test",
-  "commit": "really not a hash this time",
+  "commit": "2d848b9180db6dd46106fecf474f5e65f1f67b2a",
   "date": "",
-  "message": "another commit-info.yaml attempt",
-  "author_name": "Bogus",
+  "message": "Update README.md",
+  "author_name": "hzamir",
   "author_email": "hzamir@gmail.com"
 }
