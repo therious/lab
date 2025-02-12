@@ -13,14 +13,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Delete existing commitInfo.json
-        run: |
-          if [ -f commitInfo.json ]; then
-            git rm commitInfo.json
-            git commit -m "Remove existing commitInfo.json to prevent conflicts"
-            git push origin ${{ env.BRANCH_NAME }}
-          fi
-
       - name: Get repository information
         id: repo-info
         run: |
@@ -52,4 +44,4 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add commitInfo.json
           git commit -m "Update commitInfo.json"
-          git push origin ${{ env.BRANCH_NAME }}
+          git push origin ${{ env.BRANCH_NAME }} --force
