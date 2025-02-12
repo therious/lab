@@ -1,9 +1,10 @@
 {
   "repo": "lab",
+   "author_name": "hzamir",
   "branch": "merge-test",
-  "commit": "2d848b9180db6dd46106fecf474f5e65f1f67b2a",
+  "commit": "bogus",
   "date": "",
   "message": "Update README.md",
-  "author_name": "hzamir",
+
   "author_email": "hzamir@gmail.com"
 }
