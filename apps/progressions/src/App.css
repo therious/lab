@@ -146,11 +146,36 @@
   margin-top: 20px;
 }
 
-.tempo-control label {
+.key-control {
+  margin-top: 20px;
+}
+
+.tempo-control label,
+.key-control label {
   display: block;
   margin-bottom: 10px;
   color: #333;
   font-weight: 500;
+}
+
+.key-selector {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.key-selector:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.key-selector:hover {
+  border-color: #667eea;
 }
 
 .tempo-slider {
@@ -197,23 +222,40 @@
 .chord-box {
   flex: 1;
   min-width: 80px;
-  padding: 20px;
+  padding: 15px;
   background: #f5f5f5;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
   text-align: center;
+  transition: all 0.3s;
+}
+
+.chord-roman {
   font-size: 24px;
   font-weight: bold;
   color: #333;
-  transition: all 0.3s;
+  margin-bottom: 5px;
+}
+
+.chord-name {
+  font-size: 14px;
+  color: #666;
+  font-weight: normal;
 }
 
 .chord-box.active {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
   border-color: #667eea;
   transform: scale(1.1);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.chord-box.active .chord-roman {
+  color: white;
+}
+
+.chord-box.active .chord-name {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .progression-info {

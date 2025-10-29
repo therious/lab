@@ -130,9 +130,10 @@ export class ChordPlayer {
   private isPlaying = false;
   private currentProgression: string[] = [];
   private currentKey = 'C';
-  private currentTempo = 120;
+  private currentTempo = 60;
   private currentIndex = 0;
   private playCallback: ((index: number) => void) | null = null;
+  private playTimeoutId: NodeJS.Timeout | null = null;
   
   constructor() {
     try {
@@ -217,7 +218,7 @@ export class ChordPlayer {
     this.currentIndex = (this.currentIndex + 1) % this.currentProgression.length;
     
     // Schedule next chord
-    setTimeout(() => {
+    this.playTimeoutId = setTimeout(() => {
       this.playLoop();
     }, duration * 1000);
   };
@@ -225,6 +226,10 @@ export class ChordPlayer {
   stop() {
     this.isPlaying = false;
     this.currentIndex = 0;
+    if (this.playTimeoutId) {
+      clearTimeout(this.playTimeoutId);
+      this.playTimeoutId = null;
+    }
   }
   
   setTempo(bpm: number) {
