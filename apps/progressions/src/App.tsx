@@ -4,13 +4,74 @@ import { progressionsData } from './progressionsData';
 import { ChordPlayer } from './audioPlayer';
 import './App.css';
 
+const KEYS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+// Convert roman numeral + tonic to actual chord name
+function getChordName(chordString: string, tonic: string): string {
+  const chordInfo = parseChord(chordString);
+  const keyNotes: { [key: string]: number } = {
+    'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3,
+    'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8,
+    'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
+  };
+  
+  const cleanKey = tonic.replace(/m$/, '');
+  const tonicSemitone = keyNotes[cleanKey] || 0;
+  const rootSemitone = (tonicSemitone + chordInfo.root) % 12;
+  
+  const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const noteName = NOTES[rootSemitone];
+  
+  // Build quality suffix
+  let suffix = '';
+  if (chordString.includes('maj7')) {
+    suffix = 'maj7';
+  } else if (chordString.includes('m7')) {
+    suffix = 'm7';
+  } else if (chordString.includes('7')) {
+    suffix = '7';
+  } else if (chordInfo.quality === 'minor') {
+    suffix = 'm';
+  }
+  
+  return noteName + suffix;
+}
+
+function parseChord(chord: string): { root: number; quality: string; extensions: string[] } {
+  const matches = chord.match(/^(b)?([IV]+|vi+|ii+|iii+|iv+|v+|vii+)(maj7|m7|7|sus4|sus2|dim|aug)?(\d+)?/);
+  
+  if (!matches) {
+    return { root: 0, quality: 'major', extensions: [] };
+  }
+  
+  const [, flatPrefix, roman, quality = '', extension = ''] = matches;
+  const romanUpper = roman.toUpperCase();
+  const ROMAN_TO_INTERVAL: { [key: string]: number } = {
+    'I': 0, 'II': 2, 'III': 4, 'IV': 5, 'V': 7, 'VI': 9, 'VII': 11,
+    'i': 0, 'ii': 2, 'iii': 4, 'iv': 5, 'v': 7, 'vi': 9, 'vii': 11
+  };
+  const interval = ROMAN_TO_INTERVAL[romanUpper] || 0;
+  const rootInterval = flatPrefix ? interval - 1 : interval;
+  
+  const isMinor = roman !== roman.toUpperCase();
+  
+  const qualityStr = quality || (isMinor ? 'minor' : 'major');
+  
+  return {
+    root: rootInterval,
+    quality: qualityStr,
+    extensions: extension ? [extension] : []
+  };
+}
+
 function App() {
   const [progressionList, setProgressionList] = useState<ChordProgression[]>(progressionsData);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProgression, setSelectedProgression] = useState<ChordProgression | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentChordIndex, setCurrentChordIndex] = useState(0);
-  const [tempo, setTempo] = useState(120);
+  const [tempo, setTempo] = useState(60);
+  const [currentKey, setCurrentKey] = useState<string>('C');
   
   const playerRef = useRef<ChordPlayer | null>(null);
   
@@ -22,6 +83,43 @@ function App() {
       }
     };
   }, []);
+
+  // Auto-select the first progression on mount
+  useEffect(() => {
+    if (!selectedProgression && progressionsData.length > 0) {
+      setSelectedProgression(progressionsData[0]);
+      setCurrentKey(progressionsData[0].key);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reset currentKey when selecting a new progression
+  useEffect(() => {
+    if (selectedProgression) {
+      setCurrentKey(selectedProgression.key);
+    }
+  }, [selectedProgression?.name]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Restart playback when key changes and something is playing (skip initial mount)
+  const prevKeyRef = useRef<string>(currentKey);
+  useEffect(() => {
+    if (isPlaying && selectedProgression && playerRef.current && currentKey !== prevKeyRef.current) {
+      playerRef.current.stop();
+      setTimeout(() => {
+        if (playerRef.current && selectedProgression) {
+          playerRef.current.start(
+            selectedProgression.progression,
+            currentKey,
+            tempo,
+            (index: number) => {
+              setCurrentChordIndex(index);
+            }
+          );
+          setIsPlaying(true);
+        }
+      }, 50);
+    }
+    prevKeyRef.current = currentKey;
+  }, [currentKey]); // eslint-disable-line react-hooks/exhaustive-deps
   
   // Filter progressions based on search
   useEffect(() => {
@@ -53,7 +151,7 @@ function App() {
       if (playerRef.current && selectedProgression) {
         playerRef.current.start(
           selectedProgression.progression,
-          selectedProgression.key,
+          currentKey,
           tempo,
           (index: number) => {
             setCurrentChordIndex(index);
@@ -65,20 +163,34 @@ function App() {
   };
   
   const handleSelectProgression = (progression: ChordProgression) => {
-    // If currently playing, switch immediately
-    if (isPlaying && playerRef.current) {
+    // Always stop any current playback first
+    if (playerRef.current) {
       playerRef.current.stop();
-      playerRef.current.start(
-        progression.progression,
-        progression.key,
-        tempo,
-        (index: number) => {
-          setCurrentChordIndex(index);
-        }
-      );
     }
+    
+    // Update UI state immediately
+    const wasPlaying = isPlaying;
+    setIsPlaying(false);
     setSelectedProgression(progression);
     setCurrentChordIndex(0);
+    
+    // If it was playing before, start the new progression after a brief delay
+    if (wasPlaying && playerRef.current) {
+      const newKey = progression.key;
+      setTimeout(() => {
+        if (playerRef.current) {
+          playerRef.current.start(
+            progression.progression,
+            newKey,
+            tempo,
+            (index: number) => {
+              setCurrentChordIndex(index);
+            }
+          );
+          setIsPlaying(true);
+        }
+      }, 100); // Brief delay to ensure cleanup of scheduled audio
+    }
   };
   
   const handleTempoChange = (newTempo: number) => {
@@ -151,6 +263,19 @@ function App() {
                     className="tempo-slider"
                   />
                 </div>
+
+                <div className="key-control">
+                  <label>Key:</label>
+                  <select
+                    value={currentKey}
+                    onChange={(e) => setCurrentKey(e.target.value)}
+                    className="key-selector"
+                  >
+                    {KEYS.map(key => (
+                      <option key={key} value={key}>{key}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               
               <div className="chord-display">
@@ -161,7 +286,8 @@ function App() {
                       key={index}
                       className={`chord-box ${index === currentChordIndex && isPlaying ? 'active' : ''}`}
                     >
-                      {chord}
+                      <div className="chord-roman">{chord}</div>
+                      <div className="chord-name">{getChordName(chord, currentKey)}</div>
                     </div>
                   ))}
                 </div>
