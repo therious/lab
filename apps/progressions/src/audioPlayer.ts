@@ -134,6 +134,7 @@ export class ChordPlayer {
   private currentIndex = 0;
   private playCallback: ((index: number) => void) | null = null;
   private playTimeoutId: NodeJS.Timeout | null = null;
+  private arpeggioType = 'block';
   
   constructor() {
     try {
@@ -146,12 +147,27 @@ export class ChordPlayer {
     }
   }
   
-  playChord(frequencies: number[], duration: number, gain: number = 0.2) {
+  playChord(frequencies: number[], duration: number, gain: number = 0.2, arpeggio: string = 'block') {
     if (!this.audioContext || !this.gainNode) return;
     
     const currentTime = this.audioContext.currentTime;
     
-    frequencies.forEach(freq => {
+    // Handle arpeggiation
+    let noteOrder = [...frequencies];
+    if (arpeggio === 'up') {
+      noteOrder = [...frequencies];
+    } else if (arpeggio === 'down') {
+      noteOrder = [...frequencies].reverse();
+    } else if (arpeggio === 'updown') {
+      noteOrder = [...frequencies, ...frequencies.slice().reverse().slice(1)];
+    } else if (arpeggio === 'downup') {
+      noteOrder = [...frequencies].reverse();
+      noteOrder = [...noteOrder, ...frequencies.slice().slice(1)];
+    }
+    
+    const noteDelay = arpeggio === 'block' ? 0 : duration / noteOrder.length;
+    
+    noteOrder.forEach((freq, index) => {
       const oscillator = this.audioContext!.createOscillator();
       const chordGain = this.audioContext!.createGain();
       
@@ -159,27 +175,31 @@ export class ChordPlayer {
       oscillator.type = 'triangle';
       oscillator.frequency.value = freq;
       
+      const noteStart = currentTime + (index * noteDelay);
+      const noteDuration = arpeggio === 'block' ? duration : noteDelay * 0.95;
+      
       // Piano-like envelope: quick attack, slow decay
-      chordGain.gain.setValueAtTime(0, currentTime);
-      chordGain.gain.linearRampToValueAtTime(gain, currentTime + 0.01); // Fast attack
+      chordGain.gain.setValueAtTime(0, noteStart);
+      chordGain.gain.linearRampToValueAtTime(gain, noteStart + 0.01); // Fast attack
       
       // Exponential decay like a piano
-      chordGain.gain.setValueAtTime(gain, currentTime + 0.01);
-      chordGain.gain.exponentialRampToValueAtTime(0.001, currentTime + duration);
+      chordGain.gain.setValueAtTime(gain, noteStart + 0.01);
+      chordGain.gain.exponentialRampToValueAtTime(0.001, noteStart + noteDuration);
       
       oscillator.connect(chordGain);
       chordGain.connect(this.gainNode);
       
-      oscillator.start(currentTime);
-      oscillator.stop(currentTime + duration);
+      oscillator.start(noteStart);
+      oscillator.stop(noteStart + noteDuration);
     });
   }
   
-  async start(progression: string[], key: string, tempo: number, onChordChange: (index: number) => void) {
+  async start(progression: string[], key: string, tempo: number, onChordChange: (index: number) => void, arpeggio: string = 'block') {
     this.stop();
     this.currentProgression = progression;
     this.currentKey = key;
     this.currentTempo = tempo;
+    this.arpeggioType = arpeggio;
     this.playCallback = onChordChange;
     this.isPlaying = true;
     this.currentIndex = 0;
@@ -211,7 +231,7 @@ export class ChordPlayer {
     }
     
     // Play the chord
-    this.playChord(notes, duration, 0.15);
+    this.playChord(notes, duration, 0.15, this.arpeggioType);
     
     // Move to next chord
     this.currentIndex = (this.currentIndex + 1) % this.currentProgression.length;

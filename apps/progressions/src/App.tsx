@@ -6,6 +6,16 @@ import './App.css';
 
 const KEYS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
 
+type ArpeggioType = 'block' | 'up' | 'down' | 'updown' | 'downup';
+
+const ARPEGGIO_OPTIONS: { value: ArpeggioType; label: string }[] = [
+  { value: 'block', label: 'Block (simultaneous)' },
+  { value: 'up', label: 'Up' },
+  { value: 'down', label: 'Down' },
+  { value: 'updown', label: 'Up then Down' },
+  { value: 'downup', label: 'Down then Up' }
+];
+
 // Convert roman numeral + tonic to actual chord name
 function getChordName(chordString: string, tonic: string): string {
   const chordInfo = parseChord(chordString);
@@ -72,6 +82,7 @@ function App() {
   const [currentChordIndex, setCurrentChordIndex] = useState(0);
   const [tempo, setTempo] = useState(60);
   const [currentKey, setCurrentKey] = useState<string>('C');
+  const [arpeggioType, setArpeggioType] = useState<ArpeggioType>('block');
   
   const playerRef = useRef<ChordPlayer | null>(null);
   
@@ -112,7 +123,8 @@ function App() {
             tempo,
             (index: number) => {
               setCurrentChordIndex(index);
-            }
+            },
+            arpeggioType
           );
           setIsPlaying(true);
         }
@@ -120,6 +132,29 @@ function App() {
     }
     prevKeyRef.current = currentKey;
   }, [currentKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Restart playback when arpeggio changes and something is playing (skip initial mount)
+  const prevArpeggioRef = useRef<ArpeggioType>(arpeggioType);
+  useEffect(() => {
+    if (isPlaying && selectedProgression && playerRef.current && arpeggioType !== prevArpeggioRef.current) {
+      playerRef.current.stop();
+      setTimeout(() => {
+        if (playerRef.current && selectedProgression) {
+          playerRef.current.start(
+            selectedProgression.progression,
+            currentKey,
+            tempo,
+            (index: number) => {
+              setCurrentChordIndex(index);
+            },
+            arpeggioType
+          );
+          setIsPlaying(true);
+        }
+      }, 50);
+    }
+    prevArpeggioRef.current = arpeggioType;
+  }, [arpeggioType]); // eslint-disable-line react-hooks/exhaustive-deps
   
   // Filter progressions based on search
   useEffect(() => {
@@ -155,7 +190,8 @@ function App() {
           tempo,
           (index: number) => {
             setCurrentChordIndex(index);
-          }
+          },
+          arpeggioType
         );
         setIsPlaying(true);
       }
@@ -185,7 +221,8 @@ function App() {
             tempo,
             (index: number) => {
               setCurrentChordIndex(index);
-            }
+            },
+            arpeggioType
           );
           setIsPlaying(true);
         }
@@ -273,6 +310,19 @@ function App() {
                   >
                     {KEYS.map(key => (
                       <option key={key} value={key}>{key}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="arpeggio-control">
+                  <label>Arpeggio:</label>
+                  <select
+                    value={arpeggioType}
+                    onChange={(e) => setArpeggioType(e.target.value as ArpeggioType)}
+                    className="key-selector"
+                  >
+                    {ARPEGGIO_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
                 </div>

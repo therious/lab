@@ -150,8 +150,13 @@
   margin-top: 20px;
 }
 
+.arpeggio-control {
+  margin-top: 20px;
+}
+
 .tempo-control label,
-.key-control label {
+.key-control label,
+.arpeggio-control label {
   display: block;
   margin-bottom: 10px;
   color: #333;
