@@ -27,7 +27,7 @@ const ROMAN_TO_INTERVAL: { [key: string]: number } = {
 };
 
 export function parseChord(chord: string): { root: number; quality: string; extensions: string[] } {
-  const matches = chord.match(/^(b)?([IV]+)(maj7|m7|7|sus4|sus2|dim|aug)?(\d+)?/);
+  const matches = chord.match(/^(b)?([IV]+|vi+|ii+|iii+|iv+|v+|vii+)(maj7|m7|7|sus4|sus2|dim|aug)?(\d+)?/);
   
   if (!matches) {
     // Fallback: treat as major I
@@ -38,7 +38,9 @@ export function parseChord(chord: string): { root: number; quality: string; exte
   const romanUpper = roman.toUpperCase();
   const interval = ROMAN_TO_INTERVAL[romanUpper] || 0;
   const rootInterval = flatPrefix ? interval - 1 : interval;
-  const isMinor = roman === roman.toLowerCase();
+  
+  // Check if the original roman numeral is lowercase (minor)
+  const isMinor = roman !== roman.toUpperCase();
   
   const qualityStr = quality || (isMinor ? 'minor' : 'major');
   
@@ -90,12 +92,36 @@ export function getChordNotes(chord: string, key: string, octave: number = 4): n
       intervals = [0, 4, 7]; // default to major
   }
   
-  // Calculate actual semitones and frequencies
-  return intervals.map(interval => {
+  // Arrange chord tones in a good voicing around middle C
+  // This creates a more natural chord sound with proper spacing
+  const chordTones: number[] = [];
+  
+  // Calculate proper octaves for each interval to center around middle C
+  // Middle C is in octave 4. For a chord centered around middle C:
+  // - Root in octave 3 or 4 (depending on the note)
+  // - 3rd and 5th in octave 4
+  intervals.forEach((interval, i) => {
     const semitone = (rootSemitone + interval) % 12;
-    const octaveOffset = Math.floor((rootSemitone + interval) / 12);
-    return getNoteFrequency(NOTES[semitone], octave + octaveOffset);
+    const noteName = NOTES[semitone];
+    
+    // Arrange notes to be centered around middle C (octave 4)
+    let noteOctave = octave;
+    
+    if (interval === 0) {
+      // Root: use octave 3 for better bass
+      noteOctave = octave - 1;
+    } else if (interval <= 7) {
+      // 3rd and 5th: keep in same octave as middle C
+      noteOctave = octave;
+    } else {
+      // Extensions (7th, etc): one octave above middle C
+      noteOctave = octave + 1;
+    }
+    
+    chordTones.push(getNoteFrequency(noteName, noteOctave));
   });
+  
+  return chordTones;
 }
 
 export class ChordPlayer {
@@ -122,6 +148,8 @@ export class ChordPlayer {
   playChord(frequencies: number[], duration: number, gain: number = 0.2) {
     if (!this.audioContext || !this.gainNode) return;
     
+    const currentTime = this.audioContext.currentTime;
+    
     frequencies.forEach(freq => {
       const oscillator = this.audioContext!.createOscillator();
       const chordGain = this.audioContext!.createGain();
@@ -129,15 +157,21 @@ export class ChordPlayer {
       oscillator.type = 'sine';
       oscillator.frequency.value = freq;
       
-      chordGain.gain.setValueAtTime(0, this.audioContext!.currentTime);
-      chordGain.gain.linearRampToValueAtTime(gain, this.audioContext!.currentTime + 0.01);
-      chordGain.gain.exponentialRampToValueAtTime(0.001, this.audioContext!.currentTime + duration);
+      // Smooth attack
+      chordGain.gain.setValueAtTime(0, currentTime);
+      chordGain.gain.linearRampToValueAtTime(gain, currentTime + 0.05);
+      
+      // Sustain for the full duration
+      chordGain.gain.setValueAtTime(gain, currentTime + duration - 0.05);
+      
+      // Smooth release
+      chordGain.gain.linearRampToValueAtTime(0.001, currentTime + duration);
       
       oscillator.connect(chordGain);
       chordGain.connect(this.gainNode);
       
-      oscillator.start(this.audioContext!.currentTime);
-      oscillator.stop(this.audioContext!.currentTime + duration);
+      oscillator.start(currentTime);
+      oscillator.stop(currentTime + duration);
     });
   }
   
