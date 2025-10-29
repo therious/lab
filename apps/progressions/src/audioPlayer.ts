@@ -155,18 +155,17 @@ export class ChordPlayer {
       const oscillator = this.audioContext!.createOscillator();
       const chordGain = this.audioContext!.createGain();
       
-      oscillator.type = 'sine';
+      // Use triangle wave for more piano-like sound
+      oscillator.type = 'triangle';
       oscillator.frequency.value = freq;
       
-      // Smooth attack
+      // Piano-like envelope: quick attack, slow decay
       chordGain.gain.setValueAtTime(0, currentTime);
-      chordGain.gain.linearRampToValueAtTime(gain, currentTime + 0.05);
+      chordGain.gain.linearRampToValueAtTime(gain, currentTime + 0.01); // Fast attack
       
-      // Sustain for the full duration
-      chordGain.gain.setValueAtTime(gain, currentTime + duration - 0.05);
-      
-      // Smooth release
-      chordGain.gain.linearRampToValueAtTime(0.001, currentTime + duration);
+      // Exponential decay like a piano
+      chordGain.gain.setValueAtTime(gain, currentTime + 0.01);
+      chordGain.gain.exponentialRampToValueAtTime(0.001, currentTime + duration);
       
       oscillator.connect(chordGain);
       chordGain.connect(this.gainNode);
