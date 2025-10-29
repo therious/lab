@@ -293,7 +293,7 @@ function App() {
                   <label>Tempo: {tempo} BPM</label>
                   <input
                     type="range"
-                    min="60"
+                    min="20"
                     max="180"
                     value={tempo}
                     onChange={(e) => handleTempoChange(Number(e.target.value))}
