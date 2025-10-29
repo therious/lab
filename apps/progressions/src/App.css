@@ -1,0 +1,272 @@
+.app {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.app-header {
+  text-align: center;
+  color: white;
+  margin-bottom: 30px;
+}
+
+.app-header h1 {
+  margin: 0 0 10px 0;
+  font-size: 2.5em;
+}
+
+.app-header p {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.app-content {
+  display: flex;
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.left-panel {
+  flex: 1;
+  min-width: 400px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.right-panel {
+  flex: 1;
+  min-width: 400px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.search-bar {
+  margin-bottom: 20px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.progression-list {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.progression-item {
+  padding: 15px;
+  margin-bottom: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.progression-item:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+}
+
+.progression-item.selected {
+  border-color: #667eea;
+  background: #f0f2ff;
+}
+
+.progression-name {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.progression-chords {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.chord-badge {
+  background: #667eea;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.progression-key {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.progression-songs {
+  color: #888;
+  font-size: 13px;
+}
+
+.player-controls {
+  margin-bottom: 30px;
+}
+
+.play-button {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.play-button:hover {
+  transform: scale(1.02);
+}
+
+.tempo-control {
+  margin-top: 20px;
+}
+
+.tempo-control label {
+  display: block;
+  margin-bottom: 10px;
+  color: #333;
+  font-weight: 500;
+}
+
+.tempo-slider {
+  width: 100%;
+  height: 8px;
+  border-radius: 5px;
+  background: #e0e0e0;
+  outline: none;
+}
+
+.tempo-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+}
+
+.tempo-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  border: none;
+}
+
+.chord-display {
+  margin-bottom: 30px;
+}
+
+.chord-display h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+}
+
+.chord-progression {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.chord-box {
+  flex: 1;
+  min-width: 80px;
+  padding: 20px;
+  background: #f5f5f5;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  transition: all 0.3s;
+}
+
+.chord-box.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.progression-info {
+  border-top: 2px solid #e0e0e0;
+  padding-top: 20px;
+}
+
+.progression-info h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.progression-info ul {
+  list-style: none;
+  padding: 0;
+}
+
+.progression-info li {
+  padding: 8px 0;
+  color: #666;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.progression-info li:last-child {
+  border-bottom: none;
+}
+
+.placeholder {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.placeholder p {
+  font-size: 18px;
+}
+
+/* Scrollbar styling */
+.progression-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.progression-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.progression-list::-webkit-scrollbar-thumb {
+  background: #667eea;
+  border-radius: 4px;
+}
+
+.progression-list::-webkit-scrollbar-thumb:hover {
+  background: #764ba2;
+}
+
