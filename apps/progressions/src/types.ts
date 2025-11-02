@@ -1,4 +1,4 @@
-export type Chord = string; // e.g., 'I', 'i', 'ii', 'IV', 'bVI', 'bVII', 'VII7', 'VIImaj7'
+export type Chord = string; // e.g., 'I', 'i', 'ii', 'IV', '♭VI', '♭VII', 'VII7', 'VIImaj7'
 
 export interface ChordProgression {
   n?: number; // Optional progression number
