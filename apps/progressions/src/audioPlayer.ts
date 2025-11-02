@@ -3,9 +3,13 @@ const NOTES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A�
 
 export function getNoteFrequency(note: string, octave: number = 4): number {
   const semitones: { [key: string]: number } = {
-    'C': 0, 'C♯': 1, 'D♭': 1, 'D': 2, 'D♯': 3, 'E♭': 3,
-    'E': 4, 'F': 5, 'F♯': 6, 'G♭': 6, 'G': 7, 'G♯': 8,
-    'A♭': 8, 'A': 9, 'A♯': 10, 'B♭': 10, 'B': 11
+    'C':   0, 'C♯': 1,
+    'D♭':  1, 'D':  2, 'D♯':  3,
+    'E♭':  3, 'E':  4,
+    'F':   5, 'F♯': 6,
+    'G♭':  6, 'G':  7, 'G♯':  8,
+    'A♭':  8, 'A':  9, 'A♯': 10,
+    'B♭': 10, 'B': 11
   };
 
   // Convert 'b' to '♭' and '#' to '♯' for compatibility, then normalize
@@ -127,6 +131,8 @@ export class ChordPlayer {
   private playCallback: ((index: number) => void) | null = null;
   private playTimeoutId: NodeJS.Timeout | null = null;
   private arpeggioType = 'block';
+  private hyphenatedChords: string[] = [];
+  private hyphenatedChordIndex = 0;
 
   constructor() {
     try {
@@ -215,7 +221,7 @@ export class ChordPlayer {
       harmonic4.connect(harmonic4Gain);
 
       [fundamentalGain, harmonic2Gain, harmonic3Gain, harmonic4Gain].forEach(g => g.connect(baseGain));
-      baseGain.connect(this.gainNode);
+      baseGain.connect(this.gainNode!);
 
       // Start all oscillators
       fundamental.start(noteStart);
@@ -253,33 +259,115 @@ export class ChordPlayer {
     this.playLoop();
   }
 
+  // Helper function to parse hyphenated chords
+  private parseHyphenatedChord(chordString: string): string[] {
+    // Check if the chord string contains a hyphen (allowing for spaces around hyphens)
+    const trimmed = chordString.trim();
+    if (trimmed.includes('-')) {
+      // Split by hyphens and trim each part
+      return trimmed.split(/-/).map(part => part.trim()).filter(part => part.length > 0);
+    }
+    return [chordString];
+  }
+
   private playLoop = () => {
     if (!this.isPlaying) return;
 
     const chord = this.currentProgression[this.currentIndex];
-    const notes = getChordNotes(chord, this.currentKey);
-    const duration = 60 / this.currentTempo * 1000 / 1000; // Convert BPM to seconds
 
-    // Trigger callback
-    if (this.playCallback) {
-      this.playCallback(this.currentIndex);
+    // Check if this is a hyphenated chord (contains hyphens separating chord symbols)
+    const chordParts = this.parseHyphenatedChord(chord);
+    const barDuration = 60 / this.currentTempo; // Duration of one bar in seconds
+
+    // If we're in the middle of playing hyphenated chords, continue with the next sub-chord
+    if (this.hyphenatedChords.length > 0 && this.hyphenatedChordIndex < this.hyphenatedChords.length) {
+      // Play the current sub-chord from the hyphenated sequence
+      const subChord = this.hyphenatedChords[this.hyphenatedChordIndex];
+      const subChordDuration = barDuration / this.hyphenatedChords.length;
+      const notes = getChordNotes(subChord, this.currentKey);
+
+      // Trigger callback with the main progression index
+      if (this.playCallback) {
+        this.playCallback(this.currentIndex);
+      }
+
+      // Play the sub-chord
+      this.playChord(notes, subChordDuration, 0.15, this.arpeggioType);
+
+      // Move to next sub-chord
+      this.hyphenatedChordIndex++;
+
+      // If we've played all sub-chords, move to next main chord
+      if (this.hyphenatedChordIndex >= this.hyphenatedChords.length) {
+        this.hyphenatedChords = [];
+        this.hyphenatedChordIndex = 0;
+        this.currentIndex = (this.currentIndex + 1) % this.currentProgression.length;
+      }
+
+      // Schedule next chord/sub-chord
+      this.playTimeoutId = setTimeout(() => {
+        this.playLoop();
+      }, subChordDuration * 1000);
+    } else if (chordParts.length > 1) {
+      // This is a hyphenated chord - start playing the sequence
+      this.hyphenatedChords = chordParts;
+      this.hyphenatedChordIndex = 0;
+
+      // Play the first sub-chord
+      const subChord = this.hyphenatedChords[0];
+      const subChordDuration = barDuration / this.hyphenatedChords.length;
+      const notes = getChordNotes(subChord, this.currentKey);
+
+      // Trigger callback
+      if (this.playCallback) {
+        this.playCallback(this.currentIndex);
+      }
+
+      // Play the sub-chord
+      this.playChord(notes, subChordDuration, 0.15, this.arpeggioType);
+
+      // Move to next sub-chord
+      this.hyphenatedChordIndex++;
+
+      // If this was the only sub-chord, move to next main chord
+      if (this.hyphenatedChordIndex >= this.hyphenatedChords.length) {
+        this.hyphenatedChords = [];
+        this.hyphenatedChordIndex = 0;
+        this.currentIndex = (this.currentIndex + 1) % this.currentProgression.length;
+      }
+
+      // Schedule next chord/sub-chord
+      this.playTimeoutId = setTimeout(() => {
+        this.playLoop();
+      }, subChordDuration * 1000);
+    } else {
+      // Regular (non-hyphenated) chord
+      const notes = getChordNotes(chord, this.currentKey);
+      const duration = barDuration;
+
+      // Trigger callback
+      if (this.playCallback) {
+        this.playCallback(this.currentIndex);
+      }
+
+      // Play the chord
+      this.playChord(notes, duration, 0.15, this.arpeggioType);
+
+      // Move to next chord
+      this.currentIndex = (this.currentIndex + 1) % this.currentProgression.length;
+
+      // Schedule next chord
+      this.playTimeoutId = setTimeout(() => {
+        this.playLoop();
+      }, duration * 1000);
     }
-
-    // Play the chord
-    this.playChord(notes, duration, 0.15, this.arpeggioType);
-
-    // Move to next chord
-    this.currentIndex = (this.currentIndex + 1) % this.currentProgression.length;
-
-    // Schedule next chord
-    this.playTimeoutId = setTimeout(() => {
-      this.playLoop();
-    }, duration * 1000);
   };
 
   stop() {
     this.isPlaying = false;
     this.currentIndex = 0;
+    this.hyphenatedChords = [];
+    this.hyphenatedChordIndex = 0;
     if (this.playTimeoutId) {
       clearTimeout(this.playTimeoutId);
       this.playTimeoutId = null;
