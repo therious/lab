@@ -1,12 +1,12 @@
 import { ChordProgression } from './types';
 
-export const progressionsList: ChordProgression[] = [
+export const progressionsData: ChordProgression[] = [
   {
     n: 37,
     name: "Thinking Out Loud",
-    progression: [],
+    progression: ["I", "I-III", "IV", "V"],
     songs: ["Thinking Out Loud (Ed Sheeran)"],
-    key: ""
+    key: "D"
   },
   {
     name: "I-♭VII-IV",
@@ -261,7 +261,7 @@ export const progressionsList: ChordProgression[] = [
   {
     n: 26,
     name: "Joan of Arc",
-    progression: ["I", "V", "IV", "V/V", "V"],
+    progression: ["I", "V", "IV", "V-V", "V"],
     songs: ["Joan of Arc (Leonard Cohen)"],
     key: "G, D, C, A, D"
   },
