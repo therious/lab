@@ -1,128 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChordProgression } from './types';
+import { ChordProgression, ArpeggioType } from './types';
 import { progressionsData } from './progressionsList';
 import { ChordPlayer } from './audioPlayer';
-import './App.css';
-
-const KEYS = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
-
-type ArpeggioType = 'block' | 'up' | 'down' | 'updown' | 'downup';
-
-const ARPEGGIO_OPTIONS: { value: ArpeggioType; label: string }[] = [
-  { value: 'block', label: 'Block (simultaneous)' },
-  { value: 'up', label: 'Up' },
-  { value: 'down', label: 'Down' },
-  { value: 'updown', label: 'Up then Down' },
-  { value: 'downup', label: 'Down then Up' }
-];
-
-// Convert roman numeral + tonic to actual chord name
-function getChordName(chordString: string, tonic: string): string {
-  const chordInfo = parseChord(chordString);
-  const keyNotes: { [key: string]: number } = {
-    'C': 0, 'C♯': 1, 'D♭': 1, 'D': 2, 'D♯': 3, 'E♭': 3,
-    'E': 4, 'F': 5, 'F♯': 6, 'G♭': 6, 'G': 7, 'G♯': 8,
-    'A♭': 8, 'A': 9, 'A♯': 10, 'B♭': 10, 'B': 11
-  };
-  
-  const cleanKey = tonic.replace(/m$/, '');
-  const tonicSemitone = keyNotes[cleanKey] || 0;
-  const rootSemitone = (tonicSemitone + chordInfo.root) % 12;
-  
-  const NOTES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
-  const noteName = NOTES[rootSemitone];
-  
-  // Build quality suffix based on parsed chord info
-  let suffix = '';
-  if (chordInfo.extensions.includes('maj7')) {
-    suffix = 'maj7';
-  } else if (chordInfo.extensions.includes('7')) {
-    if (chordInfo.quality === 'dim') {
-      suffix = '°7'; // diminished 7th
-    } else {
-      suffix = chordInfo.quality === 'minor' ? 'm7' : '7';
-    }
-  } else if (chordInfo.extensions.includes('6')) {
-    suffix = chordInfo.quality === 'minor' ? 'm6' : '6';
-  } else if (chordInfo.extensions.includes('9')) {
-    suffix = chordInfo.quality === 'minor' ? 'm9' : '9';
-  } else if (chordInfo.quality === 'dim') {
-    suffix = '°';
-  } else if (chordInfo.quality === 'aug') {
-    suffix = '+';
-  } else if (chordInfo.quality === 'sus4') {
-    suffix = 'sus4';
-  } else if (chordInfo.quality === 'sus2') {
-    suffix = 'sus2';
-  } else if (chordInfo.quality === 'minor') {
-    suffix = 'm';
-  }
-  
-  return noteName + suffix;
-}
-
-function parseChord(chord: string): { root: number; quality: string; extensions: string[] } {
-  // Updated regex to capture: flat, roman numeral, diminished symbol (∂), quality, and numeric extensions
-  const matches = chord.match(/^(♭)?([IV]+|vi+|ii+|iii+|iv+|v+|vii+)(∂|maj7|m7|7|sus4|sus2|dim|aug|\+)?(\d+)?/);
-  
-  if (!matches) {
-    return { root: 0, quality: 'major', extensions: [] };
-  }
-  
-  const [, flatPrefix, roman, qualitySymbol = '', extension = ''] = matches;
-  const romanUpper = roman.toUpperCase();
-  const ROMAN_TO_INTERVAL: { [key: string]: number } = {
-    'I': 0, 'II': 2, 'III': 4, 'IV': 5, 'V': 7, 'VI': 9, 'VII': 11,
-    'i': 0, 'ii': 2, 'iii': 4, 'iv': 5, 'v': 7, 'vi': 9, 'vii': 11
-  };
-  const interval = ROMAN_TO_INTERVAL[romanUpper] || 0;
-  const rootInterval = flatPrefix ? interval - 1 : interval;
-  
-  const isMinor = roman !== roman.toUpperCase();
-  
-  // Determine quality based on symbol or default
-  let qualityStr: string;
-  const extensionsList: string[] = [];
-
-  if (qualitySymbol === '∂') {
-    // Diminished chord
-    qualityStr = 'dim';
-    if (extension === '7') {
-      extensionsList.push('7'); // Diminished 7th
-    }
-  } else if (qualitySymbol === '+' || qualitySymbol === 'aug') {
-    qualityStr = 'aug';
-  } else if (qualitySymbol === 'sus4' || qualitySymbol === 'sus2') {
-    qualityStr = qualitySymbol; // sus4 or sus2
-  } else if (qualitySymbol === 'dim') {
-    qualityStr = 'dim';
-    if (extension === '7') {
-      extensionsList.push('7');
-    }
-  } else if (qualitySymbol === 'maj7') {
-    qualityStr = 'major';
-    extensionsList.push('maj7');
-  } else if (qualitySymbol === 'm7') {
-    qualityStr = 'minor';
-    extensionsList.push('7'); // minor 7th
-  } else if (qualitySymbol === '7') {
-    qualityStr = isMinor ? 'minor' : 'major';
-    extensionsList.push('7'); // dominant 7th or minor 7th
-  } else if (extension) {
-    // Numeric extension without quality symbol
-    qualityStr = isMinor ? 'minor' : 'major';
-    extensionsList.push(extension);
-  } else {
-    // Default quality based on case
-    qualityStr = isMinor ? 'minor' : 'major';
-  }
-  
-  return {
-    root: rootInterval,
-    quality: qualityStr,
-    extensions: extensionsList
-  };
-}
+import { SearchBar } from './components/SearchBar';
+import { ProgressionListItem } from './components/ProgressionListItem';
+import { PlayerControls } from './components/PlayerControls';
+import { ChordDisplay } from './components/ChordDisplay';
+import { ProgressionInfo } from './components/ProgressionInfo';
+import { Placeholder } from './components/Placeholder';
+import { GlobalStyles } from './components/GlobalStyles';
+import {
+  AppContainer,
+  AppHeader,
+  AppContent,
+  Panel,
+  ProgressionList,
+} from './components/StyledComponents';
 
 function App() {
   const [progressionList, setProgressionList] = useState<ChordProgression[]>(progressionsData);
@@ -288,130 +181,65 @@ function App() {
   };
   
   return (
-    <div className="app">
-      <header className="app-header">
+    <>
+      <GlobalStyles />
+      <AppContainer>
+        <AppHeader>
         <h1>Chord Progressions</h1>
         <p>Explore and play popular chord progressions</p>
-      </header>
+      </AppHeader>
       
-      <div className="app-content">
-        <div className="left-panel">
-          <div className="search-bar">
-            <input
-              type="text"
-              placeholder="Search progressions or songs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-          </div>
+      <AppContent>
+        <Panel>
+          <SearchBar value={searchQuery} onChange={setSearchQuery} />
           
-          <div className="progression-list">
+          <ProgressionList>
             {progressionList.map((progression, index) => (
-              <div
+              <ProgressionListItem
                 key={index}
-                className={`progression-item ${selectedProgression?.name === progression.name ? 'selected' : ''}`}
+                progression={progression}
+                isSelected={selectedProgression?.name === progression.name}
                 onClick={() => handleSelectProgression(progression)}
-              >
-                <div className="progression-name">{progression.name}</div>
-                <div className="progression-chords">
-                  {progression.progression.map((chord, i) => (
-                    <span key={i} className="chord-badge">{chord}</span>
-                  ))}
-                </div>
-                <div className="progression-key">Key: {progression.key}</div>
-                <div className="progression-songs">
-                  {progression.songs[0]}
-                </div>
-              </div>
+              />
             ))}
-          </div>
-        </div>
+          </ProgressionList>
+        </Panel>
         
-        <div className="right-panel">
+        <Panel>
           {selectedProgression ? (
             <>
-              <div className="player-controls">
-                <button 
-                  className="play-button"
-                  onClick={handlePlay}
-                >
-                  {isPlaying ? '⏸ Pause' : '▶ Play'}
-                </button>
-                
-                <div className="tempo-control">
-                  <label>Tempo: {tempo} BPM</label>
-                  <input
-                    type="range"
-                    min="20"
-                    max="180"
-                    value={tempo}
-                    onChange={(e) => handleTempoChange(Number(e.target.value))}
-                    className="tempo-slider"
-                  />
-                </div>
-
-                <div className="key-control">
-                  <label>Key:</label>
-                  <select
-                    value={currentKey}
-                    onChange={(e) => setCurrentKey(e.target.value)}
-                    className="key-selector"
-                  >
-                    {KEYS.map(key => (
-                      <option key={key} value={key}>{key}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="arpeggio-control">
-                  <label>Arpeggio:</label>
-                  <select
-                    value={arpeggioType}
-                    onChange={(e) => setArpeggioType(e.target.value as ArpeggioType)}
-                    className="key-selector"
-                  >
-                    {ARPEGGIO_OPTIONS.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              <PlayerControls
+                isPlaying={isPlaying}
+                tempo={tempo}
+                currentKey={currentKey}
+                arpeggioType={arpeggioType}
+                onPlay={handlePlay}
+                onTempoChange={handleTempoChange}
+                onKeyChange={setCurrentKey}
+                onArpeggioChange={setArpeggioType}
+              />
               
-              <div className="chord-display">
-                <h3>Progression: {selectedProgression.name}</h3>
-                <div className="chord-progression">
-                  {selectedProgression.progression.map((chord, index) => (
-                    <div
-                      key={index}
-                      className={`chord-box ${index === currentChordIndex && isPlaying ? 'active' : ''}`}
-                    >
-                      <div className="chord-roman">{chord}</div>
-                      <div className="chord-name">{getChordName(chord, currentKey)}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <ChordDisplay
+                progressionName={selectedProgression.name}
+                progression={selectedProgression.progression}
+                currentKey={currentKey}
+                currentChordIndex={currentChordIndex}
+                isPlaying={isPlaying}
+              />
               
-              <div className="progression-info">
-                <h4>Songs using this progression:</h4>
-                <ul>
-                  {selectedProgression.songs.map((song, index) => (
-                    <li key={index}>{song}</li>
-                  ))}
-                </ul>
-              </div>
+              <ProgressionInfo
+                songs={selectedProgression.songs}
+                progressionName={selectedProgression.name}
+              />
             </>
           ) : (
-            <div className="placeholder">
-              <p>Select a progression from the list to begin</p>
-            </div>
+            <Placeholder />
           )}
-        </div>
-      </div>
-    </div>
+        </Panel>
+      </AppContent>
+    </AppContainer>
+    </>
   );
 }
 
 export default App;
-
