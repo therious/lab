@@ -1,12 +1,15 @@
 import styled from 'styled-components';
 
-export const AppContainer = styled.div`
+// Helper to add data-component attribute
+const named = (name: string) => ({ 'data-n': name } as any);
+
+export const AppContainer = styled.div.attrs(named('AppContainer'))`
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
 `;
 
-export const AppHeader = styled.header`
+export const AppHeader = styled.header.attrs(named('AppHeader'))`
   text-align: center;
   color: white;
   margin-bottom: 30px;
@@ -22,14 +25,14 @@ export const AppHeader = styled.header`
   }
 `;
 
-export const AppContent = styled.div`
+export const AppContent = styled.div.attrs(named('AppContent'))`
   display: flex;
   gap: 20px;
   max-width: 1400px;
   margin: 0 auto;
 `;
 
-export const Panel = styled.div`
+export const Panel = styled.div.attrs(named('Panel'))`
   flex: 1;
   min-width: 400px;
   background: white;
@@ -38,11 +41,11 @@ export const Panel = styled.div`
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 `;
 
-export const SearchBar = styled.div`
+export const SearchBar = styled.div.attrs(named('SearchBar'))`
   margin-bottom: 20px;
 `;
 
-export const SearchInput = styled.input`
+export const SearchInput = styled.input.attrs(named('SearchInput'))`
   width: 100%;
   padding: 12px;
   border: 2px solid #e0e0e0;
@@ -56,7 +59,7 @@ export const SearchInput = styled.input`
   }
 `;
 
-export const ProgressionList = styled.div`
+export const ProgressionList = styled.div.attrs(named('ProgressionList'))`
   max-height: 600px;
   overflow-y: auto;
 
@@ -79,7 +82,7 @@ export const ProgressionList = styled.div`
   }
 `;
 
-export const ProgressionItem = styled.div<{ $selected?: boolean }>`
+export const ProgressionItem = styled.div.attrs(named('ProgressionItem'))<{ $selected?: boolean }>`
   padding: 15px;
   margin-bottom: 10px;
   border: 2px solid ${props => props.$selected ? '#667eea' : '#e0e0e0'};
@@ -94,21 +97,21 @@ export const ProgressionItem = styled.div<{ $selected?: boolean }>`
   }
 `;
 
-export const ProgressionName = styled.div`
+export const ProgressionName = styled.div.attrs(named('ProgressionName'))`
   font-size: 18px;
   font-weight: bold;
   color: #333;
   margin-bottom: 8px;
 `;
 
-export const ProgressionChords = styled.div`
+export const ProgressionChords = styled.div.attrs(named('ProgressionChords'))`
   display: flex;
   gap: 8px;
   margin-bottom: 8px;
   flex-wrap: wrap;
 `;
 
-export const ChordBadge = styled.span`
+export const ChordBadge = styled.span.attrs(named('ChordBadge'))`
   background: #667eea;
   color: white;
   padding: 4px 12px;
@@ -117,22 +120,22 @@ export const ChordBadge = styled.span`
   font-weight: 500;
 `;
 
-export const ProgressionKey = styled.div`
+export const ProgressionKey = styled.div.attrs(named('ProgressionKey'))`
   color: #666;
   font-size: 14px;
   margin-bottom: 5px;
 `;
 
-export const ProgressionSongs = styled.div`
+export const ProgressionSongs = styled.div.attrs(named('ProgressionSongs'))`
   color: #888;
   font-size: 13px;
 `;
 
-export const PlayerControls = styled.div`
+export const PlayerControls = styled.div.attrs(named('PlayerControls'))`
   margin-bottom: 30px;
 `;
 
-export const PlayButton = styled.button`
+export const PlayButton = styled.button.attrs(named('PlayButton'))`
   width: 100%;
   padding: 15px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -149,7 +152,7 @@ export const PlayButton = styled.button`
   }
 `;
 
-export const ControlGroup = styled.div`
+export const ControlGroup = styled.div.attrs(named('ControlGroup'))`
   margin-top: 20px;
 
   label {
@@ -160,7 +163,7 @@ export const ControlGroup = styled.div`
   }
 `;
 
-export const Select = styled.select`
+export const Select = styled.select.attrs(named('Select'))`
   width: 100%;
   padding: 10px;
   border: 2px solid #e0e0e0;
@@ -180,7 +183,10 @@ export const Select = styled.select`
   }
 `;
 
-export const TempoSlider = styled.input.attrs({ type: 'range' })`
+export const TempoSlider = styled.input.attrs({
+  type: 'range',
+  ...named('TempoSlider')
+})`
   width: 100%;
   height: 8px;
   border-radius: 5px;
@@ -206,7 +212,7 @@ export const TempoSlider = styled.input.attrs({ type: 'range' })`
   }
 `;
 
-export const ChordDisplay = styled.div`
+export const ChordDisplay = styled.div.attrs(named('ChordDisplay'))`
   margin-bottom: 30px;
 
   h3 {
@@ -215,13 +221,13 @@ export const ChordDisplay = styled.div`
   }
 `;
 
-export const ChordProgression = styled.div`
+export const ChordProgression = styled.div.attrs(named('ChordProgression'))`
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
 `;
 
-export const ChordBox = styled.div<{ $active?: boolean }>`
+export const ChordBox = styled.div.attrs(named('ChordBox'))<{ $active?: boolean }>`
   flex: 1;
   min-width: 80px;
   padding: 15px;
@@ -238,20 +244,20 @@ export const ChordBox = styled.div<{ $active?: boolean }>`
     : 'none'};
 `;
 
-export const ChordRoman = styled.div<{ $active?: boolean }>`
+export const ChordRoman = styled.div.attrs(named('ChordRoman'))<{ $active?: boolean }>`
   font-size: 24px;
   font-weight: bold;
   color: ${props => props.$active ? 'white' : '#333'};
   margin-bottom: 5px;
 `;
 
-export const ChordName = styled.div<{ $active?: boolean }>`
+export const ChordName = styled.div.attrs(named('ChordName'))<{ $active?: boolean }>`
   font-size: 14px;
   color: ${props => props.$active ? 'rgba(255, 255, 255, 0.9)' : '#666'};
   font-weight: normal;
 `;
 
-export const ProgressionInfo = styled.div`
+export const ProgressionInfo = styled.div.attrs(named('ProgressionInfo'))`
   border-top: 2px solid #e0e0e0;
   padding-top: 20px;
 
@@ -276,7 +282,7 @@ export const ProgressionInfo = styled.div`
   }
 `;
 
-export const Placeholder = styled.div`
+export const Placeholder = styled.div.attrs(named('Placeholder'))`
   text-align: center;
   padding: 60px 20px;
   color: #999;
