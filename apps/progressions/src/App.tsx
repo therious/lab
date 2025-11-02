@@ -4,7 +4,7 @@ import { progressionsData } from './progressionsData';
 import { ChordPlayer } from './audioPlayer';
 import './App.css';
 
-const KEYS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+const KEYS = ['C', 'C♯', 'D', 'Eb', 'E', 'F', 'F♯', 'G', 'Ab', 'A', 'Bb', 'B'];
 
 type ArpeggioType = 'block' | 'up' | 'down' | 'updown' | 'downup';
 
@@ -20,18 +20,18 @@ const ARPEGGIO_OPTIONS: { value: ArpeggioType; label: string }[] = [
 function getChordName(chordString: string, tonic: string): string {
   const chordInfo = parseChord(chordString);
   const keyNotes: { [key: string]: number } = {
-    'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3,
-    'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8,
-    'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
+    'C': 0, 'C♯': 1, 'D♭': 1, 'D': 2, 'D♯': 3, 'E♭': 3,
+    'E': 4, 'F': 5, 'F♯': 6, 'G♭': 6, 'G': 7, 'G♯': 8,
+    'A♭': 8, 'A': 9, 'A♯': 10, 'B♭': 10, 'B': 11
   };
-  
+
   const cleanKey = tonic.replace(/m$/, '');
   const tonicSemitone = keyNotes[cleanKey] || 0;
   const rootSemitone = (tonicSemitone + chordInfo.root) % 12;
-  
-  const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+  const NOTES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
   const noteName = NOTES[rootSemitone];
-  
+
   // Build quality suffix
   let suffix = '';
   if (chordString.includes('maj7')) {
@@ -43,17 +43,17 @@ function getChordName(chordString: string, tonic: string): string {
   } else if (chordInfo.quality === 'minor') {
     suffix = 'm';
   }
-  
+
   return noteName + suffix;
 }
 
 function parseChord(chord: string): { root: number; quality: string; extensions: string[] } {
-  const matches = chord.match(/^(b)?([IV]+|vi+|ii+|iii+|iv+|v+|vii+)(maj7|m7|7|sus4|sus2|dim|aug)?(\d+)?/);
-  
+  const matches = chord.match(/^(b|♭)?([IV]+|vi+|ii+|iii+|iv+|v+|vii+)(maj7|m7|7|sus4|sus2|dim|aug)?(\d+)?/);
+
   if (!matches) {
     return { root: 0, quality: 'major', extensions: [] };
   }
-  
+
   const [, flatPrefix, roman, quality = '', extension = ''] = matches;
   const romanUpper = roman.toUpperCase();
   const ROMAN_TO_INTERVAL: { [key: string]: number } = {
@@ -62,11 +62,11 @@ function parseChord(chord: string): { root: number; quality: string; extensions:
   };
   const interval = ROMAN_TO_INTERVAL[romanUpper] || 0;
   const rootInterval = flatPrefix ? interval - 1 : interval;
-  
+
   const isMinor = roman !== roman.toUpperCase();
-  
+
   const qualityStr = quality || (isMinor ? 'minor' : 'major');
-  
+
   return {
     root: rootInterval,
     quality: qualityStr,
@@ -83,9 +83,9 @@ function App() {
   const [tempo, setTempo] = useState(60);
   const [currentKey, setCurrentKey] = useState<string>('C');
   const [arpeggioType, setArpeggioType] = useState<ArpeggioType>('block');
-  
+
   const playerRef = useRef<ChordPlayer | null>(null);
-  
+
   useEffect(() => {
     playerRef.current = new ChordPlayer();
     return () => {
@@ -155,25 +155,25 @@ function App() {
     }
     prevArpeggioRef.current = arpeggioType;
   }, [arpeggioType]); // eslint-disable-line react-hooks/exhaustive-deps
-  
+
   // Filter progressions based on search
   useEffect(() => {
     if (!searchQuery.trim()) {
       setProgressionList(progressionsData);
       return;
     }
-    
+
     const query = searchQuery.toLowerCase();
-    const filtered = progressionsData.filter(p => 
+    const filtered = progressionsData.filter(p =>
       p.name.toLowerCase().includes(query) ||
       p.songs.some(song => song.toLowerCase().includes(query))
     );
     setProgressionList(filtered);
   }, [searchQuery]);
-  
+
   const handlePlay = () => {
     if (!selectedProgression) return;
-    
+
     if (isPlaying) {
       // Stop current playback
       if (playerRef.current) {
@@ -197,19 +197,19 @@ function App() {
       }
     }
   };
-  
+
   const handleSelectProgression = (progression: ChordProgression) => {
     // Always stop any current playback first
     if (playerRef.current) {
       playerRef.current.stop();
     }
-    
+
     // Update UI state immediately
     const wasPlaying = isPlaying;
     setIsPlaying(false);
     setSelectedProgression(progression);
     setCurrentChordIndex(0);
-    
+
     // If it was playing before, start the new progression after a brief delay
     if (wasPlaying && playerRef.current) {
       const newKey = progression.key;
@@ -229,21 +229,21 @@ function App() {
       }, 100); // Brief delay to ensure cleanup of scheduled audio
     }
   };
-  
+
   const handleTempoChange = (newTempo: number) => {
     setTempo(newTempo);
     if (playerRef.current) {
       playerRef.current.setTempo(newTempo);
     }
   };
-  
+
   return (
     <div className="app">
       <header className="app-header">
         <h1>Chord Progressions</h1>
         <p>Explore and play popular chord progressions</p>
       </header>
-      
+
       <div className="app-content">
         <div className="left-panel">
           <div className="search-bar">
@@ -255,7 +255,7 @@ function App() {
               className="search-input"
             />
           </div>
-          
+
           <div className="progression-list">
             {progressionList.map((progression, index) => (
               <div
@@ -277,18 +277,18 @@ function App() {
             ))}
           </div>
         </div>
-        
+
         <div className="right-panel">
           {selectedProgression ? (
             <>
               <div className="player-controls">
-                <button 
+                <button
                   className="play-button"
                   onClick={handlePlay}
                 >
                   {isPlaying ? '⏸ Pause' : '▶ Play'}
                 </button>
-                
+
                 <div className="tempo-control">
                   <label>Tempo: {tempo} BPM</label>
                   <input
@@ -327,7 +327,7 @@ function App() {
                   </select>
                 </div>
               </div>
-              
+
               <div className="chord-display">
                 <h3>Progression: {selectedProgression.name}</h3>
                 <div className="chord-progression">
@@ -342,7 +342,7 @@ function App() {
                   ))}
                 </div>
               </div>
-              
+
               <div className="progression-info">
                 <h4>Songs using this progression:</h4>
                 <ul>

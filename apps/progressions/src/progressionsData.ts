@@ -38,8 +38,8 @@ export const progressionsData: ChordProgression[] = [
     key: "C"
   },
   {
-    name: "I-bVII-IV",
-    progression: ['I', 'bVII', 'IV'],
+    name: "I-♭VII-IV",
+    progression: ['I', '♭VII', 'IV'],
     songs: ["Sweet Child O' Mine (Guns N' Roses)", "Sweet Home Alabama (Lynyrd Skynyrd)"],
     key: "C"
   },
@@ -56,8 +56,8 @@ export const progressionsData: ChordProgression[] = [
     key: "C"
   },
   {
-    name: "I-bVI-IV-I",
-    progression: ['I', 'bVI', 'IV', 'I'],
+    name: "I-♭VI-IV-I",
+    progression: ['I', '♭VI', 'IV', 'I'],
     songs: ["Creep (Radiohead)", "No Surprises (Radiohead)"],
     key: "C"
   },
@@ -74,8 +74,8 @@ export const progressionsData: ChordProgression[] = [
     key: "C"
   },
   {
-    name: "i-bVII-bVI-bVII",
-    progression: ['i', 'bVII', 'bVI', 'bVII'],
+    name: "i-♭VII-♭VI-♭VII",
+    progression: ['i', '♭VII', '♭VI', '♭VII'],
     songs: ["White Wedding (Billy Idol)", "Running Up That Hill (Kate Bush)"],
     key: "Am"
   },
@@ -90,6 +90,12 @@ export const progressionsData: ChordProgression[] = [
     progression: ['vi', 'ii', 'V', 'I'],
     songs: ["Autumn Leaves", "Girl from Ipanema"],
     key: "Am"
+  },
+  {
+    name: "I-V-vi-iii-IV-I-IV-V",
+    progression: ['I', 'V', 'vi', 'iii', 'IV', 'I', 'IV', 'V'],
+    songs: ["Pachelbel's Canon in D", "Greensleeves"],
+    key: "D"
   }
 ];
 
