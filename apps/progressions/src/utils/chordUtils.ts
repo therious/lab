@@ -105,3 +105,12 @@ export function getChordName(chordString: string, tonic: string): string {
   return noteName + suffix;
 }
 
+// Convert regular digits (0-9) to superscript digits for display purposes only
+export function toSuperscript(str: string): string {
+  const superscriptMap: { [key: string]: string } = {
+    '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+    '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹'
+  };
+  return str.replace(/\d/g, (digit) => superscriptMap[digit] || digit);
+}
+
