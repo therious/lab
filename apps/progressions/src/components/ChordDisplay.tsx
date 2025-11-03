@@ -5,7 +5,7 @@ import {
   ChordRoman,
   ChordName,
 } from './StyledComponents';
-import { getChordName } from '../utils/chordUtils';
+import { getChordName, toSuperscript } from '../utils/chordUtils';
 
 interface ChordDisplayProps {
   progressionName: string;
@@ -24,8 +24,8 @@ export function ChordDisplay({ progressionName, progression, currentKey, current
           const isActive = index === currentChordIndex && isPlaying;
           return (
             <ChordBox key={index} $active={isActive}>
-              <ChordRoman $active={isActive}>{chord}</ChordRoman>
-              <ChordName $active={isActive}>{getChordName(chord, currentKey)}</ChordName>
+              <ChordRoman $active={isActive}>{toSuperscript(chord)}</ChordRoman>
+              <ChordName $active={isActive}>{toSuperscript(getChordName(chord, currentKey))}</ChordName>
             </ChordBox>
           );
         })}

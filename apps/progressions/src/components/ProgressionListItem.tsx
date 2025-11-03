@@ -7,6 +7,7 @@ import {
   ProgressionKey,
   ProgressionSongs,
 } from './StyledComponents';
+import { toSuperscript } from '../utils/chordUtils';
 
 interface ProgressionListItemProps {
   progression: ChordProgression;
@@ -20,7 +21,7 @@ export function ProgressionListItem({ progression, isSelected, onClick }: Progre
       <ProgressionName>{progression.name}</ProgressionName>
       <ProgressionChords>
         {progression.progression.map((chord, i) => (
-          <ChordBadge key={i}>{chord}</ChordBadge>
+          <ChordBadge key={i}>{toSuperscript(chord)}</ChordBadge>
         ))}
       </ProgressionChords>
       <ProgressionKey>Key: {progression.key}</ProgressionKey>
