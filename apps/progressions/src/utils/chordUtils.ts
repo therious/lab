@@ -1,6 +1,6 @@
 export function parseChord(chord: string): { root: number; quality: string; extensions: string[] } {
-  // Updated regex to capture: flat, roman numeral, diminished symbol (°), quality, and numeric extensions
-  const matches = chord.match(/^(♭)?([IV]+|vi+|ii+|iii+|iv+|v+|vii+)(°|maj7|m7|7|sus4|sus2|dim|aug|\+)?(\d+)?/);
+  // Updated regex to capture: flat, roman numeral, diminished symbol (°), half-diminished (∅), quality, and numeric extensions
+  const matches = chord.match(/^(♭)?([IV]+|vi+|ii+|iii+|iv+|v+|vii+)(∅|°|maj7|m7|7|sus4|sus2|dim|aug|\+)?(\d+)?/);
   
   if (!matches) {
     return { root: 0, quality: 'major', extensions: [] };
@@ -21,7 +21,11 @@ export function parseChord(chord: string): { root: number; quality: string; exte
   let qualityStr: string;
   const extensionsList: string[] = [];
 
-  if (qualitySymbol === '°') {
+  if (qualitySymbol === '∅') {
+    // Half-diminished chord (m7♭5)
+    qualityStr = 'halfdim';
+    extensionsList.push('7'); // Always includes minor 7th
+  } else if (qualitySymbol === '°') {
     // Diminished chord
     qualityStr = 'dim';
     if (extension === '7') {
@@ -81,7 +85,9 @@ export function getChordName(chordString: string, tonic: string): string {
   if (chordInfo.extensions.includes('maj7')) {
     suffix = 'maj7';
   } else if (chordInfo.extensions.includes('7')) {
-    if (chordInfo.quality === 'dim') {
+    if (chordInfo.quality === 'halfdim') {
+      suffix = '∅7'; // half-diminished 7th
+    } else if (chordInfo.quality === 'dim') {
       suffix = '°7'; // diminished 7th
     } else {
       suffix = chordInfo.quality === 'minor' ? 'm7' : '7';
@@ -90,6 +96,8 @@ export function getChordName(chordString: string, tonic: string): string {
     suffix = chordInfo.quality === 'minor' ? 'm6' : '6';
   } else if (chordInfo.extensions.includes('9')) {
     suffix = chordInfo.quality === 'minor' ? 'm9' : '9';
+  } else if (chordInfo.quality === 'halfdim') {
+    suffix = '∅7'; // half-diminished 7th
   } else if (chordInfo.quality === 'dim') {
     suffix = '°';
   } else if (chordInfo.quality === 'aug') {
