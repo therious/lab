@@ -322,6 +322,29 @@ export const ChordName = styled.div.attrs(named('ChordName'))<{ $active?: boolea
   font-weight: normal;
 `;
 
+export const SongListItem = styled.li.withConfig({
+  shouldForwardProp: (prop) => prop !== '$selected',
+})<{ $selected?: boolean }>`
+  cursor: pointer;
+  padding: 8px 12px !important;
+  margin: 4px 0 !important;
+  border-radius: 6px;
+  background: ${props => props.$selected ? '#e3d5f5' : 'transparent'} !important;
+  border: 2px solid ${props => props.$selected ? '#667eea' : 'transparent'} !important;
+  border-bottom: ${props => props.$selected ? '2px solid #667eea' : '1px solid #f0f0f0'} !important;
+  transition: all 0.2s;
+  color: ${props => props.$selected ? '#333' : '#666'} !important;
+  
+  &:hover {
+    background: ${props => props.$selected ? '#e3d5f5' : '#f0f0f0'} !important;
+    border-color: ${props => props.$selected ? '#667eea' : '#ccc'} !important;
+  }
+  
+  &:last-child {
+    border-bottom: ${props => props.$selected ? '2px solid #667eea' : 'none'} !important;
+  }
+`;
+
 export const ProgressionInfo = styled.div.attrs(named('ProgressionInfo'))`
   border-top: 2px solid #e0e0e0;
   padding-top: 20px;
@@ -334,8 +357,10 @@ export const ProgressionInfo = styled.div.attrs(named('ProgressionInfo'))`
   ul {
     list-style: none;
     padding: 0;
+    margin: 0;
   }
 
+  /* Base li styles - SongListItem will override */
   li {
     padding: 8px 0;
     color: #666;
