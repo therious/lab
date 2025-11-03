@@ -9,6 +9,7 @@ import { ChordDisplay } from './components/ChordDisplay';
 import { ProgressionInfo } from './components/ProgressionInfo';
 import { Placeholder } from './components/Placeholder';
 import { GlobalStyles } from './components/GlobalStyles';
+import { SongInfo } from './utils/songUtils';
 import {
   AppContainer,
   AppHeader,
@@ -21,6 +22,7 @@ function App() {
   const [progressionList, setProgressionList] = useState<ChordProgression[]>(progressionsData);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProgression, setSelectedProgression] = useState<ChordProgression | null>(null);
+  const [selectedSong, setSelectedSong] = useState<SongInfo | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentChordIndex, setCurrentChordIndex] = useState(0);
   const [tempo, setTempo] = useState(60);
@@ -42,16 +44,31 @@ function App() {
   useEffect(() => {
     if (!selectedProgression && progressionsData.length > 0) {
       setSelectedProgression(progressionsData[0]);
-      setCurrentKey(progressionsData[0].key);
+      const firstKey = progressionsData[0].key.split(',')[0].trim();
+      setCurrentKey(firstKey || 'C');
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset currentKey when selecting a new progression
   useEffect(() => {
     if (selectedProgression) {
-      setCurrentKey(selectedProgression.key);
+      // Extract first key if there are multiple keys
+      const firstKey = selectedProgression.key.split(',')[0].trim();
+      setCurrentKey(firstKey || 'C');
+      setSelectedSong(null); // Reset selected song when progression changes
     }
   }, [selectedProgression?.name]); // eslint-disable-line react-hooks/exhaustive-deps
+  
+  // Handle song selection - update key and tempo
+  const handleSongSelect = (song: SongInfo) => {
+    setSelectedSong(song);
+    if (song.key) {
+      setCurrentKey(song.key);
+    }
+    if (song.bpm) {
+      setTempo(song.bpm);
+    }
+  };
 
   // Restart playback when key changes and something is playing (skip initial mount)
   const prevKeyRef = useRef<string>(currentKey);
@@ -235,6 +252,8 @@ function App() {
               <ProgressionInfo
                 songs={selectedProgression.songs}
                 progressionName={selectedProgression.name}
+                selectedSong={selectedSong}
+                onSongSelect={handleSongSelect}
               />
             </>
           ) : (
