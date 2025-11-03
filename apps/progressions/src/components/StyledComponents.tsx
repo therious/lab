@@ -129,6 +129,43 @@ export const ProgressionKey = styled.div.attrs(named('ProgressionKey'))`
 export const ProgressionSongs = styled.div.attrs(named('ProgressionSongs'))`
   color: #888;
   font-size: 13px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const ProgressionSongsContainer = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== '$expanded',
+}).attrs(named('ProgressionSongsContainer'))<{ $expanded?: boolean }>`
+  color: #888;
+  font-size: 13px;
+  line-height: 1.4;
+  
+  ${props => !props.$expanded && `
+    max-height: calc(1.4em * 2);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  `}
+`;
+
+export const ExpandToggle = styled.button.attrs(named('ExpandToggle'))`
+  background: none;
+  border: none;
+  color: #667eea;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-top: 4px;
+  text-decoration: underline;
+  font-weight: 500;
+  
+  &:hover {
+    color: #764ba2;
+  }
 `;
 
 export const PlayerControls = styled.div.attrs(named('PlayerControls'))`
