@@ -115,7 +115,7 @@ export const progressionsData: ChordProgression[] = [
   {
     n: 6,
     name: "Give me Love",
-    progression: ["I", "I∂7", "I7", "IV7"],
+    progression: ["I", "I°7", "I7", "IV7"],
     songs: ["Give me Love (George Harrison)"],
     key: ""
   },
@@ -200,7 +200,7 @@ export const progressionsData: ChordProgression[] = [
   {
     n: 5,
     name: "Something (Beatles)",
-    progression: ["I", "I∂7", "I7", "IV"],
+    progression: ["I", "I°7", "I7", "IV"],
     songs: ["Something (Beatles)", "Something More (Train)", "raindrops keep falling", "Everything's not Lost (Cold Play)", "Strawberry Swing (Cold Play)", "Remember Me (Diana Ross)", "Love is a Game (Adele)", "Rollerblades (Eliza Doolittle)"],
     key: "C"
   },
@@ -247,14 +247,14 @@ export const progressionsData: ChordProgression[] = [
   {
     n: 7,
     name: "Full Something",
-    progression: ["I", "I∂7", "I7", "IV", "iv"],
+    progression: ["I", "I°7", "I7", "IV", "iv"],
     songs: [],
     key: ""
   },
   {
     n: 8,
     name: "It ain't over",
-    progression: ["I", "I∂7", "I9", "IV", "iv"],
+    progression: ["I", "I°7", "I9", "IV", "iv"],
     songs: ["It ain't over till it's over (Lenny Kravitz)"],
     key: ""
   },
@@ -275,28 +275,28 @@ export const progressionsData: ChordProgression[] = [
   {
     n: 9,
     name: "Can't take my eyes off of you",
-    progression: ["I", "I∂7", "I7", "IV", "iv", "I", "II7 - ii7"],
+    progression: ["I", "I°7", "I7", "IV", "iv", "I", "II7 - ii7"],
     songs: [],
     key: ""
   },
   {
     n: 13,
     name: "I was only joking (Rod Stewart)",
-    progression: ["I", "I∂7", "I7", "IV", "iv", "I", "V"],
+    progression: ["I", "I°7", "I7", "IV", "iv", "I", "V"],
     songs: [],
     key: "A, Amaj7, A7, D, Dm, A, E"
   },
   {
     n: 10,
     name: "Salt Walter",
-    progression: ["I", "I∂7", "I7", "IV", "iv", "I-vi", "♭VI - ♭VII"],
+    progression: ["I", "I°7", "I7", "IV", "iv", "I-vi", "♭VI - ♭VII"],
     songs: ["Julian Lennon"],
     key: "E, Emaj7, E7, A, Am E-C♯m, C-D"
   },
   {
     n: 11,
     name: "Simple Twist of Fate",
-    progression: ["I", "I∂7", "I7", "IV", "iv", "I - V - iv", "I V7"],
+    progression: ["I", "I°7", "I7", "IV", "iv", "I - V - iv", "I V7"],
     songs: ["Bob Dylan"],
     key: "E, Emaj7, E7, A, Am, E-B-A, E-B7"
   },
@@ -309,7 +309,7 @@ export const progressionsData: ChordProgression[] = [
   {
     n: 12,
     name: "If a picture (Bread)",
-    progression: ["I", "I∂7", "I7", "IV", "iv", "I", "v6", "V7"],
+    progression: ["I", "I°7", "I7", "IV", "iv", "I", "v6", "V7"],
     songs: [],
     key: "A, Amaj7, A7, D, Dm, A, Dm6, E7"
   },
