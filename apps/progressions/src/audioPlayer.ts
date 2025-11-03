@@ -32,8 +32,8 @@ const ROMAN_TO_INTERVAL: { [key: string]: number } = {
 };
 
 export function parseChord(chord: string): { root: number; quality: string; extensions: string[] } {
-  // Updated regex to capture: flat, roman numeral, diminished symbol (°), quality, and numeric extensions
-  const matches = chord.match(/^(♭)?([IV]+|vi+|ii+|iii+|iv+|v+|vii+)(°|maj7|m7|7|sus4|sus2|dim|aug|\+)?(\d+)?/);
+  // Updated regex to capture: flat, roman numeral, diminished symbol (°), half-diminished (∅), quality, and numeric extensions
+  const matches = chord.match(/^(♭)?([IV]+|vi+|ii+|iii+|iv+|v+|vii+)(∅|°|maj7|m7|7|sus4|sus2|dim|aug|\+)?(\d+)?/);
 
   if (!matches) {
     // Fallback: treat as major I
@@ -52,7 +52,11 @@ export function parseChord(chord: string): { root: number; quality: string; exte
   let qualityStr: string;
   const extensionsList: string[] = [];
 
-  if (qualitySymbol === '°') {
+  if (qualitySymbol === '∅') {
+    // Half-diminished chord (m7♭5)
+    qualityStr = 'halfdim';
+    extensionsList.push('7'); // Always includes minor 7th
+  } else if (qualitySymbol === '°') {
     // Diminished chord
     qualityStr = 'dim';
     if (extension === '7') {
@@ -123,6 +127,9 @@ export function getChordNotes(chord: string, key: string, octave: number = 4): n
       case 'major':
         intervals = [0, 4, 7]; // root, major 3rd, 5th
         break;
+      case 'halfdim':
+        intervals = [0, 3, 6]; // root, minor 3rd, diminished 5th (half-diminished triad)
+        break;
       case 'dim':
         intervals = [0, 3, 6]; // root, minor 3rd, diminished 5th
         break;
@@ -139,6 +146,8 @@ export function getChordNotes(chord: string, key: string, octave: number = 4): n
     } else if (chordInfo.extensions.includes('7')) {
       if (chordInfo.quality === 'dim') {
         intervals.push(9); // diminished 7th
+      } else if (chordInfo.quality === 'halfdim') {
+        intervals.push(10); // minor 7th (half-diminished: m7♭5)
       } else {
         intervals.push(10); // minor 7th (dominant 7th for major, minor 7th for minor)
       }
