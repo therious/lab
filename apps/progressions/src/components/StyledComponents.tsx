@@ -43,11 +43,12 @@ export const Panel = styled.div.attrs(named('Panel'))`
 
 export const SearchBar = styled.div.attrs(named('SearchBar'))`
   margin-bottom: 20px;
+  position: relative;
 `;
 
-export const SearchInput = styled.input.attrs(named('SearchInput'))`
+export const SearchInput = styled.input.attrs(named('SearchInput'))<{ $hasClear?: boolean }>`
   width: 100%;
-  padding: 12px;
+  padding: 12px ${props => props.$hasClear ? '40px' : '12px'} 12px 12px;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
   font-size: 16px;
@@ -56,6 +57,33 @@ export const SearchInput = styled.input.attrs(named('SearchInput'))`
   &:focus {
     outline: none;
     border-color: #667eea;
+  }
+`;
+
+export const ClearButton = styled.button.attrs(named('ClearButton'))`
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 18px;
+  line-height: 1;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #667eea;
+  }
+
+  &:focus {
+    outline: none;
+    color: #667eea;
   }
 `;
 

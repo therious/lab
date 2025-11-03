@@ -191,7 +191,11 @@ function App() {
       
       <AppContent>
         <Panel>
-          <SearchBar value={searchQuery} onChange={setSearchQuery} />
+          <SearchBar 
+            value={searchQuery} 
+            onChange={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+          />
           
           <ProgressionList>
             {progressionList.map((progression, index) => (
@@ -200,6 +204,7 @@ function App() {
                 progression={progression}
                 isSelected={selectedProgression?.name === progression.name}
                 onClick={() => handleSelectProgression(progression)}
+                searchQuery={searchQuery}
               />
             ))}
           </ProgressionList>

@@ -10,19 +10,87 @@ import {
   ExpandToggle,
 } from './StyledComponents';
 import { toSuperscript } from '../utils/chordUtils';
+import { HighlightText } from '../utils/highlightText';
 
 interface ProgressionListItemProps {
   progression: ChordProgression;
   isSelected: boolean;
   onClick: () => void;
+  searchQuery: string;
 }
 
-export function ProgressionListItem({ progression, isSelected, onClick }: ProgressionListItemProps) {
+export function ProgressionListItem({ progression, isSelected, onClick, searchQuery }: ProgressionListItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [needsExpandControl, setNeedsExpandControl] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   
   const songsText = progression.songs.join(', ');
+  
+  // Check if search query matches songs text and if matches would be hidden when collapsed
+  useEffect(() => {
+    if (searchQuery.trim() && containerRef.current && !isExpanded) {
+      // Check if search matches are in the songs text
+      const searchLower = searchQuery.toLowerCase();
+      const songsLower = songsText.toLowerCase();
+      const hasMatch = songsLower.includes(searchLower);
+      
+      if (hasMatch) {
+        // Wait for React to render the highlighted marks, then check positions
+        // Use double requestAnimationFrame to ensure DOM is fully updated
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const element = containerRef.current;
+            if (!element || isExpanded) return;
+            
+            const lineHeight = parseFloat(getComputedStyle(element).lineHeight) || 18.2;
+            const maxHeight = lineHeight * 2;
+            
+            // Temporarily collapse to measure
+            const tempStyle = element.style.cssText;
+            element.style.maxHeight = `${maxHeight}px`;
+            element.style.display = '-webkit-box';
+            element.style.webkitBoxOrient = 'vertical';
+            element.style.webkitLineClamp = '2';
+            
+            // Force a reflow
+            void element.offsetHeight;
+            
+            // Check if any mark elements are beyond the visible 2 lines
+            const marks = element.querySelectorAll('mark');
+            let hasHiddenMatch = false;
+            
+            if (marks.length > 0) {
+              const containerRect = element.getBoundingClientRect();
+              marks.forEach((mark) => {
+                const markRect = mark.getBoundingClientRect();
+                // If mark's top is beyond the container's visible bottom (2 lines)
+                if (markRect.top >= containerRect.top + maxHeight - 1) {
+                  hasHiddenMatch = true;
+                }
+              });
+            } else {
+              // Fallback: if content exceeds 2 lines and has a match, expand to be safe
+              const exceedsTwoLines = element.scrollHeight > maxHeight + 1;
+              if (exceedsTwoLines) {
+                // Estimate if match is likely beyond 2 lines based on character position
+                const matchIndex = songsLower.indexOf(searchLower);
+                const estimatedCharsPerLine = 50;
+                const twoLinesChars = estimatedCharsPerLine * 2;
+                hasHiddenMatch = matchIndex > twoLinesChars;
+              }
+            }
+            
+            // Restore original style
+            element.style.cssText = tempStyle;
+            
+            if (hasHiddenMatch) {
+              setIsExpanded(true);
+            }
+          });
+        });
+      }
+    }
+  }, [searchQuery, songsText, isExpanded]);
   
   useEffect(() => {
     // Check if content exceeds 2 lines when collapsed
@@ -35,10 +103,15 @@ export function ProgressionListItem({ progression, isSelected, onClick }: Progre
         const maxHeight = lineHeight * 2;
         const needsControl = element.scrollHeight > maxHeight + 1; // Small buffer for rounding
         setNeedsExpandControl(needsControl);
+      } else {
+        // If expanded, check if it would need control when collapsed
+        const lineHeight = parseFloat(getComputedStyle(element).lineHeight) || 18.2;
+        const maxHeight = lineHeight * 2;
+        const needsControl = element.scrollHeight > maxHeight + 1;
+        setNeedsExpandControl(needsControl);
       }
-      // If already expanded and we previously detected it needs control, keep showing the control
     }
-  }, [songsText, isExpanded]);
+  }, [songsText, isExpanded, searchQuery]); // Added searchQuery to dependencies
   
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the item click
@@ -47,7 +120,9 @@ export function ProgressionListItem({ progression, isSelected, onClick }: Progre
 
   return (
     <ProgressionItem $selected={isSelected} onClick={onClick}>
-      <ProgressionName>{progression.name}</ProgressionName>
+      <ProgressionName>
+        <HighlightText text={progression.name} searchTerm={searchQuery} />
+      </ProgressionName>
       <ProgressionChords>
         {progression.progression.map((chord, i) => (
           <ChordBadge key={i}>{toSuperscript(chord)}</ChordBadge>
@@ -56,7 +131,7 @@ export function ProgressionListItem({ progression, isSelected, onClick }: Progre
       <ProgressionKey>Key: {progression.key}</ProgressionKey>
       <div>
         <ProgressionSongsContainer ref={containerRef} $expanded={isExpanded}>
-          {songsText}
+          <HighlightText text={songsText} searchTerm={searchQuery} />
         </ProgressionSongsContainer>
         {needsExpandControl && (
           <ExpandToggle onClick={handleToggle}>
