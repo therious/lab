@@ -325,5 +325,11 @@ export const progressionsData: ChordProgression[] = [
     progression: ["I", "IV", "I", "V", "iii", "vii", "iii", "vii", "V", "V", "V", "IV", "I", "♭VII", "vi", "V", "V", "V", "I", "IV", "I", "V", "I"],
     songs: [],
     key: "A"
+  },
+  {
+    name: "Magnolia",
+    progression: ["I", "I°7", "I7", "IV", "iv"],
+    songs: ["Magical Mystery Tour (The Beatles)", "Magnolia's Wedding Day", "My Mother's Eyes", "When the Saints Go Marching In", "The Lonesome Road", "If I Had You"],
+    key: "C"
   }
 ];
