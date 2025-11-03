@@ -1,6 +1,6 @@
 export function parseChord(chord: string): { root: number; quality: string; extensions: string[] } {
-  // Updated regex to capture: flat, roman numeral, diminished symbol (∂), quality, and numeric extensions
-  const matches = chord.match(/^(♭)?([IV]+|vi+|ii+|iii+|iv+|v+|vii+)(∂|maj7|m7|7|sus4|sus2|dim|aug|\+)?(\d+)?/);
+  // Updated regex to capture: flat, roman numeral, diminished symbol (°), quality, and numeric extensions
+  const matches = chord.match(/^(♭)?([IV]+|vi+|ii+|iii+|iv+|v+|vii+)(°|maj7|m7|7|sus4|sus2|dim|aug|\+)?(\d+)?/);
   
   if (!matches) {
     return { root: 0, quality: 'major', extensions: [] };
@@ -21,7 +21,7 @@ export function parseChord(chord: string): { root: number; quality: string; exte
   let qualityStr: string;
   const extensionsList: string[] = [];
 
-  if (qualitySymbol === '∂') {
+  if (qualitySymbol === '°') {
     // Diminished chord
     qualityStr = 'dim';
     if (extension === '7') {
