@@ -358,6 +358,26 @@ export const ProgressionInfo = styled.div.attrs(named('ProgressionInfo'))`
     list-style: none;
     padding: 0;
     margin: 0;
+    max-height: 400px;
+    overflow-y: auto;
+    
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #667eea;
+      border-radius: 4px;
+
+      &:hover {
+        background: #764ba2;
+      }
+    }
   }
 
   /* Base li styles - SongListItem will override */
