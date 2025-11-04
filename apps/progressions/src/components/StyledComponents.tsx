@@ -402,3 +402,184 @@ export const Placeholder = styled.div.attrs(named('Placeholder'))`
   }
 `;
 
+export const YouTubeSearchContainer = styled.div.attrs(named('YouTubeSearchContainer'))`
+  border-top: 2px solid #e0e0e0;
+  padding-top: 20px;
+  margin-top: 20px;
+`;
+
+export const YouTubeSearchHeader = styled.div.attrs(named('YouTubeSearchHeader'))`
+  margin-bottom: 15px;
+
+  h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 16px;
+  }
+`;
+
+export const YouTubeVideoList = styled.div.attrs(named('YouTubeVideoList'))`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+  
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 4px;
+
+    &:hover {
+      background: #764ba2;
+    }
+  }
+`;
+
+export const YouTubeVideoItem = styled.div.attrs(named('YouTubeVideoItem'))`
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+
+  &:hover {
+    border-color: #667eea;
+    background: #f8f9ff;
+    transform: translateX(4px);
+  }
+`;
+
+export const YouTubeThumbnail = styled.img.attrs(named('YouTubeThumbnail'))`
+  width: 120px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+`;
+
+export const YouTubeVideoInfo = styled.div.attrs(named('YouTubeVideoInfo'))`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+`;
+
+export const YouTubeVideoTitle = styled.div.attrs(named('YouTubeVideoTitle'))`
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
+`;
+
+export const YouTubeVideoChannel = styled.div.attrs(named('YouTubeVideoChannel'))`
+  font-size: 12px;
+  color: #888;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const YouTubeLoading = styled.div.attrs(named('YouTubeLoading'))`
+  text-align: center;
+  padding: 20px;
+  color: #667eea;
+  font-size: 14px;
+`;
+
+export const YouTubeError = styled.div.attrs(named('YouTubeError'))`
+  padding: 15px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  color: #856404;
+  font-size: 14px;
+
+  p {
+    margin: 0 0 8px 0;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  a {
+    color: #667eea;
+    text-decoration: underline;
+  }
+`;
+
+export const YouTubeEmpty = styled.div.attrs(named('YouTubeEmpty'))`
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-size: 14px;
+`;
+
+export const YouTubeVideoEmbed = styled.div.attrs(named('YouTubeVideoEmbed'))`
+  border-top: 2px solid #e0e0e0;
+  padding-top: 20px;
+  margin-top: 20px;
+
+  h4 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 16px;
+  }
+
+  iframe {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+export const YouTubeFallbackButton = styled.button.attrs(named('YouTubeFallbackButton'))`
+  width: 100%;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  &:hover {
+    background: linear-gradient(135deg, #cc0000 0%, #990000 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &::before {
+    content: '▶';
+    font-size: 14px;
+  }
+`;
+
