@@ -7,6 +7,8 @@ import { ProgressionListItem } from './components/ProgressionListItem';
 import { PlayerControls } from './components/PlayerControls';
 import { ChordDisplay } from './components/ChordDisplay';
 import { ProgressionInfo } from './components/ProgressionInfo';
+import { YouTubeSearchResults } from './components/YouTubeSearchResults';
+import { YouTubeVideoPlayer } from './components/YouTubeVideoPlayer';
 import { Placeholder } from './components/Placeholder';
 import { GlobalStyles } from './components/GlobalStyles';
 import { SongInfo } from './utils/songUtils';
@@ -23,6 +25,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProgression, setSelectedProgression] = useState<ChordProgression | null>(null);
   const [selectedSong, setSelectedSong] = useState<SongInfo | null>(null);
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentChordIndex, setCurrentChordIndex] = useState(0);
   const [tempo, setTempo] = useState(60);
@@ -56,11 +59,23 @@ function App() {
       const firstKey = selectedProgression.key.split(',')[0].trim();
       setCurrentKey(firstKey || 'C');
       setSelectedSong(null); // Reset selected song when progression changes
+      setSelectedVideoId(null); // Reset selected video when progression changes
     }
   }, [selectedProgression?.name]); // eslint-disable-line react-hooks/exhaustive-deps
   
-  // Handle song selection - update key and tempo
+  // Handle song selection - update key and tempo, stop playback, trigger YouTube search
   const handleSongSelect = (song: SongInfo) => {
+    // Stop any currently playing chord progression
+    if (playerRef.current) {
+      playerRef.current.stop();
+    }
+    setIsPlaying(false);
+    setCurrentChordIndex(0);
+    
+    // Clear any previously selected video
+    setSelectedVideoId(null);
+    
+    // Update song selection and settings
     setSelectedSong(song);
     if (song.key) {
       setCurrentKey(song.key);
@@ -68,6 +83,19 @@ function App() {
     if (song.bpm) {
       setTempo(song.bpm);
     }
+  };
+  
+  // Handle video selection - stop playback and show video
+  const handleVideoSelect = (videoId: string) => {
+    // Stop any currently playing chord progression
+    if (playerRef.current) {
+      playerRef.current.stop();
+    }
+    setIsPlaying(false);
+    setCurrentChordIndex(0);
+    
+    // Set the selected video
+    setSelectedVideoId(videoId);
   };
 
   // Restart playback when key changes and something is playing (skip initial mount)
@@ -255,6 +283,20 @@ function App() {
                 selectedSong={selectedSong}
                 onSongSelect={handleSongSelect}
               />
+              
+              {selectedSong && !selectedVideoId && (
+                <YouTubeSearchResults
+                  song={selectedSong}
+                  onVideoSelect={handleVideoSelect}
+                />
+              )}
+              
+              {selectedVideoId && (
+                <YouTubeVideoPlayer
+                  videoId={selectedVideoId}
+                  songTitle={selectedSong ? `${selectedSong.title} by ${selectedSong.artist}` : undefined}
+                />
+              )}
             </>
           ) : (
             <Placeholder />
