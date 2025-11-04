@@ -11,26 +11,34 @@ import {
 } from './StyledComponents';
 import { toSuperscript } from '../utils/chordUtils';
 import { HighlightText } from '../utils/highlightText';
+import { sortSongsByArtist } from '../utils/artistIndex';
 
 interface ProgressionListItemProps {
   progression: ChordProgression;
   isSelected: boolean;
   onClick: () => void;
   searchQuery: string;
+  artistQuery?: string;
 }
 
-export function ProgressionListItem({ progression, isSelected, onClick, searchQuery }: ProgressionListItemProps) {
+export function ProgressionListItem({ progression, isSelected, onClick, searchQuery, artistQuery }: ProgressionListItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [needsExpandControl, setNeedsExpandControl] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const songsText = progression.songs.join(', ');
+  // Sort songs to put matching artist songs first if artistQuery exists and is not empty
+  const sortedSongs = artistQuery?.trim() ? sortSongsByArtist(progression.songs, artistQuery) : progression.songs;
+  const songsText = sortedSongs.join(', ');
   
-  // Check if search query matches songs text and if matches would be hidden when collapsed
+  // Combine searchQuery and artistQuery for highlighting (artistQuery takes precedence for highlighting)
+  const highlightTerm = artistQuery?.trim() || searchQuery?.trim() || '';
+  
+  // Check if search query or artist query matches songs text and if matches would be hidden when collapsed
   useEffect(() => {
-    if (searchQuery.trim() && containerRef.current && !isExpanded) {
+    const queryToCheck = highlightTerm || searchQuery;
+    if (queryToCheck.trim() && containerRef.current && !isExpanded) {
       // Check if search matches are in the songs text
-      const searchLower = searchQuery.toLowerCase();
+      const searchLower = queryToCheck.toLowerCase();
       const songsLower = songsText.toLowerCase();
       const hasMatch = songsLower.includes(searchLower);
       
@@ -90,7 +98,7 @@ export function ProgressionListItem({ progression, isSelected, onClick, searchQu
         });
       }
     }
-  }, [searchQuery, songsText, isExpanded]);
+  }, [searchQuery, artistQuery, songsText, isExpanded, highlightTerm]);
   
   useEffect(() => {
     // Check if content exceeds 2 lines when collapsed
@@ -111,7 +119,7 @@ export function ProgressionListItem({ progression, isSelected, onClick, searchQu
         setNeedsExpandControl(needsControl);
       }
     }
-  }, [songsText, isExpanded, searchQuery]); // Added searchQuery to dependencies
+  }, [songsText, isExpanded, searchQuery, artistQuery]); // Added searchQuery and artistQuery to dependencies
   
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the item click
@@ -131,7 +139,7 @@ export function ProgressionListItem({ progression, isSelected, onClick, searchQu
       <ProgressionKey>Key: {progression.key}</ProgressionKey>
       <div>
         <ProgressionSongsContainer ref={containerRef} $expanded={isExpanded}>
-          <HighlightText text={songsText} searchTerm={searchQuery} />
+          <HighlightText text={songsText} searchTerm={highlightTerm || ''} />
         </ProgressionSongsContainer>
         {needsExpandControl && (
           <ExpandToggle onClick={handleToggle}>

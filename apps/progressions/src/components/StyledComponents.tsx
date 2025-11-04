@@ -46,6 +46,17 @@ export const SearchBar = styled.div.attrs(named('SearchBar'))`
   position: relative;
 `;
 
+export const SearchBarContainer = styled.div.attrs(named('SearchBarContainer'))`
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  
+  > div {
+    flex: 1;
+    margin-bottom: 0;
+  }
+`;
+
 export const SearchInput = styled.input.attrs(named('SearchInput'))<{ $hasClear?: boolean }>`
   width: 100%;
   padding: 12px ${props => props.$hasClear ? '40px' : '12px'} 12px 12px;
