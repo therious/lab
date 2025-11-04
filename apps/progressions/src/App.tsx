@@ -18,11 +18,14 @@ import {
   AppContent,
   Panel,
   ProgressionList,
+  SearchBarContainer,
 } from './components/StyledComponents';
+import { filterProgressionsByArtist } from './utils/artistIndex';
 
 function App() {
   const [progressionList, setProgressionList] = useState<ChordProgression[]>(progressionsData);
   const [searchQuery, setSearchQuery] = useState('');
+  const [artistQuery, setArtistQuery] = useState('');
   const [selectedProgression, setSelectedProgression] = useState<ChordProgression | null>(null);
   const [selectedSong, setSelectedSong] = useState<SongInfo | null>(null);
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
@@ -144,20 +147,42 @@ function App() {
     prevArpeggioRef.current = arpeggioType;
   }, [arpeggioType]); // eslint-disable-line react-hooks/exhaustive-deps
   
-  // Filter progressions based on search
+  // Filter progressions based on search and artist query
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setProgressionList(progressionsData);
-      return;
+    let filtered = progressionsData;
+    
+    // First filter by artist if artist query exists
+    if (artistQuery.trim()) {
+      filtered = filterProgressionsByArtist(filtered, artistQuery);
     }
     
-    const query = searchQuery.toLowerCase();
-    const filtered = progressionsData.filter(p => 
-      p.name.toLowerCase().includes(query) ||
-      p.songs.some(song => song.toLowerCase().includes(query))
-    );
+    // Then filter by general search query if it exists
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(query) ||
+        p.songs.some(song => song.toLowerCase().includes(query))
+      );
+    }
+    
     setProgressionList(filtered);
-  }, [searchQuery]);
+  }, [searchQuery, artistQuery]);
+  
+  // Clear artist query when search query changes
+  const handleSearchQueryChange = (value: string) => {
+    setSearchQuery(value);
+    if (value.trim()) {
+      setArtistQuery('');
+    }
+  };
+  
+  // Clear search query when artist query changes
+  const handleArtistQueryChange = (value: string) => {
+    setArtistQuery(value);
+    if (value.trim()) {
+      setSearchQuery('');
+    }
+  };
   
   const handlePlay = () => {
     if (!selectedProgression) return;
@@ -236,11 +261,20 @@ function App() {
       
       <AppContent>
         <Panel>
-          <SearchBar 
-            value={searchQuery} 
-            onChange={setSearchQuery}
-            onClear={() => setSearchQuery('')}
-          />
+          <SearchBarContainer>
+            <SearchBar 
+              value={searchQuery} 
+              onChange={handleSearchQueryChange}
+              onClear={() => setSearchQuery('')}
+              placeholder="Search progressions or songs..."
+            />
+            <SearchBar 
+              value={artistQuery} 
+              onChange={handleArtistQueryChange}
+              onClear={() => setArtistQuery('')}
+              placeholder="Search by artist..."
+            />
+          </SearchBarContainer>
           
           <ProgressionList>
             {progressionList.map((progression, index) => (
@@ -250,6 +284,7 @@ function App() {
                 isSelected={selectedProgression?.name === progression.name}
                 onClick={() => handleSelectProgression(progression)}
                 searchQuery={searchQuery}
+                artistQuery={artistQuery}
               />
             ))}
           </ProgressionList>
@@ -282,6 +317,7 @@ function App() {
                 progressionName={selectedProgression.name}
                 selectedSong={selectedSong}
                 onSongSelect={handleSongSelect}
+                artistQuery={artistQuery}
               />
               
               {selectedSong && !selectedVideoId && (
