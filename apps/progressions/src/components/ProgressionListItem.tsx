@@ -36,68 +36,88 @@ export function ProgressionListItem({ progression, isSelected, onClick, searchQu
   // Check if search query or artist query matches songs text and if matches would be hidden when collapsed
   useEffect(() => {
     const queryToCheck = highlightTerm || searchQuery;
-    if (queryToCheck.trim() && containerRef.current && !isExpanded) {
-      // Check if search matches are in the songs text
-      const searchLower = queryToCheck.toLowerCase();
-      const songsLower = songsText.toLowerCase();
-      const hasMatch = songsLower.includes(searchLower);
-      
-      if (hasMatch) {
-        // Wait for React to render the highlighted marks, then check positions
-        // Use double requestAnimationFrame to ensure DOM is fully updated
+    // Only run this check when we have a query and the container is currently collapsed
+    if (!queryToCheck.trim() || !containerRef.current || isExpanded) {
+      return;
+    }
+    
+    // When artist search is active, matching songs are sorted to the top, so they should be visible
+    // Only check for auto-expansion if it's a regular search query (not artist-specific)
+    // OR if we can verify that marks are actually hidden
+    const isArtistSearch = !!artistQuery?.trim();
+    
+    // Wait for React to render the highlighted marks, then check positions
+    // Use triple requestAnimationFrame to ensure DOM is fully updated with sorted content
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            const element = containerRef.current;
-            if (!element || isExpanded) return;
-            
-            const lineHeight = parseFloat(getComputedStyle(element).lineHeight) || 18.2;
-            const maxHeight = lineHeight * 2;
-            
-            // Temporarily collapse to measure
-            const tempStyle = element.style.cssText;
-            element.style.maxHeight = `${maxHeight}px`;
-            element.style.display = '-webkit-box';
-            element.style.webkitBoxOrient = 'vertical';
-            element.style.webkitLineClamp = '2';
-            
-            // Force a reflow
-            void element.offsetHeight;
-            
-            // Check if any mark elements are beyond the visible 2 lines
-            const marks = element.querySelectorAll('mark');
-            let hasHiddenMatch = false;
-            
-            if (marks.length > 0) {
-              const containerRect = element.getBoundingClientRect();
-              marks.forEach((mark) => {
-                const markRect = mark.getBoundingClientRect();
-                // If mark's top is beyond the container's visible bottom (2 lines)
-                if (markRect.top >= containerRect.top + maxHeight - 1) {
-                  hasHiddenMatch = true;
-                }
-              });
-            } else {
-              // Fallback: if content exceeds 2 lines and has a match, expand to be safe
-              const exceedsTwoLines = element.scrollHeight > maxHeight + 1;
-              if (exceedsTwoLines) {
-                // Estimate if match is likely beyond 2 lines based on character position
-                const matchIndex = songsLower.indexOf(searchLower);
-                const estimatedCharsPerLine = 50;
-                const twoLinesChars = estimatedCharsPerLine * 2;
-                hasHiddenMatch = matchIndex > twoLinesChars;
+          const element = containerRef.current;
+          // Double-check state hasn't changed
+          if (!element || isExpanded) return;
+          
+          // Check if there are any mark elements (highlighted text)
+          const marks = element.querySelectorAll('mark');
+          if (marks.length === 0) {
+            // No highlights to check, don't expand
+            return;
+          }
+          
+          // Get the computed styles - check if element is actually collapsed
+          const computedStyle = getComputedStyle(element);
+          const computedMaxHeight = computedStyle.maxHeight;
+          
+          // If maxHeight is 'none', element is expanded, so skip
+          if (computedMaxHeight === 'none' || !computedMaxHeight) {
+            return;
+          }
+          
+          // Parse the computed maxHeight (should be in px like "36.4px")
+          const maxHeightPx = parseFloat(computedMaxHeight);
+          if (!maxHeightPx || maxHeightPx === 0) {
+            return;
+          }
+          
+          // Get the container's bounding rect
+          const containerRect = element.getBoundingClientRect();
+          const visibleBottom = containerRect.top + maxHeightPx;
+          
+          // For artist search, matching songs are sorted to top, so check if FIRST mark is visible
+          // For regular search, check if ANY mark is hidden
+          let hasHiddenMatch = false;
+          
+          if (isArtistSearch) {
+            // For artist search, only expand if the FIRST mark (from sorted matching songs) is hidden
+            // This shouldn't happen since matching songs are at the top, but check anyway
+            const firstMark = marks[0];
+            if (firstMark) {
+              const firstMarkRect = firstMark.getBoundingClientRect();
+              // If even the first mark is hidden, something is wrong, but don't expand
+              // Actually, if first mark is visible, we're good - matching songs are at top
+              // Only expand if we find marks BEYOND the first few that are hidden
+              // But actually, if artist search is active, matching songs are at top, so all their marks should be visible
+              // So we should NOT auto-expand for artist search at all
+              return; // Don't auto-expand for artist search
+            }
+          } else {
+            // For regular search, check if any mark is clipped
+            for (const mark of marks) {
+              const markRect = mark.getBoundingClientRect();
+              // If mark's top edge is at or below the visible bottom, it's clipped
+              // Use a small buffer (2px) to account for rounding/subpixel rendering
+              if (markRect.top >= visibleBottom - 2) {
+                hasHiddenMatch = true;
+                break; // Found one hidden mark, no need to check others
               }
             }
             
-            // Restore original style
-            element.style.cssText = tempStyle;
-            
+            // Only expand if there are actually hidden matches
             if (hasHiddenMatch) {
               setIsExpanded(true);
             }
-          });
+          }
         });
-      }
-    }
+      });
+    });
   }, [searchQuery, artistQuery, songsText, isExpanded, highlightTerm]);
   
   useEffect(() => {
