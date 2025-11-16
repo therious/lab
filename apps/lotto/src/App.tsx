@@ -473,23 +473,24 @@ function App() {
                   {predictionWithAnimation ? (
                     <>
                       <div className="main-numbers">
-                        {predictionWithAnimation.prediction.numbers.map((num, idx) => {
+                        {/* Render in sorted order so timelines align correctly */}
+                        {[...predictionWithAnimation.originalNumbers].sort((a, b) => a - b).map((num, sortedIdx) => {
                       const isHandPicked = prediction?.handPickedMain?.includes(num);
-                      const dropDelay = idx * 600; // 600ms = 40% of 1.5s animation (when ball first hits bottom)
                       
-                      // Find where this number should end up in sorted order
-                      const sortedOriginal = [...predictionWithAnimation.originalNumbers].sort((a, b) => a - b);
-                      const finalOrder = sortedOriginal.indexOf(num);
+                      // Find where this number was in the shuffled order (for drop animation)
+                      const shuffledIdx = predictionWithAnimation.prediction.numbers.indexOf(num);
+                      const dropDelay = shuffledIdx * 600; // 600ms = 40% of 1.5s animation (when ball first hits bottom)
                       
-                      // Current position is just the index (left to right)
-                      const initialOrder = idx;
+                      // For reordering: sorted position is final, shuffled position is initial
+                      const finalOrder = sortedIdx;
+                      const initialOrder = shuffledIdx;
                       
                       // Determine arc direction: if moving right, arc above; if moving left, arc below
                       const isMovingRight = finalOrder > initialOrder;
                       const arcDirection = isMovingRight ? 1 : -1;
                       
                       return (
-                        <div key={`${num}-${idx}`} className="number-ball-wrapper">
+                        <div key={`${num}-${sortedIdx}`} className="number-ball-wrapper">
                           <span 
                             className={`number-ball ${isHandPicked ? 'hand-picked' : ''} ${predictionWithAnimation.showReordering ? 'reordering' : ''}`}
                             title={isHandPicked ? 'Hand-picked number' : 'Predicted number'}
@@ -498,6 +499,10 @@ function App() {
                               '--final-order': finalOrder,
                               '--initial-order': initialOrder,
                               '--arc-direction': arcDirection,
+                              // Position at shuffled location initially (before reordering)
+                              transform: predictionWithAnimation.showReordering 
+                                ? undefined 
+                                : `translateX(calc((${initialOrder} - ${finalOrder}) * (60px + 12px)))`,
                             } as React.CSSProperties}
                           >
                             {num}
