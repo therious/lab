@@ -338,6 +338,34 @@ body {
   animation-delay: var(--drop-delay, 0ms);
 }
 
+.number-ball.bonus-indicator {
+  background: transparent;
+  color: #666;
+  font-size: 2rem;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 0;
+  box-shadow: none;
+  position: relative;
+  /* Appear when bonus ball hits baseline */
+  opacity: 0;
+  animation: appearPlus 0.1s ease-in forwards;
+  animation-delay: var(--appear-delay, 0ms);
+}
+
+@keyframes appearPlus {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .number-ball.hand-picked {
   position: relative;
   border: 2px solid #ffd700;
@@ -356,33 +384,33 @@ body {
 @keyframes dropAndBounce {
   0% {
     opacity: 0;
-    transform: translateY(-200vh) scale(0.5);
+    transform: translateX(var(--drop-x, 0)) translateY(-200vh) scale(0.5);
   }
   40% {
     opacity: 1;
-    transform: translateY(0) scale(1); /* Land at final position */
+    transform: translateX(var(--drop-x, 0)) translateY(0) scale(1); /* Land at final position */
   }
   50% {
-    transform: translateY(-25px) scale(1.05); /* Bounce up */
+    transform: translateX(var(--drop-x, 0)) translateY(-25px) scale(1.05); /* Bounce up */
   }
   60% {
-    transform: translateY(0) scale(1); /* Return to position */
+    transform: translateX(var(--drop-x, 0)) translateY(0) scale(1); /* Return to position */
   }
   68% {
-    transform: translateY(-12px) scale(1.02); /* Smaller bounce */
+    transform: translateX(var(--drop-x, 0)) translateY(-12px) scale(1.02); /* Smaller bounce */
   }
   75% {
-    transform: translateY(0) scale(1); /* Return */
+    transform: translateX(var(--drop-x, 0)) translateY(0) scale(1); /* Return */
   }
   82% {
-    transform: translateY(-5px) scale(1.01); /* Tiny bounce */
+    transform: translateX(var(--drop-x, 0)) translateY(-5px) scale(1.01); /* Tiny bounce */
   }
   88% {
-    transform: translateY(0) scale(1); /* Return */
+    transform: translateX(var(--drop-x, 0)) translateY(0) scale(1); /* Return */
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1); /* Settled */
+    transform: translateX(var(--drop-x, 0)) translateY(0) scale(1); /* Settled */
   }
 }
 
