@@ -388,32 +388,36 @@ body {
 
 @keyframes reorderNumbersArc {
   0% {
-    transform: translateX(0) translateY(0) scale(1);
+    /* Start at shuffled position (initial transform positions it there) */
+    transform: translateX(calc((var(--initial-order) - var(--final-order)) * (60px + 12px))) 
+                translateY(0) 
+                scale(1);
     opacity: 1;
   }
   25% {
     /* Early arc: rising */
-    transform: translateX(calc((var(--final-order) - var(--initial-order)) * (60px + 12px) * 0.25)) 
+    transform: translateX(calc((var(--initial-order) - var(--final-order)) * (60px + 12px) * 0.75)) 
                 translateY(calc(var(--arc-direction, 1) * -25px)) 
                 scale(1.05);
     opacity: 1;
   }
   50% {
     /* Midpoint: maximum arc height */
-    transform: translateX(calc((var(--final-order) - var(--initial-order)) * (60px + 12px) * 0.5)) 
+    transform: translateX(calc((var(--initial-order) - var(--final-order)) * (60px + 12px) * 0.5)) 
                 translateY(calc(var(--arc-direction, 1) * -40px)) 
                 scale(1.1);
     opacity: 1;
   }
   75% {
     /* Late arc: descending */
-    transform: translateX(calc((var(--final-order) - var(--initial-order)) * (60px + 12px) * 0.75)) 
+    transform: translateX(calc((var(--initial-order) - var(--final-order)) * (60px + 12px) * 0.25)) 
                 translateY(calc(var(--arc-direction, 1) * -15px)) 
                 scale(1.03);
     opacity: 1;
   }
   100% {
-    transform: translateX(calc((var(--final-order) - var(--initial-order)) * (60px + 12px))) 
+    /* End at final position (0, since balls are in sorted order in DOM) */
+    transform: translateX(0) 
                 translateY(0) 
                 scale(1);
     opacity: 1;
