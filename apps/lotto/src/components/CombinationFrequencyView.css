@@ -1,0 +1,161 @@
+.combination-frequency-view {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.combination-frequency-view h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-size: 1.25rem;
+}
+
+.combination-frequency-view .subtitle {
+  margin: 0 0 0.5rem 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.combination-frequency-view .hint {
+  margin: 0 0 1rem 0;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.combination-frequency-view .predicted-indicator {
+  background: #fff3cd;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+  color: #856404;
+}
+
+.combination-group {
+  margin-bottom: 1.5rem;
+}
+
+.combination-group:last-child {
+  margin-bottom: 0;
+}
+
+.combination-group h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  color: #555;
+  font-weight: 600;
+}
+
+.combination-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.combination-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.combination-item:hover {
+  border-color: #007bff;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.1);
+}
+
+.combination-item.hovered {
+  background: #fff3cd;
+  border-color: #ffc107;
+  position: relative;
+  z-index: 10;
+}
+
+.combination-numbers {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.combination-numbers .predicted-number {
+  background: #ffc107;
+  color: #000;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 700;
+}
+
+.combination-numbers .separator {
+  color: #999;
+  margin: 0 0.125rem;
+}
+
+.combination-frequency {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 600;
+  background: #f0f0f0;
+  padding: 2px 8px;
+  border-radius: 12px;
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+.combination-item.hovered .combination-frequency {
+  background: #ffc107;
+  color: #000;
+}
+
+.combination-dates-tooltip {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 0;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  padding: 0.75rem;
+  min-width: 200px;
+  max-width: 300px;
+  z-index: 1000;
+  font-size: 0.85rem;
+}
+
+.tooltip-header {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0.25rem;
+}
+
+.tooltip-dates {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.tooltip-date {
+  padding: 0.25rem 0;
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.tooltip-more {
+  padding: 0.25rem 0;
+  color: #999;
+  font-style: italic;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 0.5rem;
+}
+

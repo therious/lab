@@ -236,21 +236,73 @@ body {
   text-align: center;
 }
 
+.numbers-display-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  justify-content: center;
+  position: relative;
+  /* Allow balls to animate from viewport top */
+  overflow: visible;
+}
+
+/* Year scale placeholder - matches the ball size for alignment */
+.year-scale-placeholder {
+  width: 60px;
+  height: 60px;
+  visibility: hidden; /* Takes up space but invisible */
+}
+
+/* Year scale container - matches timeline structure exactly */
+.year-scale-container {
+  width: 60px;
+  padding: 0.25rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.year-scale-container .year-scale {
+  margin-top: 0;
+  margin-left: 0;
+  width: 100%;
+}
+
 .numbers-display {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1.5rem;
 }
 
 .main-numbers {
   display: flex;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
+  align-items: flex-start;
   position: relative;
   min-height: 80px;
+  overflow-x: auto;
+  overflow-y: visible;
+  /* Allow balls to animate from viewport top */
+  overflow: visible;
+}
+
+.number-ball-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  /* Allow balls to animate from viewport top */
+  overflow: visible;
 }
 
 .number-ball {
@@ -304,7 +356,7 @@ body {
 @keyframes dropAndBounce {
   0% {
     opacity: 0;
-    transform: translateY(-100vh) scale(0.5);
+    transform: translateY(-200vh) scale(0.5);
   }
   40% {
     opacity: 1;

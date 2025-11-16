@@ -1,0 +1,87 @@
+.number-history-timeline {
+  width: 60px; /* Same width as ball */
+  padding: 0.25rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 0.7rem;
+}
+
+.timeline-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  margin-bottom: 0.25rem;
+}
+
+.timeline-number {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: #333;
+}
+
+.timeline-stats {
+  color: #666;
+  font-size: 0.6rem;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.timeline-stats .most-recent {
+  color: #888;
+  font-size: 0.55rem;
+  display: block;
+  margin-top: 0.125rem;
+}
+
+.timeline-visualization {
+  width: 100%;
+  position: relative;
+}
+
+.timeline-bar-vertical {
+  position: relative;
+  width: 100%;
+  height: 300px; /* 2.5x taller (was 120px) */
+  background: #f0f0f0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.timeline-point {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 2px;
+  background: #e0e0e0;
+  transition: background 0.2s;
+}
+
+.timeline-point.has-draw {
+  background: #28a745;
+  height: 3px;
+}
+
+.timeline-point:hover {
+  opacity: 0.8;
+  z-index: 1;
+}
+
+.timeline-unused {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background-image: 
+    repeating-linear-gradient(
+      45deg,
+      #f0f0f0,
+      #f0f0f0 4px,
+      #e8e8e8 4px,
+      #e8e8e8 8px
+    );
+  opacity: 0.4;
+}
