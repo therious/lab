@@ -27,6 +27,13 @@ function App() {
     candidatesFound: number;
     estimatedSecondsRemaining: number;
   } | null>(null);
+  const [predictionWithAnimation, setPredictionWithAnimation] = useState<{
+    prediction: PredictionResult;
+    dropOrder: number[];
+    showReordering: boolean;
+    originalNumbers: number[]; // Original sorted numbers for final positioning
+  } | null>(null);
+  const [predictionKey, setPredictionKey] = useState<number>(0);
   const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
@@ -45,13 +52,67 @@ function App() {
     setSelectedBonusNumbers(new Set());
   }, [selectedGame]);
 
-  const handlePredict = () => {
+  const handlePredict = (event: React.MouseEvent<HTMLButtonElement>) => {
     const game = games[selectedGame];
     if (!game) return;
 
-    setIsComputing(true);
+    // Check for Control+Click or Command+Click to show most recent winning numbers
+    if (event.ctrlKey || event.metaKey) {
+      // Immediately clear previous prediction display and force remount
+      setPrediction(null);
+      setPredictionWithAnimation(null);
+      setWorkerProgress(null);
+      setPredictionKey(prev => prev + 1); // Force React to remount the component
+      
+      if (game.draws.length === 0) {
+        return; // No draws available
+      }
+      
+      // Get the most recent draw by finding the one with the latest date
+      const mostRecent = game.draws.reduce((latest, current) => {
+        return current.date > latest.date ? current : latest;
+      }, game.draws[0]);
+      
+      // Create a prediction result from the actual draw
+      const actualResult: PredictionResult = {
+        numbers: mostRecent.numbers,
+        bonus: mostRecent.bonus,
+        confidence: 1.0,
+        reasoning: 'Most recent actual winning numbers from the database.',
+        handPickedMain: undefined,
+        handPickedBonus: undefined,
+      };
+      
+      setPrediction(actualResult);
+      
+      // Shuffle the numbers themselves for random order
+      const shuffledNumbers = [...mostRecent.numbers];
+      for (let i = shuffledNumbers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledNumbers[i], shuffledNumbers[j]] = [shuffledNumbers[j], shuffledNumbers[i]];
+      }
+      
+      setPredictionWithAnimation({
+        prediction: { ...actualResult, numbers: shuffledNumbers },
+        dropOrder: mostRecent.numbers.map((_, idx) => idx), // Fill positions left to right
+        showReordering: false,
+        originalNumbers: mostRecent.numbers, // Keep original sorted for final order
+      });
+      
+      const totalDropTime = (mostRecent.numbers.length + (mostRecent.bonus !== undefined ? 1 : 0)) * 2000; // 2 seconds per number
+      setTimeout(() => {
+        setPredictionWithAnimation(prev => prev ? { ...prev, showReordering: true } : null);
+      }, totalDropTime);
+      
+      return; // Exit early, don't run prediction
+    }
+
+    // Immediately clear previous prediction display and force remount
     setPrediction(null);
+    setPredictionWithAnimation(null);
     setWorkerProgress(null);
+    setPredictionKey(prev => prev + 1); // Force React to remount the component
+    setIsComputing(true);
 
     if (useWorker) {
       // Use Web Worker for computation
@@ -77,7 +138,28 @@ function App() {
         }
         
         if (event.data.success) {
-          setPrediction(event.data.result);
+          const result = event.data.result;
+          setPrediction(result);
+          
+          // Shuffle the numbers themselves (not the indices) for random order
+          const shuffledNumbers = [...result.numbers];
+          for (let i = shuffledNumbers.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledNumbers[i], shuffledNumbers[j]] = [shuffledNumbers[j], shuffledNumbers[i]];
+          }
+          
+          setPredictionWithAnimation({
+            prediction: { ...result, numbers: shuffledNumbers },
+            dropOrder: result.numbers.map((_, idx) => idx), // Fill positions left to right
+            showReordering: false,
+            originalNumbers: result.numbers, // Keep original sorted for final order
+          });
+          
+          // After all numbers drop, trigger reordering
+          const totalDropTime = (result.numbers.length + (result.bonus !== undefined ? 1 : 0)) * 2000; // 2 seconds per number
+          setTimeout(() => {
+            setPredictionWithAnimation(prev => prev ? { ...prev, showReordering: true } : null);
+          }, totalDropTime);
         } else {
           console.error('Worker error:', event.data.error);
           // Fallback to main thread
@@ -88,6 +170,24 @@ function App() {
             selectedBonusNumbers
           );
           setPrediction(result);
+          
+          // Set up animation order
+          const mainIndices = result.numbers.map((_, idx) => idx);
+          for (let i = mainIndices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [mainIndices[i], mainIndices[j]] = [mainIndices[j], mainIndices[i]];
+          }
+          
+          setPredictionWithAnimation({
+            prediction: result,
+            dropOrder: mainIndices,
+            showReordering: false,
+          });
+          
+          const totalDropTime = (mainIndices.length + (result.bonus !== undefined ? 1 : 0)) * 1000;
+          setTimeout(() => {
+            setPredictionWithAnimation(prev => prev ? { ...prev, showReordering: true } : null);
+          }, totalDropTime);
         }
         setIsComputing(false);
         setWorkerProgress(null);
@@ -105,6 +205,26 @@ function App() {
           selectedBonusNumbers
         );
         setPrediction(result);
+        
+        // Shuffle the numbers themselves for random order
+        const shuffledNumbers = [...result.numbers];
+        for (let i = shuffledNumbers.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffledNumbers[i], shuffledNumbers[j]] = [shuffledNumbers[j], shuffledNumbers[i]];
+        }
+        
+        setPredictionWithAnimation({
+          prediction: { ...result, numbers: shuffledNumbers },
+          dropOrder: result.numbers.map((_, idx) => idx), // Fill positions left to right
+          showReordering: false,
+          originalNumbers: result.numbers, // Keep original sorted for final order
+        });
+        
+        const totalDropTime = (result.numbers.length + (result.bonus !== undefined ? 1 : 0)) * 2000; // 2 seconds per number
+        setTimeout(() => {
+          setPredictionWithAnimation(prev => prev ? { ...prev, showReordering: true } : null);
+        }, totalDropTime);
+        
         setIsComputing(false);
         setWorkerProgress(null);
         worker.terminate();
@@ -155,6 +275,26 @@ function App() {
             selectedBonusNumbers
           );
           setPrediction(result);
+          
+          // Shuffle the numbers themselves for random order
+          const shuffledNumbers = [...result.numbers];
+          for (let i = shuffledNumbers.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledNumbers[i], shuffledNumbers[j]] = [shuffledNumbers[j], shuffledNumbers[i]];
+          }
+          
+          setPredictionWithAnimation({
+            prediction: { ...result, numbers: shuffledNumbers },
+            dropOrder: result.numbers.map((_, idx) => idx), // Fill positions left to right
+            showReordering: false,
+            originalNumbers: result.numbers, // Keep original sorted for final order
+          });
+          
+          const totalDropTime = (result.numbers.length + (result.bonus !== undefined ? 1 : 0)) * 2000; // 2 seconds per number
+          setTimeout(() => {
+            setPredictionWithAnimation(prev => prev ? { ...prev, showReordering: true } : null);
+          }, totalDropTime);
+          
           setIsComputing(false);
           setWorkerProgress(null);
         }, 1000);
@@ -205,6 +345,7 @@ function App() {
             onClick={handlePredict}
             disabled={isComputing}
             className="predict-button"
+            title="Click to generate prediction. Control/Command+Click to show most recent winning numbers."
           >
             {isComputing ? 'Computing...' : 'Generate Prediction'}
           </button>
@@ -280,44 +421,102 @@ function App() {
           );
         })()}
 
-            {prediction && (
-              <div className="prediction-result">
+            {(prediction || predictionWithAnimation) && (
+              <div className="prediction-result" key={`prediction-${predictionKey}`}>
                 <h2>Predicted Numbers</h2>
                 <div className="numbers-display">
-                  <div className="main-numbers">
-                    {prediction.numbers.map((num, idx) => {
-                      const isHandPicked = prediction.handPickedMain?.includes(num);
+                  {predictionWithAnimation ? (
+                    <>
+                      <div className="main-numbers">
+                        {predictionWithAnimation.prediction.numbers.map((num, idx) => {
+                      const isHandPicked = prediction?.handPickedMain?.includes(num);
+                      const dropDelay = idx * 2000; // 2 seconds per number, left to right
+                      
+                      // Find where this number should end up in sorted order
+                      const sortedOriginal = [...predictionWithAnimation.originalNumbers].sort((a, b) => a - b);
+                      const finalOrder = sortedOriginal.indexOf(num);
+                      
+                      // Current position is just the index (left to right)
+                      const initialOrder = idx;
+                      
+                      // Determine arc direction: if moving right, arc above; if moving left, arc below
+                      const isMovingRight = finalOrder > initialOrder;
+                      const arcDirection = isMovingRight ? 1 : -1;
+                      
                       return (
                         <span 
-                          key={idx} 
-                          className={`number-ball ${isHandPicked ? 'hand-picked' : ''}`}
+                          key={`${num}-${idx}`}
+                          className={`number-ball ${isHandPicked ? 'hand-picked' : ''} ${predictionWithAnimation.showReordering ? 'reordering' : ''}`}
                           title={isHandPicked ? 'Hand-picked number' : 'Predicted number'}
+                          style={{
+                            '--drop-delay': `${dropDelay}ms`,
+                            '--final-order': finalOrder,
+                            '--initial-order': initialOrder,
+                            '--arc-direction': arcDirection,
+                          } as React.CSSProperties}
                         >
                           {num}
                           {isHandPicked && <span className="hand-picked-indicator">★</span>}
                         </span>
                       );
                     })}
-                  </div>
-                  {prediction.bonus !== undefined && (
-                    <div className="bonus-number">
-                      <span className={`number-ball bonus ${prediction.handPickedBonus !== undefined ? 'hand-picked' : ''}`}>
-                        ⭐ {prediction.bonus}
-                        {prediction.handPickedBonus !== undefined && (
-                          <span className="hand-picked-indicator">★</span>
-                        )}
-                      </span>
+                      </div>
+                      {predictionWithAnimation.prediction.bonus !== undefined && (
+                        <div className="bonus-number">
+                          <span 
+                            className={`number-ball bonus ${prediction?.handPickedBonus !== undefined ? 'hand-picked' : ''}`}
+                            style={{
+                              '--drop-delay': `${predictionWithAnimation.prediction.numbers.length * 2000}ms`, // Always last, 2 seconds per main number
+                            } as React.CSSProperties}
+                          >
+                            ⭐ {predictionWithAnimation.prediction.bonus}
+                            {prediction?.handPickedBonus !== undefined && (
+                              <span className="hand-picked-indicator">★</span>
+                            )}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  ) : prediction ? (
+                    <>
+                      <div className="main-numbers">
+                        {prediction.numbers.map((num, idx) => {
+                          const isHandPicked = prediction.handPickedMain?.includes(num);
+                          return (
+                            <span 
+                              key={idx} 
+                              className={`number-ball ${isHandPicked ? 'hand-picked' : ''}`}
+                              title={isHandPicked ? 'Hand-picked number' : 'Predicted number'}
+                            >
+                              {num}
+                              {isHandPicked && <span className="hand-picked-indicator">★</span>}
+                            </span>
+                          );
+                        })}
+                      </div>
+                      {prediction.bonus !== undefined && (
+                        <div className="bonus-number">
+                          <span className={`number-ball bonus ${prediction.handPickedBonus !== undefined ? 'hand-picked' : ''}`}>
+                            ⭐ {prediction.bonus}
+                            {prediction.handPickedBonus !== undefined && (
+                              <span className="hand-picked-indicator">★</span>
+                            )}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  ) : null}
+                </div>
+                {prediction && (
+                  <div className="prediction-meta">
+                    <div className="confidence">
+                      <strong>Confidence Score:</strong>{' '}
+                      {(prediction.confidence * 100).toFixed(1)}%
                     </div>
-                  )}
-                </div>
-                <div className="prediction-meta">
-                  <div className="confidence">
-                    <strong>Confidence Score:</strong>{' '}
-                    {(prediction.confidence * 100).toFixed(1)}%
+                    <p className="reasoning">{prediction.reasoning}</p>
                   </div>
-                  <p className="reasoning">{prediction.reasoning}</p>
-                </div>
-              </div>
+                )}
+      </div>
             )}
 
             <div className="disclaimer">
@@ -326,8 +525,8 @@ function App() {
                 but does not guarantee winning. Lottery numbers are drawn randomly,
                 and each combination has equal probability. This is for entertainment
                 purposes only.
-              </p>
-            </div>
+        </p>
+      </div>
           </div>
 
           {game && (
