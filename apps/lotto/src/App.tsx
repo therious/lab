@@ -461,22 +461,21 @@ function App() {
                         </span>
                       );
                     })}
-                      </div>
                       {predictionWithAnimation.prediction.bonus !== undefined && (
-                        <div className="bonus-number">
-                          <span 
-                            className={`number-ball bonus ${prediction?.handPickedBonus !== undefined ? 'hand-picked' : ''}`}
-                            style={{
-                              '--drop-delay': `${predictionWithAnimation.prediction.numbers.length * 600}ms`, // Always last, 600ms per main number
-                            } as React.CSSProperties}
-                          >
-                            ⭐ {predictionWithAnimation.prediction.bonus}
-                            {prediction?.handPickedBonus !== undefined && (
-                              <span className="hand-picked-indicator">★</span>
-                            )}
-                          </span>
-                        </div>
+                        <span 
+                          className={`number-ball bonus ${prediction?.handPickedBonus !== undefined ? 'hand-picked' : ''}`}
+                          title={prediction?.handPickedBonus !== undefined ? 'Hand-picked bonus number' : 'Bonus number'}
+                          style={{
+                            '--drop-delay': `${predictionWithAnimation.prediction.numbers.length * 600}ms`, // Always last, 600ms per main number
+                          } as React.CSSProperties}
+                        >
+                          {predictionWithAnimation.prediction.bonus}
+                          {prediction?.handPickedBonus !== undefined && (
+                            <span className="hand-picked-indicator">★</span>
+                          )}
+                        </span>
                       )}
+                      </div>
                     </>
                   ) : prediction ? (
                     <>
@@ -494,17 +493,18 @@ function App() {
                             </span>
                           );
                         })}
-                      </div>
-                      {prediction.bonus !== undefined && (
-                        <div className="bonus-number">
-                          <span className={`number-ball bonus ${prediction.handPickedBonus !== undefined ? 'hand-picked' : ''}`}>
-                            ⭐ {prediction.bonus}
+                        {prediction.bonus !== undefined && (
+                          <span 
+                            className={`number-ball bonus ${prediction.handPickedBonus !== undefined ? 'hand-picked' : ''}`}
+                            title={prediction.handPickedBonus !== undefined ? 'Hand-picked bonus number' : 'Bonus number'}
+                          >
+                            {prediction.bonus}
                             {prediction.handPickedBonus !== undefined && (
                               <span className="hand-picked-indicator">★</span>
                             )}
                           </span>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </>
                   ) : null}
                 </div>

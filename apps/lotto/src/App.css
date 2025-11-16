@@ -281,9 +281,7 @@ body {
 
 .number-ball.bonus {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  width: 80px;
-  height: 80px;
-  font-size: 1.2rem;
+  /* Same size as main balls - differentiated only by color */
   animation: dropAndBounce 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   animation-delay: var(--drop-delay, 0ms);
 }
@@ -370,9 +368,7 @@ body {
   }
 }
 
-.bonus-number {
-  margin-top: 0.5rem;
-}
+/* Bonus ball is now on the same line as main numbers */
 
 .prediction-meta {
   text-align: center;
