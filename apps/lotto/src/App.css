@@ -15,7 +15,7 @@ body {
 }
 
 .app {
-  max-width: 900px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: 2rem;
 }
@@ -42,6 +42,26 @@ body {
   border-radius: 16px;
   padding: 2rem;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.main-content-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 600px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.heatmap-sidebar {
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
 }
 
 .controls {
@@ -221,6 +241,17 @@ body {
   line-height: 1.6;
 }
 
+@media (max-width: 1400px) {
+  .main-content-wrapper {
+    grid-template-columns: 1fr;
+  }
+  
+  .heatmap-sidebar {
+    position: static;
+    max-height: none;
+  }
+}
+
 @media (max-width: 600px) {
   .app {
     padding: 1rem;
@@ -239,5 +270,9 @@ body {
   .number-ball.bonus {
     width: 70px;
     height: 70px;
+  }
+  
+  .main-content-wrapper {
+    gap: 1rem;
   }
 }
