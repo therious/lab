@@ -23,5 +23,7 @@ export interface PredictionResult {
   bonus?: number;
   confidence: number; // 0-1 score indicating how "likely" this combination seems
   reasoning: string;
+  handPickedMain?: number[]; // Numbers that were manually selected
+  handPickedBonus?: number; // Bonus number that was manually selected
 }
 

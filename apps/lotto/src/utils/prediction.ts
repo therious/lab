@@ -122,7 +122,9 @@ function scoreCombination(
  */
 export function predictNumbers(
   game: LotteryGame,
-  maxCandidates: number = 10000
+  maxCandidates: number = 10000,
+  preselectedMain: Set<number> = new Set(),
+  preselectedBonus?: Set<number>
 ): PredictionResult {
   const draws = game.draws;
   
@@ -151,6 +153,22 @@ export function predictNumbers(
   );
   const pairFreq = calculatePairFrequencies(draws);
   
+  // Handle preselected numbers
+  const handPickedMain = Array.from(preselectedMain).sort((a, b) => a - b);
+  const remainingCount = game.mainNumbers.count - preselectedMain.size;
+  
+  if (preselectedMain.size > game.mainNumbers.count) {
+    // Too many preselected, just use the first N
+    const trimmed = Array.from(preselectedMain).slice(0, game.mainNumbers.count).sort((a, b) => a - b);
+    return {
+      numbers: trimmed,
+      bonus: undefined,
+      confidence: 0.5,
+      reasoning: 'Too many numbers preselected. Using first selections.',
+      handPickedMain: trimmed,
+    };
+  }
+  
   // Generate candidate combinations
   const candidates: Array<{ numbers: number[]; score: number }> = [];
   const seen = new Set<string>();
@@ -158,11 +176,25 @@ export function predictNumbers(
   // Strategy: Generate random combinations and score them
   // This is more efficient than generating all combinations for large ranges
   for (let i = 0; i < maxCandidates; i++) {
-    const numbers = generateRandomNumbers(
-      game.mainNumbers.count,
-      game.mainNumbers.min,
-      game.mainNumbers.max
-    );
+    let numbers: number[];
+    
+    if (preselectedMain.size > 0) {
+      // Generate remaining numbers, excluding preselected ones
+      const remaining = generateRandomNumbers(
+        remainingCount,
+        game.mainNumbers.min,
+        game.mainNumbers.max,
+        preselectedMain
+      );
+      numbers = [...handPickedMain, ...remaining].sort((a, b) => a - b);
+    } else {
+      numbers = generateRandomNumbers(
+        game.mainNumbers.count,
+        game.mainNumbers.min,
+        game.mainNumbers.max
+      );
+    }
+    
     const key = JSON.stringify([...numbers].sort((a, b) => a - b));
     
     // Skip if already seen or if it's been drawn before
@@ -179,37 +211,55 @@ export function predictNumbers(
   candidates.sort((a, b) => b.score - a.score);
   
   const best = candidates[0] || {
-    numbers: generateRandomNumbers(
-      game.mainNumbers.count,
-      game.mainNumbers.min,
-      game.mainNumbers.max
-    ),
+    numbers: preselectedMain.size > 0
+      ? (() => {
+          const remaining = generateRandomNumbers(
+            remainingCount,
+            game.mainNumbers.min,
+            game.mainNumbers.max,
+            preselectedMain
+          );
+          return [...handPickedMain, ...remaining].sort((a, b) => a - b);
+        })()
+      : generateRandomNumbers(
+          game.mainNumbers.count,
+          game.mainNumbers.min,
+          game.mainNumbers.max
+        ),
     score: 0.5,
   };
   
   // Generate bonus number if applicable
   let bonus: number | undefined;
+  let handPickedBonus: number | undefined;
+  
   if (game.bonusNumber) {
-    const bonusFreq = new Map<number, number>();
-    draws.forEach(draw => {
-      if (draw.bonus !== undefined) {
-        bonusFreq.set(draw.bonus, (bonusFreq.get(draw.bonus) || 0) + 1);
-      }
-    });
-    
-    // Pick bonus number with moderate frequency
-    const bonusCandidates = Array.from(bonusFreq.entries())
-      .map(([num, freq]) => ({ num, freq }))
-      .sort((a, b) => {
-        const aDist = Math.abs(a.freq - draws.length / (game.bonusNumber!.max - game.bonusNumber!.min + 1));
-        const bDist = Math.abs(b.freq - draws.length / (game.bonusNumber!.max - game.bonusNumber!.min + 1));
-        return aDist - bDist;
+    // Check if bonus number was preselected
+    if (preselectedBonus && preselectedBonus.size > 0) {
+      bonus = Array.from(preselectedBonus)[0];
+      handPickedBonus = bonus;
+    } else {
+      const bonusFreq = new Map<number, number>();
+      draws.forEach(draw => {
+        if (draw.bonus !== undefined) {
+          bonusFreq.set(draw.bonus, (bonusFreq.get(draw.bonus) || 0) + 1);
+        }
       });
-    
-    bonus = bonusCandidates[0]?.num || generateRandomNumber(
-      game.bonusNumber.min,
-      game.bonusNumber.max
-    );
+      
+      // Pick bonus number with moderate frequency
+      const bonusCandidates = Array.from(bonusFreq.entries())
+        .map(([num, freq]) => ({ num, freq }))
+        .sort((a, b) => {
+          const aDist = Math.abs(a.freq - draws.length / (game.bonusNumber!.max - game.bonusNumber!.min + 1));
+          const bDist = Math.abs(b.freq - draws.length / (game.bonusNumber!.max - game.bonusNumber!.min + 1));
+          return aDist - bDist;
+        });
+      
+      bonus = bonusCandidates[0]?.num || generateRandomNumber(
+        game.bonusNumber.min,
+        game.bonusNumber.max
+      );
+    }
   }
   
   return {
@@ -217,13 +267,23 @@ export function predictNumbers(
     bonus,
     confidence: best.score,
     reasoning: `Based on ${draws.length} historical draws, this combination has not been drawn before and shows balanced frequency patterns.`,
+    handPickedMain: preselectedMain.size > 0 ? handPickedMain : undefined,
+    handPickedBonus,
   };
 }
 
-function generateRandomNumbers(count: number, min: number, max: number): number[] {
+function generateRandomNumbers(
+  count: number, 
+  min: number, 
+  max: number, 
+  exclude: Set<number> = new Set()
+): number[] {
   const numbers = new Set<number>();
   while (numbers.size < count) {
-    numbers.add(Math.floor(Math.random() * (max - min + 1)) + min);
+    const num = Math.floor(Math.random() * (max - min + 1)) + min;
+    if (!exclude.has(num)) {
+      numbers.add(num);
+    }
   }
   return Array.from(numbers).sort((a, b) => a - b);
 }

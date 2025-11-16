@@ -196,6 +196,21 @@ body {
   font-size: 1.2rem;
 }
 
+.number-ball.hand-picked {
+  position: relative;
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.3);
+}
+
+.hand-picked-indicator {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 0.7rem;
+  color: #ffd700;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
 @keyframes popIn {
   from {
     transform: scale(0);

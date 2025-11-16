@@ -9,6 +9,10 @@ interface HeatMapProps {
   game: LotteryGame;
   filterDate?: string; // Only show draws from this date onwards
   onFilterDateChange?: (date: string | undefined) => void;
+  selectedMainNumbers?: Set<number>;
+  selectedBonusNumbers?: Set<number>;
+  onMainNumberToggle?: (num: number) => void;
+  onBonusNumberToggle?: (num: number) => void;
 }
 
 /**
@@ -191,7 +195,15 @@ function getHeatColor(frequency: number, minFreq: number, maxFreq: number): { bg
   };
 }
 
-export function HeatMap({ game, filterDate, onFilterDateChange }: HeatMapProps) {
+export function HeatMap({ 
+  game, 
+  filterDate, 
+  onFilterDateChange,
+  selectedMainNumbers = new Set(),
+  selectedBonusNumbers = new Set(),
+  onMainNumberToggle,
+  onBonusNumberToggle,
+}: HeatMapProps) {
   const mainFrequencies = useMemo(() => {
     return calculateFrequencies(
       game.draws,
@@ -460,13 +472,25 @@ export function HeatMap({ game, filterDate, onFilterDateChange }: HeatMapProps) 
               ? ((freq / mainMaxFreq) * 100).toFixed(0) 
               : '0';
             
+            const isSelected = selectedMainNumbers.has(num);
+            const lastSeen = mainNumberLastSeen.get(num);
+            const lastSeenDate = lastSeen 
+              ? new Date(lastSeen).toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'short', 
+                  day: 'numeric' 
+                })
+              : 'Never';
+            
             return (
               <div
                 key={num}
-                className="heatmap-cell"
+                className={`heatmap-cell ${isSelected ? 'selected' : ''}`}
                 style={{ backgroundColor: bg, color: text }}
-                title={`Number ${num}: appeared ${freq} times (${percentage}% of max)`}
+                title={`Number ${num}: appeared ${freq} times (${percentage}% of max). Last seen: ${lastSeenDate}`}
+                onClick={() => onMainNumberToggle?.(num)}
               >
+                {isSelected && <span className="heatmap-checkmark">✓</span>}
                 <span className="heatmap-number">{num}</span>
                 <span className="heatmap-count">{freq}</span>
               </div>
@@ -494,13 +518,25 @@ export function HeatMap({ game, filterDate, onFilterDateChange }: HeatMapProps) 
                 ? ((freq / bonusMaxFreq) * 100).toFixed(0) 
                 : '0';
               
+              const isSelected = selectedBonusNumbers.has(num);
+              const lastSeen = bonusNumberLastSeen.get(num);
+              const lastSeenDate = lastSeen 
+                ? new Date(lastSeen).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                  })
+                : 'Never';
+              
               return (
                 <div
                   key={num}
-                  className="heatmap-cell bonus-cell"
+                  className={`heatmap-cell bonus-cell ${isSelected ? 'selected' : ''}`}
                   style={{ backgroundColor: bg, color: text }}
-                  title={`${game.name === 'Powerball' ? 'Powerball' : game.name === 'Mega Millions' ? 'Mega Ball' : 'Bonus'} ${num}: appeared ${freq} times (${percentage}% of max)`}
+                  title={`${game.name === 'Powerball' ? 'Powerball' : game.name === 'Mega Millions' ? 'Mega Ball' : 'Bonus'} ${num}: appeared ${freq} times (${percentage}% of max). Last seen: ${lastSeenDate}`}
+                  onClick={() => onBonusNumberToggle?.(num)}
                 >
+                  {isSelected && <span className="heatmap-checkmark">✓</span>}
                   <span className="heatmap-number">{num}</span>
                   <span className="heatmap-count">{freq}</span>
                 </div>

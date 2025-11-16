@@ -19,6 +19,8 @@ function App() {
   const [isComputing, setIsComputing] = useState(false);
   const [useWorker, setUseWorker] = useState(true);
   const [heatmapFilterDate, setHeatmapFilterDate] = useState<string | undefined>(undefined);
+  const [selectedMainNumbers, setSelectedMainNumbers] = useState<Set<number>>(new Set());
+  const [selectedBonusNumbers, setSelectedBonusNumbers] = useState<Set<number>>(new Set());
   const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
@@ -31,8 +33,10 @@ function App() {
   }, []);
   
   useEffect(() => {
-    // Reset filter date when game changes
+    // Reset filter date and selections when game changes
     setHeatmapFilterDate(undefined);
+    setSelectedMainNumbers(new Set());
+    setSelectedBonusNumbers(new Set());
   }, [selectedGame]);
 
   const handlePredict = () => {
@@ -59,7 +63,12 @@ function App() {
         } else {
           console.error('Worker error:', event.data.error);
           // Fallback to main thread
-          const result = predictNumbers(game, 10000);
+          const result = predictNumbers(
+            game, 
+            10000,
+            selectedMainNumbers,
+            selectedBonusNumbers
+          );
           setPrediction(result);
         }
         setIsComputing(false);
@@ -70,19 +79,34 @@ function App() {
       worker.onerror = (error) => {
         console.error('Worker error:', error);
         // Fallback to main thread
-        const result = predictNumbers(game, 10000);
+        const result = predictNumbers(
+          game, 
+          10000,
+          selectedMainNumbers,
+          selectedBonusNumbers
+        );
         setPrediction(result);
         setIsComputing(false);
         worker.terminate();
         workerRef.current = null;
       };
 
-      worker.postMessage({ game, maxCandidates: 50000 });
+      worker.postMessage({ 
+        game, 
+        maxCandidates: 50000,
+        preselectedMain: Array.from(selectedMainNumbers),
+        preselectedBonus: Array.from(selectedBonusNumbers),
+      });
       workerRef.current = worker;
     } else {
       // Use main thread
       setTimeout(() => {
-        const result = predictNumbers(game, 10000);
+        const result = predictNumbers(
+          game, 
+          10000,
+          selectedMainNumbers,
+          selectedBonusNumbers
+        );
         setPrediction(result);
         setIsComputing(false);
       }, 0);
@@ -182,15 +206,28 @@ function App() {
                 <h2>Predicted Numbers</h2>
                 <div className="numbers-display">
                   <div className="main-numbers">
-                    {prediction.numbers.map((num, idx) => (
-                      <span key={idx} className="number-ball">
-                        {num}
-                      </span>
-                    ))}
+                    {prediction.numbers.map((num, idx) => {
+                      const isHandPicked = prediction.handPickedMain?.includes(num);
+                      return (
+                        <span 
+                          key={idx} 
+                          className={`number-ball ${isHandPicked ? 'hand-picked' : ''}`}
+                          title={isHandPicked ? 'Hand-picked number' : 'Predicted number'}
+                        >
+                          {num}
+                          {isHandPicked && <span className="hand-picked-indicator">★</span>}
+                        </span>
+                      );
+                    })}
                   </div>
                   {prediction.bonus !== undefined && (
                     <div className="bonus-number">
-                      <span className="number-ball bonus">⭐ {prediction.bonus}</span>
+                      <span className={`number-ball bonus ${prediction.handPickedBonus !== undefined ? 'hand-picked' : ''}`}>
+                        ⭐ {prediction.bonus}
+                        {prediction.handPickedBonus !== undefined && (
+                          <span className="hand-picked-indicator">★</span>
+                        )}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -220,6 +257,26 @@ function App() {
                 game={game} 
                 filterDate={heatmapFilterDate}
                 onFilterDateChange={setHeatmapFilterDate}
+                selectedMainNumbers={selectedMainNumbers}
+                selectedBonusNumbers={selectedBonusNumbers}
+                onMainNumberToggle={(num) => {
+                  const newSet = new Set(selectedMainNumbers);
+                  if (newSet.has(num)) {
+                    newSet.delete(num);
+                  } else {
+                    newSet.add(num);
+                  }
+                  setSelectedMainNumbers(newSet);
+                }}
+                onBonusNumberToggle={(num) => {
+                  const newSet = new Set(selectedBonusNumbers);
+                  if (newSet.has(num)) {
+                    newSet.delete(num);
+                  } else {
+                    newSet.add(num);
+                  }
+                  setSelectedBonusNumbers(newSet);
+                }}
               />
             </aside>
           )}
