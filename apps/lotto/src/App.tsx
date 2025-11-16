@@ -99,7 +99,7 @@ function App() {
         originalNumbers: mostRecent.numbers, // Keep original sorted for final order
       });
       
-      const totalDropTime = (mostRecent.numbers.length + (mostRecent.bonus !== undefined ? 1 : 0)) * 2000; // 2 seconds per number
+      const totalDropTime = (mostRecent.numbers.length + (mostRecent.bonus !== undefined ? 1 : 0)) * 600 + 1500; // 600ms delay + 1.5s animation duration
       setTimeout(() => {
         setPredictionWithAnimation(prev => prev ? { ...prev, showReordering: true } : null);
       }, totalDropTime);
@@ -156,7 +156,7 @@ function App() {
           });
           
           // After all numbers drop, trigger reordering
-          const totalDropTime = (result.numbers.length + (result.bonus !== undefined ? 1 : 0)) * 2000; // 2 seconds per number
+          const totalDropTime = (result.numbers.length + (result.bonus !== undefined ? 1 : 0)) * 600 + 1500; // 600ms delay + 1.5s animation duration
           setTimeout(() => {
             setPredictionWithAnimation(prev => prev ? { ...prev, showReordering: true } : null);
           }, totalDropTime);
@@ -171,20 +171,21 @@ function App() {
           );
           setPrediction(result);
           
-          // Set up animation order
-          const mainIndices = result.numbers.map((_, idx) => idx);
-          for (let i = mainIndices.length - 1; i > 0; i--) {
+          // Shuffle the numbers themselves for random order
+          const shuffledNumbers = [...result.numbers];
+          for (let i = shuffledNumbers.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [mainIndices[i], mainIndices[j]] = [mainIndices[j], mainIndices[i]];
+            [shuffledNumbers[i], shuffledNumbers[j]] = [shuffledNumbers[j], shuffledNumbers[i]];
           }
           
           setPredictionWithAnimation({
-            prediction: result,
-            dropOrder: mainIndices,
+            prediction: { ...result, numbers: shuffledNumbers },
+            dropOrder: result.numbers.map((_, idx) => idx), // Fill positions left to right
             showReordering: false,
+            originalNumbers: result.numbers, // Keep original sorted for final order
           });
           
-          const totalDropTime = (mainIndices.length + (result.bonus !== undefined ? 1 : 0)) * 1000;
+          const totalDropTime = (result.numbers.length + (result.bonus !== undefined ? 1 : 0)) * 600 + 1500; // 600ms delay + 1.5s animation duration
           setTimeout(() => {
             setPredictionWithAnimation(prev => prev ? { ...prev, showReordering: true } : null);
           }, totalDropTime);
@@ -290,7 +291,7 @@ function App() {
             originalNumbers: result.numbers, // Keep original sorted for final order
           });
           
-          const totalDropTime = (result.numbers.length + (result.bonus !== undefined ? 1 : 0)) * 2000; // 2 seconds per number
+          const totalDropTime = (result.numbers.length + (result.bonus !== undefined ? 1 : 0)) * 600 + 1500; // 600ms delay + 1.5s animation duration
           setTimeout(() => {
             setPredictionWithAnimation(prev => prev ? { ...prev, showReordering: true } : null);
           }, totalDropTime);
@@ -430,7 +431,7 @@ function App() {
                       <div className="main-numbers">
                         {predictionWithAnimation.prediction.numbers.map((num, idx) => {
                       const isHandPicked = prediction?.handPickedMain?.includes(num);
-                      const dropDelay = idx * 2000; // 2 seconds per number, left to right
+                      const dropDelay = idx * 600; // 600ms = 40% of 1.5s animation (when ball first hits bottom)
                       
                       // Find where this number should end up in sorted order
                       const sortedOriginal = [...predictionWithAnimation.originalNumbers].sort((a, b) => a - b);
@@ -466,7 +467,7 @@ function App() {
                           <span 
                             className={`number-ball bonus ${prediction?.handPickedBonus !== undefined ? 'hand-picked' : ''}`}
                             style={{
-                              '--drop-delay': `${predictionWithAnimation.prediction.numbers.length * 2000}ms`, // Always last, 2 seconds per main number
+                              '--drop-delay': `${predictionWithAnimation.prediction.numbers.length * 600}ms`, // Always last, 600ms per main number
                             } as React.CSSProperties}
                           >
                             ⭐ {predictionWithAnimation.prediction.bonus}
