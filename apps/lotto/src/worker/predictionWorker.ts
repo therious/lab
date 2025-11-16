@@ -151,12 +151,30 @@ function predictNumbers(
     };
   }
   
+  // Report initial progress
+  self.postMessage({
+    type: 'progress',
+    progress: 5,
+    status: 'Analyzing historical data...',
+    candidatesFound: 0,
+    estimatedSecondsRemaining: 0,
+  });
+  
   const numberFreq = calculateNumberFrequencies(
     draws,
     game.mainNumbers.min,
     game.mainNumbers.max
   );
   const pairFreq = calculatePairFrequencies(draws);
+  
+  // Report progress after frequency calculation
+  self.postMessage({
+    type: 'progress',
+    progress: 10,
+    status: 'Frequency analysis complete. Generating candidates...',
+    candidatesFound: 0,
+    estimatedSecondsRemaining: 0,
+  });
   
   // Handle preselected numbers
   const handPickedMain = Array.from(preselectedMain).sort((a, b) => a - b);
@@ -175,6 +193,9 @@ function predictNumbers(
   
   const candidates: Array<{ numbers: number[]; score: number }> = [];
   const seen = new Set<string>();
+  
+  const progressInterval = Math.max(1, Math.floor(maxCandidates / 100)); // Report every 1%
+  const startTime = Date.now();
   
   for (let i = 0; i < maxCandidates; i++) {
     let numbers: number[];
@@ -198,15 +219,64 @@ function predictNumbers(
     const key = JSON.stringify([...numbers].sort((a, b) => a - b));
     
     if (seen.has(key) || hasBeenDrawn(numbers, draws)) {
+      // Report progress even for skipped candidates
+      if (i % progressInterval === 0) {
+        const progress = (i / maxCandidates) * 100;
+        const elapsed = Date.now() - startTime;
+        const estimatedTotal = elapsed / (progress / 100);
+        const estimatedRemaining = estimatedTotal - elapsed;
+        
+        self.postMessage({
+          type: 'progress',
+          progress,
+          status: 'Generating candidate combinations...',
+          candidatesFound: candidates.length,
+          estimatedSecondsRemaining: Math.ceil(estimatedRemaining / 1000),
+        });
+      }
       continue;
     }
     
     seen.add(key);
     const score = scoreCombination(numbers, game, numberFreq, pairFreq);
     candidates.push({ numbers, score });
+    
+    // Report progress
+    if (i % progressInterval === 0 || i === maxCandidates - 1) {
+      const progress = ((i + 1) / maxCandidates) * 100;
+      const elapsed = Date.now() - startTime;
+      const estimatedTotal = elapsed / (progress / 100);
+      const estimatedRemaining = estimatedTotal - elapsed;
+      
+      self.postMessage({
+        type: 'progress',
+        progress,
+        status: `Evaluating combinations... (${candidates.length} valid found)`,
+        candidatesFound: candidates.length,
+        estimatedSecondsRemaining: Math.ceil(estimatedRemaining / 1000),
+      });
+    }
   }
   
+  // Report progress before sorting
+  self.postMessage({
+    type: 'progress',
+    progress: 90,
+    status: `Sorting ${candidates.length} candidate combinations...`,
+    candidatesFound: candidates.length,
+    estimatedSecondsRemaining: 1,
+  });
+  
   candidates.sort((a, b) => b.score - a.score);
+  
+  // Report progress before final selection
+  self.postMessage({
+    type: 'progress',
+    progress: 95,
+    status: 'Selecting best combination...',
+    candidatesFound: candidates.length,
+    estimatedSecondsRemaining: 0,
+  });
   
   const best = candidates[0] || {
     numbers: preselectedMain.size > 0

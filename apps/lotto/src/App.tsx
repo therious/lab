@@ -21,6 +21,12 @@ function App() {
   const [heatmapFilterDate, setHeatmapFilterDate] = useState<string | undefined>(undefined);
   const [selectedMainNumbers, setSelectedMainNumbers] = useState<Set<number>>(new Set());
   const [selectedBonusNumbers, setSelectedBonusNumbers] = useState<Set<number>>(new Set());
+  const [workerProgress, setWorkerProgress] = useState<{
+    progress: number;
+    status: string;
+    candidatesFound: number;
+    estimatedSecondsRemaining: number;
+  } | null>(null);
   const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
@@ -45,6 +51,7 @@ function App() {
 
     setIsComputing(true);
     setPrediction(null);
+    setWorkerProgress(null);
 
     if (useWorker) {
       // Use Web Worker for computation
@@ -58,6 +65,17 @@ function App() {
       ) as Worker;
 
       worker.onmessage = (event) => {
+        if (event.data.type === 'progress') {
+          // Handle progress updates
+          setWorkerProgress({
+            progress: event.data.progress,
+            status: event.data.status,
+            candidatesFound: event.data.candidatesFound,
+            estimatedSecondsRemaining: event.data.estimatedSecondsRemaining,
+          });
+          return;
+        }
+        
         if (event.data.success) {
           setPrediction(event.data.result);
         } else {
@@ -72,6 +90,7 @@ function App() {
           setPrediction(result);
         }
         setIsComputing(false);
+        setWorkerProgress(null);
         worker.terminate();
         workerRef.current = null;
       };
@@ -87,6 +106,7 @@ function App() {
         );
         setPrediction(result);
         setIsComputing(false);
+        setWorkerProgress(null);
         worker.terminate();
         workerRef.current = null;
       };
@@ -99,16 +119,45 @@ function App() {
       });
       workerRef.current = worker;
     } else {
-      // Use main thread
+      // Use main thread - show simple progress
+      setWorkerProgress({
+        progress: 0,
+        status: 'Computing on main thread...',
+        candidatesFound: 0,
+        estimatedSecondsRemaining: 0,
+      });
+      
       setTimeout(() => {
-        const result = predictNumbers(
-          game, 
-          10000,
-          selectedMainNumbers,
-          selectedBonusNumbers
-        );
-        setPrediction(result);
-        setIsComputing(false);
+        // Simulate progress for main thread computation
+        const progressSteps = [25, 50, 75];
+        let stepIndex = 0;
+        
+        const progressInterval = setInterval(() => {
+          if (stepIndex < progressSteps.length) {
+            setWorkerProgress({
+              progress: progressSteps[stepIndex],
+              status: 'Generating and evaluating combinations...',
+              candidatesFound: 0,
+              estimatedSecondsRemaining: 0,
+            });
+            stepIndex++;
+          } else {
+            clearInterval(progressInterval);
+          }
+        }, 200);
+        
+        setTimeout(() => {
+          clearInterval(progressInterval);
+          const result = predictNumbers(
+            game, 
+            10000,
+            selectedMainNumbers,
+            selectedBonusNumbers
+          );
+          setPrediction(result);
+          setIsComputing(false);
+          setWorkerProgress(null);
+        }, 1000);
       }, 0);
     }
   };
@@ -152,14 +201,44 @@ function App() {
                 </label>
               </div>
 
-              <button
-                onClick={handlePredict}
-                disabled={isComputing}
-                className="predict-button"
-              >
-                {isComputing ? 'Computing...' : 'Generate Prediction'}
-              </button>
+          <button
+            onClick={handlePredict}
+            disabled={isComputing}
+            className="predict-button"
+          >
+            {isComputing ? 'Computing...' : 'Generate Prediction'}
+          </button>
+          
+          {isComputing && (
+            <div className="computation-progress">
+              {workerProgress ? (
+                <>
+                  <div className="progress-bar-container">
+                    <div 
+                      className="progress-bar" 
+                      style={{ width: `${workerProgress.progress}%` }}
+                    ></div>
+                  </div>
+                  <div className="progress-info">
+                    <div className="progress-status">{workerProgress.status}</div>
+                    <div className="progress-details">
+                      {workerProgress.candidatesFound > 0 && (
+                        <span>{workerProgress.candidatesFound} valid combinations found</span>
+                      )}
+                      {workerProgress.estimatedSecondsRemaining > 0 && (
+                        <span className="progress-time">
+                          ~{workerProgress.estimatedSecondsRemaining}s remaining
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="progress-status">Initializing computation...</div>
+              )}
             </div>
+          )}
+        </div>
 
         {game && (() => {
           const drawDates = game.draws.map(d => d.date).sort();
