@@ -5,6 +5,10 @@ import { megamillionsData } from './data/megamillions';
 import { lottoData } from './data/lotto';
 import { predictNumbers } from './utils/prediction';
 import { HeatMap } from './components/HeatMap';
+import { CombinationFrequencyView } from './components/CombinationFrequencyView';
+import { NumberHistoryTimeline } from './components/NumberHistoryTimeline';
+import { YearScale } from './components/YearScale';
+import { getUniformTimelineRange } from './utils/combinationFrequencies';
 import './App.css';
 
 const games: Record<string, LotteryGame> = {
@@ -34,6 +38,7 @@ function App() {
     originalNumbers: number[]; // Original sorted numbers for final positioning
   } | null>(null);
   const [predictionKey, setPredictionKey] = useState<number>(0);
+  const [showTimelines, setShowTimelines] = useState<boolean>(false);
   const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
@@ -62,6 +67,7 @@ function App() {
       setPrediction(null);
       setPredictionWithAnimation(null);
       setWorkerProgress(null);
+      setShowTimelines(false);
       setPredictionKey(prev => prev + 1); // Force React to remount the component
       
       if (game.draws.length === 0) {
@@ -102,16 +108,21 @@ function App() {
       const totalDropTime = (mostRecent.numbers.length + (mostRecent.bonus !== undefined ? 1 : 0)) * 600 + 1500; // 600ms delay + 1.5s animation duration
       setTimeout(() => {
         setPredictionWithAnimation(prev => prev ? { ...prev, showReordering: true } : null);
+        // Show timelines after reordering animation completes (1.5s)
+        setTimeout(() => {
+          setShowTimelines(true);
+        }, 1500);
       }, totalDropTime);
       
       return; // Exit early, don't run prediction
     }
 
-    // Immediately clear previous prediction display and force remount
-    setPrediction(null);
-    setPredictionWithAnimation(null);
-    setWorkerProgress(null);
-    setPredictionKey(prev => prev + 1); // Force React to remount the component
+      // Immediately clear previous prediction display and force remount
+      setPrediction(null);
+      setPredictionWithAnimation(null);
+      setWorkerProgress(null);
+      setShowTimelines(false);
+      setPredictionKey(prev => prev + 1); // Force React to remount the component
     setIsComputing(true);
 
     if (useWorker) {
@@ -159,6 +170,10 @@ function App() {
           const totalDropTime = (result.numbers.length + (result.bonus !== undefined ? 1 : 0)) * 600 + 1500; // 600ms delay + 1.5s animation duration
           setTimeout(() => {
             setPredictionWithAnimation(prev => prev ? { ...prev, showReordering: true } : null);
+            // Show timelines after reordering animation completes (1.5s)
+            setTimeout(() => {
+              setShowTimelines(true);
+            }, 1500);
           }, totalDropTime);
         } else {
           console.error('Worker error:', event.data.error);
@@ -188,6 +203,10 @@ function App() {
           const totalDropTime = (result.numbers.length + (result.bonus !== undefined ? 1 : 0)) * 600 + 1500; // 600ms delay + 1.5s animation duration
           setTimeout(() => {
             setPredictionWithAnimation(prev => prev ? { ...prev, showReordering: true } : null);
+            // Show timelines after reordering animation completes (1.5s)
+            setTimeout(() => {
+              setShowTimelines(true);
+            }, 1500);
           }, totalDropTime);
         }
         setIsComputing(false);
@@ -294,6 +313,10 @@ function App() {
           const totalDropTime = (result.numbers.length + (result.bonus !== undefined ? 1 : 0)) * 600 + 1500; // 600ms delay + 1.5s animation duration
           setTimeout(() => {
             setPredictionWithAnimation(prev => prev ? { ...prev, showReordering: true } : null);
+            // Show timelines after reordering animation completes (1.5s)
+            setTimeout(() => {
+              setShowTimelines(true);
+            }, 1500);
           }, totalDropTime);
           
           setIsComputing(false);
@@ -422,10 +445,31 @@ function App() {
           );
         })()}
 
-            {(prediction || predictionWithAnimation) && (
+            {(prediction || predictionWithAnimation) && (() => {
+              // Calculate uniform timeline range for all numbers
+              const currentPrediction = prediction || predictionWithAnimation?.prediction;
+              const uniformRange = currentPrediction && game
+                ? getUniformTimelineRange(
+                    game,
+                    game.name,
+                    currentPrediction.numbers,
+                    false
+                  )
+                : null;
+              const uniformBonusRange = currentPrediction?.bonus !== undefined && game
+                ? getUniformTimelineRange(
+                    game,
+                    game.name,
+                    [currentPrediction.bonus],
+                    true
+                  )
+                : null;
+              
+              return (
               <div className="prediction-result" key={`prediction-${predictionKey}`}>
                 <h2>Predicted Numbers</h2>
-                <div className="numbers-display">
+                <div className="numbers-display-wrapper">
+                  <div className="numbers-display">
                   {predictionWithAnimation ? (
                     <>
                       <div className="main-numbers">
@@ -445,35 +489,59 @@ function App() {
                       const arcDirection = isMovingRight ? 1 : -1;
                       
                       return (
-                        <span 
-                          key={`${num}-${idx}`}
-                          className={`number-ball ${isHandPicked ? 'hand-picked' : ''} ${predictionWithAnimation.showReordering ? 'reordering' : ''}`}
-                          title={isHandPicked ? 'Hand-picked number' : 'Predicted number'}
-                          style={{
-                            '--drop-delay': `${dropDelay}ms`,
-                            '--final-order': finalOrder,
-                            '--initial-order': initialOrder,
-                            '--arc-direction': arcDirection,
-                          } as React.CSSProperties}
-                        >
-                          {num}
-                          {isHandPicked && <span className="hand-picked-indicator">★</span>}
-                        </span>
+                        <div key={`${num}-${idx}`} className="number-ball-wrapper">
+                          <span 
+                            className={`number-ball ${isHandPicked ? 'hand-picked' : ''} ${predictionWithAnimation.showReordering ? 'reordering' : ''}`}
+                            title={isHandPicked ? 'Hand-picked number' : 'Predicted number'}
+                            style={{
+                              '--drop-delay': `${dropDelay}ms`,
+                              '--final-order': finalOrder,
+                              '--initial-order': initialOrder,
+                              '--arc-direction': arcDirection,
+                            } as React.CSSProperties}
+                          >
+                            {num}
+                            {isHandPicked && <span className="hand-picked-indicator">★</span>}
+                          </span>
+                          {game && uniformRange && (
+                            <NumberHistoryTimeline
+                              number={num}
+                              game={game}
+                              gameName={game.name}
+                              uniformStartDate={uniformRange.earliestDate}
+                              uniformEndDate={uniformRange.latestDate}
+                              show={!predictionWithAnimation || showTimelines}
+                            />
+                          )}
+                        </div>
                       );
                     })}
                       {predictionWithAnimation.prediction.bonus !== undefined && (
-                        <span 
-                          className={`number-ball bonus ${prediction?.handPickedBonus !== undefined ? 'hand-picked' : ''}`}
-                          title={prediction?.handPickedBonus !== undefined ? 'Hand-picked bonus number' : 'Bonus number'}
-                          style={{
-                            '--drop-delay': `${predictionWithAnimation.prediction.numbers.length * 600}ms`, // Always last, 600ms per main number
-                          } as React.CSSProperties}
-                        >
-                          {predictionWithAnimation.prediction.bonus}
-                          {prediction?.handPickedBonus !== undefined && (
-                            <span className="hand-picked-indicator">★</span>
+                        <div className="number-ball-wrapper">
+                          <span 
+                            className={`number-ball bonus ${prediction?.handPickedBonus !== undefined ? 'hand-picked' : ''}`}
+                            title={prediction?.handPickedBonus !== undefined ? 'Hand-picked bonus number' : 'Bonus number'}
+                            style={{
+                              '--drop-delay': `${predictionWithAnimation.prediction.numbers.length * 600}ms`, // Always last, 600ms per main number
+                            } as React.CSSProperties}
+                          >
+                            {predictionWithAnimation.prediction.bonus}
+                            {prediction?.handPickedBonus !== undefined && (
+                              <span className="hand-picked-indicator">★</span>
+                            )}
+                          </span>
+                          {game && uniformBonusRange && (
+                            <NumberHistoryTimeline
+                              number={predictionWithAnimation.prediction.bonus}
+                              game={game}
+                              gameName={game.name}
+                              isBonus={true}
+                              uniformStartDate={uniformBonusRange.earliestDate}
+                              uniformEndDate={uniformBonusRange.latestDate}
+                              show={!predictionWithAnimation || showTimelines}
+                            />
                           )}
-                        </span>
+                        </div>
                       )}
                       </div>
                     </>
@@ -483,42 +551,90 @@ function App() {
                         {prediction.numbers.map((num, idx) => {
                           const isHandPicked = prediction.handPickedMain?.includes(num);
                           return (
-                            <span 
-                              key={idx} 
-                              className={`number-ball ${isHandPicked ? 'hand-picked' : ''}`}
-                              title={isHandPicked ? 'Hand-picked number' : 'Predicted number'}
-                            >
-                              {num}
-                              {isHandPicked && <span className="hand-picked-indicator">★</span>}
-                            </span>
+                            <div key={idx} className="number-ball-wrapper">
+                              <span 
+                                className={`number-ball ${isHandPicked ? 'hand-picked' : ''}`}
+                                title={isHandPicked ? 'Hand-picked number' : 'Predicted number'}
+                              >
+                                {num}
+                                {isHandPicked && <span className="hand-picked-indicator">★</span>}
+                              </span>
+                              {game && uniformRange && (
+                                <NumberHistoryTimeline
+                                  number={num}
+                                  game={game}
+                                  gameName={game.name}
+                                  uniformStartDate={uniformRange.earliestDate}
+                                  uniformEndDate={uniformRange.latestDate}
+                                  show={true}
+                                />
+                              )}
+                            </div>
                           );
                         })}
                         {prediction.bonus !== undefined && (
-                          <span 
-                            className={`number-ball bonus ${prediction.handPickedBonus !== undefined ? 'hand-picked' : ''}`}
-                            title={prediction.handPickedBonus !== undefined ? 'Hand-picked bonus number' : 'Bonus number'}
-                          >
-                            {prediction.bonus}
-                            {prediction.handPickedBonus !== undefined && (
-                              <span className="hand-picked-indicator">★</span>
+                          <div className="number-ball-wrapper">
+                            <span 
+                              className={`number-ball bonus ${prediction.handPickedBonus !== undefined ? 'hand-picked' : ''}`}
+                              title={prediction.handPickedBonus !== undefined ? 'Hand-picked bonus number' : 'Bonus number'}
+                            >
+                              {prediction.bonus}
+                              {prediction.handPickedBonus !== undefined && (
+                                <span className="hand-picked-indicator">★</span>
+                              )}
+                            </span>
+                            {game && uniformBonusRange && (
+                              <NumberHistoryTimeline
+                                number={prediction.bonus}
+                                game={game}
+                                gameName={game.name}
+                                isBonus={true}
+                                uniformStartDate={uniformBonusRange.earliestDate}
+                                uniformEndDate={uniformBonusRange.latestDate}
+                                show={true}
+                              />
                             )}
-                          </span>
+                          </div>
                         )}
                       </div>
                     </>
                   ) : null}
+                  </div>
+                  {/* Shared year scale - only show when timelines are shown */}
+                  {uniformRange && (!predictionWithAnimation || showTimelines) && (
+                    <div className="number-ball-wrapper">
+                      <div className="year-scale-placeholder" />
+                      <div className="year-scale-container">
+                        <YearScale
+                          startDate={uniformRange.earliestDate}
+                          endDate={uniformRange.latestDate}
+                          height={300}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {prediction && (
-                  <div className="prediction-meta">
-                    <div className="confidence">
-                      <strong>Confidence Score:</strong>{' '}
-                      {(prediction.confidence * 100).toFixed(1)}%
+                  <>
+                    <div className="prediction-meta">
+                      <div className="confidence">
+                        <strong>Confidence Score:</strong>{' '}
+                        {(prediction.confidence * 100).toFixed(1)}%
+                      </div>
+                      <p className="reasoning">{prediction.reasoning}</p>
                     </div>
-                    <p className="reasoning">{prediction.reasoning}</p>
-                  </div>
+                    {game && (
+                      <CombinationFrequencyView
+                        game={game}
+                        predictedNumbers={prediction.numbers}
+                        filterDate={heatmapFilterDate}
+                      />
+                    )}
+                  </>
                 )}
       </div>
-            )}
+            );
+            })()}
 
             <div className="disclaimer">
               <p>
