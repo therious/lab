@@ -8,6 +8,75 @@
   border: 1px solid #e0e0e0;
 }
 
+.heatmap-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.heatmap-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.heatmap-filter label {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.heatmap-filter-label {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.heatmap-filter select {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: white;
+  cursor: pointer;
+}
+
+.heatmap-filter select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.heatmap-radio-group {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.heatmap-radio {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.heatmap-radio input[type="radio"] {
+  cursor: pointer;
+  margin: 0;
+}
+
+.heatmap-radio span {
+  user-select: none;
+}
+
 .heatmap-section {
   display: flex;
   flex-direction: column;

@@ -1,18 +1,26 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { LotteryGame } from '../types';
+import { getRangeForDate, getRangeChangeDates } from '../data/historicalRanges';
 import './HeatMap.css';
+
+type SortOrder = 'numeric' | 'frequency' | 'recent';
 
 interface HeatMapProps {
   game: LotteryGame;
+  filterDate?: string; // Only show draws from this date onwards
+  onFilterDateChange?: (date: string | undefined) => void;
 }
 
 /**
  * Calculate frequency of each number in historical draws
+ * Only counts numbers that were valid at the time of the draw
  */
 function calculateFrequencies(
-  draws: { numbers: number[] }[],
+  draws: { numbers: number[]; date: string }[],
+  gameName: string,
   min: number,
-  max: number
+  max: number,
+  filterDate?: string
 ): Map<number, number> {
   const frequencies = new Map<number, number>();
   
@@ -21,10 +29,23 @@ function calculateFrequencies(
     frequencies.set(num, 0);
   }
   
-  // Count occurrences
+  // Count occurrences, only considering draws where the number was valid
   draws.forEach(draw => {
+    // If filtering by date, skip draws outside the range
+    if (filterDate && draw.date < filterDate) {
+      return;
+    }
+    
+    const range = getRangeForDate(gameName, draw.date);
+    if (!range) {
+      return;
+    }
+    
     draw.numbers.forEach(num => {
-      frequencies.set(num, (frequencies.get(num) || 0) + 1);
+      // Only count if the number was valid at the time of the draw
+      if (num >= range.mainMin && num <= range.mainMax && num >= min && num <= max) {
+        frequencies.set(num, (frequencies.get(num) || 0) + 1);
+      }
     });
   });
   
@@ -33,11 +54,14 @@ function calculateFrequencies(
 
 /**
  * Calculate bonus number frequencies
+ * Only counts numbers that were valid at the time of the draw
  */
 function calculateBonusFrequencies(
-  draws: { bonus?: number }[],
+  draws: { bonus?: number; date: string }[],
+  gameName: string,
   min: number,
-  max: number
+  max: number,
+  filterDate?: string
 ): Map<number, number> {
   const frequencies = new Map<number, number>();
   
@@ -46,8 +70,20 @@ function calculateBonusFrequencies(
   }
   
   draws.forEach(draw => {
+    // If filtering by date, skip draws outside the range
+    if (filterDate && draw.date < filterDate) {
+      return;
+    }
+    
     if (draw.bonus !== undefined) {
-      frequencies.set(draw.bonus, (frequencies.get(draw.bonus) || 0) + 1);
+      const range = getRangeForDate(gameName, draw.date);
+      if (range) {
+        // Only count if the bonus number was valid at the time of the draw
+        if (draw.bonus >= range.bonusMin && draw.bonus <= range.bonusMax && 
+            draw.bonus >= min && draw.bonus <= max) {
+          frequencies.set(draw.bonus, (frequencies.get(draw.bonus) || 0) + 1);
+        }
+      }
     }
   });
   
@@ -155,23 +191,57 @@ function getHeatColor(frequency: number, minFreq: number, maxFreq: number): { bg
   };
 }
 
-export function HeatMap({ game }: HeatMapProps) {
+export function HeatMap({ game, filterDate, onFilterDateChange }: HeatMapProps) {
   const mainFrequencies = useMemo(() => {
     return calculateFrequencies(
       game.draws,
+      game.name,
       game.mainNumbers.min,
-      game.mainNumbers.max
+      game.mainNumbers.max,
+      filterDate
     );
-  }, [game.draws, game.mainNumbers.min, game.mainNumbers.max]);
+  }, [game.draws, game.name, game.mainNumbers.min, game.mainNumbers.max, filterDate]);
   
   const bonusFrequencies = useMemo(() => {
     if (!game.bonusNumber) return null;
     return calculateBonusFrequencies(
       game.draws,
+      game.name,
       game.bonusNumber.min,
-      game.bonusNumber.max
+      game.bonusNumber.max,
+      filterDate
     );
-  }, [game.draws, game.bonusNumber]);
+  }, [game.draws, game.name, game.bonusNumber, filterDate]);
+  
+  const rangeChangeDates = useMemo(() => {
+    const allDates = getRangeChangeDates(game.name);
+    if (game.draws.length === 0) {
+      return allDates;
+    }
+    
+    // Find the actual date range of the loaded data
+    const drawDates = game.draws.map(d => d.date).sort();
+    const earliestDraw = drawDates[0];
+    const latestDraw = drawDates[drawDates.length - 1];
+    
+    // Only include range changes that are relevant to the loaded data
+    // Include:
+    // 1. The first range change (even if before earliest draw, it applies to earliest data)
+    // 2. Any range change that falls within the data range (between earliest and latest)
+    // 3. Any range change before latest draw (they affect draws in our data)
+    const relevantDates = allDates.filter((date, index) => {
+      // Always include the first range (applies to earliest draws)
+      if (index === 0) {
+        return true;
+      }
+      
+      // Include if the change date is on or before the latest draw
+      // (it affects some portion of our data)
+      return date <= latestDraw;
+    });
+    
+    return relevantDates;
+  }, [game.name, game.draws]);
   
   // Calculate min/max for color scaling
   const mainFreqValues = Array.from(mainFrequencies.values());
@@ -198,15 +268,192 @@ export function HeatMap({ game }: HeatMapProps) {
       )
     : [];
   
+  const [sortOrder, setSortOrder] = useState<SortOrder>('numeric');
+  
+  const filteredDrawsCount = filterDate
+    ? game.draws.filter(d => d.date >= filterDate).length
+    : game.draws.length;
+  
+  // Calculate most recent draw date for each number
+  const mainNumberLastSeen = useMemo(() => {
+    const lastSeen = new Map<number, string>();
+    const filteredDraws = filterDate 
+      ? game.draws.filter(d => d.date >= filterDate)
+      : game.draws;
+    
+    filteredDraws.forEach(draw => {
+      const range = getRangeForDate(game.name, draw.date);
+      if (!range) return;
+      
+      draw.numbers.forEach(num => {
+        if (num >= range.mainMin && num <= range.mainMax) {
+          const current = lastSeen.get(num);
+          if (!current || draw.date > current) {
+            lastSeen.set(num, draw.date);
+          }
+        }
+      });
+    });
+    
+    return lastSeen;
+  }, [game.draws, game.name, filterDate]);
+  
+  const bonusNumberLastSeen = useMemo(() => {
+    if (!game.bonusNumber) return new Map<number, string>();
+    
+    const lastSeen = new Map<number, string>();
+    const filteredDraws = filterDate 
+      ? game.draws.filter(d => d.date >= filterDate)
+      : game.draws;
+    
+    filteredDraws.forEach(draw => {
+      if (draw.bonus === undefined) return;
+      const range = getRangeForDate(game.name, draw.date);
+      if (!range) return;
+      
+      if (draw.bonus >= range.bonusMin && draw.bonus <= range.bonusMax) {
+        const current = lastSeen.get(draw.bonus);
+        if (!current || draw.date > current) {
+          lastSeen.set(draw.bonus, draw.date);
+        }
+      }
+    });
+    
+    return lastSeen;
+  }, [game.draws, game.name, game.bonusNumber, filterDate]);
+  
+  // Sort main numbers based on selected order
+  const sortedMainNumbers = useMemo(() => {
+    const numbers = [...mainNumbers];
+    
+    switch (sortOrder) {
+      case 'numeric':
+        return numbers.sort((a, b) => a - b);
+      
+      case 'frequency':
+        return numbers.sort((a, b) => {
+          const freqA = mainFrequencies.get(a) || 0;
+          const freqB = mainFrequencies.get(b) || 0;
+          if (freqB !== freqA) return freqB - freqA;
+          return a - b; // Tie-breaker: numeric
+        });
+      
+      case 'recent':
+        return numbers.sort((a, b) => {
+          const dateA = mainNumberLastSeen.get(a) || '';
+          const dateB = mainNumberLastSeen.get(b) || '';
+          if (dateB !== dateA) return dateB.localeCompare(dateA);
+          return a - b; // Tie-breaker: numeric
+        });
+      
+      default:
+        return numbers;
+    }
+  }, [mainNumbers, sortOrder, mainFrequencies, mainNumberLastSeen]);
+  
+  // Sort bonus numbers based on selected order
+  const sortedBonusNumbers = useMemo(() => {
+    if (!bonusNumbers.length) return [];
+    
+    const numbers = [...bonusNumbers];
+    
+    switch (sortOrder) {
+      case 'numeric':
+        return numbers.sort((a, b) => a - b);
+      
+      case 'frequency':
+        return numbers.sort((a, b) => {
+          const freqA = bonusFrequencies?.get(a) || 0;
+          const freqB = bonusFrequencies?.get(b) || 0;
+          if (freqB !== freqA) return freqB - freqA;
+          return a - b;
+        });
+      
+      case 'recent':
+        return numbers.sort((a, b) => {
+          const dateA = bonusNumberLastSeen.get(a) || '';
+          const dateB = bonusNumberLastSeen.get(b) || '';
+          if (dateB !== dateA) return dateB.localeCompare(dateA);
+          return a - b;
+        });
+      
+      default:
+        return numbers;
+    }
+  }, [bonusNumbers, sortOrder, bonusFrequencies, bonusNumberLastSeen]);
+  
   return (
     <div className="heatmap-container">
+      <div className="heatmap-controls">
+        {rangeChangeDates.length > 1 && (
+          <div className="heatmap-filter">
+            <label htmlFor="date-filter">Show draws from:</label>
+            <select
+              id="date-filter"
+              value={filterDate || ''}
+              onChange={(e) => {
+                onFilterDateChange?.(e.target.value || undefined);
+              }}
+            >
+              <option value="">All time</option>
+              {rangeChangeDates.map(date => (
+                <option key={date} value={date}>
+                  {new Date(date).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                  })}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        
+        <div className="heatmap-filter">
+          <span className="heatmap-filter-label">Sort by:</span>
+          <div className="heatmap-radio-group">
+            <label className="heatmap-radio">
+              <input
+                type="radio"
+                name="sort-order"
+                value="numeric"
+                checked={sortOrder === 'numeric'}
+                onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+              />
+              <span>Numeric</span>
+            </label>
+            <label className="heatmap-radio">
+              <input
+                type="radio"
+                name="sort-order"
+                value="frequency"
+                checked={sortOrder === 'frequency'}
+                onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+              />
+              <span>Frequency</span>
+            </label>
+            <label className="heatmap-radio">
+              <input
+                type="radio"
+                name="sort-order"
+                value="recent"
+                checked={sortOrder === 'recent'}
+                onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+              />
+              <span>Most Recent</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      
       <div className="heatmap-section">
         <h3>Main Numbers Heat Map</h3>
         <p className="heatmap-subtitle">
-          Frequency of numbers in {game.draws.length} historical draws
+          Frequency of numbers in {filteredDrawsCount} historical draws
+          {filterDate && ` (from ${new Date(filterDate).toLocaleDateString()})`}
         </p>
         <div className="heatmap-grid">
-          {mainNumbers.map(num => {
+          {sortedMainNumbers.map(num => {
             const freq = mainFrequencies.get(num) || 0;
             const { bg, text } = getHeatColor(freq, mainMinFreq, mainMaxFreq);
             const percentage = mainMaxFreq > 0 
@@ -240,7 +487,7 @@ export function HeatMap({ game }: HeatMapProps) {
             Frequency of {game.name === 'Powerball' ? 'Powerball' : game.name === 'Mega Millions' ? 'Mega Ball' : 'Bonus'} numbers
           </p>
           <div className="heatmap-grid bonus-grid">
-            {bonusNumbers.map(num => {
+            {sortedBonusNumbers.map(num => {
               const freq = bonusFrequencies.get(num) || 0;
               const { bg, text } = getHeatColor(freq, bonusMinFreq, bonusMaxFreq);
               const percentage = bonusMaxFreq > 0 
