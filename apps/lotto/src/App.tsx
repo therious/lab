@@ -456,12 +456,22 @@ function App() {
                     false
                   )
                 : null;
+              // Range for bonus number when it appears as bonus only
               const uniformBonusRange = currentPrediction?.bonus !== undefined && game
                 ? getUniformTimelineRange(
                     game,
                     game.name,
                     [currentPrediction.bonus],
                     true
+                  )
+                : null;
+              // Range for bonus number when it appears in any position (main or bonus)
+              const uniformBonusAllRange = currentPrediction?.bonus !== undefined && game
+                ? getUniformTimelineRange(
+                    game,
+                    game.name,
+                    [currentPrediction.bonus],
+                    false
                   )
                 : null;
               
@@ -479,15 +489,21 @@ function App() {
                       
                       // Find where this number was in the shuffled order (for drop animation)
                       const shuffledIdx = predictionWithAnimation.prediction.numbers.indexOf(num);
+                      // Each ball drops into the next position from left to right
+                      // The drop delay is based on when it should appear in its shuffled order
                       const dropDelay = shuffledIdx * 600; // 600ms = 40% of 1.5s animation (when ball first hits bottom)
                       
-                      // For reordering: sorted position is final, shuffled position is initial
-                      const finalOrder = sortedIdx;
-                      const initialOrder = shuffledIdx;
+                      // During drop phase: balls fill positions left to right in shuffled order
+                      // After reordering: balls are in sorted order
+                      const finalOrder = sortedIdx; // Final sorted position
+                      const dropPosition = shuffledIdx; // Position it drops into (left to right)
                       
                       // Determine arc direction: if moving right, arc above; if moving left, arc below
-                      const isMovingRight = finalOrder > initialOrder;
+                      const isMovingRight = finalOrder > dropPosition;
                       const arcDirection = isMovingRight ? 1 : -1;
+                      
+                      // Calculate X offset for drop position (left to right)
+                      const dropXOffset = (dropPosition - finalOrder) * (60 + 12); // 60px ball + 12px gap
                       
                       return (
                         <div key={`${num}-${sortedIdx}`} className="number-ball-wrapper">
@@ -496,13 +512,10 @@ function App() {
                             title={isHandPicked ? 'Hand-picked number' : 'Predicted number'}
                             style={{
                               '--drop-delay': `${dropDelay}ms`,
+                              '--drop-x': `${dropXOffset}px`,
                               '--final-order': finalOrder,
-                              '--initial-order': initialOrder,
+                              '--initial-order': dropPosition,
                               '--arc-direction': arcDirection,
-                              // Position at shuffled location initially (before reordering)
-                              transform: predictionWithAnimation.showReordering 
-                                ? undefined 
-                                : `translateX(calc((${initialOrder} - ${finalOrder}) * (60px + 12px)))`,
                             } as React.CSSProperties}
                           >
                             {num}
@@ -522,31 +535,56 @@ function App() {
                       );
                     })}
                       {predictionWithAnimation.prediction.bonus !== undefined && (
-                        <div className="number-ball-wrapper">
-                          <span 
-                            className={`number-ball bonus ${prediction?.handPickedBonus !== undefined ? 'hand-picked' : ''}`}
-                            title={prediction?.handPickedBonus !== undefined ? 'Hand-picked bonus number' : 'Bonus number'}
-                            style={{
-                              '--drop-delay': `${predictionWithAnimation.prediction.numbers.length * 600}ms`, // Always last, 600ms per main number
-                            } as React.CSSProperties}
-                          >
-                            {predictionWithAnimation.prediction.bonus}
-                            {prediction?.handPickedBonus !== undefined && (
-                              <span className="hand-picked-indicator">★</span>
+                        <>
+                          {/* Plus sign indicator with graph for all occurrences */}
+                          <div className="number-ball-wrapper">
+                            <span 
+                              className="number-ball bonus-indicator"
+                              style={{
+                                '--appear-delay': `${predictionWithAnimation.prediction.numbers.length * 600 + 600}ms`, // Appear when bonus ball hits baseline (40% of 1.5s = 600ms)
+                              } as React.CSSProperties}
+                            >
+                              +
+                            </span>
+                            {game && uniformBonusAllRange && (
+                              <NumberHistoryTimeline
+                                number={predictionWithAnimation.prediction.bonus}
+                                game={game}
+                                gameName={game.name}
+                                isBonus={false}
+                                uniformStartDate={uniformBonusAllRange.earliestDate}
+                                uniformEndDate={uniformBonusAllRange.latestDate}
+                                show={!predictionWithAnimation || showTimelines}
+                              />
                             )}
-                          </span>
-                          {game && uniformBonusRange && (
-                            <NumberHistoryTimeline
-                              number={predictionWithAnimation.prediction.bonus}
-                              game={game}
-                              gameName={game.name}
-                              isBonus={true}
-                              uniformStartDate={uniformBonusRange.earliestDate}
-                              uniformEndDate={uniformBonusRange.latestDate}
-                              show={!predictionWithAnimation || showTimelines}
-                            />
-                          )}
-                        </div>
+                          </div>
+                          {/* Bonus ball with graph for bonus-only occurrences */}
+                          <div className="number-ball-wrapper">
+                            <span 
+                              className={`number-ball bonus ${prediction?.handPickedBonus !== undefined ? 'hand-picked' : ''}`}
+                              title={prediction?.handPickedBonus !== undefined ? 'Hand-picked bonus number' : 'Bonus number'}
+                              style={{
+                                '--drop-delay': `${predictionWithAnimation.prediction.numbers.length * 600}ms`, // Always last, 600ms per main number
+                              } as React.CSSProperties}
+                            >
+                              {predictionWithAnimation.prediction.bonus}
+                              {prediction?.handPickedBonus !== undefined && (
+                                <span className="hand-picked-indicator">★</span>
+                              )}
+                            </span>
+                            {game && uniformBonusRange && (
+                              <NumberHistoryTimeline
+                                number={predictionWithAnimation.prediction.bonus}
+                                game={game}
+                                gameName={game.name}
+                                isBonus={true}
+                                uniformStartDate={uniformBonusRange.earliestDate}
+                                uniformEndDate={uniformBonusRange.latestDate}
+                                show={!predictionWithAnimation || showTimelines}
+                              />
+                            )}
+                          </div>
+                        </>
                       )}
                       </div>
                     </>
@@ -578,28 +616,48 @@ function App() {
                           );
                         })}
                         {prediction.bonus !== undefined && (
-                          <div className="number-ball-wrapper">
-                            <span 
-                              className={`number-ball bonus ${prediction.handPickedBonus !== undefined ? 'hand-picked' : ''}`}
-                              title={prediction.handPickedBonus !== undefined ? 'Hand-picked bonus number' : 'Bonus number'}
-                            >
-                              {prediction.bonus}
-                              {prediction.handPickedBonus !== undefined && (
-                                <span className="hand-picked-indicator">★</span>
+                          <>
+                            {/* Plus sign indicator with graph for all occurrences */}
+                            <div className="number-ball-wrapper">
+                              <span className="number-ball bonus-indicator">
+                                +
+                              </span>
+                              {game && uniformBonusAllRange && (
+                                <NumberHistoryTimeline
+                                  number={prediction.bonus}
+                                  game={game}
+                                  gameName={game.name}
+                                  isBonus={false}
+                                  uniformStartDate={uniformBonusAllRange.earliestDate}
+                                  uniformEndDate={uniformBonusAllRange.latestDate}
+                                  show={true}
+                                />
                               )}
-                            </span>
-                            {game && uniformBonusRange && (
-                              <NumberHistoryTimeline
-                                number={prediction.bonus}
-                                game={game}
-                                gameName={game.name}
-                                isBonus={true}
-                                uniformStartDate={uniformBonusRange.earliestDate}
-                                uniformEndDate={uniformBonusRange.latestDate}
-                                show={true}
-                              />
-                            )}
-                          </div>
+                            </div>
+                            {/* Bonus ball with graph for bonus-only occurrences */}
+                            <div className="number-ball-wrapper">
+                              <span 
+                                className={`number-ball bonus ${prediction.handPickedBonus !== undefined ? 'hand-picked' : ''}`}
+                                title={prediction.handPickedBonus !== undefined ? 'Hand-picked bonus number' : 'Bonus number'}
+                              >
+                                {prediction.bonus}
+                                {prediction.handPickedBonus !== undefined && (
+                                  <span className="hand-picked-indicator">★</span>
+                                )}
+                              </span>
+                              {game && uniformBonusRange && (
+                                <NumberHistoryTimeline
+                                  number={prediction.bonus}
+                                  game={game}
+                                  gameName={game.name}
+                                  isBonus={true}
+                                  uniformStartDate={uniformBonusRange.earliestDate}
+                                  uniformEndDate={uniformBonusRange.latestDate}
+                                  show={true}
+                                />
+                              )}
+                            </div>
+                          </>
                         )}
                       </div>
                     </>
