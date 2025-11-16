@@ -131,22 +131,32 @@ export function getUniformTimelineRange(
 ): { earliestDate: string; latestDate: string } | null {
   if (game.draws.length === 0) return null;
   
+  // Find earliest actual draw date in the data
+  const earliestActualDraw = game.draws.reduce((earliest, draw) => 
+    draw.date < earliest ? draw.date : earliest, 
+    game.draws[0].date
+  );
+  
   // Find earliest introduction date among all numbers
-  let earliestDate: string | null = null;
+  let earliestIntroDate: string | null = null;
   for (const num of numbers) {
     const introDate = getNumberIntroductionDate(gameName, num, isBonus);
-    if (introDate && (!earliestDate || introDate < earliestDate)) {
-      earliestDate = introDate;
+    if (introDate && (!earliestIntroDate || introDate < earliestIntroDate)) {
+      earliestIntroDate = introDate;
     }
   }
+  
+  // Use the later of: earliest introduction date or earliest actual draw date
+  // This ensures we don't show dates before we have actual data
+  const earliestDate = earliestIntroDate && earliestIntroDate > earliestActualDraw
+    ? earliestIntroDate
+    : earliestActualDraw;
   
   // Find latest draw date
   const latestDate = game.draws.reduce((latest, draw) => 
     draw.date > latest ? draw.date : latest, 
     game.draws[0].date
   );
-  
-  if (!earliestDate) return null;
   
   return { earliestDate, latestDate };
 }

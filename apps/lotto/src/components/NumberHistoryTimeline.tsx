@@ -47,15 +47,31 @@ export function NumberHistoryTimeline({
     const timelineEnd = new Date(endDate);
     const totalDays = Math.ceil((timelineEnd.getTime() - timelineStart.getTime()) / (1000 * 60 * 60 * 24));
     
-    // Create a set of dates for quick lookup
-    const drawDateSet = new Set(drawDates);
+    // Create points for EVERY draw date, not just samples
+    const drawPoints: Array<{ date: string; hasDraw: boolean; position: number }> = [];
     
-    // For vertical visualization, sample points along the timeline
-    // Most recent at top (0%), oldest at bottom (100%)
-    const points: Array<{ date: string; hasDraw: boolean; position: number }> = [];
+    // Add a point for each actual draw date
+    drawDates.forEach(drawDate => {
+      const drawDateObj = new Date(drawDate);
+      
+      // Only include draws on or after the number's introduction date
+      if (drawDate < introductionDate) {
+        return;
+      }
+      
+      // Calculate position: 0% = top (most recent), 100% = bottom (oldest)
+      const position = 1 - ((drawDateObj.getTime() - timelineStart.getTime()) / (timelineEnd.getTime() - timelineStart.getTime()));
+      
+      drawPoints.push({ 
+        date: drawDate, 
+        hasDraw: true, 
+        position: Math.max(0, Math.min(1, position)) // Clamp between 0 and 1
+      });
+    });
     
-    // Sample points along the timeline (up to 200 points for better resolution)
-    const sampleCount = Math.min(200, totalDays);
+    // Also add background sample points for the timeline bar (to show the full range)
+    const backgroundPoints: Array<{ date: string; hasDraw: boolean; position: number }> = [];
+    const sampleCount = Math.min(300, totalDays);
     const step = Math.max(1, Math.floor(totalDays / sampleCount));
     
     for (let i = 0; i <= totalDays; i += step) {
@@ -68,27 +84,30 @@ export function NumberHistoryTimeline({
         continue;
       }
       
-      // Check if there's a draw on or near this date
-      const hasDraw = drawDateSet.has(dateStr) || 
-        drawDates.some(d => {
-          const drawDate = new Date(d);
-          const diffDays = Math.abs((drawDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
-          return diffDays <= 1; // Within 1 day
-        });
-      
       // Position: 0% = top (most recent/end date), 100% = bottom (oldest/start date)
-      // Reverse the position so most recent is at top
       const position = 1 - (i / totalDays);
       
-      points.push({ date: dateStr, hasDraw, position });
+      // Check if this point already has a draw (to avoid duplicates)
+      const hasDraw = drawPoints.some(dp => {
+        const dpDate = new Date(dp.date);
+        const diffDays = Math.abs((dpDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+        return diffDays < 0.5; // Within half a day
+      });
+      
+      if (!hasDraw) {
+        backgroundPoints.push({ date: dateStr, hasDraw: false, position });
+      }
     }
+    
+    // Combine draw points and background points, sort by position
+    const allPoints = [...drawPoints, ...backgroundPoints].sort((a, b) => a.position - b.position);
     
     // Calculate the position where the number was introduced (as a percentage from top)
     const introDateObj = new Date(introductionDate);
     const introPosition = 1 - ((introDateObj.getTime() - timelineStart.getTime()) / (timelineEnd.getTime() - timelineStart.getTime()));
     
     return {
-      timelinePoints: points,
+      timelinePoints: allPoints,
       introPosition,
     };
   }, [startDate, endDate, introductionDate, drawDates]);
