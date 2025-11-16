@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
+import { generateCombinations } from '../utils/combinationFrequencies';
 import type { LotteryGame } from '../types';
-import { calculateCombinationFrequencies, getTopCombinations, getCombinationDrawDates } from '../utils/combinationFrequencies';
+import { calculateCombinationFrequencies, getCombinationDrawDates } from '../utils/combinationFrequencies';
 import './CombinationFrequencyView.css';
 
 interface CombinationFrequencyViewProps {
@@ -13,8 +14,7 @@ interface CombinationFrequencyViewProps {
 export function CombinationFrequencyView({
   game,
   predictedNumbers,
-  filterDate,
-  maxDisplay = 20,
+  filterDate
 }: CombinationFrequencyViewProps) {
   const [hoveredCombination, setHoveredCombination] = useState<{
     combination: number[];
@@ -26,13 +26,13 @@ export function CombinationFrequencyView({
   const predictedCombinations = useMemo(() => {
     const sorted = [...predictedNumbers].sort((a, b) => a - b);
     const combos: Map<number, number[][]> = new Map();
-    
+
     // Generate combinations of size 2, 3, 4, 5, and 6 (if applicable)
     for (let size = 2; size <= Math.min(6, predictedNumbers.length); size++) {
-      const sizeCombos = generateCombinationsFromArray(sorted, size);
+      const sizeCombos = generateCombinations(sorted, size);
       combos.set(size, sizeCombos);
     }
-    
+
     return combos;
   }, [predictedNumbers]);
 
@@ -44,14 +44,14 @@ export function CombinationFrequencyView({
     const quadFreq = new Map<string, number>();
     const quintFreq = new Map<string, number>();
     const sextetFreq = game.mainNumbers.count >= 6 ? new Map<string, number>() : null;
-    
+
     // Only include frequencies for combinations that are in the prediction
     const pairCombos = predictedCombinations.get(2) || [];
     pairCombos.forEach(combo => {
       const key = combo.join('-');
       pairFreq.set(key, allFreq.get(key) || 0);
     });
-    
+
     if (predictedCombinations.has(3)) {
       const allTripletFreq = calculateCombinationFrequencies(game, 3, filterDate);
       const tripletCombos = predictedCombinations.get(3) || [];
@@ -60,7 +60,7 @@ export function CombinationFrequencyView({
         tripletFreq.set(key, allTripletFreq.get(key) || 0);
       });
     }
-    
+
     if (predictedCombinations.has(4)) {
       const allQuadFreq = calculateCombinationFrequencies(game, 4, filterDate);
       const quadCombos = predictedCombinations.get(4) || [];
@@ -69,7 +69,7 @@ export function CombinationFrequencyView({
         quadFreq.set(key, allQuadFreq.get(key) || 0);
       });
     }
-    
+
     if (predictedCombinations.has(5)) {
       const allQuintFreq = calculateCombinationFrequencies(game, 5, filterDate);
       const quintCombos = predictedCombinations.get(5) || [];
@@ -78,7 +78,7 @@ export function CombinationFrequencyView({
         quintFreq.set(key, allQuintFreq.get(key) || 0);
       });
     }
-    
+
     if (sextetFreq && predictedCombinations.has(6)) {
       const allSextetFreq = calculateCombinationFrequencies(game, 6, filterDate);
       const sextetCombos = predictedCombinations.get(6) || [];
@@ -87,33 +87,10 @@ export function CombinationFrequencyView({
         sextetFreq.set(key, allSextetFreq.get(key) || 0);
       });
     }
-    
+
     return [pairFreq, tripletFreq, quadFreq, quintFreq, sextetFreq];
   }, [game, filterDate, predictedCombinations]);
 
-  // Helper to generate combinations from an array
-  function generateCombinationsFromArray<T>(arr: T[], size: number): T[][] {
-    if (size === 0) return [[]];
-    if (size > arr.length) return [];
-    
-    const combinations: T[][] = [];
-    
-    function backtrack(start: number, current: T[]) {
-      if (current.length === size) {
-        combinations.push([...current]);
-        return;
-      }
-      
-      for (let i = start; i < arr.length; i++) {
-        current.push(arr[i]);
-        backtrack(i + 1, current);
-        current.pop();
-      }
-    }
-    
-    backtrack(0, []);
-    return combinations;
-  }
 
   // Get combinations from frequencies, sorted by frequency
   const getCombinationsFromFreq = (
@@ -151,56 +128,78 @@ export function CombinationFrequencyView({
   ) => {
     if (items.length === 0) return null;
 
+    // Group combinations by frequency
+    const groups = new Map<number, Array<{ combination: number[]; frequency: number }>>();
+    items.forEach(item => {
+      const freq = item.frequency;
+      if (!groups.has(freq)) {
+        groups.set(freq, []);
+      }
+      groups.get(freq)!.push(item);
+    });
+
+    // Convert to array and sort by frequency (descending)
+    const groupedByFreq = Array.from(groups.entries())
+      .map(([freq, combos]) => ({ frequency: freq, combinations: combos }))
+      .sort((a, b) => b.frequency - a.frequency);
+
     return (
       <div className="combination-group">
         <h4>{title}</h4>
         <div className="combination-list">
-          {items.map((item, idx) => {
-            const isHovered = hoveredCombination?.combination.join('-') === item.combination.join('-') &&
-                             hoveredCombination?.size === size;
-            
-            return (
-              <div
-                key={idx}
-                className={`combination-item ${isHovered ? 'hovered' : ''}`}
-                onMouseEnter={() => handleCombinationHover(item.combination, size)}
-                onMouseLeave={handleCombinationLeave}
-              >
-                <span className="combination-numbers">
-                  {item.combination.map((num, i) => (
-                    <span key={i}>
-                      <span className="predicted-number">
-                        {num}
-                      </span>
-                      {i < item.combination.length - 1 && <span className="separator">-</span>}
-                    </span>
-                  ))}
-                </span>
-                <span className="combination-frequency">{item.frequency}</span>
-                {isHovered && hoverDates.length > 0 && (
-                  <div className="combination-dates-tooltip">
-                    <div className="tooltip-header">Appeared on:</div>
-                    <div className="tooltip-dates">
-                      {hoverDates.slice(0, 10).map((date, dateIdx) => (
-                        <div key={dateIdx} className="tooltip-date">
-                          {new Date(date).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          })}
-                        </div>
+          {groupedByFreq.map((group, groupIdx) => (
+            <div
+              key={groupIdx}
+              className="combination-item"
+            >
+              <span className="combination-numbers-group">
+                {group.combinations.map((item, comboIdx) => {
+                  const isHovered = hoveredCombination?.combination.join('-') === item.combination.join('-') &&
+                                   hoveredCombination?.size === size;
+
+                  return (
+                    <span
+                      key={comboIdx}
+                      className={`combination-item-inline ${isHovered ? 'hovered' : ''}`}
+                      onMouseEnter={() => handleCombinationHover(item.combination, size)}
+                      onMouseLeave={handleCombinationLeave}
+                    >
+                      {item.combination.map((num, i) => (
+                        <span key={i}>
+                          <span className="predicted-number">
+                            {num}
+                          </span>
+                          {i < item.combination.length - 1 && <span className="separator">-</span>}
+                        </span>
                       ))}
-                      {hoverDates.length > 10 && (
-                        <div className="tooltip-more">
-                          ... and {hoverDates.length - 10} more
+                      {isHovered && hoverDates.length > 0 && (
+                        <div className="combination-dates-tooltip">
+                          <div className="tooltip-header">Appeared on:</div>
+                          <div className="tooltip-dates">
+                            {hoverDates.slice(0, 10).map((date, dateIdx) => (
+                              <div key={dateIdx} className="tooltip-date">
+                                {new Date(date).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}
+                              </div>
+                            ))}
+                            {hoverDates.length > 10 && (
+                              <div className="tooltip-more">
+                                ... and {hoverDates.length - 10} more
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                    </span>
+                  );
+                })}
+              </span>
+              <span className="combination-frequency">{group.frequency}</span>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -216,7 +215,7 @@ export function CombinationFrequencyView({
       <p className="hint">
         Showing only combinations from your prediction. Hover over any combination to see dates when it appeared.
       </p>
-      
+
       {renderCombinationList(relevantPairs, 'Pairs (2 numbers)', 2)}
       {renderCombinationList(relevantTriplets, 'Triplets (3 numbers)', 3)}
       {renderCombinationList(relevantQuads, 'Quadruplets (4 numbers)', 4)}
