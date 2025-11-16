@@ -267,12 +267,12 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   position: relative;
   opacity: 0;
-  animation: dropAndBounce 2s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  animation: dropAndBounce 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   animation-delay: var(--drop-delay, 0ms);
 }
 
 .number-ball.reordering {
-  animation: dropAndBounce 2s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards,
+  animation: dropAndBounce 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards,
              reorderNumbersArc 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   animation-delay: var(--drop-delay, 0ms),
                    0ms; /* All balls start reordering simultaneously */
@@ -284,7 +284,7 @@ body {
   width: 80px;
   height: 80px;
   font-size: 1.2rem;
-  animation: dropAndBounce 2s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  animation: dropAndBounce 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   animation-delay: var(--drop-delay, 0ms);
 }
 
@@ -308,28 +308,31 @@ body {
     opacity: 0;
     transform: translateY(-100vh) scale(0.5);
   }
-  30% {
+  40% {
     opacity: 1;
-    transform: translateY(20px) scale(1.1);
+    transform: translateY(0) scale(1); /* Land at final position */
   }
   50% {
-    transform: translateY(-10px) scale(0.95);
+    transform: translateY(-25px) scale(1.05); /* Bounce up */
   }
-  65% {
-    transform: translateY(5px) scale(1.05);
+  60% {
+    transform: translateY(0) scale(1); /* Return to position */
+  }
+  68% {
+    transform: translateY(-12px) scale(1.02); /* Smaller bounce */
   }
   75% {
-    transform: translateY(-3px) scale(0.98);
+    transform: translateY(0) scale(1); /* Return */
   }
-  85% {
-    transform: translateY(2px) scale(1.02);
+  82% {
+    transform: translateY(-5px) scale(1.01); /* Tiny bounce */
   }
-  92% {
-    transform: translateY(-1px) scale(0.99);
+  88% {
+    transform: translateY(0) scale(1); /* Return */
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0) scale(1); /* Settled */
   }
 }
 
