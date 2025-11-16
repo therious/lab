@@ -158,10 +158,6 @@
   opacity: 0.9;
 }
 
-.bonus-cell {
-  min-height: 50px;
-}
-
 .heatmap-legend {
   display: flex;
   align-items: center;
@@ -185,7 +181,7 @@
 .legend-gradient {
   width: 100px;
   height: 20px;
-  background: linear-gradient(to right, 
+  background: linear-gradient(to right,
     hsl(180, 100%, 50%), /* Cyan */
     hsl(150, 100%, 50%), /* Green-cyan */
     hsl(120, 100%, 50%), /* Green */
@@ -202,7 +198,7 @@
   .heatmap-grid {
     grid-template-columns: repeat(8, 1fr);
   }
-  
+
   .bonus-grid {
     grid-template-columns: repeat(8, 1fr);
   }
@@ -212,15 +208,15 @@
   .heatmap-grid {
     grid-template-columns: repeat(6, 1fr);
   }
-  
+
   .bonus-grid {
     grid-template-columns: repeat(6, 1fr);
   }
-  
+
   .heatmap-number {
     font-size: 0.8rem;
   }
-  
+
   .heatmap-count {
     font-size: 0.65rem;
   }
