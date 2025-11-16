@@ -18,6 +18,7 @@ function App() {
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [isComputing, setIsComputing] = useState(false);
   const [useWorker, setUseWorker] = useState(true);
+  const [heatmapFilterDate, setHeatmapFilterDate] = useState<string | undefined>(undefined);
   const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
@@ -28,6 +29,11 @@ function App() {
       }
     };
   }, []);
+  
+  useEffect(() => {
+    // Reset filter date when game changes
+    setHeatmapFilterDate(undefined);
+  }, [selectedGame]);
 
   const handlePredict = () => {
     const game = games[selectedGame];
@@ -131,23 +137,45 @@ function App() {
               </button>
             </div>
 
-            {game && (
-              <div className="game-info">
-                <h2>{game.name}</h2>
-                <div className="game-details">
+        {game && (() => {
+          const drawDates = game.draws.map(d => d.date).sort();
+          const earliestDraw = drawDates.length > 0 ? drawDates[0] : null;
+          const latestDraw = drawDates.length > 0 ? drawDates[drawDates.length - 1] : null;
+          
+          return (
+            <div className="game-info">
+              <h2>{game.name}</h2>
+              <div className="game-details">
+                <p>
+                  Main Numbers: {game.mainNumbers.count} numbers from{' '}
+                  {game.mainNumbers.min} to {game.mainNumbers.max}
+                </p>
+                {game.bonusNumber && (
                   <p>
-                    Main Numbers: {game.mainNumbers.count} numbers from{' '}
-                    {game.mainNumbers.min} to {game.mainNumbers.max}
+                    Bonus Number: {game.bonusNumber.min} to {game.bonusNumber.max}
                   </p>
-                  {game.bonusNumber && (
-                    <p>
-                      Bonus Number: {game.bonusNumber.min} to {game.bonusNumber.max}
-                    </p>
-                  )}
-                  <p>Historical Draws: {game.draws.length}</p>
-                </div>
+                )}
+                <p>Historical Draws: {game.draws.length}</p>
+                {earliestDraw && latestDraw && (
+                  <p>
+                    Includes drawings from{' '}
+                    {new Date(earliestDraw).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}{' '}
+                    to{' '}
+                    {new Date(latestDraw).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                )}
               </div>
-            )}
+            </div>
+          );
+        })()}
 
             {prediction && (
               <div className="prediction-result">
@@ -188,7 +216,11 @@ function App() {
 
           {game && (
             <aside className="heatmap-sidebar">
-              <HeatMap game={game} />
+              <HeatMap 
+                game={game} 
+                filterDate={heatmapFilterDate}
+                onFilterDateChange={setHeatmapFilterDate}
+              />
             </aside>
           )}
         </div>
