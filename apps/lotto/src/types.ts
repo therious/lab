@@ -18,6 +18,14 @@ export interface LotteryGame {
   draws: LotteryDraw[];
 }
 
+export interface ScoreBreakdown {
+  numberFrequency: number; // 0-0.3
+  pairFrequency: number; // 0-0.2
+  numberSpread: number; // 0-0.2
+  oddEvenBalance: number; // 0-0.2
+  sumDistribution: number; // 0-0.1
+}
+
 export interface PredictionResult {
   numbers: number[];
   bonus?: number;
@@ -25,5 +33,6 @@ export interface PredictionResult {
   reasoning: string;
   handPickedMain?: number[]; // Numbers that were manually selected
   handPickedBonus?: number; // Bonus number that was manually selected
+  scoreBreakdown?: ScoreBreakdown; // Detailed breakdown of confidence factors
 }
 

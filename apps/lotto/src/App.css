@@ -464,10 +464,57 @@ body {
   margin-bottom: 1rem;
 }
 
+.confidence-note {
+  font-size: 0.85rem;
+  color: #888;
+  font-weight: normal;
+  font-style: italic;
+}
+
+.score-breakdown {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.breakdown-title {
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.breakdown-factors {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.breakdown-factor {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.factor-label {
+  color: #666;
+}
+
+.factor-value {
+  color: #333;
+  font-weight: 600;
+  min-width: 3rem;
+  text-align: right;
+}
+
 .reasoning {
   color: #666;
   font-style: italic;
   line-height: 1.6;
+  margin-top: 1rem;
 }
 
 .disclaimer {

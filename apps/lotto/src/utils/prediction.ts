@@ -66,16 +66,24 @@ function scoreCombination(
   game: LotteryGame,
   numberFreq: Map<number, number>,
   pairFreq: Map<string, number>
-): number {
+): { score: number; breakdown: import('../types').ScoreBreakdown } {
   let score = 0;
   const sorted = [...numbers].sort((a, b) => a - b);
+  const breakdown: import('../types').ScoreBreakdown = {
+    numberFrequency: 0,
+    pairFrequency: 0,
+    numberSpread: 0,
+    oddEvenBalance: 0,
+    sumDistribution: 0,
+  };
   
   // Factor 1: Average number frequency (moderate frequency is better than extreme)
   const avgFreq = sorted.reduce((sum, num) => sum + (numberFreq.get(num) || 0), 0) / sorted.length;
   const maxFreq = Math.max(...Array.from(numberFreq.values()));
   const normalizedFreq = avgFreq / (maxFreq || 1);
   // Prefer moderate frequency (not too hot, not too cold)
-  score += Math.abs(normalizedFreq - 0.5) < 0.3 ? 0.3 : 0.1;
+  breakdown.numberFrequency = Math.abs(normalizedFreq - 0.5) < 0.3 ? 0.3 : 0.1;
+  score += breakdown.numberFrequency;
   
   // Factor 2: Pair frequency (common pairs are slightly better)
   let pairScore = 0;
@@ -86,35 +94,33 @@ function scoreCombination(
       pairScore += Math.min(freq / 10, 0.1); // Cap contribution
     }
   }
-  score += Math.min(pairScore / (sorted.length * (sorted.length - 1) / 2), 0.2);
+  breakdown.pairFrequency = Math.min(pairScore / (sorted.length * (sorted.length - 1) / 2), 0.2);
+  score += breakdown.pairFrequency;
   
   // Factor 3: Number spread (balanced distribution is better)
   const spread = sorted[sorted.length - 1] - sorted[0];
   const range = game.mainNumbers.max - game.mainNumbers.min;
   const spreadRatio = spread / range;
   // Prefer moderate spread (not all low, not all high, not all middle)
-  if (spreadRatio > 0.3 && spreadRatio < 0.8) {
-    score += 0.2;
-  }
+  breakdown.numberSpread = (spreadRatio > 0.3 && spreadRatio < 0.8) ? 0.2 : 0;
+  score += breakdown.numberSpread;
   
   // Factor 4: Odd/even balance
   const oddCount = sorted.filter(n => n % 2 === 1).length;
   const evenCount = sorted.length - oddCount;
   const balance = Math.abs(oddCount - evenCount) / sorted.length;
-  if (balance < 0.3) {
-    score += 0.2; // Good balance
-  }
+  breakdown.oddEvenBalance = (balance < 0.3) ? 0.2 : 0; // Good balance
+  score += breakdown.oddEvenBalance;
   
   // Factor 5: Sum distribution (moderate sum is better)
   const sum = sorted.reduce((a, b) => a + b, 0);
   const minSum = (game.mainNumbers.min * sorted.length);
   const maxSum = (game.mainNumbers.max * sorted.length);
   const sumRatio = (sum - minSum) / (maxSum - minSum);
-  if (sumRatio > 0.3 && sumRatio < 0.7) {
-    score += 0.1;
-  }
+  breakdown.sumDistribution = (sumRatio > 0.3 && sumRatio < 0.7) ? 0.1 : 0;
+  score += breakdown.sumDistribution;
   
-  return Math.min(score, 1.0);
+  return { score: Math.min(score, 1.0), breakdown };
 }
 
 /**
@@ -170,7 +176,7 @@ export function predictNumbers(
   }
   
   // Generate candidate combinations
-  const candidates: Array<{ numbers: number[]; score: number }> = [];
+  const candidates: Array<{ numbers: number[]; score: number; breakdown?: import('../types').ScoreBreakdown }> = [];
   const seen = new Set<string>();
   
   // Strategy: Generate random combinations and score them
@@ -203,8 +209,8 @@ export function predictNumbers(
     }
     
     seen.add(key);
-    const score = scoreCombination(numbers, game, numberFreq, pairFreq);
-    candidates.push({ numbers, score });
+    const scoreResult = scoreCombination(numbers, game, numberFreq, pairFreq);
+    candidates.push({ numbers, score: scoreResult.score, breakdown: scoreResult.breakdown });
   }
   
   // Sort by score and pick the best
@@ -227,6 +233,13 @@ export function predictNumbers(
           game.mainNumbers.max
         ),
     score: 0.5,
+    breakdown: {
+      numberFrequency: 0.1,
+      pairFrequency: 0.1,
+      numberSpread: 0.1,
+      oddEvenBalance: 0.1,
+      sumDistribution: 0.1,
+    },
   };
   
   // Generate bonus number if applicable
@@ -262,13 +275,22 @@ export function predictNumbers(
     }
   }
   
+  const handPickedCount = preselectedMain.size;
+  const algorithmChosenCount = game.mainNumbers.count - handPickedCount;
+  
+  let reasoning = `Based on ${draws.length} historical draws, this combination has not been drawn before and shows balanced frequency patterns.`;
+  if (handPickedCount > 0) {
+    reasoning += ` ${handPickedCount} number${handPickedCount > 1 ? 's were' : ' was'} manually selected; ${algorithmChosenCount} ${algorithmChosenCount === 1 ? 'was' : 'were'} algorithm-chosen.`;
+  }
+  
   return {
     numbers: best.numbers.sort((a, b) => a - b),
     bonus,
     confidence: best.score,
-    reasoning: `Based on ${draws.length} historical draws, this combination has not been drawn before and shows balanced frequency patterns.`,
+    reasoning,
     handPickedMain: preselectedMain.size > 0 ? handPickedMain : undefined,
     handPickedBonus,
+    scoreBreakdown: best.breakdown,
   };
 }
 
