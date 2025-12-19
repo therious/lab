@@ -1,4 +1,4 @@
-import type { LotteryGame, PredictionResult } from '../types';
+import type { LotteryGame, PredictionResult, ScoreBreakdown } from '../types';
 
 // Import prediction function - we'll need to inline it for the worker
 // or use a different approach
@@ -77,14 +77,22 @@ function scoreCombination(
   game: LotteryGame,
   numberFreq: Map<number, number>,
   pairFreq: Map<string, number>
-): number {
+): { score: number; breakdown: ScoreBreakdown } {
   let score = 0;
   const sorted = [...numbers].sort((a, b) => a - b);
+  const breakdown: ScoreBreakdown = {
+    numberFrequency: 0,
+    pairFrequency: 0,
+    numberSpread: 0,
+    oddEvenBalance: 0,
+    sumDistribution: 0,
+  };
   
   const avgFreq = sorted.reduce((sum, num) => sum + (numberFreq.get(num) || 0), 0) / sorted.length;
   const maxFreq = Math.max(...Array.from(numberFreq.values()));
   const normalizedFreq = avgFreq / (maxFreq || 1);
-  score += Math.abs(normalizedFreq - 0.5) < 0.3 ? 0.3 : 0.1;
+  breakdown.numberFrequency = Math.abs(normalizedFreq - 0.5) < 0.3 ? 0.3 : 0.1;
+  score += breakdown.numberFrequency;
   
   let pairScore = 0;
   for (let i = 0; i < sorted.length; i++) {
@@ -94,31 +102,29 @@ function scoreCombination(
       pairScore += Math.min(freq / 10, 0.1);
     }
   }
-  score += Math.min(pairScore / (sorted.length * (sorted.length - 1) / 2), 0.2);
+  breakdown.pairFrequency = Math.min(pairScore / (sorted.length * (sorted.length - 1) / 2), 0.2);
+  score += breakdown.pairFrequency;
   
   const spread = sorted[sorted.length - 1] - sorted[0];
   const range = game.mainNumbers.max - game.mainNumbers.min;
   const spreadRatio = spread / range;
-  if (spreadRatio > 0.3 && spreadRatio < 0.8) {
-    score += 0.2;
-  }
+  breakdown.numberSpread = (spreadRatio > 0.3 && spreadRatio < 0.8) ? 0.2 : 0;
+  score += breakdown.numberSpread;
   
   const oddCount = sorted.filter(n => n % 2 === 1).length;
   const evenCount = sorted.length - oddCount;
   const balance = Math.abs(oddCount - evenCount) / sorted.length;
-  if (balance < 0.3) {
-    score += 0.2;
-  }
+  breakdown.oddEvenBalance = (balance < 0.3) ? 0.2 : 0;
+  score += breakdown.oddEvenBalance;
   
   const sum = sorted.reduce((a, b) => a + b, 0);
   const minSum = (game.mainNumbers.min * sorted.length);
   const maxSum = (game.mainNumbers.max * sorted.length);
   const sumRatio = (sum - minSum) / (maxSum - minSum);
-  if (sumRatio > 0.3 && sumRatio < 0.7) {
-    score += 0.1;
-  }
+  breakdown.sumDistribution = (sumRatio > 0.3 && sumRatio < 0.7) ? 0.1 : 0;
+  score += breakdown.sumDistribution;
   
-  return Math.min(score, 1.0);
+  return { score: Math.min(score, 1.0), breakdown };
 }
 
 function predictNumbers(
@@ -191,7 +197,7 @@ function predictNumbers(
     };
   }
   
-  const candidates: Array<{ numbers: number[]; score: number }> = [];
+  const candidates: Array<{ numbers: number[]; score: number; breakdown?: ScoreBreakdown }> = [];
   const seen = new Set<string>();
   
   const progressInterval = Math.max(1, Math.floor(maxCandidates / 100)); // Report every 1%
@@ -238,8 +244,8 @@ function predictNumbers(
     }
     
     seen.add(key);
-    const score = scoreCombination(numbers, game, numberFreq, pairFreq);
-    candidates.push({ numbers, score });
+    const scoreResult = scoreCombination(numbers, game, numberFreq, pairFreq);
+    candidates.push({ numbers, score: scoreResult.score, breakdown: scoreResult.breakdown });
     
     // Report progress
     if (i % progressInterval === 0 || i === maxCandidates - 1) {
@@ -295,6 +301,13 @@ function predictNumbers(
           game.mainNumbers.max
         ),
     score: 0.5,
+    breakdown: {
+      numberFrequency: 0.1,
+      pairFrequency: 0.1,
+      numberSpread: 0.1,
+      oddEvenBalance: 0.1,
+      sumDistribution: 0.1,
+    },
   };
   
   let bonus: number | undefined;
@@ -327,13 +340,22 @@ function predictNumbers(
     }
   }
   
+  const handPickedCount = preselectedMain.size;
+  const algorithmChosenCount = game.mainNumbers.count - handPickedCount;
+  
+  let reasoning = `Based on ${draws.length} historical draws, this combination has not been drawn before and shows balanced frequency patterns.`;
+  if (handPickedCount > 0) {
+    reasoning += ` ${handPickedCount} number${handPickedCount > 1 ? 's were' : ' was'} manually selected; ${algorithmChosenCount} ${algorithmChosenCount === 1 ? 'was' : 'were'} algorithm-chosen.`;
+  }
+  
   return {
     numbers: best.numbers.sort((a, b) => a - b),
     bonus,
     confidence: best.score,
-    reasoning: `Based on ${draws.length} historical draws, this combination has not been drawn before and shows balanced frequency patterns.`,
+    reasoning,
     handPickedMain: preselectedMain.size > 0 ? handPickedMain : undefined,
     handPickedBonus,
+    scoreBreakdown: best.breakdown,
   };
 }
 

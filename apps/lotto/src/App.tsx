@@ -683,7 +683,37 @@ function App() {
                       <div className="confidence">
                         <strong>Confidence Score:</strong>{' '}
                         {(prediction.confidence * 100).toFixed(1)}%
+                        <span className="confidence-note">
+                          {' '}(Relative quality score, not probability)
+                        </span>
                       </div>
+                      {prediction.scoreBreakdown && (
+                        <div className="score-breakdown">
+                          <div className="breakdown-title">Score Breakdown:</div>
+                          <div className="breakdown-factors">
+                            <div className="breakdown-factor">
+                              <span className="factor-label">Number Frequency:</span>
+                              <span className="factor-value">{(prediction.scoreBreakdown.numberFrequency * 100).toFixed(0)}%</span>
+                            </div>
+                            <div className="breakdown-factor">
+                              <span className="factor-label">Pair Frequency:</span>
+                              <span className="factor-value">{(prediction.scoreBreakdown.pairFrequency * 100).toFixed(0)}%</span>
+                            </div>
+                            <div className="breakdown-factor">
+                              <span className="factor-label">Number Spread:</span>
+                              <span className="factor-value">{(prediction.scoreBreakdown.numberSpread * 100).toFixed(0)}%</span>
+                            </div>
+                            <div className="breakdown-factor">
+                              <span className="factor-label">Odd/Even Balance:</span>
+                              <span className="factor-value">{(prediction.scoreBreakdown.oddEvenBalance * 100).toFixed(0)}%</span>
+                            </div>
+                            <div className="breakdown-factor">
+                              <span className="factor-label">Sum Distribution:</span>
+                              <span className="factor-value">{(prediction.scoreBreakdown.sumDistribution * 100).toFixed(0)}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       <p className="reasoning">{prediction.reasoning}</p>
                     </div>
                     {game && (
