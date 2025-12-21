@@ -6,12 +6,14 @@ import 'react-contexify/ReactContexify.css';
 
 import {CheckboxRenderer} from '../agstuff/CheckboxRenderer';
 import {DiffRenderer} from "../agstuff/DiffRenderer";
+import {HebrewFloatingFilter} from '../agstuff/HebrewFloatingFilter';
 
 
 
 const frameworkComponents = {
     checkboxRenderer:CheckboxRenderer,
     diffRenderer:DiffRenderer,
+    hebrewFloatingFilter: HebrewFloatingFilter,
 };
 
 export const  MyGrid = ({children, style, contextM, rowData, columnDefs,  onFilterChanged, getRowNodeId, dark=true}) => {
