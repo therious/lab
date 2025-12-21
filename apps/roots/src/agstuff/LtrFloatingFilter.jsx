@@ -136,7 +136,7 @@ export const LtrFloatingFilter = forwardRef((props, ref) => {
                     lineHeight: 'normal',
                     verticalAlign: 'baseline',
                     direction: 'ltr',
-                    textAlign: 'left'
+                    textAlign: 'right'
                 }}
             />
         </div>
