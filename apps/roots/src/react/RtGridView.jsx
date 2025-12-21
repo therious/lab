@@ -14,9 +14,10 @@ export const  RtGridView = () => {
   const [filteredCount, setFilteredCount] = useState(rowData.length);
 
   const onFilterChanged = useCallback(ev =>{
-    setFilteredCount(ev.api.rowModel.rowsToDisplay.length);
-    // setGraphableRows(ev.api.rowModel.rowsToDisplay);
-    toRender.graphableRows = ev.api.rowModel.rowsToDisplay.map(rtd=>rtd.data);
+    const rowsToDisplay = ev.api.rowModel.rowsToDisplay || [];
+    setFilteredCount(rowsToDisplay.length);
+    // setGraphableRows(rowsToDisplay);
+    toRender.graphableRows = rowsToDisplay.map(rtd=>rtd.data);
   },[]);
 
   // todo this is very inefficient, but fine for now

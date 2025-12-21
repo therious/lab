@@ -44,10 +44,10 @@ function toAgColDef(v) {
 
  const rootsColumns = [
    {f:'id',maxWidth:65, comparator:numberSort},
-   {f: 'r', h:'שרש', maxWidth:75},
-   {f:'P', h:'פ', maxWidth:50, filter: 'agTextColumnFilter', filterParams: { textMatcher: singleCharTextMatcher }},
-   {f:'E', h:'ע', maxWidth:50, filter: 'agTextColumnFilter', filterParams: { textMatcher: singleCharTextMatcher }},
-   {f:'L', h:'ל', maxWidth:50, filter: 'agTextColumnFilter', filterParams: { textMatcher: singleCharTextMatcher }},
+   {f: 'r', h:'שרש', maxWidth:75, filter: 'agTextColumnFilter', floatingFilterComponent: 'hebrewFloatingFilter'},
+   {f:'P', h:'פ', maxWidth:50, filter: 'agTextColumnFilter', filterParams: { textMatcher: singleCharTextMatcher }, floatingFilterComponent: 'hebrewFloatingFilter'},
+   {f:'E', h:'ע', maxWidth:50, filter: 'agTextColumnFilter', filterParams: { textMatcher: singleCharTextMatcher }, floatingFilterComponent: 'hebrewFloatingFilter'},
+   {f:'L', h:'ל', maxWidth:50, filter: 'agTextColumnFilter', filterParams: { textMatcher: singleCharTextMatcher }, floatingFilterComponent: 'hebrewFloatingFilter'},
    {f:'d', h: 'definition', width:500, maxWidth:2000}, //valueFormatter:vfMidiNote
 
  ].map(o=>({...o, suppressMenu: true, floatingFilter: true, floatingFilterComponentParams: { suppressFilterButton: true }}));
