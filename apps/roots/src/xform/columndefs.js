@@ -12,7 +12,7 @@ const numberSort = (num1, num2) => {
 
 // Custom text matcher for single-character columns (P, E, L)
 // Matches if the cell value (single character) is contained in the filter string (multiple characters)
-// AG Grid v32 textMatcher receives: { filterOption, value, filterText }
+// AG Grid v34 textMatcher receives: { filterOption, value, filterText }
 const singleCharTextMatcher = ({ filterOption, value, filterText }) => {
     if (!filterText) return true; // Empty filter shows all rows
     if (!value) return false;
@@ -31,7 +31,8 @@ function toAgColDef(v) {
 
     const o = {...v};
 
-   o.cellStyle = {fontSize: '18px'};
+    // Merge cellStyle instead of replacing it
+    o.cellStyle = {fontSize: '18px', ...(o.cellStyle || {})};
 
     o.headerName = (o.h||o.f).toUpperCase();
     o.field = o.f;
