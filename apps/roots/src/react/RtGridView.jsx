@@ -4,6 +4,7 @@ import { rootsColumnDefs} from "../xform/columndefs";
 import {roots} from '../roots/roots';
 import {toRender} from "../roots/myvis.js";
 import {Menu, Item, Separator, useContextMenu} from 'react-contexify';
+import {actions, useSelector} from '../actions-integration';
 
 const getRowNodeId = params => {
   // AG Grid v34 getRowId callback receives { data } object, not data directly
@@ -32,17 +33,48 @@ export const  RtGridView = () => {
   const gridApiRef = useRef(null);
   const currentColumnRef = useRef(null);
   const {show: showContextMenu} = useContextMenu({});
+  
+  // Get grid state from Redux
+  const gridState = useSelector(s => s.grid);
 
   const onFilterChanged = useCallback(ev =>{
     const rowsToDisplay = ev.api?.rowModel?.rowsToDisplay || [];
     setFilteredCount(rowsToDisplay.length);
     // setGraphableRows(rowsToDisplay);
     toRender.graphableRows = rowsToDisplay.map(rtd=>rtd.data);
+    
+    // Save filter state to Redux
+    if (gridApiRef.current) {
+      const filterModel = gridApiRef.current.getFilterModel();
+      const columnState = gridApiRef.current.getColumnState();
+      actions.grid.setGridState(filterModel || null, columnState || null);
+    }
   },[]);
 
   const onGridReady = useCallback((params) => {
     gridApiRef.current = params.api;
-  }, []);
+    
+    // Restore filter state from Redux
+    if (gridState.filterModel || gridState.columnState) {
+      // Restore column state first (sorting, etc.)
+      if (gridState.columnState && gridState.columnState.length > 0) {
+        params.api.applyColumnState({ state: gridState.columnState });
+      }
+      
+      // Restore filter model
+      if (gridState.filterModel && Object.keys(gridState.filterModel).length > 0) {
+        // Restore filters using v34 API
+        // Floating filter components will sync automatically via filterChanged events
+        Object.keys(gridState.filterModel).forEach(colId => {
+          const filterModel = gridState.filterModel[colId];
+          if (filterModel) {
+            params.api.setColumnFilterModel(colId, filterModel);
+          }
+        });
+        params.api.onFilterChanged();
+      }
+    }
+  }, [gridState]);
 
   const updateMenuState = useCallback(() => {
     if (!gridApiRef.current) return;
@@ -111,9 +143,18 @@ export const  RtGridView = () => {
     if (!gridApiRef.current) return;
     const api = gridApiRef.current;
     
-    // Clear all filter models
-    api.setFilterModel(null);
+    // Clear all filter models using v34 API (setColumnFilterModel for each column)
+    const allColumns = api.getColumns();
+    if (allColumns) {
+      allColumns.forEach(column => {
+        const colId = column.getColId();
+        api.setColumnFilterModel(colId, null);
+      });
+    }
     api.onFilterChanged();
+    
+    // Clear Redux state
+    actions.grid.clearGridState();
     
     // Directly clear all floating filter inputs
     setTimeout(() => {
