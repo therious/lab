@@ -9,6 +9,7 @@ scripts:
   mgStop:      docker compose -f scripts/docker-compose-memgraph.yaml down
   toyserve:    ts-node ./scripts/toy-server.ts
   f:           pnpm --filter #pnpm f is now an alias for pnpm --filter, so pnpm f ticket start = pnpm --filter ticket start
+  test:        pnpm --filter "./libs/*" --recursive run test # Run tests for all libraries that have a test script
 engines:
   node:        ">=18.17.1"
   pnpm:        ">=8.7.4"

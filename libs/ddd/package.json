@@ -12,6 +12,6 @@
     "typescript": "~5.4.5"
   },
   "scripts": {
-  "test": "vitest --globals --disable-console-intercept "
+  "test": "vitest --run --globals --disable-console-intercept --passWithNoTests"
   }
 }

@@ -205,7 +205,7 @@ const bip39WordList = [
   "wrap", "wreck", "wrestle", "wrist", "write", "wrong", "yard", "year", "yellow", "you",
   "young", "youth", "zebra", "zero", "zone", "zoo"];
 
-function reverseString(str: string): string {
+export function reverseString(str: string): string {
   return str.split('').reverse().join('');
 }
 
@@ -215,7 +215,7 @@ function reverseString(str: string): string {
 // the limit is just a convenience in case hash source is inconsistent about length
 // e.g. some git clients display  6, 7 characters, some 8, some 9, etc.
 
-function hashToWords(inputHash: string, limit?:number): string {
+export function hashToWords(inputHash: string, limit?:number): string {
   const hash = reverseString(limit? inputHash.slice(0, limit):inputHash);
   const number = BigInt(`0x${hash}`);
   const words = [];
@@ -230,7 +230,7 @@ function hashToWords(inputHash: string, limit?:number): string {
   return words.join(' ');
 }
 
-function wordsToHash(phrase: string, hashCharacters: number): string {
+export function wordsToHash(phrase: string, hashCharacters: number): string {
   const words = phrase.split(' ');
   let number = BigInt(0);
 
@@ -254,36 +254,5 @@ function wordsToHash(phrase: string, hashCharacters: number): string {
 
   return r.slice(-hashCharacters);
 }
-const testHashes = [
-  "abc123", "abc12345", "01234567", "012345678",
-  "0123456789", "0123456789a", "0123456789ab", "0123456789abc",
-  "8dd2f3e9", "8dd2f3e9a", "8dd2f3e9ab", "8dd2f3e9abc",
-  "cad490fd", "cad490fda", "cad490fdab", "cad490fdabc",
-  "8dd2f3e9cad490123fdab"
-];
-
-testHashes.forEach((hash) => {
-  for(let i = hash.length; i > 4; --i) {
-
-    const nhash = hash.slice(0, i);
-    let phrase = '';
-    let hash2 = '';
-    try {
-
-      console.log(`xconverting "${nhash}" of length ${nhash.length} to phrase and back`);
-      phrase = '';
-      hash2 = '';
-      phrase = hashToWords(hash);
-      hash2 = wordsToHash(phrase, nhash.length);
-
-      console[(hash2 === nhash)? 'log': 'error'](`phrase: "${nhash}" -> "${hash2}" = [${phrase}] `);
-
-    } catch(err) {
-      console.error(`phrase: "${nhash}" -> "${hash2}" = [${phrase}] `, err);
-
-    }
-  }
-
-})
 
 

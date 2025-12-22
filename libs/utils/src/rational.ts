@@ -24,7 +24,6 @@ export class Rational {
     }
     this.numerator = num;
     this.denominator = den;
-    console.log(`constructed ${this.toString()} from (${n}/${d}) with gcdv = ${gcdv}`);
   }
 
 
