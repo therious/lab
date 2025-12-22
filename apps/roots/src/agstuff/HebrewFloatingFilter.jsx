@@ -69,6 +69,7 @@ export const HebrewFloatingFilter = forwardRef((props, ref) => {
     const [currentValue, setCurrentValue] = useState('');
     const propsRef = useRef(props);
     const [inputReady, setInputReady] = useState(false);
+    const updateFilterRef = useRef(null);
     
     // Keep props ref up to date
     useEffect(() => {
@@ -84,26 +85,56 @@ export const HebrewFloatingFilter = forwardRef((props, ref) => {
     };
 
     // In AG Grid v34, floating filters can receive currentModel as a prop
-    // We still need onParentModelChanged for backward compatibility
+    // This is a fallback - the API sync below is the primary mechanism
     useEffect(() => {
         if (props.currentModel !== undefined) {
             const value = props.currentModel && props.currentModel.filter ? props.currentModel.filter : '';
-            setCurrentValue(value);
-            if (inputRef.current) {
-                inputRef.current.value = value;
-            }
+            setCurrentValue(prev => prev !== value ? value : prev);
         }
     }, [props.currentModel]);
+    
+    // Also sync with the actual filter model from the API periodically
+    // This ensures we're in sync even if AG Grid doesn't call onParentModelChanged
+    useEffect(() => {
+        if (!props.api || !props.column) return;
+        
+        const colId = props.column.getColId ? props.column.getColId() : 
+                     (props.column.colId || props.column.getColDef?.().field || props.column);
+        if (!colId) return;
+        
+        const syncWithApi = () => {
+            const filterModel = props.api.getColumnFilterModel(colId);
+            if (filterModel && filterModel.filter) {
+                const value = filterModel.filter;
+                setCurrentValue(prev => prev !== value ? value : prev);
+            } else {
+                setCurrentValue(prev => prev !== '' ? '' : prev);
+            }
+        };
+        
+        // Sync immediately
+        syncWithApi();
+        
+        // Also listen to filterChanged events to sync when filters change
+        const filterChangedListener = () => {
+            syncWithApi();
+        };
+        
+        if (props.api.addEventListener) {
+            props.api.addEventListener('filterChanged', filterChangedListener);
+            return () => {
+                props.api.removeEventListener('filterChanged', filterChangedListener);
+            };
+        }
+    }, [props.api, props.column]);
 
     useImperativeHandle(ref, () => {
         return {
             onParentModelChanged(parentModel) {
-                // When the filter model changes, update the input
+                // When the filter model changes, update the state
+                // React will update the controlled input automatically
                 const value = parentModel && parentModel.filter ? parentModel.filter : '';
                 setCurrentValue(value);
-                if (inputRef.current) {
-                    inputRef.current.value = value;
-                }
             }
         };
     });
@@ -175,47 +206,33 @@ export const HebrewFloatingFilter = forwardRef((props, ref) => {
             return false;
         };
         
-        const handleInput = (e) => {
-            const inputValue = e.target.value;
-            
-            // Convert Latin to Hebrew
-            const converted = convertLatinToHebrew(inputValue);
-            
-            // Update the input with Hebrew characters
-            if (converted !== inputValue) {
-                const cursorPos = input.selectionStart;
-                input.value = converted;
-                // Try to maintain cursor position (approximate)
-                const newPos = Math.min(cursorPos, converted.length);
-                input.setSelectionRange(newPos, newPos);
-            }
-            
-            setCurrentValue(converted);
-            updateFilter(converted);
-        };
+        // Store updateFilter in a ref so onChange can access it
+        updateFilterRef.current = updateFilter;
         
         const handleKeyDown = (e) => {
             // Handle shift-W for sin (ש with dot on left)
             if (e.key === 'W' && e.shiftKey) {
                 e.preventDefault();
                 const cursorPos = input.selectionStart;
-                const before = input.value.substring(0, cursorPos);
-                const after = input.value.substring(cursorPos);
+                const before = currentValue.substring(0, cursorPos);
+                const after = currentValue.substring(cursorPos);
                 // ש with dot on left: U+05E9 + U+05C2
                 const sin = 'ש\u05C2';
-                input.value = before + sin + after;
-                setCurrentValue(input.value);
-                const newPos = cursorPos + sin.length;
-                input.setSelectionRange(newPos, newPos);
-                updateFilter(input.value);
+                const newValue = before + sin + after;
+                setCurrentValue(newValue);
+                updateFilterRef.current(newValue);
+                requestAnimationFrame(() => {
+                    if (input) {
+                        const newPos = cursorPos + sin.length;
+                        input.setSelectionRange(newPos, newPos);
+                    }
+                });
             }
         };
         
-        input.addEventListener('input', handleInput);
         input.addEventListener('keydown', handleKeyDown);
         
         return () => {
-            input.removeEventListener('input', handleInput);
             input.removeEventListener('keydown', handleKeyDown);
         };
     }, [inputReady]); // Re-run when input is ready
@@ -227,7 +244,52 @@ export const HebrewFloatingFilter = forwardRef((props, ref) => {
                 type="text"
                 className="ag-floating-filter-input"
                 placeholder={props.placeholder || ''}
-                defaultValue={currentValue}
+                value={currentValue}
+                onChange={(e) => {
+                    const inputValue = e.target.value;
+                    
+                    // Convert Latin to Hebrew
+                    const converted = convertLatinToHebrew(inputValue);
+                    
+                    // Update state (React will update the controlled input)
+                    setCurrentValue(converted);
+                    
+                    // Update cursor position if conversion happened
+                    if (converted !== inputValue && inputRef.current) {
+                        requestAnimationFrame(() => {
+                            if (inputRef.current) {
+                                const cursorPos = inputRef.current.selectionStart;
+                                const newPos = Math.min(cursorPos, converted.length);
+                                inputRef.current.setSelectionRange(newPos, newPos);
+                            }
+                        });
+                    }
+                    
+                    // Update filter - use the updateFilter from the effect closure
+                    const currentProps = propsRef.current;
+                    const filterModel = converted ? { filter: converted, type: 'contains' } : null;
+                    
+                    if (currentProps.onModelChange) {
+                        currentProps.onModelChange(filterModel);
+                        if (currentProps.api) {
+                            currentProps.api.onFilterChanged();
+                        }
+                    } else if (currentProps.onFloatingFilterChanged) {
+                        currentProps.onFloatingFilterChanged(filterModel);
+                        if (currentProps.api) {
+                            currentProps.api.onFilterChanged();
+                        }
+                    } else if (currentProps.api && currentProps.column) {
+                        const colId = currentProps.column.getColId ? currentProps.column.getColId() : 
+                                     (currentProps.column.colId || currentProps.column.getColDef?.().field || currentProps.column);
+                        if (converted) {
+                            currentProps.api.setColumnFilterModel(colId, filterModel);
+                        } else {
+                            currentProps.api.setColumnFilterModel(colId, null);
+                        }
+                        currentProps.api.onFilterChanged();
+                    }
+                }}
                 style={{ 
                     width: '100%',
                     height: '18px',

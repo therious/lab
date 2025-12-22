@@ -7,6 +7,7 @@ export const LtrFloatingFilter = forwardRef((props, ref) => {
     const [currentValue, setCurrentValue] = useState('');
     const propsRef = useRef(props);
     const [inputReady, setInputReady] = useState(false);
+    const updateFilterRef = useRef(null);
     
     // Keep props ref up to date
     useEffect(() => {
@@ -22,25 +23,56 @@ export const LtrFloatingFilter = forwardRef((props, ref) => {
     };
 
     // In AG Grid v34, floating filters can receive currentModel as a prop
+    // This is a fallback - the API sync below is the primary mechanism
     useEffect(() => {
         if (props.currentModel !== undefined) {
             const value = props.currentModel && props.currentModel.filter ? props.currentModel.filter : '';
-            setCurrentValue(value);
-            if (inputRef.current) {
-                inputRef.current.value = value;
-            }
+            setCurrentValue(prev => prev !== value ? value : prev);
         }
     }, [props.currentModel]);
+    
+    // Also sync with the actual filter model from the API periodically
+    // This ensures we're in sync even if AG Grid doesn't call onParentModelChanged
+    useEffect(() => {
+        if (!props.api || !props.column) return;
+        
+        const colId = props.column.getColId ? props.column.getColId() : 
+                     (props.column.colId || props.column.getColDef?.().field || props.column);
+        if (!colId) return;
+        
+        const syncWithApi = () => {
+            const filterModel = props.api.getColumnFilterModel(colId);
+            if (filterModel && filterModel.filter) {
+                const value = filterModel.filter;
+                setCurrentValue(prev => prev !== value ? value : prev);
+            } else {
+                setCurrentValue(prev => prev !== '' ? '' : prev);
+            }
+        };
+        
+        // Sync immediately
+        syncWithApi();
+        
+        // Also listen to filterChanged events to sync when filters change
+        const filterChangedListener = () => {
+            syncWithApi();
+        };
+        
+        if (props.api.addEventListener) {
+            props.api.addEventListener('filterChanged', filterChangedListener);
+            return () => {
+                props.api.removeEventListener('filterChanged', filterChangedListener);
+            };
+        }
+    }, [props.api, props.column]);
 
     useImperativeHandle(ref, () => {
         return {
             onParentModelChanged(parentModel) {
-                // When the filter model changes, update the input
+                // When the filter model changes, update the state
+                // React will update the controlled input automatically
                 const value = parentModel && parentModel.filter ? parentModel.filter : '';
                 setCurrentValue(value);
-                if (inputRef.current) {
-                    inputRef.current.value = value;
-                }
             }
         };
     });
@@ -107,17 +139,8 @@ export const LtrFloatingFilter = forwardRef((props, ref) => {
             return false;
         };
         
-        const handleInput = (e) => {
-            const inputValue = e.target.value;
-            setCurrentValue(inputValue);
-            updateFilter(inputValue);
-        };
-        
-        input.addEventListener('input', handleInput);
-        
-        return () => {
-            input.removeEventListener('input', handleInput);
-        };
+        // Store updateFilter in a ref so onChange can access it
+        updateFilterRef.current = updateFilter;
     }, [inputReady]);
 
     return (
@@ -127,7 +150,40 @@ export const LtrFloatingFilter = forwardRef((props, ref) => {
                 type="text"
                 className="ag-floating-filter-input"
                 placeholder={props.placeholder || ''}
-                defaultValue={currentValue}
+                value={currentValue}
+                onChange={(e) => {
+                    const inputValue = e.target.value;
+                    setCurrentValue(inputValue);
+                    // Use the updateFilter function from the ref
+                    if (updateFilterRef.current) {
+                        updateFilterRef.current(inputValue);
+                    } else {
+                        // Fallback: update filter directly if ref not ready yet
+                        const currentProps = propsRef.current;
+                        const filterModel = inputValue ? { filter: inputValue, type: 'contains' } : null;
+                        
+                        if (currentProps.onModelChange) {
+                            currentProps.onModelChange(filterModel);
+                            if (currentProps.api) {
+                                currentProps.api.onFilterChanged();
+                            }
+                        } else if (currentProps.onFloatingFilterChanged) {
+                            currentProps.onFloatingFilterChanged(filterModel);
+                            if (currentProps.api) {
+                                currentProps.api.onFilterChanged();
+                            }
+                        } else if (currentProps.api && currentProps.column) {
+                            const colId = currentProps.column.getColId ? currentProps.column.getColId() : 
+                                         (currentProps.column.colId || currentProps.column.getColDef?.().field || currentProps.column);
+                            if (inputValue) {
+                                currentProps.api.setColumnFilterModel(colId, filterModel);
+                            } else {
+                                currentProps.api.setColumnFilterModel(colId, null);
+                            }
+                            currentProps.api.onFilterChanged();
+                        }
+                    }
+                }}
                 style={{ 
                     width: '100%',
                     height: '18px',
