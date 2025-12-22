@@ -52,7 +52,7 @@ function toAgColDef(v) {
    {f:'L', h:'ל', maxWidth:50, filter: 'agTextColumnFilter', filterParams: { textMatcher: singleCharTextMatcher }, floatingFilterComponent: 'hebrewFloatingFilter'},
    {f:'d', h: 'definition', width:500, maxWidth:2000, filter: 'agTextColumnFilter', filterParams: { textMatcher: definitionFilterMatcher }, floatingFilterComponent: 'ltrFloatingFilter'}, //valueFormatter:vfMidiNote
 
- ].map(o=>({...o, suppressMenu: true, floatingFilter: true, floatingFilterComponentParams: { suppressFilterButton: true }}));
+ ].map(o=>({...o, floatingFilter: true, floatingFilterComponentParams: { suppressFilterButton: true }}));
 
 
 
