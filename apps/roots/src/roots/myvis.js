@@ -246,4 +246,168 @@ export function renderGraphData(list, amischalfim, otherChoices, maxNodes, maxEd
 }
 
 // reset graphableRows from outside to communicate what to render
-export const toRender = {graphableRows:{}}
+export const toRender = {graphableRows: {}, expandedLinkedRows: [], indirectlyLinkedRows: []}
+
+// Expand filtered roots to include all linked roots from the full list
+// This function checks each filtered root against every root in the full list
+// to find linked roots based on the linking rules (mischalfim, etc.)
+export function expandFilteredWithLinkedRoots(filteredRoots, allRoots, amischalfim, otherChoices) {
+    if (!filteredRoots || !Array.isArray(filteredRoots) || filteredRoots.length === 0) {
+        return [];
+    }
+    
+    if (!allRoots || !Array.isArray(allRoots) || allRoots.length === 0) {
+        return filteredRoots;
+    }
+    
+    // Build mischalfim and set useVavToDoubled for the linking logic
+    const currentMischalfim = buildMischalfim(amischalfim || []);
+    const currentUseVavToDoubled = (otherChoices && otherChoices.vavToDoubled !== undefined) ? otherChoices.vavToDoubled : true;
+    
+    // Temporarily set globals for findEdge function
+    const originalMischalfim = mischalfim;
+    const originalUseVavToDoubled = useVavToDoubled;
+    mischalfim = currentMischalfim;
+    useVavToDoubled = currentUseVavToDoubled;
+    
+    try {
+        // Use a Map to track unique roots by id, preserving order
+        const includedRoots = new Map();
+        
+        // Add all filtered roots first
+        filteredRoots.forEach(root => {
+            if (root && root.id !== undefined && root.id !== null) {
+                includedRoots.set(root.id, root);
+            }
+        });
+        
+        // For each filtered root, check against every root in the full list
+        filteredRoots.forEach(filteredRoot => {
+            if (!filteredRoot || filteredRoot.id === undefined || filteredRoot.id === null) {
+                return;
+            }
+            
+            for (let i = 0; i < allRoots.length; i++) {
+                const candidate = allRoots[i];
+                
+                if (!candidate || candidate.id === undefined || candidate.id === null) {
+                    continue;
+                }
+                
+                // Skip if already included
+                if (includedRoots.has(candidate.id)) {
+                    continue;
+                }
+                
+                // Check if this candidate root is linked to the filtered root
+                // We need to create a temporary roots array with just these two for findEdge
+                const tempRoots = [filteredRoot, candidate];
+                const matchindex = findEdge(filteredRoot.P, filteredRoot.E, filteredRoot.L, tempRoots, 1);
+                
+                if (matchindex >= 0) {
+                    // Found a link! Add the candidate to the expanded list
+                    includedRoots.set(candidate.id, candidate);
+                }
+            }
+        });
+        
+        // Return as array, maintaining order: filtered roots first, then newly linked roots
+        const result = Array.from(includedRoots.values());
+        return result;
+    } finally {
+        // Restore globals
+        mischalfim = originalMischalfim;
+        useVavToDoubled = originalUseVavToDoubled;
+    }
+}
+
+// Expand filtered roots to include all indirectly linked roots (transitive closure)
+// This iteratively expands the list until no new linked roots are found
+export function expandFilteredWithIndirectlyLinkedRoots(filteredRoots, allRoots, amischalfim, otherChoices) {
+    if (!filteredRoots || !Array.isArray(filteredRoots) || filteredRoots.length === 0) {
+        return [];
+    }
+    
+    if (!allRoots || !Array.isArray(allRoots) || allRoots.length === 0) {
+        return filteredRoots;
+    }
+    
+    // Build mischalfim and set useVavToDoubled for the linking logic
+    const currentMischalfim = buildMischalfim(amischalfim || []);
+    const currentUseVavToDoubled = (otherChoices && otherChoices.vavToDoubled !== undefined) ? otherChoices.vavToDoubled : true;
+    
+    // Temporarily set globals for findEdge function
+    const originalMischalfim = mischalfim;
+    const originalUseVavToDoubled = useVavToDoubled;
+    mischalfim = currentMischalfim;
+    useVavToDoubled = currentUseVavToDoubled;
+    
+    try {
+        // Use a Map to track unique roots by id
+        const includedRoots = new Map();
+        
+        // Add all filtered roots first
+        filteredRoots.forEach(root => {
+            if (root && root.id !== undefined && root.id !== null) {
+                includedRoots.set(root.id, root);
+            }
+        });
+        
+        let previousSize = 0;
+        let currentSize = includedRoots.size;
+        let iteration = 0;
+        const maxIterations = 100; // Safety limit to prevent infinite loops
+        
+        // Iteratively expand until no new roots are found
+        while (currentSize > previousSize && iteration < maxIterations) {
+            previousSize = currentSize;
+            iteration++;
+            
+            // Get current list of included roots
+            const currentRoots = Array.from(includedRoots.values());
+            
+            // For each currently included root, check against all roots in the full list
+            currentRoots.forEach(currentRoot => {
+                if (!currentRoot || currentRoot.id === undefined || currentRoot.id === null) {
+                    return;
+                }
+                
+                for (let i = 0; i < allRoots.length; i++) {
+                    const candidate = allRoots[i];
+                    
+                    if (!candidate || candidate.id === undefined || candidate.id === null) {
+                        continue;
+                    }
+                    
+                    // Skip if already included
+                    if (includedRoots.has(candidate.id)) {
+                        continue;
+                    }
+                    
+                    // Check if this candidate root is linked to the current root
+                    const tempRoots = [currentRoot, candidate];
+                    const matchindex = findEdge(currentRoot.P, currentRoot.E, currentRoot.L, tempRoots, 1);
+                    
+                    if (matchindex >= 0) {
+                        // Found a link! Add the candidate to the expanded list
+                        includedRoots.set(candidate.id, candidate);
+                    }
+                }
+            });
+            
+            currentSize = includedRoots.size;
+        }
+        
+        if (iteration >= maxIterations) {
+            console.warn('expandFilteredWithIndirectlyLinkedRoots: Reached max iterations limit');
+        }
+        
+        // Return as array, maintaining order: filtered roots first, then newly linked roots
+        const result = Array.from(includedRoots.values());
+        return result;
+    } finally {
+        // Restore globals
+        mischalfim = originalMischalfim;
+        useVavToDoubled = originalUseVavToDoubled;
+    }
+}
