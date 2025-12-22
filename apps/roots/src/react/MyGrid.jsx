@@ -1,4 +1,4 @@
-import React, {useCallback, useRef} from 'react';
+import React, {useCallback, useRef, useEffect} from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css';
@@ -23,14 +23,77 @@ const frameworkComponents = {
     ltrFloatingFilter: LtrFloatingFilter,
 };
 
-export const  MyGrid = ({children, style, contextM, rowData, columnDefs,  onFilterChanged, getRowNodeId, dark=true}) => {
+export const  MyGrid = ({children, style, contextM, rowData, columnDefs,  onFilterChanged, onGridReady, onHeaderContextMenu, getRowNodeId, dark=true}) => {
     const gridRef = useRef(null);
-    const ready = useCallback(e=>{console.log(`ready event`, e)},[]);
+    const gridContainerRef = useRef(null);
+    const gridApiRef = useRef(null);
+    
+    const ready = useCallback(e=>{
+        console.log(`ready event`, e);
+        gridApiRef.current = e.api;
+        if (onGridReady) {
+            onGridReady(e);
+        }
+    },[onGridReady]);
 
-    const gridOptions = {suppressPropertyNamesCheck : true};
+    // Attach context menu handler to header elements
+    useEffect(() => {
+        if (!onHeaderContextMenu || !gridContainerRef.current) return;
+        
+        const container = gridContainerRef.current;
+        
+        const handleContextMenu = (event) => {
+            // Check if the target is a header cell
+            const headerCell = event.target.closest('.ag-header-cell');
+            if (headerCell && gridApiRef.current) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                const api = gridApiRef.current;
+                
+                // Try to get column ID from various attributes
+                let colId = headerCell.getAttribute('col-id') || 
+                           headerCell.getAttribute('colid');
+                
+                // If not found, try to find by column index
+                if (!colId) {
+                    const allHeaders = Array.from(container.querySelectorAll('.ag-header-cell'));
+                    const index = allHeaders.indexOf(headerCell);
+                    if (index >= 0) {
+                        const columns = api.getColumns();
+                        if (columns && columns[index]) {
+                            colId = columns[index].getColId();
+                        }
+                    }
+                }
+                
+                if (colId) {
+                    const column = api.getColumn(colId);
+                    if (column) {
+                        onHeaderContextMenu({
+                            event: event,
+                            column: column,
+                            api: api
+                        });
+                    }
+                }
+            }
+        };
+        
+        container.addEventListener('contextmenu', handleContextMenu, true);
+        
+        return () => {
+            container.removeEventListener('contextmenu', handleContextMenu, true);
+        };
+    }, [onHeaderContextMenu]);
+
+    const gridOptions = {
+        suppressPropertyNamesCheck : true,
+        popupParent: document.body
+    };
     const className = `ag-theme-balham${dark? '-dark':''}`;
     return (
-        <div  className={className} style={style}>
+        <div ref={gridContainerRef} className={className} style={style}>
             {children}
             <AgGridReact
                 onFilterChanged={onFilterChanged}
