@@ -2,7 +2,7 @@ import React, {useCallback, useState, useRef} from 'react';
 import {MyGrid} from "./MyGrid";
 import { rootsColumnDefs} from "../xform/columndefs";
 import {roots} from '../roots/roots';
-import {toRender} from "../roots/myvis.js";
+import {toRender, expandFilteredWithLinkedRoots, expandFilteredWithIndirectlyLinkedRoots} from "../roots/myvis.js";
 import {Menu, Item, Separator, useContextMenu} from 'react-contexify';
 import {actions, useSelector} from '../actions-integration';
 
@@ -36,12 +36,41 @@ export const  RtGridView = () => {
   
   // Get grid state from Redux
   const gridState = useSelector(s => s.grid);
+  const { options: { mischalfim, otherChoices } } = useSelector(s => s);
 
   const onFilterChanged = useCallback(ev =>{
-    const rowsToDisplay = ev.api?.rowModel?.rowsToDisplay || [];
-    setFilteredCount(rowsToDisplay.length);
-    // setGraphableRows(rowsToDisplay);
-    toRender.graphableRows = rowsToDisplay.map(rtd=>rtd.data);
+    const api = ev.api;
+    if (!api) return;
+    
+    // Get all rows that pass the current filters
+    const filteredRoots = [];
+    api.forEachNodeAfterFilter((node) => {
+      if (node.data) {
+        filteredRoots.push(node.data);
+      }
+    });
+    
+    setFilteredCount(filteredRoots.length);
+    toRender.graphableRows = filteredRoots;
+    
+    // Create expanded linked list (directly linked) and store it for the visualization
+    const expandedLinkedRoots = expandFilteredWithLinkedRoots(filteredRoots, roots, mischalfim, otherChoices);
+    toRender.expandedLinkedRows = expandedLinkedRoots;
+    
+    // Create indirectly linked list (transitive closure) and store it for the visualization
+    const indirectlyLinkedRoots = expandFilteredWithIndirectlyLinkedRoots(filteredRoots, roots, mischalfim, otherChoices);
+    toRender.indirectlyLinkedRows = indirectlyLinkedRoots;
+    
+    // Log which roots are in the expanded linked lists
+    console.log('=== Expanded Linked Roots ===');
+    console.log(`Filtered roots: ${filteredRoots.length}`);
+    console.log(`Directly linked roots: ${expandedLinkedRoots.length}`);
+    console.log(`Indirectly linked roots: ${indirectlyLinkedRoots.length}`);
+    console.log(`Newly directly linked: ${expandedLinkedRoots.length - filteredRoots.length}`);
+    console.log(`Newly indirectly linked: ${indirectlyLinkedRoots.length - filteredRoots.length}`);
+    console.log('\nFiltered root IDs:', filteredRoots.map(r => r.id).sort((a, b) => a - b));
+    console.log('\nDirectly linked root IDs:', expandedLinkedRoots.map(r => r.id).sort((a, b) => a - b));
+    console.log('\nIndirectly linked root IDs:', indirectlyLinkedRoots.map(r => r.id).sort((a, b) => a - b));
     
     // Save filter state to Redux
     if (gridApiRef.current) {
@@ -49,7 +78,7 @@ export const  RtGridView = () => {
       const columnState = gridApiRef.current.getColumnState();
       actions.grid.setGridState(filterModel || null, columnState || null);
     }
-  },[]);
+  },[mischalfim, otherChoices]);
 
   const onGridReady = useCallback((params) => {
     gridApiRef.current = params.api;
