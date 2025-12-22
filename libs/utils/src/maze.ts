@@ -203,11 +203,11 @@ export class Maze {
   }
 }
 
-  const w = 5;
-  const h = 4;
-  let maze: Maze = Maze.createMaze(w, h, h*w*100);
-  for (let i = 0; i < 10; i++) {
-    console.log(`[i] ------------------------------`)
-    console.log(maze.print());
-    maze = maze.iterate()
-  }
+  // const w = 5;
+  // const h = 4;
+  // let maze: Maze = Maze.createMaze(w, h, h*w*100);
+  // for (let i = 0; i < 10; i++) {
+  //   console.log(`[i] ------------------------------`)
+  //   console.log(maze.print());
+  //   maze = maze.iterate()
+  // }
