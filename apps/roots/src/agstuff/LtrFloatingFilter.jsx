@@ -5,34 +5,9 @@ import React, { useRef, useEffect, useImperativeHandle, forwardRef, useState } f
 export const LtrFloatingFilter = forwardRef((props, ref) => {
     const inputRef = useRef(null);
     const [currentValue, setCurrentValue] = useState('');
-    const propsRef = useRef(props);
-    const [inputReady, setInputReady] = useState(false);
-    const updateFilterRef = useRef(null);
-    
-    // Keep props ref up to date
-    useEffect(() => {
-        propsRef.current = props;
-    }, [props]);
-    
-    // Callback ref to set up event listeners when input is mounted
-    const setInputRef = (node) => {
-        inputRef.current = node;
-        if (node) {
-            setInputReady(true);
-        }
-    };
 
-    // In AG Grid v34, floating filters can receive currentModel as a prop
-    // This is a fallback - the API sync below is the primary mechanism
-    useEffect(() => {
-        if (props.currentModel !== undefined) {
-            const value = props.currentModel && props.currentModel.filter ? props.currentModel.filter : '';
-            setCurrentValue(prev => prev !== value ? value : prev);
-        }
-    }, [props.currentModel]);
-    
-    // Also sync with the actual filter model from the API periodically
-    // This ensures we're in sync even if AG Grid doesn't call onParentModelChanged
+    // Sync with the actual filter model from the API
+    // This ensures we're in sync when filters are restored programmatically
     useEffect(() => {
         if (!props.api || !props.column) return;
         
@@ -53,7 +28,7 @@ export const LtrFloatingFilter = forwardRef((props, ref) => {
         // Sync immediately
         syncWithApi();
         
-        // Also listen to filterChanged events to sync when filters change
+        // Listen to filterChanged events to sync when filters change
         const filterChangedListener = () => {
             syncWithApi();
         };
@@ -66,87 +41,30 @@ export const LtrFloatingFilter = forwardRef((props, ref) => {
         }
     }, [props.api, props.column]);
 
-    useImperativeHandle(ref, () => {
-        return {
-            onParentModelChanged(parentModel) {
-                // When the filter model changes, update the state
-                // React will update the controlled input automatically
-                const value = parentModel && parentModel.filter ? parentModel.filter : '';
-                setCurrentValue(value);
-            }
-        };
-    });
-
-    useEffect(() => {
-        if (!inputReady || !inputRef.current) {
-            return;
+    // Required by AG Grid for floating filters
+    useImperativeHandle(ref, () => ({
+        onParentModelChanged(parentModel) {
+            const value = parentModel && parentModel.filter ? parentModel.filter : '';
+            setCurrentValue(value);
         }
+    }));
+
+    const updateFilter = (value) => {
+        if (!props.api || !props.column) return;
         
-        const input = inputRef.current;
+        const colId = props.column.getColId ? props.column.getColId() : 
+                     (props.column.colId || props.column.getColDef?.().field || props.column);
+        if (!colId) return;
         
-        const updateFilter = (value) => {
-            const currentProps = propsRef.current;
-            const filterModel = value ? { filter: value, type: 'contains' } : null;
-            
-            // Try multiple ways to update the filter (AG Grid v34 compatible)
-            // Method 1: Use onModelChange callback (AG Grid v34 preferred)
-            if (currentProps.onModelChange) {
-                currentProps.onModelChange(filterModel);
-                if (currentProps.api) {
-                    currentProps.api.onFilterChanged();
-                }
-                return true;
-            }
-            
-            // Method 2: Use onFloatingFilterChanged callback (AG Grid v32 style, still supported)
-            if (currentProps.onFloatingFilterChanged) {
-                currentProps.onFloatingFilterChanged(filterModel);
-                if (currentProps.api) {
-                    currentProps.api.onFilterChanged();
-                }
-                return true;
-            }
-            
-            // Method 3: Use AG Grid v34 API directly (setColumnFilterModel)
-            if (currentProps.api && currentProps.column) {
-                const colId = currentProps.column.getColId ? currentProps.column.getColId() : 
-                             (currentProps.column.colId || currentProps.column.getColDef?.().field || currentProps.column);
-                if (value) {
-                    currentProps.api.setColumnFilterModel(colId, filterModel);
-                } else {
-                    currentProps.api.setColumnFilterModel(colId, null);
-                }
-                currentProps.api.onFilterChanged();
-                return true;
-            }
-            
-            // Method 4: Fallback to old API (deprecated in v34 but might still work)
-            if (currentProps.column && currentProps.column.getFilterInstance) {
-                const filterInstance = currentProps.column.getFilterInstance();
-                if (filterInstance) {
-                    if (value) {
-                        filterInstance.setModel(filterModel);
-                    } else {
-                        filterInstance.setModel(null);
-                    }
-                    if (currentProps.api) {
-                        currentProps.api.onFilterChanged();
-                    }
-                    return true;
-                }
-            }
-            
-            return false;
-        };
-        
-        // Store updateFilter in a ref so onChange can access it
-        updateFilterRef.current = updateFilter;
-    }, [inputReady]);
+        const filterModel = value ? { filter: value, type: 'contains' } : null;
+        props.api.setColumnFilterModel(colId, filterModel);
+        props.api.onFilterChanged();
+    };
 
     return (
         <div className="ag-wrapper ag-input-wrapper ag-text-field-input-wrapper" style={{ display: 'flex', alignItems: 'center', padding: '0px', height: '18px', direction: 'ltr' }}>
             <input
-                ref={setInputRef}
+                ref={inputRef}
                 type="text"
                 className="ag-floating-filter-input"
                 placeholder={props.placeholder || ''}
@@ -154,35 +72,7 @@ export const LtrFloatingFilter = forwardRef((props, ref) => {
                 onChange={(e) => {
                     const inputValue = e.target.value;
                     setCurrentValue(inputValue);
-                    // Use the updateFilter function from the ref
-                    if (updateFilterRef.current) {
-                        updateFilterRef.current(inputValue);
-                    } else {
-                        // Fallback: update filter directly if ref not ready yet
-                        const currentProps = propsRef.current;
-                        const filterModel = inputValue ? { filter: inputValue, type: 'contains' } : null;
-                        
-                        if (currentProps.onModelChange) {
-                            currentProps.onModelChange(filterModel);
-                            if (currentProps.api) {
-                                currentProps.api.onFilterChanged();
-                            }
-                        } else if (currentProps.onFloatingFilterChanged) {
-                            currentProps.onFloatingFilterChanged(filterModel);
-                            if (currentProps.api) {
-                                currentProps.api.onFilterChanged();
-                            }
-                        } else if (currentProps.api && currentProps.column) {
-                            const colId = currentProps.column.getColId ? currentProps.column.getColId() : 
-                                         (currentProps.column.colId || currentProps.column.getColDef?.().field || currentProps.column);
-                            if (inputValue) {
-                                currentProps.api.setColumnFilterModel(colId, filterModel);
-                            } else {
-                                currentProps.api.setColumnFilterModel(colId, null);
-                            }
-                            currentProps.api.onFilterChanged();
-                        }
-                    }
+                    updateFilter(inputValue);
                 }}
                 style={{ 
                     width: '100%',
