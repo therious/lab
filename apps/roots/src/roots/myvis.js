@@ -40,11 +40,24 @@ export function mischalef(a,b)
 }
 
 
-function populateNodes(roots, nodeMax)
+function populateNodes(roots, nodeMax, showGenerations = false)
 {
     const max = Math.min(nodeMax, roots.length);
 
-    return roots.slice(0, max).map((o,i)=>({id:i+1, label:o.r, title:o.d}));
+    return roots.slice(0, max).map((o,i)=>{
+        const node = {id:i+1, label:o.r, title:o.d};
+        
+        // If generation info is available and we should show it, add it to the label
+        if (showGenerations && o.generation !== undefined) {
+            // Use newline to display generation number on a separate line below the root text
+            // vis-network supports \n for multi-line labels
+            node.label = o.r + '\n' + o.generation;
+            // Enable multi-line font support
+            node.font = { multi: true };
+        }
+        
+        return node;
+    });
 
   // const node = {id:i+1, label: root.P + root.E + root.L};
   // if(root.d)
@@ -205,12 +218,12 @@ function populateEdges(roots, hardMax, edgeMax) {
     return  edges;
 }
 
-function diagram(list, nodeMax, edgeMax)
+function diagram(list, nodeMax, edgeMax, showGenerations = false)
 {
      nodeMax = Math.min(nodeMax, list.length);
 
 
-    let nodes = populateNodes(list, nodeMax);
+    let nodes = populateNodes(list, nodeMax, showGenerations);
     console.log(`nodes`, nodes);
 
     let edges = populateEdges(list, nodeMax, edgeMax);
@@ -220,7 +233,7 @@ function diagram(list, nodeMax, edgeMax)
         const unfreelist = list.filter(o=>mappedNodes[o.r]); // shrink the list, and do it again!
         nodeMax = Math.min(nodeMax, unfreelist.length);
 
-        nodes = populateNodes(unfreelist, nodeMax);
+        nodes = populateNodes(unfreelist, nodeMax, showGenerations);
         edges = populateEdges(unfreelist, nodeMax, edgeMax);
     }
 //
@@ -237,12 +250,12 @@ function diagram(list, nodeMax, edgeMax)
 }
 
 
-export function renderGraphData(list, amischalfim, otherChoices, maxNodes, maxEdges)
+export function renderGraphData(list, amischalfim, otherChoices, maxNodes, maxEdges, showGenerations = false)
 {
     mischalfim = buildMischalfim(amischalfim);
     useVavToDoubled =   otherChoices.vavToDoubled;
     removeFree = otherChoices.removeFree;
-    return diagram(list, maxNodes, maxEdges);
+    return diagram(list, maxNodes, maxEdges, showGenerations);
 }
 
 // reset graphableRows from outside to communicate what to render
@@ -251,13 +264,14 @@ export const toRender = {graphableRows: {}, expandedLinkedRows: [], indirectlyLi
 // Expand filtered roots to include all linked roots from the full list
 // This function checks each filtered root against every root in the full list
 // to find linked roots based on the linking rules (mischalfim, etc.)
+// Returns roots with generation numbers: filtered = 1, directly linked = 2
 export function expandFilteredWithLinkedRoots(filteredRoots, allRoots, amischalfim, otherChoices) {
     if (!filteredRoots || !Array.isArray(filteredRoots) || filteredRoots.length === 0) {
         return [];
     }
     
     if (!allRoots || !Array.isArray(allRoots) || allRoots.length === 0) {
-        return filteredRoots;
+        return filteredRoots.map(root => ({ ...root, generation: 1 }));
     }
     
     // Build mischalfim and set useVavToDoubled for the linking logic
@@ -274,10 +288,10 @@ export function expandFilteredWithLinkedRoots(filteredRoots, allRoots, amischalf
         // Use a Map to track unique roots by id, preserving order
         const includedRoots = new Map();
         
-        // Add all filtered roots first
+        // Add all filtered roots first (generation 1)
         filteredRoots.forEach(root => {
             if (root && root.id !== undefined && root.id !== null) {
-                includedRoots.set(root.id, root);
+                includedRoots.set(root.id, { ...root, generation: 1 });
             }
         });
         
@@ -305,8 +319,8 @@ export function expandFilteredWithLinkedRoots(filteredRoots, allRoots, amischalf
                 const matchindex = findEdge(filteredRoot.P, filteredRoot.E, filteredRoot.L, tempRoots, 1);
                 
                 if (matchindex >= 0) {
-                    // Found a link! Add the candidate to the expanded list
-                    includedRoots.set(candidate.id, candidate);
+                    // Found a link! Add the candidate to the expanded list (generation 2)
+                    includedRoots.set(candidate.id, { ...candidate, generation: 2 });
                 }
             }
         });
@@ -323,13 +337,14 @@ export function expandFilteredWithLinkedRoots(filteredRoots, allRoots, amischalf
 
 // Expand filtered roots to include all indirectly linked roots (transitive closure)
 // This iteratively expands the list until no new linked roots are found
+// Returns roots with generation numbers: filtered = 1, each iteration adds +1
 export function expandFilteredWithIndirectlyLinkedRoots(filteredRoots, allRoots, amischalfim, otherChoices) {
     if (!filteredRoots || !Array.isArray(filteredRoots) || filteredRoots.length === 0) {
         return [];
     }
     
     if (!allRoots || !Array.isArray(allRoots) || allRoots.length === 0) {
-        return filteredRoots;
+        return filteredRoots.map(root => ({ ...root, generation: 1 }));
     }
     
     // Build mischalfim and set useVavToDoubled for the linking logic
@@ -343,13 +358,13 @@ export function expandFilteredWithIndirectlyLinkedRoots(filteredRoots, allRoots,
     useVavToDoubled = currentUseVavToDoubled;
     
     try {
-        // Use a Map to track unique roots by id
+        // Use a Map to track unique roots by id with their generation
         const includedRoots = new Map();
         
-        // Add all filtered roots first
+        // Add all filtered roots first (generation 1)
         filteredRoots.forEach(root => {
             if (root && root.id !== undefined && root.id !== null) {
-                includedRoots.set(root.id, root);
+                includedRoots.set(root.id, { ...root, generation: 1 });
             }
         });
         
@@ -362,6 +377,7 @@ export function expandFilteredWithIndirectlyLinkedRoots(filteredRoots, allRoots,
         while (currentSize > previousSize && iteration < maxIterations) {
             previousSize = currentSize;
             iteration++;
+            const currentGeneration = iteration + 1; // Generation 2 for first iteration, 3 for second, etc.
             
             // Get current list of included roots
             const currentRoots = Array.from(includedRoots.values());
@@ -389,8 +405,8 @@ export function expandFilteredWithIndirectlyLinkedRoots(filteredRoots, allRoots,
                     const matchindex = findEdge(currentRoot.P, currentRoot.E, currentRoot.L, tempRoots, 1);
                     
                     if (matchindex >= 0) {
-                        // Found a link! Add the candidate to the expanded list
-                        includedRoots.set(candidate.id, candidate);
+                        // Found a link! Add the candidate to the expanded list with current generation
+                        includedRoots.set(candidate.id, { ...candidate, generation: currentGeneration });
                     }
                 }
             });
