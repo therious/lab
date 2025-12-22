@@ -115,13 +115,6 @@ export const HebrewFloatingFilter = forwardRef((props, ref) => {
         
         const input = inputRef.current;
         
-        console.log('HebrewFloatingFilter: Setting up event listeners', {
-            hasOnModelChange: !!propsRef.current.onModelChange,
-            hasOnFloatingFilterChanged: !!propsRef.current.onFloatingFilterChanged,
-            hasApi: !!propsRef.current.api,
-            hasColumn: !!propsRef.current.column
-        });
-        
         const updateFilter = (value) => {
             const currentProps = propsRef.current;
             const filterModel = value ? { filter: value, type: 'contains' } : null;
@@ -129,7 +122,6 @@ export const HebrewFloatingFilter = forwardRef((props, ref) => {
             // Try multiple ways to update the filter
             // Method 1: Use onModelChange callback (AG Grid v34 preferred)
             if (currentProps.onModelChange) {
-                console.log('HebrewFloatingFilter: Using onModelChange', filterModel);
                 currentProps.onModelChange(filterModel);
                 // Ensure filter is applied
                 if (currentProps.api) {
@@ -140,7 +132,6 @@ export const HebrewFloatingFilter = forwardRef((props, ref) => {
             
             // Method 2: Use onFloatingFilterChanged callback (AG Grid v32 style, still supported)
             if (currentProps.onFloatingFilterChanged) {
-                console.log('HebrewFloatingFilter: Using onFloatingFilterChanged', filterModel);
                 currentProps.onFloatingFilterChanged(filterModel);
                 // Ensure filter is applied
                 if (currentProps.api) {
@@ -154,7 +145,6 @@ export const HebrewFloatingFilter = forwardRef((props, ref) => {
                 // Get column ID - can be getColId() method or colId property
                 const colId = currentProps.column.getColId ? currentProps.column.getColId() : 
                              (currentProps.column.colId || currentProps.column.getColDef?.().field || currentProps.column);
-                console.log('HebrewFloatingFilter: Using setColumnFilterModel', filterModel, 'columnId:', colId);
                 if (value) {
                     currentProps.api.setColumnFilterModel(colId, filterModel);
                 } else {
@@ -167,7 +157,6 @@ export const HebrewFloatingFilter = forwardRef((props, ref) => {
             
             // Method 4: Fallback to old API (deprecated in v34 but might still work)
             if (currentProps.column && currentProps.column.getFilterInstance) {
-                console.log('HebrewFloatingFilter: Using getFilterInstance().setModel()', filterModel);
                 const filterInstance = currentProps.column.getFilterInstance();
                 if (filterInstance) {
                     if (value) {
@@ -183,23 +172,14 @@ export const HebrewFloatingFilter = forwardRef((props, ref) => {
                 }
             }
             
-            console.warn('HebrewFloatingFilter: No way to update filter found', {
-                hasOnFloatingFilterChanged: !!currentProps.onFloatingFilterChanged,
-                hasOnModelChange: !!currentProps.onModelChange,
-                hasColumn: !!currentProps.column,
-                hasApi: !!currentProps.api,
-                allProps: Object.keys(currentProps)
-            });
             return false;
         };
         
         const handleInput = (e) => {
             const inputValue = e.target.value;
-            console.log('HebrewFloatingFilter: handleInput called', inputValue);
             
             // Convert Latin to Hebrew
             const converted = convertLatinToHebrew(inputValue);
-            console.log('HebrewFloatingFilter: converted to', converted);
             
             // Update the input with Hebrew characters
             if (converted !== inputValue) {
@@ -211,8 +191,7 @@ export const HebrewFloatingFilter = forwardRef((props, ref) => {
             }
             
             setCurrentValue(converted);
-            const filterUpdated = updateFilter(converted);
-            console.log('HebrewFloatingFilter: updateFilter returned', filterUpdated);
+            updateFilter(converted);
         };
         
         const handleKeyDown = (e) => {
