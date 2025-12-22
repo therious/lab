@@ -104,7 +104,7 @@ export const  MyGrid = ({children, style, contextM, rowData, columnDefs,  onFilt
                 components={frameworkComponents}
                 gridOptions={gridOptions}
                 sideBar={{ toolPanels: ['columns'], defaultToolPanel: 'columns' }}
-                theme={dark ? 'balham-dark' : 'balham'}
+                theme="legacy"
                 getRowNodeId={getRowNodeId}
                 columnDefs={columnDefs} rowData={rowData}/>
         </div>
