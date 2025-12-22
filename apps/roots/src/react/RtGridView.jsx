@@ -5,7 +5,21 @@ import {roots} from '../roots/roots';
 import {toRender} from "../roots/myvis.js";
 import {Menu, Item, Separator, useContextMenu} from 'react-contexify';
 
-const getRowNodeId = data=>data.id
+const getRowNodeId = params => {
+  // AG Grid v34 getRowId callback receives { data } object, not data directly
+  // Extract data from params object
+  const data = params && typeof params === 'object' && 'data' in params ? params.data : params;
+  
+  // Use the 'id' property from the row data
+  // AG Grid v34 requires getRowId to return a string
+  if (!data) {
+    throw new Error(`getRowId: row data is required`);
+  }
+  if (data.id === undefined || data.id === null) {
+    throw new Error(`getRowId: row data must have an 'id' property. Received: ${JSON.stringify(data)}`);
+  }
+  return String(data.id);
+}
 const gridstyle = {height: '96%', width: '100%'};
 
 const rowData= roots;
@@ -135,7 +149,7 @@ export const  RtGridView = () => {
         style={gridstyle} 
         rowData={rowData} 
         columnDefs={rootsColumnDefs}  
-        getRowNodeId={getRowNodeId}
+        getRowId={getRowNodeId}
       >
         <Menu id={kHeaderContextMenu}>
           <Item 

@@ -23,7 +23,7 @@ const frameworkComponents = {
     ltrFloatingFilter: LtrFloatingFilter,
 };
 
-export const  MyGrid = ({children, style, contextM, rowData, columnDefs,  onFilterChanged, onGridReady, onHeaderContextMenu, getRowNodeId, dark=true}) => {
+export const  MyGrid = ({children, style, contextM, rowData, columnDefs,  onFilterChanged, onGridReady, onHeaderContextMenu, getRowId, dark=true}) => {
     const gridRef = useRef(null);
     const gridContainerRef = useRef(null);
     const gridApiRef = useRef(null);
@@ -88,7 +88,6 @@ export const  MyGrid = ({children, style, contextM, rowData, columnDefs,  onFilt
     }, [onHeaderContextMenu]);
 
     const gridOptions = {
-        suppressPropertyNamesCheck : true,
         popupParent: document.body
     };
     const className = `ag-theme-balham${dark? '-dark':''}`;
@@ -103,9 +102,8 @@ export const  MyGrid = ({children, style, contextM, rowData, columnDefs,  onFilt
                 ref={gridRef}
                 components={frameworkComponents}
                 gridOptions={gridOptions}
-                sideBar={{ toolPanels: ['columns'], defaultToolPanel: 'columns' }}
                 theme="legacy"
-                getRowNodeId={getRowNodeId}
+                getRowId={getRowId}
                 columnDefs={columnDefs} rowData={rowData}/>
         </div>
     );
