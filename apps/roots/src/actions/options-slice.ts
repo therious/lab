@@ -5,6 +5,9 @@ export interface OptionsState {
   allmischalfim:Mischalef[];
   choices:MischalefChoices;
   otherChoices:Record<string, boolean>;
+  includeLinked: boolean;
+  maxNodes: number;
+  maxEdges: number;
 }
 
 type OptionsCreator = (...rest: any)=>unknown;
@@ -23,7 +26,10 @@ const initialState:OptionsState = {
   mischalfim: arrMischalfim,
   allmischalfim: arrMischalfim,
   choices: allChoices(arrMischalfim),
-  otherChoices: {vavToDoubled: true, removeFree:false}
+  otherChoices: {vavToDoubled: true, removeFree:false},
+  includeLinked: false,
+  maxNodes: 2001,
+  maxEdges: 200_000,
 };
 
 
@@ -34,6 +40,9 @@ const creators = {
   chooseOtherOne: (choice:string, value:boolean) => ({choice, value}),
   clearChoices: () => ({}),
   allChoices:()=> ({}),
+  setIncludeLinked: (includeLinked: boolean) => ({ includeLinked }),
+  setMaxNodes: (maxNodes: number) => ({ maxNodes }),
+  setMaxEdges: (maxEdges: number) => ({ maxEdges }),
 };
 
 const reducers:OptionsReducers = {
@@ -58,7 +67,19 @@ const reducers:OptionsReducers = {
   {
     const otherChoices= {...s.otherChoices, [choice]:value };
     return {...s, otherChoices};
-  }
+  },
+  setIncludeLinked: (s, { includeLinked }) => ({
+    ...s,
+    includeLinked,
+  }),
+  setMaxNodes: (s, { maxNodes }) => ({
+    ...s,
+    maxNodes,
+  }),
+  setMaxEdges: (s, { maxEdges }) => ({
+    ...s,
+    maxEdges,
+  }),
 
 };
 

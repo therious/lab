@@ -29,24 +29,21 @@ const events =  {
 export const  RtStarView = ()=>{
 
   const {
-    options: {choices, otherChoices, mischalfim}
+    options: {choices, otherChoices, mischalfim, includeLinked, maxNodes, maxEdges}
   } = useSelector(s=>s);
 
 
   const [reset, setReset] = useState(false);
 
-  const [maxNodes, setMaxNodes] = useState(2001); // get limits.nodes value here
-  const [maxEdges, setMaxEdges] = useState(200_000); // get limits.edges value here
-  const [linkageOption, setLinkageOption] = useState('filtered'); // 'filtered', 'directlyLinked', 'indirectlyLinked'
   const [maxGeneration, setMaxGeneration] = useState(1);
 
   const [graph, setGraph] = useState(defaultGraph);
   const [options, setOptions] = useState(defaultOptions);
 
-  const chMaxNodes = useCallback((evt)=>{setMaxNodes(evt.target.value)},[]);
-  const chMaxEdges = useCallback((evt)=>{setMaxEdges(evt.target.value)},[]);
-  const chLinkageOption = useCallback((evt)=>{
-    setLinkageOption(evt.target.value);
+  const chMaxNodes = useCallback((evt)=>{actions.options.setMaxNodes(Number(evt.target.value))},[]);
+  const chMaxEdges = useCallback((evt)=>{actions.options.setMaxEdges(Number(evt.target.value))},[]);
+  const chIncludeLinked = useCallback((evt)=>{
+    actions.options.setIncludeLinked(evt.target.checked);
   },[]);
   const chMaxGeneration = useCallback((evt)=>{setMaxGeneration(Number(evt.target.value))},[]);
 
@@ -54,10 +51,8 @@ export const  RtStarView = ()=>{
   const generationRange = useMemo(() => {
     let rootsToCheck = toRender.graphableRows;
     
-    if (linkageOption === 'indirectlyLinked' && toRender.indirectlyLinkedRows && Array.isArray(toRender.indirectlyLinkedRows) && toRender.indirectlyLinkedRows.length > 0) {
+    if (includeLinked && toRender.indirectlyLinkedRows && Array.isArray(toRender.indirectlyLinkedRows) && toRender.indirectlyLinkedRows.length > 0) {
       rootsToCheck = toRender.indirectlyLinkedRows;
-    } else if (linkageOption === 'directlyLinked' && toRender.expandedLinkedRows && Array.isArray(toRender.expandedLinkedRows) && toRender.expandedLinkedRows.length > 0) {
-      rootsToCheck = toRender.expandedLinkedRows;
     }
     
     if (!rootsToCheck || rootsToCheck.length === 0) {
@@ -76,27 +71,24 @@ export const  RtStarView = ()=>{
       min: Math.min(...generations),
       max: Math.max(...generations)
     };
-  }, [linkageOption]);
+  }, [includeLinked]);
   
-  // Update max generation when linkage option changes - start at minimum
+  // Update max generation when includeLinked changes - start at minimum
   useEffect(() => {
     if (generationRange.max >= generationRange.min) {
       setMaxGeneration(generationRange.min);
     }
-  }, [linkageOption, generationRange]);
+  }, [includeLinked, generationRange]);
 
   const renderReset = useCallback(()=>setReset(true),[]);
 
   const render = useCallback(()=>{
-    // Determine which list to use based on radio selection
+    // Determine which list to use based on checkbox
     let rootsToRender = toRender.graphableRows;
     let showGenerations = false;
     
-    if (linkageOption === 'indirectlyLinked' && toRender.indirectlyLinkedRows && Array.isArray(toRender.indirectlyLinkedRows) && toRender.indirectlyLinkedRows.length > 0) {
+    if (includeLinked && toRender.indirectlyLinkedRows && Array.isArray(toRender.indirectlyLinkedRows) && toRender.indirectlyLinkedRows.length > 0) {
       rootsToRender = toRender.indirectlyLinkedRows;
-      showGenerations = true;
-    } else if (linkageOption === 'directlyLinked' && toRender.expandedLinkedRows && Array.isArray(toRender.expandedLinkedRows) && toRender.expandedLinkedRows.length > 0) {
-      rootsToRender = toRender.expandedLinkedRows;
       showGenerations = true;
     }
     
@@ -104,7 +96,7 @@ export const  RtStarView = ()=>{
     const { data, nodeMax, edgeMax} = renderGraphData(rootsToRender, mischalfim, otherChoices, maxNodes, maxEdges, showGenerations);
     
     // Filter nodes and edges by generation if generations are being shown and slider is active
-    if (showGenerations && (linkageOption === 'directlyLinked' || linkageOption === 'indirectlyLinked')) {
+    if (showGenerations && includeLinked) {
       // Find which indices in the roots list should be included based on generation filter
       // Node IDs are 1-based indices (i+1), so we need to track which indices to include
       const includedIndices = new Set();
@@ -131,14 +123,14 @@ export const  RtStarView = ()=>{
     console.log(`new graphData`, data);
     setReset(false);
     setGraph(data);
-  }, [maxNodes, maxEdges, mischalfim, otherChoices, linkageOption, maxGeneration]);
+  }, [maxNodes, maxEdges, mischalfim, otherChoices, includeLinked, maxGeneration]);
 
   // Auto-update graph when slider changes (if graph is already rendered)
   useEffect(() => {
-    if (!reset && (linkageOption === 'directlyLinked' || linkageOption === 'indirectlyLinked')) {
+    if (!reset && includeLinked) {
       render();
     }
-  }, [maxGeneration, reset, linkageOption, render]);
+  }, [maxGeneration, reset, includeLinked, render]);
 
 
 
@@ -156,17 +148,25 @@ export const  RtStarView = ()=>{
         <button  onClick={actions.options.clearChoices}>Clear All</button>
         <span style={{marginLeft:'20px', fontWeight:'normal'}}>
           <label style={{marginRight:'15px'}}>
-            <input type="radio" name="linkageOption" value="filtered" checked={linkageOption === 'filtered'} onChange={chLinkageOption} />
-            Filtered
+            <input type="checkbox" checked={includeLinked} onChange={chIncludeLinked} />
+            Include linked
           </label>
-          <label style={{marginRight:'15px'}}>
-            <input type="radio" name="linkageOption" value="directlyLinked" checked={linkageOption === 'directlyLinked'} onChange={chLinkageOption} />
-            Directly linked
-          </label>
-          <label>
-            <input type="radio" name="linkageOption" value="indirectlyLinked" checked={linkageOption === 'indirectlyLinked'} onChange={chLinkageOption} />
-            Indirectly linked
-          </label>
+          {includeLinked && (
+            <>
+              <span style={{marginRight:'15px'}}>
+                Max generation: {maxGeneration}
+                <input 
+                  type="range" 
+                  min={generationRange.min} 
+                  max={generationRange.max} 
+                  value={maxGeneration} 
+                  onChange={chMaxGeneration}
+                  style={{width: '200px', margin: '0 10px', verticalAlign: 'middle'}}
+                />
+                <span style={{marginLeft: '10px'}}>(max: {generationRange.max})</span>
+              </span>
+            </>
+          )}
         </span>
         </h3>
           <CheckGroup choices={otherChoices} setChoice={actions.options.chooseOtherOne}/>
@@ -177,22 +177,6 @@ export const  RtStarView = ()=>{
         <input type="number" min={1} max={2_001} step={50} value={maxNodes} onChange={chMaxNodes}/>&nbsp;
         <label>connections:</label>&nbsp;
         <input type="number" min={100} max={200_000} step={1_000} value={maxEdges} onChange={chMaxEdges}/>
-        {(linkageOption === 'directlyLinked' || linkageOption === 'indirectlyLinked') && (
-          <>
-            <hr/>
-            <label>Max generation:</label>&nbsp;
-            <input 
-              type="range" 
-              min={generationRange.min} 
-              max={generationRange.max} 
-              value={maxGeneration} 
-              onChange={chMaxGeneration}
-              style={{width: '200px', margin: '0 10px'}}
-            />
-            <span>{maxGeneration}</span>
-            <span style={{marginLeft: '10px'}}>(showing generations {generationRange.min} - {maxGeneration})</span>
-          </>
-        )}
         <hr/>
         <button disabled={!reset} onClick={render}>Show results</button>
         <button disabled={reset} onClick={renderReset}>Reset Graph</button>
