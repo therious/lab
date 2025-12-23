@@ -2,6 +2,7 @@
  * Created by hzamir on 10/13/14. revised 10/2/2023
  */
 import {arrMischalfim, vav} from "./mischalfim";
+import {getDefinitionSimilarityGrade} from "./definition-similarity-grades";
 
 
 function buildMischalfim(arr)
@@ -40,13 +41,18 @@ export function mischalef(a,b)
 }
 
 
+// Import dictionary utility
+import { getRootTooltipSync } from './loadDictionary';
+
 function populateNodes(roots, nodeMax, showGenerations = false)
 {
     const max = Math.min(nodeMax, roots.length);
 
     return roots.slice(0, max).map((o,i)=>{
-        const node = {id:i+1, label:o.r, title:o.d};
-        
+        // Use dictionary tooltip with example words
+        const tooltip = getRootTooltipSync(o.id, o.d || '');
+        const node = {id:i+1, label:o.r, title:tooltip};
+
         // If generation info is available and we should show it, add it to the label
         if (showGenerations && o.generation !== undefined) {
             // Use newline to display generation number on a separate line below the root text
@@ -55,7 +61,7 @@ function populateNodes(roots, nodeMax, showGenerations = false)
             // Enable multi-line font support
             node.font = { multi: true };
         }
-        
+
         return node;
     });
 
@@ -143,7 +149,7 @@ function findEdge(p,e,l, roots, index)
 let mappedNodes = {}
 let mappedEdges = {};
 let edgeCount = 0;
-function createEdge(aidx, bidx, edges) {
+function createEdge(aidx, bidx, edges, roots, relatedMeaningsThreshold = 6) {
     if(bidx < 0)
         return null;
     if (aidx === bidx)
@@ -155,7 +161,23 @@ function createEdge(aidx, bidx, edges) {
     if (mappedEdges[key])
         return null;
 
+    const root1 = roots[aidx];
+    const root2 = roots[bidx];
     const edge = {from: aidx + 1, to: bidx + 1};
+
+    // Always check for meaning-based connection and adjust edge width and color based on grade
+    // Edge strength (width) always reflects the meaning grade if one exists
+    if (root1 && root2) {
+        const meaningGrade = getDefinitionSimilarityGrade(root1.id, root2.id);
+        if (meaningGrade > 0) {
+            // Adjust edge width based on grade (5 = thickest, 1 = thinnest)
+            // Grade 5 = width 5, Grade 4 = width 4, etc.
+            edge.width = meaningGrade;
+            // Use white color for meaning-based connections
+            edge.color = 'white';
+        }
+    }
+
     mappedEdges[key]=true;
     edgeCount++;
 
@@ -190,7 +212,7 @@ function createEdge(aidx, bidx, edges) {
 // }
 //
 
-function populateEdges(roots, hardMax, edgeMax) {
+function populateEdges(roots, hardMax, edgeMax, relatedMeaningsThreshold = 6) {
     const edges = [];
 
    mappedEdges = {};
@@ -208,7 +230,7 @@ function populateEdges(roots, hardMax, edgeMax) {
             if (j !== i) {
                 const matchindex = findEdge(src.P, src.E, src.L, roots, j);
                 if (matchindex >= 0) {
-                    createEdge(i, matchindex, edges);
+                    createEdge(i, matchindex, edges, roots, relatedMeaningsThreshold);
                     mappedNodes[src.r] =true;
                     mappedNodes[roots[j].r] = true;
                 }
@@ -218,7 +240,7 @@ function populateEdges(roots, hardMax, edgeMax) {
     return  edges;
 }
 
-function diagram(list, nodeMax, edgeMax, showGenerations = false)
+function diagram(list, nodeMax, edgeMax, showGenerations = false, relatedMeaningsThreshold = 6)
 {
      nodeMax = Math.min(nodeMax, list.length);
 
@@ -226,7 +248,7 @@ function diagram(list, nodeMax, edgeMax, showGenerations = false)
     let nodes = populateNodes(list, nodeMax, showGenerations);
     console.log(`nodes`, nodes);
 
-    let edges = populateEdges(list, nodeMax, edgeMax);
+    let edges = populateEdges(list, nodeMax, edgeMax, relatedMeaningsThreshold);
 
     // remove anything from list that is not contained in mapped edges
     if(removeFree) {
@@ -234,7 +256,7 @@ function diagram(list, nodeMax, edgeMax, showGenerations = false)
         nodeMax = Math.min(nodeMax, unfreelist.length);
 
         nodes = populateNodes(unfreelist, nodeMax, showGenerations);
-        edges = populateEdges(unfreelist, nodeMax, edgeMax);
+        edges = populateEdges(unfreelist, nodeMax, edgeMax, relatedMeaningsThreshold);
     }
 //
 //        dumpNodes(nodes);
@@ -250,12 +272,12 @@ function diagram(list, nodeMax, edgeMax, showGenerations = false)
 }
 
 
-export function renderGraphData(list, amischalfim, otherChoices, maxNodes, maxEdges, showGenerations = false)
+export function renderGraphData(list, amischalfim, otherChoices, maxNodes, maxEdges, showGenerations = false, relatedMeaningsThreshold = 6)
 {
     mischalfim = buildMischalfim(amischalfim);
     useVavToDoubled =   otherChoices.vavToDoubled;
     removeFree = otherChoices.removeFree;
-    return diagram(list, maxNodes, maxEdges, showGenerations);
+    return diagram(list, maxNodes, maxEdges, showGenerations, relatedMeaningsThreshold);
 }
 
 // reset graphableRows from outside to communicate what to render
@@ -269,62 +291,62 @@ export function expandFilteredWithLinkedRoots(filteredRoots, allRoots, amischalf
     if (!filteredRoots || !Array.isArray(filteredRoots) || filteredRoots.length === 0) {
         return [];
     }
-    
+
     if (!allRoots || !Array.isArray(allRoots) || allRoots.length === 0) {
         return filteredRoots.map(root => ({ ...root, generation: 1 }));
     }
-    
+
     // Build mischalfim and set useVavToDoubled for the linking logic
     const currentMischalfim = buildMischalfim(amischalfim || []);
     const currentUseVavToDoubled = (otherChoices && otherChoices.vavToDoubled !== undefined) ? otherChoices.vavToDoubled : true;
-    
+
     // Temporarily set globals for findEdge function
     const originalMischalfim = mischalfim;
     const originalUseVavToDoubled = useVavToDoubled;
     mischalfim = currentMischalfim;
     useVavToDoubled = currentUseVavToDoubled;
-    
+
     try {
         // Use a Map to track unique roots by id, preserving order
         const includedRoots = new Map();
-        
+
         // Add all filtered roots first (generation 1)
         filteredRoots.forEach(root => {
             if (root && root.id !== undefined && root.id !== null) {
                 includedRoots.set(root.id, { ...root, generation: 1 });
             }
         });
-        
+
         // For each filtered root, check against every root in the full list
         filteredRoots.forEach(filteredRoot => {
             if (!filteredRoot || filteredRoot.id === undefined || filteredRoot.id === null) {
                 return;
             }
-            
+
             for (let i = 0; i < allRoots.length; i++) {
                 const candidate = allRoots[i];
-                
+
                 if (!candidate || candidate.id === undefined || candidate.id === null) {
                     continue;
                 }
-                
+
                 // Skip if already included
                 if (includedRoots.has(candidate.id)) {
                     continue;
                 }
-                
+
                 // Check if this candidate root is linked to the filtered root
                 // We need to create a temporary roots array with just these two for findEdge
                 const tempRoots = [filteredRoot, candidate];
                 const matchindex = findEdge(filteredRoot.P, filteredRoot.E, filteredRoot.L, tempRoots, 1);
-                
+
                 if (matchindex >= 0) {
                     // Found a link! Add the candidate to the expanded list (generation 2)
                     includedRoots.set(candidate.id, { ...candidate, generation: 2 });
                 }
             }
         });
-        
+
         // Return as array, maintaining order: filtered roots first, then newly linked roots
         const result = Array.from(includedRoots.values());
         return result;
@@ -342,82 +364,82 @@ export function expandFilteredWithIndirectlyLinkedRoots(filteredRoots, allRoots,
     if (!filteredRoots || !Array.isArray(filteredRoots) || filteredRoots.length === 0) {
         return [];
     }
-    
+
     if (!allRoots || !Array.isArray(allRoots) || allRoots.length === 0) {
         return filteredRoots.map(root => ({ ...root, generation: 1 }));
     }
-    
+
     // Build mischalfim and set useVavToDoubled for the linking logic
     const currentMischalfim = buildMischalfim(amischalfim || []);
     const currentUseVavToDoubled = (otherChoices && otherChoices.vavToDoubled !== undefined) ? otherChoices.vavToDoubled : true;
-    
+
     // Temporarily set globals for findEdge function
     const originalMischalfim = mischalfim;
     const originalUseVavToDoubled = useVavToDoubled;
     mischalfim = currentMischalfim;
     useVavToDoubled = currentUseVavToDoubled;
-    
+
     try {
         // Use a Map to track unique roots by id with their generation
         const includedRoots = new Map();
-        
+
         // Add all filtered roots first (generation 1)
         filteredRoots.forEach(root => {
             if (root && root.id !== undefined && root.id !== null) {
                 includedRoots.set(root.id, { ...root, generation: 1 });
             }
         });
-        
+
         let previousSize = 0;
         let currentSize = includedRoots.size;
         let iteration = 0;
         const maxIterations = 100; // Safety limit to prevent infinite loops
-        
+
         // Iteratively expand until no new roots are found
         while (currentSize > previousSize && iteration < maxIterations) {
             previousSize = currentSize;
             iteration++;
             const currentGeneration = iteration + 1; // Generation 2 for first iteration, 3 for second, etc.
-            
+
             // Get current list of included roots
             const currentRoots = Array.from(includedRoots.values());
-            
+
             // For each currently included root, check against all roots in the full list
             currentRoots.forEach(currentRoot => {
                 if (!currentRoot || currentRoot.id === undefined || currentRoot.id === null) {
                     return;
                 }
-                
+
                 for (let i = 0; i < allRoots.length; i++) {
                     const candidate = allRoots[i];
-                    
+
                     if (!candidate || candidate.id === undefined || candidate.id === null) {
                         continue;
                     }
-                    
+
                     // Skip if already included
                     if (includedRoots.has(candidate.id)) {
                         continue;
                     }
-                    
+
                     // Check if this candidate root is linked to the current root
                     const tempRoots = [currentRoot, candidate];
                     const matchindex = findEdge(currentRoot.P, currentRoot.E, currentRoot.L, tempRoots, 1);
-                    
+
                     if (matchindex >= 0) {
                         // Found a link! Add the candidate to the expanded list with current generation
                         includedRoots.set(candidate.id, { ...candidate, generation: currentGeneration });
                     }
                 }
             });
-            
+
             currentSize = includedRoots.size;
         }
-        
+
         if (iteration >= maxIterations) {
             console.warn('expandFilteredWithIndirectlyLinkedRoots: Reached max iterations limit');
         }
-        
+
         // Return as array, maintaining order: filtered roots first, then newly linked roots
         const result = Array.from(includedRoots.values());
         return result;

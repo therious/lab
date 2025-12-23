@@ -16,20 +16,13 @@ const   defaultGraph = {nodes: [], edges: []};
 
 
 
-const events =  {
-  select: ({ nodes, edges }) => {
-    console.log("Selected nodes/edges:", nodes, edges);
-  },
-  doubleClick: ({ pointer: { canvas } }) => {
-  }
-}
 
 
 
 export const  RtStarView = ()=>{
 
   const {
-    options: {choices, otherChoices, mischalfim, includeLinked, maxNodes, maxEdges}
+    options: {choices, otherChoices, mischalfim, includeLinked, maxNodes, maxEdges, relatedMeaningsThreshold}
   } = useSelector(s=>s);
 
 
@@ -46,6 +39,12 @@ export const  RtStarView = ()=>{
     actions.options.setIncludeLinked(evt.target.checked);
   },[]);
   const chMaxGeneration = useCallback((evt)=>{setMaxGeneration(Number(evt.target.value))},[]);
+  const chRelatedMeanings = useCallback((evt)=>{actions.options.setRelatedMeaningsThreshold(Number(evt.target.value))},[]);
+  
+  // Get filtered count from toRender.graphableRows
+  const filteredCount = useMemo(() => {
+    return toRender.graphableRows && Array.isArray(toRender.graphableRows) ? toRender.graphableRows.length : 0;
+  }, [toRender.graphableRows]);
 
   // Calculate min/max generations from the current roots list
   const generationRange = useMemo(() => {
@@ -93,7 +92,7 @@ export const  RtStarView = ()=>{
     }
     
     // Create graph data with full list first (so all edges are created)
-    const { data, nodeMax, edgeMax} = renderGraphData(rootsToRender, mischalfim, otherChoices, maxNodes, maxEdges, showGenerations);
+    const { data, nodeMax, edgeMax} = renderGraphData(rootsToRender, mischalfim, otherChoices, maxNodes, maxEdges, showGenerations, relatedMeaningsThreshold);
     
     // Filter nodes and edges by generation if generations are being shown and slider is active
     if (showGenerations && includeLinked) {
@@ -123,7 +122,7 @@ export const  RtStarView = ()=>{
     console.log(`new graphData`, data);
     setReset(false);
     setGraph(data);
-  }, [maxNodes, maxEdges, mischalfim, otherChoices, includeLinked, maxGeneration]);
+  }, [maxNodes, maxEdges, mischalfim, otherChoices, includeLinked, maxGeneration, relatedMeaningsThreshold]);
 
   // Auto-update graph when slider changes (if graph is already rendered)
   useEffect(() => {
@@ -131,8 +130,21 @@ export const  RtStarView = ()=>{
       render();
     }
   }, [maxGeneration, reset, includeLinked, render]);
+  
+  // Auto-update graph when related meanings threshold changes
+  useEffect(() => {
+    if (!reset) {
+      render();
+    }
+  }, [relatedMeaningsThreshold, reset, render]);
 
-
+  const events = useMemo(() => ({
+    select: ({ nodes, edges }) => {
+      console.log("Selected nodes/edges:", nodes, edges);
+    },
+    doubleClick: ({ pointer: { canvas } }) => {
+    }
+  }), []);
 
   const graphing = reset? (<></>):  (<div style={{  backgroundColor: 'midnightblue', height: "100%", width:"100%"}}>
     <Graph events={events} graph={graph} options={options} style={{  backgroundColor: 'midnightblue'}} />
@@ -177,6 +189,29 @@ export const  RtStarView = ()=>{
         <input type="number" min={1} max={2_001} step={50} value={maxNodes} onChange={chMaxNodes}/>&nbsp;
         <label>connections:</label>&nbsp;
         <input type="number" min={100} max={200_000} step={1_000} value={maxEdges} onChange={chMaxEdges}/>
+        {filteredCount <= 5 && (
+          <>
+            <hr/>
+            <label>Related meanings:</label>&nbsp;
+            <span style={{marginRight: '5px'}}>6</span>
+            <input 
+              type="range" 
+              min={1} 
+              max={6} 
+              value={7 - relatedMeaningsThreshold} 
+              onChange={(evt) => {
+                const sliderValue = Number(evt.target.value);
+                const threshold = 7 - sliderValue; // Reverse: slider 1 = threshold 6, slider 6 = threshold 1
+                actions.options.setRelatedMeaningsThreshold(threshold);
+              }}
+              style={{width: '200px', margin: '0 10px', verticalAlign: 'middle'}}
+            />
+            <span style={{marginLeft: '5px', marginRight: '10px'}}>1</span>
+            <span>
+              {relatedMeaningsThreshold === 6 ? 'Off' : `Grade ≥ ${relatedMeaningsThreshold}`}
+            </span>
+          </>
+        )}
         <hr/>
         <button disabled={!reset} onClick={render}>Show results</button>
         <button disabled={reset} onClick={renderReset}>Reset Graph</button>

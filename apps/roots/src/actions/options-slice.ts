@@ -8,6 +8,7 @@ export interface OptionsState {
   includeLinked: boolean;
   maxNodes: number;
   maxEdges: number;
+  relatedMeaningsThreshold: number; // 6 = don't include, 5-1 = include grade >= threshold
 }
 
 type OptionsCreator = (...rest: any)=>unknown;
@@ -30,6 +31,7 @@ const initialState:OptionsState = {
   includeLinked: false,
   maxNodes: 2001,
   maxEdges: 200_000,
+  relatedMeaningsThreshold: 6,
 };
 
 
@@ -43,6 +45,7 @@ const creators = {
   setIncludeLinked: (includeLinked: boolean) => ({ includeLinked }),
   setMaxNodes: (maxNodes: number) => ({ maxNodes }),
   setMaxEdges: (maxEdges: number) => ({ maxEdges }),
+  setRelatedMeaningsThreshold: (relatedMeaningsThreshold: number) => ({ relatedMeaningsThreshold }),
 };
 
 const reducers:OptionsReducers = {
@@ -79,6 +82,10 @@ const reducers:OptionsReducers = {
   setMaxEdges: (s, { maxEdges }) => ({
     ...s,
     maxEdges,
+  }),
+  setRelatedMeaningsThreshold: (s, { relatedMeaningsThreshold }) => ({
+    ...s,
+    relatedMeaningsThreshold,
   }),
 
 };
