@@ -1,10 +1,26 @@
 import { definitionFilterMatcher } from '../agstuff/DefinitionFilterMatcher';
+import { getRootTooltipSync } from '../roots/loadDictionary';
 
 const defCol = {
     sortable:true,
     filter:true,
     enableCellChangeFlash:true,
-
+    tooltipValueGetter: (params) => {
+        // For the 'r' (root) column, show dictionary words in tooltip
+        if (params.colDef?.field === 'r' && params.data) {
+            const rootId = params.data.id;
+            const definition = params.data.d || '';
+            return getRootTooltipSync(rootId, definition);
+        }
+        // For 'd' (definition) column, also show dictionary words
+        if (params.colDef?.field === 'd' && params.data) {
+            const rootId = params.data.id;
+            const definition = params.data.d || '';
+            return getRootTooltipSync(rootId, definition);
+        }
+        // Default: return cell value
+        return params.value;
+    },
 };
 
 const numberSort = (num1, num2) => {
