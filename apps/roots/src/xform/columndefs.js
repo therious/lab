@@ -1,5 +1,5 @@
 import { definitionFilterMatcher } from '../agstuff/DefinitionFilterMatcher';
-import { getRootTooltipSync } from '../roots/loadDictionary';
+import { getRootTooltipSync, getDictionaryWords } from '../roots/loadDictionary';
 
 const defCol = {
     sortable:true,
@@ -60,6 +60,22 @@ function toAgColDef(v) {
 
 }
 
+// Value getter for examples column - formats all examples for filtering
+const examplesValueGetter = (params) => {
+  if (!params.data || !params.data.id) {
+    return '';
+  }
+  const words = getDictionaryWords(params.data.id);
+  if (words.length === 0) {
+    return '';
+  }
+  // Format: Hebrew (part of speech): English
+  return words.map(word => {
+    const partOfSpeech = word.t ? ` (${word.t})` : '';
+    return `${word.h}${partOfSpeech}: ${word.e}`;
+  }).join(' | ');
+};
+
  const rootsColumns = [
    {f:'id',maxWidth:65, comparator:numberSort, filter: 'agTextColumnFilter', floatingFilterComponent: 'ltrFloatingFilter'},
    {f: 'r', h:'שרש', maxWidth:75, filter: 'agTextColumnFilter', floatingFilterComponent: 'hebrewFloatingFilter'},
@@ -67,9 +83,33 @@ function toAgColDef(v) {
    {f:'E', h:'ע', maxWidth:50, filter: 'agTextColumnFilter', filterParams: { textMatcher: singleCharTextMatcher }, floatingFilterComponent: 'hebrewFloatingFilter'},
    {f:'L', h:'ל', maxWidth:50, filter: 'agTextColumnFilter', filterParams: { textMatcher: singleCharTextMatcher }, floatingFilterComponent: 'hebrewFloatingFilter'},
    {f:'d', h: 'definition', width:500, maxWidth:2000, filter: 'agTextColumnFilter', filterParams: { textMatcher: definitionFilterMatcher }, floatingFilterComponent: 'ltrFloatingFilter'}, //valueFormatter:vfMidiNote
+   {f:'examples', h:'examples', flex:1, minWidth:200,
+    valueGetter: examplesValueGetter,
+    cellRenderer: 'examplesCellRendererSingleLine', // Default to single-line, will be updated dynamically
+    filter: 'agTextColumnFilter', 
+    filterParams: { textMatcher: definitionFilterMatcher }, 
+    floatingFilterComponent: 'ltrFloatingFilter'},
 
  ].map(o=>({...o, floatingFilter: true, floatingFilterComponentParams: { suppressFilterButton: true }}));
 
 
 
 export const rootsColumnDefs = rootsColumns.map(o=>toAgColDef(o)); // xform abbrievated column definitions to AgGrid spec columnDefinitions
+
+// Function to create column defs with dynamic cell renderer
+export const createRootsColumnDefs = (multiLineExamples = false) => {
+  return rootsColumns.map(o => {
+    const colDef = toAgColDef(o);
+    // Update examples column cell renderer based on multiLineExamples
+    if (colDef.field === 'examples') {
+      colDef.cellRenderer = multiLineExamples ? 'examplesCellRendererMultiLine' : 'examplesCellRendererSingleLine';
+      // Enable auto-height for multi-line mode
+      if (multiLineExamples) {
+        colDef.autoHeight = true;
+      } else {
+        colDef.autoHeight = false;
+      }
+    }
+    return colDef;
+  });
+};

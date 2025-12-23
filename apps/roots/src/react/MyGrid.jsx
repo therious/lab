@@ -13,6 +13,7 @@ import {CheckboxRenderer} from '../agstuff/CheckboxRenderer';
 import {DiffRenderer} from "../agstuff/DiffRenderer";
 import {HebrewFloatingFilter} from '../agstuff/HebrewFloatingFilter';
 import {LtrFloatingFilter} from '../agstuff/LtrFloatingFilter';
+import {ExamplesCellRendererSingleLine, ExamplesCellRendererMultiLine} from '../agstuff/ExamplesCellRenderer';
 
 
 
@@ -21,6 +22,8 @@ const frameworkComponents = {
     diffRenderer:DiffRenderer,
     hebrewFloatingFilter: HebrewFloatingFilter,
     ltrFloatingFilter: LtrFloatingFilter,
+    examplesCellRendererSingleLine: ExamplesCellRendererSingleLine,
+    examplesCellRendererMultiLine: ExamplesCellRendererMultiLine,
 };
 
 export const  MyGrid = ({children, style, contextM, rowData, columnDefs,  onFilterChanged, onGridReady, onHeaderContextMenu, getRowId, dark=true}) => {
