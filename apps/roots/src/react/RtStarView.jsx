@@ -1,11 +1,11 @@
-import React, {useCallback, useEffect, useState, useMemo} from 'react';
+import React, {useCallback, useEffect, useState, useMemo, useRef} from 'react';
 import {actions} from "../actions-integration";
 import {selectors} from "../actions/selectors";
 import {useSelector} from "../actions-integration";
 import {roots} from '../roots/roots';
 import Graph from "react-vis-graph-wrapper";
 import "vis-network/styles/vis-network.css";
-import {renderGraphData, toRender} from "../roots/myvis.js";
+import {toRender} from "../roots/myvis.js";
 import {defaultOptions} from "../roots/options";
 import {CheckGroup} from "./CheckGroup";
 
@@ -22,7 +22,7 @@ const   defaultGraph = {nodes: [], edges: []};
 export const  RtStarView = ()=>{
 
   const {
-    options: {choices, otherChoices, mischalfim, includeLinked, maxNodes, maxEdges, relatedMeaningsThreshold}
+    options: {choices, otherChoices, mischalfim, includeLinked, maxNodes, maxEdges, linkByMeaningThreshold, pruneByGradeThreshold}
   } = useSelector(s=>s);
 
 
@@ -32,111 +32,199 @@ export const  RtStarView = ()=>{
 
   const [graph, setGraph] = useState(defaultGraph);
   const [options, setOptions] = useState(defaultOptions);
+  const [isComputing, setIsComputing] = useState(false);
+  const [generationRange, setGenerationRange] = useState({ min: 1, max: 1 });
+  const workerRef = useRef(null);
+  const computationIdRef = useRef(0);
+  const debounceTimeoutRef = useRef(null);
+  const pendingGraphDataRef = useRef(null); // Store computed graph data before rendering
+  const graphUpdateTimeoutRef = useRef(null);
 
   const chMaxNodes = useCallback((evt)=>{actions.options.setMaxNodes(Number(evt.target.value))},[]);
   const chMaxEdges = useCallback((evt)=>{actions.options.setMaxEdges(Number(evt.target.value))},[]);
-  const chIncludeLinked = useCallback((evt)=>{
-    actions.options.setIncludeLinked(evt.target.checked);
+  const chMaxGeneration = useCallback((evt)=>{
+    const value = Number(evt.target.value);
+    // Use requestAnimationFrame to ensure non-blocking update
+    requestAnimationFrame(() => {
+      setMaxGeneration(value);
+    });
   },[]);
-  const chMaxGeneration = useCallback((evt)=>{setMaxGeneration(Number(evt.target.value))},[]);
-  const chRelatedMeanings = useCallback((evt)=>{actions.options.setRelatedMeaningsThreshold(Number(evt.target.value))},[]);
+  const chLinkByMeaning = useCallback((evt)=>{
+    const sliderValue = Number(evt.target.value);
+    const threshold = 6 - sliderValue; // Reverse: slider 0 = threshold 6, slider 6 = threshold 0
+    // Use requestAnimationFrame to ensure non-blocking update
+    requestAnimationFrame(() => {
+      actions.options.setLinkByMeaningThreshold(threshold);
+    });
+  },[]);
+  // Local state for immediate slider updates (non-blocking)
+  const [localPruneByGrade, setLocalPruneByGrade] = useState(pruneByGradeThreshold);
+  const pruneSyncTimeoutRef = useRef(null);
   
-  // Get filtered count from toRender.graphableRows
-  const filteredCount = useMemo(() => {
-    return toRender.graphableRows && Array.isArray(toRender.graphableRows) ? toRender.graphableRows.length : 0;
-  }, [toRender.graphableRows]);
-
-  // Calculate min/max generations from the current roots list
-  const generationRange = useMemo(() => {
-    let rootsToCheck = toRender.graphableRows;
-    
-    if (includeLinked && toRender.indirectlyLinkedRows && Array.isArray(toRender.indirectlyLinkedRows) && toRender.indirectlyLinkedRows.length > 0) {
-      rootsToCheck = toRender.indirectlyLinkedRows;
+  // Sync local state to Redux with debounce (only when user stops dragging)
+  useEffect(() => {
+    if (pruneSyncTimeoutRef.current) {
+      clearTimeout(pruneSyncTimeoutRef.current);
     }
     
-    if (!rootsToCheck || rootsToCheck.length === 0) {
-      return { min: 1, max: 1 };
+    if (localPruneByGrade !== pruneByGradeThreshold) {
+      // Debounce Redux update - only update after user stops dragging
+      pruneSyncTimeoutRef.current = setTimeout(() => {
+        actions.options.setPruneByGradeThreshold(localPruneByGrade);
+      }, 300); // 300ms after last change
     }
     
-    const generations = rootsToCheck
-      .filter(r => r && r.generation !== undefined)
-      .map(r => r.generation);
-    
-    if (generations.length === 0) {
-      return { min: 1, max: 1 };
-    }
-    
-    return {
-      min: Math.min(...generations),
-      max: Math.max(...generations)
+    return () => {
+      if (pruneSyncTimeoutRef.current) {
+        clearTimeout(pruneSyncTimeoutRef.current);
+      }
     };
-  }, [includeLinked]);
+  }, [localPruneByGrade, pruneByGradeThreshold]);
   
-  // Update max generation when includeLinked changes - start at minimum
+  // Sync Redux state to local when it changes externally (but not from our own updates)
+  useEffect(() => {
+    // Only sync if the difference is significant (to avoid loops)
+    if (Math.abs(localPruneByGrade - pruneByGradeThreshold) > 0.1) {
+      setLocalPruneByGrade(pruneByGradeThreshold);
+    }
+  }, [pruneByGradeThreshold]);
+  
+  const chPruneByGrade = useCallback((evt)=>{
+    const sliderValue = Number(evt.target.value);
+    const threshold = 6 - sliderValue; // Reverse: slider 0 = threshold 6, slider 6 = threshold 0
+    // Update local state immediately (non-blocking, no Redux update yet)
+    setLocalPruneByGrade(threshold);
+  },[]);
+  
+  // Initialize worker
+  useEffect(() => {
+    workerRef.current = new Worker(
+      new URL('../worker/graphWorker.ts', import.meta.url),
+      { type: 'module' }
+    );
+
+    workerRef.current.onmessage = (e) => {
+      if (e.data.type === 'result') {
+        const { computationId, data, nodeMax, edgeMax, generationRange } = e.data.payload;
+        // Only update if this is the latest computation
+        if (computationId === computationIdRef.current) {
+          // Store the computed data but don't render immediately
+          pendingGraphDataRef.current = { data, generationRange };
+          setIsComputing(false);
+          setReset(false);
+          
+          // Clear any pending graph update
+          if (graphUpdateTimeoutRef.current) {
+            clearTimeout(graphUpdateTimeoutRef.current);
+          }
+          
+          // Update graph visualization with throttling using requestAnimationFrame
+          // This batches updates and prevents blocking during rapid slider changes
+          requestAnimationFrame(() => {
+            graphUpdateTimeoutRef.current = setTimeout(() => {
+              if (pendingGraphDataRef.current) {
+                setGraph(pendingGraphDataRef.current.data);
+                setGenerationRange(pendingGraphDataRef.current.generationRange);
+                pendingGraphDataRef.current = null;
+              }
+            }, 50); // Small delay to batch rapid updates
+          });
+        }
+      } else if (e.data.type === 'error') {
+        console.error('Worker error:', e.data.payload.error);
+        setIsComputing(false);
+      }
+    };
+
+    workerRef.current.onerror = (error) => {
+      console.error('Worker error:', error);
+      setIsComputing(false);
+    };
+
+    return () => {
+      workerRef.current?.terminate();
+    };
+  }, []);
+
+  // Update max generation when generation range changes (from worker)
   useEffect(() => {
     if (generationRange.max >= generationRange.min) {
-      setMaxGeneration(generationRange.min);
+      setMaxGeneration(prev => {
+        // Only update if current value is outside the new range
+        if (prev < generationRange.min || prev > generationRange.max) {
+          return generationRange.min;
+        }
+        return prev;
+      });
     }
-  }, [includeLinked, generationRange]);
+  }, [generationRange]);
 
   const renderReset = useCallback(()=>setReset(true),[]);
 
-  const render = useCallback(()=>{
-    // Determine which list to use based on checkbox
-    let rootsToRender = toRender.graphableRows;
-    let showGenerations = false;
-    
-    if (includeLinked && toRender.indirectlyLinkedRows && Array.isArray(toRender.indirectlyLinkedRows) && toRender.indirectlyLinkedRows.length > 0) {
-      rootsToRender = toRender.indirectlyLinkedRows;
-      showGenerations = true;
+  // Debounced computation function
+  const computeGraph = useCallback(() => {
+    if (!workerRef.current || !toRender.graphableRows || !Array.isArray(toRender.graphableRows)) {
+      return;
     }
-    
-    // Create graph data with full list first (so all edges are created)
-    const { data, nodeMax, edgeMax} = renderGraphData(rootsToRender, mischalfim, otherChoices, maxNodes, maxEdges, showGenerations, relatedMeaningsThreshold);
-    
-    // Filter nodes and edges by generation if generations are being shown and slider is active
-    if (showGenerations && includeLinked) {
-      // Find which indices in the roots list should be included based on generation filter
-      // Node IDs are 1-based indices (i+1), so we need to track which indices to include
-      const includedIndices = new Set();
-      rootsToRender.forEach((root, index) => {
-        // If root has no generation, it's from filtered list (generation 1), include it
-        if (root.generation === undefined) {
-          if (maxGeneration >= 1) {
-            includedIndices.add(index + 1); // Node ID is index + 1
-          }
-        } else if (root.generation <= maxGeneration) {
-          includedIndices.add(index + 1); // Node ID is index + 1
-        }
-      });
-      
-      // Filter nodes to only include those with included indices
-      data.nodes = data.nodes.filter(node => includedIndices.has(node.id));
-      
-      // Filter edges to only include those where both nodes are in the filtered set
-      data.edges = data.edges.filter(edge => 
-        includedIndices.has(edge.from) && includedIndices.has(edge.to)
-      );
-    }
-    
-    console.log(`new graphData`, data);
-    setReset(false);
-    setGraph(data);
-  }, [maxNodes, maxEdges, mischalfim, otherChoices, includeLinked, maxGeneration, relatedMeaningsThreshold]);
+
+    setIsComputing(true);
+    // Note: computationIdRef.current is incremented in the useEffect before calling this
+
+    // Send computation request to worker with computation ID
+    // Use localPruneByGrade for immediate responsiveness
+    workerRef.current.postMessage({
+      type: 'compute',
+      payload: {
+        computationId: computationIdRef.current,
+        filteredRoots: toRender.graphableRows,
+        allRoots: roots,
+        linkByMeaningThreshold,
+        maxGeneration,
+        mischalfim,
+        otherChoices,
+        maxNodes,
+        maxEdges,
+        pruneByGradeThreshold: localPruneByGrade,
+      },
+    });
+  }, [linkByMeaningThreshold, maxGeneration, mischalfim, otherChoices, maxNodes, maxEdges, localPruneByGrade]);
+
+  const render = useCallback(() => {
+    // Increment computation ID to cancel any in-flight computation
+    computationIdRef.current += 1;
+    computeGraph();
+  }, [computeGraph]);
 
   // Auto-update graph when slider changes (if graph is already rendered)
+  // Use debounce with cancellation for smooth slider dragging
   useEffect(() => {
-    if (!reset && includeLinked) {
-      render();
+    if (!reset && workerRef.current) {
+      // Cancel previous computation by incrementing ID immediately
+      computationIdRef.current += 1;
+      
+      // Clear any pending timeout
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+        debounceTimeoutRef.current = null;
+      }
+      
+      // Use requestAnimationFrame to ensure we're not blocking the UI thread
+      // Then set a timeout for the actual computation
+      requestAnimationFrame(() => {
+        debounceTimeoutRef.current = setTimeout(() => {
+          computeGraph();
+        }, 100); // 100ms debounce - enough to batch rapid changes
+      });
+      
+      return () => {
+        if (debounceTimeoutRef.current) {
+          clearTimeout(debounceTimeoutRef.current);
+          debounceTimeoutRef.current = null;
+        }
+      };
     }
-  }, [maxGeneration, reset, includeLinked, render]);
+  }, [maxGeneration, linkByMeaningThreshold, localPruneByGrade, maxNodes, maxEdges, reset, computeGraph]);
   
-  // Auto-update graph when related meanings threshold changes
-  useEffect(() => {
-    if (!reset) {
-      render();
-    }
-  }, [relatedMeaningsThreshold, reset, render]);
 
   const events = useMemo(() => ({
     select: ({ nodes, edges }) => {
@@ -159,26 +247,61 @@ export const  RtStarView = ()=>{
         <button  onClick={actions.options.allChoices}>Select All</button>
         <button  onClick={actions.options.clearChoices}>Clear All</button>
         <span style={{marginLeft:'20px', fontWeight:'normal'}}>
-          <label style={{marginRight:'15px'}}>
-            <input type="checkbox" checked={includeLinked} onChange={chIncludeLinked} />
-            Include linked
-          </label>
-          {includeLinked && (
-            <>
-              <span style={{marginRight:'15px'}}>
-                Max generation: {maxGeneration}
-                <input 
-                  type="range" 
-                  min={generationRange.min} 
-                  max={generationRange.max} 
-                  value={maxGeneration} 
-                  onChange={chMaxGeneration}
-                  style={{width: '200px', margin: '0 10px', verticalAlign: 'middle'}}
-                />
-                <span style={{marginLeft: '10px'}}>(max: {generationRange.max})</span>
-              </span>
-            </>
-          )}
+          <span style={{marginRight:'15px', display: 'inline-block'}}>
+            <label style={{fontSize: '14px', marginRight: '5px'}}>Link by Meaning:</label>
+            <span style={{marginRight: '5px'}}>6</span>
+            <input 
+              type="range" 
+              min={0} 
+              max={6} 
+              value={6 - linkByMeaningThreshold} 
+              onChange={chLinkByMeaning}
+              style={{width: '120px', margin: '0 5px', verticalAlign: 'middle'}}
+            />
+            <span style={{marginLeft: '5px'}}>0</span>
+            <span style={{marginLeft: '5px', fontSize: '12px'}}>
+              {linkByMeaningThreshold >= 6 ? 'Filtered only' : `Grade ≥ ${linkByMeaningThreshold}`}
+            </span>
+          </span>
+          <span style={{marginRight:'15px', display: 'inline-block'}}>
+            <label style={{fontSize: '14px', marginRight: '5px'}}>Max generation:</label>
+            <input 
+              type="range" 
+              min={generationRange.min} 
+              max={generationRange.max} 
+              value={maxGeneration} 
+              onChange={chMaxGeneration}
+              style={{width: '120px', margin: '0 5px', verticalAlign: 'middle'}}
+            />
+            <span style={{marginLeft: '5px'}}>{maxGeneration} (max: {generationRange.max})</span>
+          </span>
+          <span style={{marginRight:'15px', display: 'inline-block'}}>
+            <label style={{fontSize: '14px', marginRight: '5px'}}>Prune by grade:</label>
+            <span style={{marginRight: '5px'}}>6</span>
+            <input 
+              type="range" 
+              min={0} 
+              max={6} 
+              value={6 - localPruneByGrade} 
+              onChange={chPruneByGrade}
+              style={{width: '120px', margin: '0 5px', verticalAlign: 'middle'}}
+            />
+            <span style={{marginLeft: '5px'}}>0</span>
+            <span style={{marginLeft: '5px', fontSize: '12px'}}>
+              {localPruneByGrade === 0 ? 'Off' : `Grade ≥ ${localPruneByGrade}`}
+            </span>
+          </span>
+          <span style={{marginRight:'15px', display: 'inline-block'}}>
+            <label style={{fontSize: '14px', marginRight: '5px', fontWeight: 'normal'}}>
+              <input
+                type="checkbox"
+                checked={otherChoices.removeFree || false}
+                onChange={(e) => actions.options.chooseOtherOne('removeFree', e.target.checked)}
+                style={{marginRight: '5px'}}
+              />
+              Remove Free
+            </label>
+          </span>
         </span>
         </h3>
           <CheckGroup choices={otherChoices} setChoice={actions.options.chooseOtherOne}/>
@@ -189,32 +312,10 @@ export const  RtStarView = ()=>{
         <input type="number" min={1} max={2_001} step={50} value={maxNodes} onChange={chMaxNodes}/>&nbsp;
         <label>connections:</label>&nbsp;
         <input type="number" min={100} max={200_000} step={1_000} value={maxEdges} onChange={chMaxEdges}/>
-        {filteredCount <= 5 && (
-          <>
-            <hr/>
-            <label>Related meanings:</label>&nbsp;
-            <span style={{marginRight: '5px'}}>6</span>
-            <input 
-              type="range" 
-              min={1} 
-              max={6} 
-              value={7 - relatedMeaningsThreshold} 
-              onChange={(evt) => {
-                const sliderValue = Number(evt.target.value);
-                const threshold = 7 - sliderValue; // Reverse: slider 1 = threshold 6, slider 6 = threshold 1
-                actions.options.setRelatedMeaningsThreshold(threshold);
-              }}
-              style={{width: '200px', margin: '0 10px', verticalAlign: 'middle'}}
-            />
-            <span style={{marginLeft: '5px', marginRight: '10px'}}>1</span>
-            <span>
-              {relatedMeaningsThreshold === 6 ? 'Off' : `Grade ≥ ${relatedMeaningsThreshold}`}
-            </span>
-          </>
-        )}
         <hr/>
-        <button disabled={!reset} onClick={render}>Show results</button>
+        <button disabled={!reset || isComputing} onClick={render}>Show results</button>
         <button disabled={reset} onClick={renderReset}>Reset Graph</button>
+        {isComputing && <span style={{marginLeft: '10px', color: '#888'}}>Computing...</span>}
         {graphing}
       </div>
 

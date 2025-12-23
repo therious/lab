@@ -9,6 +9,8 @@ export interface OptionsState {
   maxNodes: number;
   maxEdges: number;
   relatedMeaningsThreshold: number; // 6 = don't include, 5-1 = include grade >= threshold
+  linkByMeaningThreshold: number; // 6 = only filtered, 5-0 = include roots with grade >= threshold
+  pruneByGradeThreshold: number; // 6-0, default 0, removes nodes not connected by at least this grade
 }
 
 type OptionsCreator = (...rest: any)=>unknown;
@@ -32,6 +34,8 @@ const initialState:OptionsState = {
   maxNodes: 2001,
   maxEdges: 200_000,
   relatedMeaningsThreshold: 6,
+  linkByMeaningThreshold: 6, // Default: only filtered roots
+  pruneByGradeThreshold: 0, // Default: no pruning
 };
 
 
@@ -46,6 +50,8 @@ const creators = {
   setMaxNodes: (maxNodes: number) => ({ maxNodes }),
   setMaxEdges: (maxEdges: number) => ({ maxEdges }),
   setRelatedMeaningsThreshold: (relatedMeaningsThreshold: number) => ({ relatedMeaningsThreshold }),
+  setLinkByMeaningThreshold: (linkByMeaningThreshold: number) => ({ linkByMeaningThreshold }),
+  setPruneByGradeThreshold: (pruneByGradeThreshold: number) => ({ pruneByGradeThreshold }),
 };
 
 const reducers:OptionsReducers = {
@@ -86,6 +92,14 @@ const reducers:OptionsReducers = {
   setRelatedMeaningsThreshold: (s, { relatedMeaningsThreshold }) => ({
     ...s,
     relatedMeaningsThreshold,
+  }),
+  setLinkByMeaningThreshold: (s, { linkByMeaningThreshold }) => ({
+    ...s,
+    linkByMeaningThreshold,
+  }),
+  setPruneByGradeThreshold: (s, { pruneByGradeThreshold }) => ({
+    ...s,
+    pruneByGradeThreshold,
   }),
 
 };
