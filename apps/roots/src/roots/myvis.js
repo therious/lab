@@ -2,7 +2,7 @@
  * Created by hzamir on 10/13/14. revised 10/2/2023
  */
 import {arrMischalfim, vav} from "./mischalfim";
-import {getDefinitionSimilarityGrade} from "./definition-similarity-grades";
+import {getDefinitionSimilarityGrade, getMeaningConnectedRoots} from "./definition-similarity-grades";
 
 
 function buildMischalfim(arr)
@@ -171,11 +171,18 @@ function createEdge(aidx, bidx, edges, roots, relatedMeaningsThreshold = 6) {
         const meaningGrade = getDefinitionSimilarityGrade(root1.id, root2.id);
         if (meaningGrade > 0) {
             // Adjust edge width based on grade (5 = thickest, 1 = thinnest)
-            // Grade 5 = width 5, Grade 4 = width 4, etc.
-            edge.width = meaningGrade;
+            // Scale width for better visibility: grade 5 = width 8, grade 4 = width 6, etc.
+            // This makes the thickness more visible
+            edge.width = meaningGrade * 1.5 + 0.5; // Grade 5 -> 8, Grade 4 -> 6.5, Grade 3 -> 5, etc.
             // Use white color for meaning-based connections
             edge.color = 'white';
+        } else {
+            // Letter-based edges (no meaning connection) get default thin width
+            edge.width = 1;
         }
+    } else {
+        // Default width for letter-based edges
+        edge.width = 1;
     }
 
     mappedEdges[key]=true;
@@ -246,7 +253,6 @@ function diagram(list, nodeMax, edgeMax, showGenerations = false, relatedMeaning
 
 
     let nodes = populateNodes(list, nodeMax, showGenerations);
-    console.log(`nodes`, nodes);
 
     let edges = populateEdges(list, nodeMax, edgeMax, relatedMeaningsThreshold);
 
@@ -281,7 +287,66 @@ export function renderGraphData(list, amischalfim, otherChoices, maxNodes, maxEd
 }
 
 // reset graphableRows from outside to communicate what to render
-export const toRender = {graphableRows: {}, expandedLinkedRows: [], indirectlyLinkedRows: []}
+export const toRender = {graphableRows: {}, expandedLinkedRows: [], indirectlyLinkedRows: [], linkedByMeaningRows: []}
+
+// Expand filtered roots to include roots connected by meaning grades
+// linkByMeaningThreshold: 6 = only filtered roots, 5-0 = include roots with grade >= threshold
+export function expandFilteredByMeaning(filteredRoots, allRoots, linkByMeaningThreshold) {
+    if (!filteredRoots || !Array.isArray(filteredRoots) || filteredRoots.length === 0) {
+        return [];
+    }
+
+    // If threshold is 6, return only filtered roots
+    if (linkByMeaningThreshold >= 6) {
+        return filteredRoots.map(root => ({ ...root }));
+    }
+
+    if (!allRoots || !Array.isArray(allRoots) || allRoots.length === 0) {
+        return filteredRoots.map(root => ({ ...root }));
+    }
+
+    // Create a map of all roots by ID for quick lookup
+    const allRootsMap = new Map();
+    allRoots.forEach(root => {
+        if (root && root.id !== undefined && root.id !== null) {
+            allRootsMap.set(root.id, root);
+        }
+    });
+
+    // Use a Map to track unique roots by id
+    const includedRoots = new Map();
+
+    // Add all filtered roots first
+    filteredRoots.forEach(root => {
+        if (root && root.id !== undefined && root.id !== null) {
+            includedRoots.set(root.id, { ...root });
+        }
+    });
+
+    // For each filtered root, find all roots connected by meaning
+    filteredRoots.forEach(filteredRoot => {
+        if (!filteredRoot || filteredRoot.id === undefined || filteredRoot.id === null) {
+            return;
+        }
+
+        // Get all roots connected by meaning with grade >= threshold
+        const minGrade = linkByMeaningThreshold; // 5, 4, 3, 2, 1, or 0
+        const connectedRoots = getMeaningConnectedRoots(filteredRoot.id, minGrade);
+
+        // Add connected roots to the list
+        connectedRoots.forEach(({ rootId, grade }) => {
+            if (!includedRoots.has(rootId)) {
+                const candidate = allRootsMap.get(rootId);
+                if (candidate) {
+                    includedRoots.set(rootId, { ...candidate });
+                }
+            }
+        });
+    });
+
+    // Return as array
+    return Array.from(includedRoots.values());
+}
 
 // Expand filtered roots to include all linked roots from the full list
 // This function checks each filtered root against every root in the full list

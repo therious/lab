@@ -6,4 +6,7 @@ export default defineConfig({
   plugins: [react({tsDecorators:true})],
   // Allow YAML files to be imported/fetched
   assetsInclude: ['**/*.yaml', '**/*.yml'],
+  worker: {
+    format: 'es',
+  },
 })
