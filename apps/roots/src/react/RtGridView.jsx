@@ -1,6 +1,6 @@
-import React, {useCallback, useState, useRef} from 'react';
+import React, {useCallback, useState, useRef, useMemo} from 'react';
 import {MyGrid} from "./MyGrid";
-import { rootsColumnDefs} from "../xform/columndefs";
+import { createRootsColumnDefs} from "../xform/columndefs";
 import {roots} from '../roots/roots';
 import {toRender, expandFilteredWithLinkedRoots, expandFilteredWithIndirectlyLinkedRoots} from "../roots/myvis.js";
 import {Menu, Item, Separator, useContextMenu} from 'react-contexify';
@@ -30,6 +30,7 @@ export const  RtGridView = () => {
   const [filter, setFilter]  = useState('');
   const [filteredCount, setFilteredCount] = useState(rowData.length);
   const [menuState, setMenuState] = useState({ hasColumnFilter: false, hasAnyFilter: false, hasAnySort: false });
+  const [multiLineExamples, setMultiLineExamples] = useState(false);
   const gridApiRef = useRef(null);
   const currentColumnRef = useRef(null);
   const {show: showContextMenu} = useContextMenu({});
@@ -206,11 +207,48 @@ export const  RtGridView = () => {
     });
   }, []);
 
+  // Create column defs with dynamic cell renderer based on multiLineExamples
+  const columnDefs = useMemo(() => {
+    return createRootsColumnDefs(multiLineExamples);
+  }, [multiLineExamples]);
+
+  // Update column defs when multiLineExamples changes
+  React.useEffect(() => {
+    if (gridApiRef.current) {
+      gridApiRef.current.setGridOption('columnDefs', columnDefs);
+      // Enable auto-height for multi-line mode
+      // When autoHeight is set on a column, AG Grid automatically calculates row height
+      // We need to reset row heights to trigger recalculation
+      if (multiLineExamples) {
+        // Enable auto-height by setting getRowHeight to undefined (default behavior)
+        gridApiRef.current.setGridOption('getRowHeight', undefined);
+        // Reset row heights to recalculate with new column defs
+        setTimeout(() => {
+          gridApiRef.current?.resetRowHeights();
+        }, 0);
+      } else {
+        // Disable auto-height by setting a fixed height
+        gridApiRef.current.setGridOption('getRowHeight', null);
+        gridApiRef.current.resetRowHeights();
+      }
+    }
+  }, [columnDefs, multiLineExamples]);
+
   // todo this is very inefficient, but fine for now
 
    return  (
       <>
-       Filtered/Total Roots:  {`${filteredCount}/${rowData.length}`}
+       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+         <span>Filtered/Total Roots: {`${filteredCount}/${rowData.length}`}</span>
+         <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'normal' }}>
+           <input 
+             type="checkbox" 
+             checked={multiLineExamples}
+             onChange={(e) => setMultiLineExamples(e.target.checked)}
+           />
+           <span>Multi-line</span>
+         </label>
+       </div>
         <hr/>
       <MyGrid 
         onFilterChanged={onFilterChanged} 
@@ -218,7 +256,7 @@ export const  RtGridView = () => {
         onHeaderContextMenu={onHeaderContextMenu}
         style={gridstyle} 
         rowData={rowData} 
-        columnDefs={rootsColumnDefs}  
+        columnDefs={columnDefs}  
         getRowId={getRowNodeId}
       >
         <Menu id={kHeaderContextMenu}>
