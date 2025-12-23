@@ -35,3 +35,14 @@ code {
   min-height: 18px;
   height: 18px;
 }
+
+/* Add faint borders between columns */
+.ag-header-cell-with-border {
+  border-right: 1px solid rgba(128, 128, 128, 0.2) !important;
+}
+
+/* Also add border to cells (handled in cellStyle, but ensure it works in RTL) */
+.ag-theme-balham .ag-cell,
+.ag-theme-balham-dark .ag-cell {
+  border-right: 1px solid rgba(128, 128, 128, 0.2);
+}

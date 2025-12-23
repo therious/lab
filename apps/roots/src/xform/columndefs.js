@@ -49,7 +49,15 @@ function toAgColDef(v) {
     const o = {...v};
 
     // Merge cellStyle instead of replacing it
-    o.cellStyle = {fontSize: '18px', ...(o.cellStyle || {})};
+    // Add faint border on the right (left in RTL) to separate columns
+    o.cellStyle = {
+        fontSize: '18px', 
+        borderRight: '1px solid rgba(128, 128, 128, 0.2)', // Faint gray border
+        ...(o.cellStyle || {})
+    };
+    
+    // Also add border to header (CSS will handle this via class)
+    o.headerClass = 'ag-header-cell-with-border';
 
     o.headerName = (o.h||o.f).toUpperCase();
     o.field = o.f;
