@@ -3,6 +3,8 @@
  * Works in browser environment (Vite)
  */
 
+import * as yaml from 'js-yaml';
+
 let dictionaryCache: Map<number, RootDictionaryEntry> | null = null;
 let loadingPromise: Promise<Map<number, RootDictionaryEntry>> | null = null;
 
@@ -45,16 +47,12 @@ async function loadDictionaryDataAsync(): Promise<Map<number, RootDictionaryEntr
 
   loadingPromise = (async () => {
     try {
-      const yaml = await import('js-yaml');
-      
       // In Vite, use fetch to load YAML file
       // Try multiple possible paths (public folder and src folder)
       let response: Response | null = null;
       const paths = [
-        '/root-dictionary-definitions.yaml',  // Public folder (preferred)
-        '/src/roots/root-dictionary-definitions.yaml',
+        '/root-dictionary-definitions.yaml',  // Public folder
         './root-dictionary-definitions.yaml',
-        './src/roots/root-dictionary-definitions.yaml',
       ];
 
       for (const yamlPath of paths) {
