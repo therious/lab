@@ -1,7 +1,10 @@
 import React, { useRef, useEffect, useImperativeHandle, forwardRef, useState } from 'react';
+import type { IFloatingFilterParams } from 'ag-grid-community';
 
 // Hebrew-Qwerty keyboard mapping
-const latinToHebrew = {
+type LatinToHebrewMap = Record<string, string>;
+
+const latinToHebrew: LatinToHebrewMap = {
     'A': 'א',  // alef
     'B': 'ב',  // bet
     'C': 'צ',  // Tzadi
@@ -31,7 +34,7 @@ const latinToHebrew = {
 };
 
 // Convert Latin characters to Hebrew according to Hebrew-Qwerty mapping
-function convertLatinToHebrew(input) {
+function convertLatinToHebrew(input: string): string {
     if (!input) return '';
     
     let result = '';
@@ -61,12 +64,22 @@ function convertLatinToHebrew(input) {
     return result;
 }
 
+// Using interface here because AG Grid's IFloatingFilterParams is an interface
+// and we need to extend/compose with it for proper type compatibility
+type HebrewFloatingFilterProps = IFloatingFilterParams & {
+  placeholder?: string;
+};
+
+type HebrewFloatingFilterRef = {
+  onParentModelChanged: (parentModel: { filter?: string } | null) => void;
+};
+
 // Custom floating filter that converts Latin input to Hebrew
 // AG Grid React floating filters must implement onParentModelChanged via useImperativeHandle
 // and call onFloatingFilterChanged to update the filter
-export const HebrewFloatingFilter = forwardRef((props, ref) => {
-    const inputRef = useRef(null);
-    const [currentValue, setCurrentValue] = useState('');
+export const HebrewFloatingFilter = forwardRef<HebrewFloatingFilterRef, HebrewFloatingFilterProps>((props, ref) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [currentValue, setCurrentValue] = useState<string>('');
 
     // Sync with the actual filter model from the API
     // This ensures we're in sync when filters are restored programmatically
@@ -74,13 +87,13 @@ export const HebrewFloatingFilter = forwardRef((props, ref) => {
         if (!props.api || !props.column) return;
         
         const colId = props.column.getColId ? props.column.getColId() : 
-                     (props.column.colId || props.column.getColDef?.().field || props.column);
+                     (props.column.getColDef?.().field || String(props.column));
         if (!colId) return;
         
-        const syncWithApi = () => {
-            const filterModel = props.api.getColumnFilterModel(colId);
-            if (filterModel && filterModel.filter) {
-                const value = filterModel.filter;
+        const syncWithApi = (): void => {
+            const filterModel = props.api?.getColumnFilterModel(colId);
+            if (filterModel && typeof filterModel === 'object' && 'filter' in filterModel) {
+                const value = String(filterModel.filter || '');
                 setCurrentValue(prev => prev !== value ? value : prev);
             } else {
                 setCurrentValue(prev => prev !== '' ? '' : prev);
@@ -91,31 +104,31 @@ export const HebrewFloatingFilter = forwardRef((props, ref) => {
         syncWithApi();
         
         // Listen to filterChanged events to sync when filters change
-        const filterChangedListener = () => {
+        const filterChangedListener = (): void => {
             syncWithApi();
         };
         
         if (props.api.addEventListener) {
             props.api.addEventListener('filterChanged', filterChangedListener);
             return () => {
-                props.api.removeEventListener('filterChanged', filterChangedListener);
+                props.api?.removeEventListener('filterChanged', filterChangedListener);
             };
         }
     }, [props.api, props.column]);
 
     // Required by AG Grid for floating filters
     useImperativeHandle(ref, () => ({
-        onParentModelChanged(parentModel) {
-            const value = parentModel && parentModel.filter ? parentModel.filter : '';
+        onParentModelChanged(parentModel: { filter?: string } | null): void {
+            const value = parentModel && parentModel.filter ? String(parentModel.filter) : '';
             setCurrentValue(value);
         }
     }));
 
-    const updateFilter = (value) => {
+    const updateFilter = (value: string): void => {
         if (!props.api || !props.column) return;
         
         const colId = props.column.getColId ? props.column.getColId() : 
-                     (props.column.colId || props.column.getColDef?.().field || props.column);
+                     (props.column.getColDef?.().field || String(props.column));
         if (!colId) return;
         
         const filterModel = value ? { filter: value, type: 'contains' } : null;
@@ -123,11 +136,11 @@ export const HebrewFloatingFilter = forwardRef((props, ref) => {
         props.api.onFilterChanged();
     };
 
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
         // Handle shift-W for sin (ש with dot on left)
         if (e.key === 'W' && e.shiftKey) {
             e.preventDefault();
-            const cursorPos = inputRef.current?.selectionStart || 0;
+            const cursorPos = inputRef.current?.selectionStart ?? 0;
             const before = currentValue.substring(0, cursorPos);
             const after = currentValue.substring(cursorPos);
             const sin = 'ש\u05C2';
@@ -161,7 +174,7 @@ export const HebrewFloatingFilter = forwardRef((props, ref) => {
                     if (converted !== inputValue && inputRef.current) {
                         requestAnimationFrame(() => {
                             if (inputRef.current) {
-                                const cursorPos = inputRef.current.selectionStart;
+                                const cursorPos = inputRef.current.selectionStart ?? 0;
                                 const newPos = Math.min(cursorPos, converted.length);
                                 inputRef.current.setSelectionRange(newPos, newPos);
                             }
@@ -182,4 +195,6 @@ export const HebrewFloatingFilter = forwardRef((props, ref) => {
         </div>
     );
 });
+
+HebrewFloatingFilter.displayName = 'HebrewFloatingFilter';
 

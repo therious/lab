@@ -1,27 +1,38 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, ReactNode, CSSProperties } from 'react';
 
 /**
  * Custom tooltip component with word wrap and better formatting
  * Supports tabular formatting for numbers
  * Automatically positions below if there's not enough space above
  */
-export function Tooltip({ children, content, style = {}, maxWidth = 350 }) {
-  const [isVisible, setIsVisible] = useState(false);
-  const [position, setPosition] = useState('top'); // 'top' or 'bottom'
-  const tooltipRef = useRef(null);
-  const containerRef = useRef(null);
+type TooltipProps = {
+  children: ReactNode;
+  content: string | null | undefined;
+  style?: CSSProperties;
+  maxWidth?: number;
+};
+
+type TooltipPosition = 'top' | 'bottom';
+
+export function Tooltip({ children, content, style = {}, maxWidth = 350 }: TooltipProps): JSX.Element {
+  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [position, setPosition] = useState<TooltipPosition>('top');
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLSpanElement>(null);
 
   if (!content) {
-    return children;
+    return <>{children}</>;
   }
 
   // Format content - if it contains newlines, format as multi-line
-  const formattedContent = typeof content === 'string' ? content.split('\n').map((line, i) => (
-    <React.Fragment key={i}>
-      {line}
-      {i < content.split('\n').length - 1 && <br />}
-    </React.Fragment>
-  )) : content;
+  const formattedContent: ReactNode = typeof content === 'string' 
+    ? content.split('\n').map((line, i) => (
+        <React.Fragment key={i}>
+          {line}
+          {i < content.split('\n').length - 1 && <br />}
+        </React.Fragment>
+      ))
+    : content;
 
   // Check position when tooltip becomes visible
   useEffect(() => {

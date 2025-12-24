@@ -6,14 +6,94 @@ import {roots} from '../roots/roots';
 import Graph from "react-vis-graph-wrapper";
 import "vis-network/styles/vis-network.css";
 import {toRender} from "../roots/myvis.js";
-import {defaultOptions} from "../roots/options";
+import {defaultOptions, type VisNetworkOptions} from "../roots/options";
 import {CheckGroup} from "./CheckGroup";
 import {matchesDefinitionFilter} from "../roots/definitionFilter";
 import {getDictionaryWords, getDictionaryEntry} from "../roots/loadDictionary";
 import {Tooltip} from "./Tooltip";
 
+// Type definitions
+type Root = {
+  id: number;
+  r: string; // root (concatenated P+E+L)
+  d?: string; // definition
+  P: string; // first letter
+  E: string; // middle letter
+  L: string; // last letter
+  generation?: number; // generation number for visualization
+};
+
+type GraphNode = {
+  id: number;
+  label: string;
+  title?: string;
+  font?: { multi: boolean };
+  color?: {
+    background: string;
+    border: string;
+    highlight: {
+      background: string;
+      border: string;
+    };
+  };
+};
+
+type GraphEdge = {
+  from: number;
+  to: number;
+  color?: string;
+  width?: number;
+};
+
+type GraphData = {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+};
+
+type GenerationRange = {
+  min: number;
+  max: number;
+};
+
+type TooltipCounts = {
+  n: number; // Grid filter count
+  x: number; // Roots added by similar meanings (not in grid filter)
+  w: number; // Roots added only by extra degrees (not in grid filter or similar meanings)
+  y: number; // Total roots after all processing
+  q: number; // Roots with no edges (for Remove Free)
+  pruneRemoved: number; // Number of nodes removed by pruning
+};
+
+type PendingGraphData = {
+  data: GraphData;
+  generationRange: GenerationRange;
+  nodeIdToRootId: [number, number][];
+  tooltipCounts: TooltipCounts;
+};
+
+// Using interface here because vis-network's Network type is an interface
+// and we need to match its structure for proper type compatibility
+interface VisNetworkInstance {
+  body: {
+    data: {
+      nodes: {
+        update: (node: { id: number; color?: GraphNode['color'] }) => void;
+      };
+    };
+  };
+}
+
+type WorkerMessage = 
+  | { type: 'result'; payload: { computationId: number; data: GraphData; nodeMax: number; edgeMax: number; generationRange: GenerationRange; nodeIdToRootId: [number, number][]; tooltipCounts: TooltipCounts } }
+  | { type: 'error'; payload: { error: unknown } };
+
+type GraphEvents = {
+  select: (params: { nodes: number[]; edges: number[] }) => void;
+  doubleClick: (params: { pointer: { canvas: { x: number; y: number } } }) => void;
+};
+
 toRender.graphableRows = roots; // the full list
-const   defaultGraph = {nodes: [], edges: []};
+const defaultGraph: GraphData = {nodes: [], edges: []};
 
 
 
@@ -22,7 +102,7 @@ const   defaultGraph = {nodes: [], edges: []};
 
 
 
-export const  RtStarView = ()=>{
+export const RtStarView = (): JSX.Element => {
 
   const {
     options: {choices, otherChoices, mischalfim, includeLinked, maxNodes, maxEdges, linkByMeaningThreshold, pruneByGradeThreshold}
@@ -34,31 +114,36 @@ export const  RtStarView = ()=>{
   const [maxGeneration, setMaxGeneration] = useState(1);
   const [localExtraDegrees, setLocalExtraDegrees] = useState(0);
 
-  const [graph, setGraph] = useState(defaultGraph);
-  const [options, setOptions] = useState(defaultOptions);
-  const [isComputing, setIsComputing] = useState(false);
-  const [generationRange, setGenerationRange] = useState({ min: 1, max: 1 });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [tooltipCounts, setTooltipCounts] = useState({ n: 0, x: 0, w: 0, y: 0, q: 0, pruneRemoved: 0 });
-  const workerRef = useRef(null);
-  const computationIdRef = useRef(0);
-  const debounceTimeoutRef = useRef(null);
-  const pendingGraphDataRef = useRef(null); // Store computed graph data before rendering
-  const graphUpdateTimeoutRef = useRef(null);
-  const networkRef = useRef(null); // Reference to vis-network instance
-  const nodeIdToRootIdRef = useRef(new Map()); // Map node IDs to root IDs for search
+  const [graph, setGraph] = useState<GraphData>(defaultGraph);
+  const [isComputing, setIsComputing] = useState<boolean>(false);
+  const [generationRange, setGenerationRange] = useState<GenerationRange>({ min: 1, max: 1 });
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [tooltipCounts, setTooltipCounts] = useState<TooltipCounts>({ n: 0, x: 0, w: 0, y: 0, q: 0, pruneRemoved: 0 });
+  const workerRef = useRef<Worker | null>(null);
+  const computationIdRef = useRef<number>(0);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingGraphDataRef = useRef<PendingGraphData | null>(null); // Store computed graph data before rendering
+  const graphUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const networkRef = useRef<VisNetworkInstance | null>(null); // Reference to vis-network instance
+  const nodeIdToRootIdRef = useRef<Map<number, number>>(new Map()); // Map node IDs to root IDs for search
 
-  const chMaxNodes = useCallback((evt)=>{actions.options.setMaxNodes(Number(evt.target.value))},[]);
-  const chMaxEdges = useCallback((evt)=>{actions.options.setMaxEdges(Number(evt.target.value))},[]);
-  const chMaxGeneration = useCallback((evt)=>{
+  const chMaxNodes = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
+    actions.options.setMaxNodes(Number(evt.target.value));
+  }, []);
+  
+  const chMaxEdges = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
+    actions.options.setMaxEdges(Number(evt.target.value));
+  }, []);
+  
+  const chMaxGeneration = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
     const value = Number(evt.target.value);
     // Use requestAnimationFrame to ensure non-blocking update
     requestAnimationFrame(() => {
       setMaxGeneration(value);
     });
-  },[]);
+  }, []);
   
-  const chExtraDegrees = useCallback((evt)=>{
+  const chExtraDegrees = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
     const value = Number(evt.target.value);
     // Shift: 0 = 1, 1 = 2, etc. (value + 1)
     setLocalExtraDegrees(value);
@@ -66,18 +151,20 @@ export const  RtStarView = ()=>{
     requestAnimationFrame(() => {
       setMaxGeneration(value + 1);
     });
-  },[]);
-  const chLinkByMeaning = useCallback((evt)=>{
+  }, []);
+  
+  const chLinkByMeaning = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
     const sliderValue = Number(evt.target.value);
     const threshold = 6 - sliderValue; // Reverse: slider 0 = threshold 6, slider 6 = threshold 0
     // Use requestAnimationFrame to ensure non-blocking update
     requestAnimationFrame(() => {
       actions.options.setLinkByMeaningThreshold(threshold);
     });
-  },[]);
+  }, []);
+  
   // Local state for immediate slider updates (non-blocking)
-  const [localPruneByGrade, setLocalPruneByGrade] = useState(pruneByGradeThreshold);
-  const pruneSyncTimeoutRef = useRef(null);
+  const [localPruneByGrade, setLocalPruneByGrade] = useState<number>(pruneByGradeThreshold);
+  const pruneSyncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Sync local state to Redux with debounce (only when user stops dragging)
   useEffect(() => {
@@ -107,12 +194,12 @@ export const  RtStarView = ()=>{
     }
   }, [pruneByGradeThreshold]);
   
-  const chPruneByGrade = useCallback((evt)=>{
+  const chPruneByGrade = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
     const sliderValue = Number(evt.target.value);
     const threshold = 6 - sliderValue; // Reverse: slider 0 = threshold 6, slider 6 = threshold 0
     // Update local state immediately (non-blocking, no Redux update yet)
     setLocalPruneByGrade(threshold);
-  },[]);
+  }, []);
   
   // Initialize worker
   useEffect(() => {
@@ -121,7 +208,7 @@ export const  RtStarView = ()=>{
       { type: 'module' }
     );
 
-    workerRef.current.onmessage = (e) => {
+    workerRef.current.onmessage = (e: MessageEvent<WorkerMessage>): void => {
       if (e.data.type === 'result') {
         const { computationId, data, nodeMax, edgeMax, generationRange, nodeIdToRootId, tooltipCounts } = e.data.payload;
         // Only update if this is the latest computation
@@ -137,9 +224,9 @@ export const  RtStarView = ()=>{
           }
           
           // Store nodeId to rootId mapping (convert from array to Map)
-          const mapping = new Map();
+          const mapping = new Map<number, number>();
           if (nodeIdToRootId && Array.isArray(nodeIdToRootId)) {
-            nodeIdToRootId.forEach(([nodeId, rootId]) => {
+            nodeIdToRootId.forEach(([nodeId, rootId]: [number, number]) => {
               mapping.set(nodeId, rootId);
             });
           }
@@ -162,9 +249,9 @@ export const  RtStarView = ()=>{
                   setTooltipCounts(pendingGraphDataRef.current.tooltipCounts);
                 }
                 // Update mapping
-                const mapping = new Map();
+                const mapping = new Map<number, number>();
                 if (pendingGraphDataRef.current.nodeIdToRootId && Array.isArray(pendingGraphDataRef.current.nodeIdToRootId)) {
-                  pendingGraphDataRef.current.nodeIdToRootId.forEach(([nodeId, rootId]) => {
+                  pendingGraphDataRef.current.nodeIdToRootId.forEach(([nodeId, rootId]: [number, number]) => {
                     mapping.set(nodeId, rootId);
                   });
                 }
@@ -180,7 +267,7 @@ export const  RtStarView = ()=>{
       }
     };
 
-    workerRef.current.onerror = (error) => {
+    workerRef.current.onerror = (error: ErrorEvent): void => {
       console.error('Worker error:', error);
       setIsComputing(false);
     };
@@ -200,25 +287,28 @@ export const  RtStarView = ()=>{
     }
   }, [maxGeneration, localExtraDegrees]);
 
-  const renderReset = useCallback(()=>setReset(true),[]);
+  const renderReset = useCallback((): void => setReset(true), []);
 
   // Debounced computation function
-  const computeGraph = useCallback(() => {
-    if (!workerRef.current || !toRender.graphableRows || !Array.isArray(toRender.graphableRows)) {
+  const computeGraph = useCallback((): void => {
+    if (!toRender.graphableRows || !Array.isArray(toRender.graphableRows)) {
       return;
     }
 
+    // Assert non-null: workerRef.current is guaranteed to be set when this runs
+    const worker = workerRef.current!;
+    
     setIsComputing(true);
     // Note: computationIdRef.current is incremented in the useEffect before calling this
 
     // Send computation request to worker with computation ID
     // Use localPruneByGrade for immediate responsiveness
-    workerRef.current.postMessage({
+    worker.postMessage({
       type: 'compute',
       payload: {
         computationId: computationIdRef.current,
-        filteredRoots: toRender.graphableRows,
-        allRoots: roots,
+        filteredRoots: toRender.graphableRows as Root[],
+        allRoots: roots as Root[],
         linkByMeaningThreshold,
         maxGeneration,
         mischalfim,
@@ -230,7 +320,7 @@ export const  RtStarView = ()=>{
     });
   }, [linkByMeaningThreshold, maxGeneration, mischalfim, otherChoices, maxNodes, maxEdges, localPruneByGrade]);
 
-  const render = useCallback(() => {
+  const render = useCallback((): void => {
     // Increment computation ID to cancel any in-flight computation
     computationIdRef.current += 1;
     computeGraph();
@@ -239,7 +329,8 @@ export const  RtStarView = ()=>{
   // Auto-update graph when slider changes (if graph is already rendered)
   // Use debounce with cancellation for smooth slider dragging
   useEffect(() => {
-    if (!reset && workerRef.current) {
+    if (!reset) {
+      // Assert non-null: workerRef.current is guaranteed to be set when this runs
       // Cancel previous computation by incrementing ID immediately
       computationIdRef.current += 1;
       
@@ -267,11 +358,12 @@ export const  RtStarView = ()=>{
   }, [maxGeneration, linkByMeaningThreshold, localPruneByGrade, maxNodes, maxEdges, reset, computeGraph]);
   
 
-  const events = useMemo(() => ({
-    select: ({ nodes, edges }) => {
+  const events = useMemo<GraphEvents>(() => ({
+    select: ({ nodes, edges }: { nodes: number[]; edges: number[] }): void => {
       console.log("Selected nodes/edges:", nodes, edges);
     },
-    doubleClick: ({ pointer: { canvas } }) => {
+    doubleClick: ({ pointer: { canvas } }: { pointer: { canvas: { x: number; y: number } } }): void => {
+      // Handle double click if needed
     }
   }), []);
 
@@ -280,27 +372,29 @@ export const  RtStarView = ()=>{
     // Use a ref to track if this effect is still valid (not cancelled)
     let isCancelled = false;
     
-    const updateNodeColors = () => {
+    const updateNodeColors = (): void => {
       if (isCancelled) return;
       
-    if (!networkRef.current || !graph.nodes || graph.nodes.length === 0) {
-      return;
-    }
-
-      // Check if nodes DataSet is available
-      if (!networkRef.current.body || !networkRef.current.body.data || !networkRef.current.body.data.nodes) {
-        // Retry after a short delay
-        setTimeout(() => {
-          if (!isCancelled) {
-            updateNodeColors();
-          }
-        }, 100);
+      if (!graph.nodes || graph.nodes.length === 0) {
         return;
       }
 
-    const network = networkRef.current;
-    const nodesDataSet = network.body.data.nodes;
-    const updates = [];
+      // Assert non-null: networkRef.current is guaranteed to be set when this runs
+      const network = networkRef.current!;
+      const nodesDataSet = network.body.data.nodes;
+      type NodeUpdate = {
+        id: number;
+        matchType?: 'definition' | 'example';
+        color: {
+          background: string;
+          border: string;
+          highlight: {
+            background: string;
+            border: string;
+          };
+        };
+      };
+      const updates: NodeUpdate[] = [];
 
     if (!searchTerm || !searchTerm.trim()) {
       // Clear all colors - reset to default
@@ -318,8 +412,8 @@ export const  RtStarView = ()=>{
         });
       });
     } else {
-      // Search through nodes
-      graph.nodes.forEach((node) => {
+        // Search through nodes
+      graph.nodes.forEach((node: GraphNode) => {
         const nodeId = node.id;
         const rootId = nodeIdToRootIdRef.current.get(nodeId);
         
@@ -340,7 +434,7 @@ export const  RtStarView = ()=>{
         }
 
         // Find root data
-        const root = roots.find(r => r.id === rootId);
+        const root = (roots as Root[]).find((r: Root) => r.id === rootId);
         if (!root) {
           return;
         }
@@ -410,9 +504,9 @@ export const  RtStarView = ()=>{
           requestAnimationFrame(() => {
             if (isCancelled) return;
             
-            if (networkRef.current && networkRef.current.body && networkRef.current.body.data && networkRef.current.body.data.nodes) {
+            // Assert non-null: networkRef.current is guaranteed to be set when this runs
             try {
-              const nodesDataSet = networkRef.current.body.data.nodes;
+              const nodesDataSet = networkRef.current!.body.data.nodes;
               // Update each node using DataSet.update()
               // Batch updates for better performance
               updates.forEach((update) => {
@@ -421,11 +515,10 @@ export const  RtStarView = ()=>{
                   const { id, color } = update;
                   nodesDataSet.update({ id, color });
                 }
-                });
-              } catch (error) {
-                console.error('Error updating nodes:', error);
-              }
-              }
+              });
+            } catch (error) {
+              console.error('Error updating nodes:', error);
+            }
           });
         });
       }
@@ -441,7 +534,7 @@ export const  RtStarView = ()=>{
   }, [searchTerm, graph.nodes]);
 
   // Get network instance via getNetwork prop (if supported) or events
-  const handleGetNetwork = useCallback((network) => {
+  const handleGetNetwork = useCallback((network: VisNetworkInstance): void => {
     networkRef.current = network;
   }, []);
 
@@ -449,7 +542,7 @@ export const  RtStarView = ()=>{
     <Graph 
       events={events} 
       graph={graph} 
-      options={options} 
+      options={defaultOptions} 
       style={{  backgroundColor: 'midnightblue'}}
       getNetwork={handleGetNetwork}
     />
@@ -457,7 +550,7 @@ export const  RtStarView = ()=>{
 
 //heading, active, name, choices,  setChoice
    return  (
-      <div key={`${graph.length}-${options.length}`} style={{marginTop:'30px'}}>
+      <div key={`${graph.nodes.length}-${graph.edges.length}`} style={{marginTop:'30px'}}>
         <h1>Star view</h1>
         <div style={{ paddingBottom: '10px'}}>
         <h3 style={{marginLeft:'14px', display:'inline'}}>Osios Mischalfos
@@ -481,7 +574,7 @@ export const  RtStarView = ()=>{
               />
             </Tooltip>
             <datalist id={`linkByMeaning-ticks`}>
-              {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={val} label={val} />)}
+              {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={String(val)} label={String(val)} />)}
             </datalist>
             <span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '85px'}}>
               Grade ≥ {linkByMeaningThreshold}
@@ -497,14 +590,14 @@ export const  RtStarView = ()=>{
                 min={0} 
                 max={6} 
                 step={1}
-                value={localExtraDegrees} 
+                value={String(localExtraDegrees)} 
                 onChange={chExtraDegrees}
                 style={{width: '120px', margin: '0 5px', verticalAlign: 'middle'}}
                 list={`extraDegrees-ticks`}
               />
             </Tooltip>
             <datalist id={`extraDegrees-ticks`}>
-              {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={val} label={val} />)}
+              {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={String(val)} label={String(val)} />)}
             </datalist>
             <span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '20px'}}>
               {localExtraDegrees}
@@ -529,7 +622,7 @@ export const  RtStarView = ()=>{
                       min={0} 
                       max={6} 
                       step={1}
-                      value={6 - localPruneByGrade} 
+                      value={String(6 - localPruneByGrade)} 
                       onChange={chPruneByGrade}
                       style={{width: '120px', margin: '0 5px', verticalAlign: 'middle'}}
                       list={`pruneByGrade-ticks`}
@@ -539,7 +632,7 @@ export const  RtStarView = ()=>{
               );
             })()}
             <datalist id={`pruneByGrade-ticks`}>
-              {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={val} label={val} />)}
+              {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={String(val)} label={String(val)} />)}
             </datalist>
             <span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '85px'}}>
               Grade ≥ {localPruneByGrade}
