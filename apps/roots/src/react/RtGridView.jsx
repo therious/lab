@@ -2,7 +2,7 @@ import React, {useCallback, useState, useRef, useMemo} from 'react';
 import {MyGrid} from "./MyGrid";
 import { createRootsColumnDefs} from "../xform/columndefs";
 import {roots} from '../roots/roots';
-import {toRender, expandFilteredWithLinkedRoots, expandFilteredWithIndirectlyLinkedRoots} from "../roots/myvis.js";
+import {toRender, expandFilteredWithLinkedRoots, expandFilteredWithIndirectlyLinkedRoots} from "../roots/myvis";
 import {Menu, Item, Separator, useContextMenu} from 'react-contexify';
 import {actions, useSelector} from '../actions-integration';
 

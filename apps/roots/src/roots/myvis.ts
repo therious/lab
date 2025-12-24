@@ -1,13 +1,15 @@
 /**
  * Created by hzamir on 10/13/14. revised 10/2/2023
  */
-import {arrMischalfim, vav} from "./mischalfim";
+import {Mischalef, arrMischalfim, vav} from "./mischalfim";
 import {getDefinitionSimilarityGrade, getMeaningConnectedRoots} from "./definition-similarity-grades";
+import { getRootTooltipSync } from './loadDictionary';
+import type {Root} from './roots';
 
+type MischalfimMap = Record<string, Record<string, number>>;
 
-function buildMischalfim(arr)
-{
-    const result = {};
+function buildMischalfim(arr: Mischalef[]): MischalfimMap {
+    const result: MischalfimMap = {};
 
     for (let i = 0; i < arr.length; ++i) {
         const set = arr[i].data;
@@ -20,7 +22,7 @@ function buildMischalfim(arr)
                     if (o === undefined) {
                         o = result[key] = {};
                     }
-                    o[m]=1;
+                    o[m] = 1;
                 }
             }  // each item in the set as an entry (excepting the current key itself)
         } // each item in set as the key to create in map
@@ -31,32 +33,33 @@ function buildMischalfim(arr)
 
 // check a map of maps mischalfim for letters that substitute for other letters
 // and use those to generate a connection. Any mischalef relationship will do
-let mischalfim = buildMischalfim(arrMischalfim);
+let mischalfim: MischalfimMap = buildMischalfim(arrMischalfim);
 
-export function mischalef(a,b)
-{
+export function mischalef(a: string, b: string): boolean {
     const ao = mischalfim[a];
 
-    return (ao && ao[b]);
+    return !!(ao && ao[b]);
 }
 
+type GraphNode = {
+    id: number;
+    label: string;
+    title: string;
+    font?: { multi: boolean };
+};
 
-// Import dictionary utility
-import { getRootTooltipSync } from './loadDictionary';
-
-function populateNodes(roots, nodeMax, showGenerations = false)
-{
+function populateNodes(roots: Root[], nodeMax: number, showGenerations = false): GraphNode[] {
     const max = Math.min(nodeMax, roots.length);
 
-    return roots.slice(0, max).map((o,i)=>{
+    return roots.slice(0, max).map((o, i) => {
         // Use dictionary tooltip with example words
-        const tooltip = getRootTooltipSync(o.id, o.d || '');
+        const tooltip = getRootTooltipSync(o.id, o.d);
         // Format: rootId: definition (then examples if available)
         const rootId = o.id;
-        const definition = o.d || '';
+        const definition = o.d;
         // getRootTooltipSync returns "definition\n\nExample words:\n..." if examples exist, or just "definition" if not
         // We want: "rootId: definition\n\nExample words:\n..." or just "rootId: definition"
-        let tooltipWithId;
+        let tooltipWithId: string;
         if (tooltip === definition) {
             // No examples, just definition
             tooltipWithId = `${rootId}: ${definition}`;
@@ -65,7 +68,7 @@ function populateNodes(roots, nodeMax, showGenerations = false)
             tooltipWithId = tooltip.replace(definition, `${rootId}: ${definition}`);
         }
         const nodeId = i + 1;
-        const node = {id:nodeId, label:o.r, title:tooltipWithId};
+        const node: GraphNode = {id: nodeId, label: o.r, title: tooltipWithId};
 
         // If generation info is available and we should show it, add it to the label
         if (showGenerations && o.generation !== undefined) {
@@ -87,10 +90,7 @@ function populateNodes(roots, nodeMax, showGenerations = false)
 
 }
 
-
-
-function atLeastTwoMatch(p,e,l, cand)
-{
+function atLeastTwoMatch(p: string, e: string, l: string, cand: Root): boolean {
     let matches = 0;
     if(p === cand.P)
         ++matches;
@@ -125,25 +125,22 @@ function firstOrLastTwoMatch(p,e,l,cand)
 // if the first letter is the same
 // and the second letter is a vav
 // and the third letter is the second and third letter or the second root
-function doubledLast(p,e,l, root)
-{
+function doubledLast(p: string, e: string, l: string, root: Root): boolean {
     return (e === vav && root.L === l && p === root.P &&  root.E === root.L );
 }
 
 // maybe revise with option that first letter is identical, and not always connect because first letter is also mischalef
-function pairMischalef(p,e,l, cand)
-{
+function pairMischalef(p: string, e: string, l: string, cand: Root): boolean {
      return !!(e === l &&       // doubled src last letters
        cand.E === cand.L &&       // doubled dst last letters
        (mischalef(e, cand.E)) &&    // pairs are interchangeable
        (p === cand.P || mischalef(p, cand.P)));
 }
-let  useVavToDoubled = true;
-let removeFree = false;
+let  useVavToDoubled: boolean = true;
+let removeFree: boolean = false;
 
 // return index of matching item from
-function findEdge(p,e,l, roots, index)
-{
+function findEdge(p: string, e: string, l: string, roots: Root[], index: number): number {
     const cand = roots[index];
 
     if (atLeastTwoMatch(p, e, l, cand)) { // if two of the three letters of shoresh are the same
@@ -160,10 +157,18 @@ function findEdge(p,e,l, roots, index)
     return -1;
 }
 
-let mappedNodes = {}
-let mappedEdges = {};
-let edgeCount = 0;
-function createEdge(aidx, bidx, edges, roots, relatedMeaningsThreshold = 6) {
+let mappedNodes: Record<string, boolean> = {};
+let mappedEdges: Record<string, boolean> = {};
+let edgeCount: number = 0;
+
+type GraphEdge = {
+    from: number;
+    to: number;
+    width?: number;
+    color?: string;
+};
+
+function createEdge(aidx: number, bidx: number, edges: GraphEdge[], roots: Root[], relatedMeaningsThreshold = 6): GraphEdge | null {
     if(bidx < 0)
         return null;
     if (aidx === bidx)
@@ -177,7 +182,7 @@ function createEdge(aidx, bidx, edges, roots, relatedMeaningsThreshold = 6) {
 
     const root1 = roots[aidx];
     const root2 = roots[bidx];
-    const edge = {from: aidx + 1, to: bidx + 1};
+    const edge: GraphEdge = {from: aidx + 1, to: bidx + 1};
 
     // Always check for meaning-based connection and adjust edge width and color based on grade
     // Edge strength (width) always reflects the meaning grade if one exists
@@ -199,7 +204,7 @@ function createEdge(aidx, bidx, edges, roots, relatedMeaningsThreshold = 6) {
         edge.width = 1;
     }
 
-    mappedEdges[key]=true;
+    mappedEdges[key] = true;
     edgeCount++;
 
     edges.push(edge);
@@ -233,8 +238,8 @@ function createEdge(aidx, bidx, edges, roots, relatedMeaningsThreshold = 6) {
 // }
 //
 
-function populateEdges(roots, hardMax, edgeMax, relatedMeaningsThreshold = 6) {
-    const edges = [];
+function populateEdges(roots: Root[], hardMax: number, edgeMax: number, relatedMeaningsThreshold = 6): GraphEdge[] {
+    const edges: GraphEdge[] = [];
 
    mappedEdges = {};
    mappedNodes = {};
@@ -252,8 +257,9 @@ function populateEdges(roots, hardMax, edgeMax, relatedMeaningsThreshold = 6) {
                 const matchindex = findEdge(src.P, src.E, src.L, roots, j);
                 if (matchindex >= 0) {
                     createEdge(i, matchindex, edges, roots, relatedMeaningsThreshold);
-                    mappedNodes[src.r] =true;
-                    mappedNodes[roots[j].r] = true;
+                    mappedNodes[src.r] = true;
+                    const targetRoot = roots[j];
+                    if (targetRoot) mappedNodes[targetRoot.r] = true;
                 }
             }
         }
@@ -261,8 +267,18 @@ function populateEdges(roots, hardMax, edgeMax, relatedMeaningsThreshold = 6) {
     return  edges;
 }
 
-function diagram(list, nodeMax, edgeMax, showGenerations = false, relatedMeaningsThreshold = 6)
-{
+type GraphData = {
+    nodes: GraphNode[];
+    edges: GraphEdge[];
+};
+
+type DiagramResult = {
+    nodeMax: number;
+    edgeMax: number;
+    data: GraphData;
+};
+
+function diagram(list: Root[], nodeMax: number, edgeMax: number, showGenerations = false, relatedMeaningsThreshold = 6): DiagramResult {
      nodeMax = Math.min(nodeMax, list.length);
 
 
@@ -272,7 +288,7 @@ function diagram(list, nodeMax, edgeMax, showGenerations = false, relatedMeaning
 
     // remove anything from list that is not contained in mapped edges
     if(removeFree) {
-        const unfreelist = list.filter(o=>mappedNodes[o.r]); // shrink the list, and do it again!
+        const unfreelist = list.filter(o => mappedNodes[o.r]); // shrink the list, and do it again!
         nodeMax = Math.min(nodeMax, unfreelist.length);
 
         nodes = populateNodes(unfreelist, nodeMax, showGenerations);
@@ -282,7 +298,7 @@ function diagram(list, nodeMax, edgeMax, showGenerations = false, relatedMeaning
 //        dumpNodes(nodes);
 //        dumpEdges(edges);
 
-    const data= {
+    const data: GraphData = {
         nodes: nodes,
         edges: edges
     };
@@ -291,21 +307,29 @@ function diagram(list, nodeMax, edgeMax, showGenerations = false, relatedMeaning
 
 }
 
+type OtherChoices = {
+    vavToDoubled?: boolean;
+    removeFree?: boolean;
+};
 
-export function renderGraphData(list, amischalfim, otherChoices, maxNodes, maxEdges, showGenerations = false, relatedMeaningsThreshold = 6)
-{
+export function renderGraphData(list: Root[], amischalfim: Mischalef[], otherChoices: OtherChoices, maxNodes: number, maxEdges: number, showGenerations = false, relatedMeaningsThreshold = 6): DiagramResult {
     mischalfim = buildMischalfim(amischalfim);
-    useVavToDoubled =   otherChoices.vavToDoubled;
-    removeFree = otherChoices.removeFree;
+    useVavToDoubled = otherChoices.vavToDoubled ?? true;
+    removeFree = otherChoices.removeFree ?? false;
     return diagram(list, maxNodes, maxEdges, showGenerations, relatedMeaningsThreshold);
 }
 
 // reset graphableRows from outside to communicate what to render
-export const toRender = {graphableRows: {}, expandedLinkedRows: [], indirectlyLinkedRows: [], linkedByMeaningRows: []}
+export const toRender: {
+    graphableRows: Record<string, unknown>;
+    expandedLinkedRows: Root[];
+    indirectlyLinkedRows: Root[];
+    linkedByMeaningRows: Root[];
+} = {graphableRows: {}, expandedLinkedRows: [], indirectlyLinkedRows: [], linkedByMeaningRows: []};
 
 // Expand filtered roots to include roots connected by meaning grades
 // linkByMeaningThreshold: 6 = only filtered roots, 5-0 = include roots with grade >= threshold
-export function expandFilteredByMeaning(filteredRoots, allRoots, linkByMeaningThreshold) {
+export function expandFilteredByMeaning(filteredRoots: Root[], allRoots: Root[], linkByMeaningThreshold: number): Root[] {
     if (!filteredRoots || !Array.isArray(filteredRoots) || filteredRoots.length === 0) {
         return [];
     }
@@ -320,7 +344,7 @@ export function expandFilteredByMeaning(filteredRoots, allRoots, linkByMeaningTh
     }
 
     // Create a map of all roots by ID for quick lookup
-    const allRootsMap = new Map();
+    const allRootsMap = new Map<number, Root>();
     allRoots.forEach(root => {
         if (root && root.id !== undefined && root.id !== null) {
             allRootsMap.set(root.id, root);
@@ -328,7 +352,7 @@ export function expandFilteredByMeaning(filteredRoots, allRoots, linkByMeaningTh
     });
 
     // Use a Map to track unique roots by id
-    const includedRoots = new Map();
+    const includedRoots = new Map<number, Root>();
 
     // Add all filtered roots first
     filteredRoots.forEach(root => {
@@ -366,7 +390,7 @@ export function expandFilteredByMeaning(filteredRoots, allRoots, linkByMeaningTh
 // This function checks each filtered root against every root in the full list
 // to find linked roots based on the linking rules (mischalfim, etc.)
 // Returns roots with generation numbers: filtered = 1, directly linked = 2
-export function expandFilteredWithLinkedRoots(filteredRoots, allRoots, amischalfim, otherChoices) {
+export function expandFilteredWithLinkedRoots(filteredRoots: Root[], allRoots: Root[], amischalfim: Mischalef[], otherChoices: OtherChoices): Root[] {
     if (!filteredRoots || !Array.isArray(filteredRoots) || filteredRoots.length === 0) {
         return [];
     }
@@ -387,7 +411,7 @@ export function expandFilteredWithLinkedRoots(filteredRoots, allRoots, amischalf
 
     try {
         // Use a Map to track unique roots by id, preserving order
-        const includedRoots = new Map();
+        const includedRoots = new Map<number, Root>();
 
         // Add all filtered roots first (generation 1)
         filteredRoots.forEach(root => {
@@ -439,7 +463,7 @@ export function expandFilteredWithLinkedRoots(filteredRoots, allRoots, amischalf
 // Expand filtered roots to include all indirectly linked roots (transitive closure)
 // This iteratively expands the list until no new linked roots are found
 // Returns roots with generation numbers: filtered = 1, each iteration adds +1
-export function expandFilteredWithIndirectlyLinkedRoots(filteredRoots, allRoots, amischalfim, otherChoices) {
+export function expandFilteredWithIndirectlyLinkedRoots(filteredRoots: Root[], allRoots: Root[], amischalfim: Mischalef[], otherChoices: OtherChoices): Root[] {
     if (!filteredRoots || !Array.isArray(filteredRoots) || filteredRoots.length === 0) {
         return [];
     }
@@ -460,7 +484,7 @@ export function expandFilteredWithIndirectlyLinkedRoots(filteredRoots, allRoots,
 
     try {
         // Use a Map to track unique roots by id with their generation
-        const includedRoots = new Map();
+        const includedRoots = new Map<number, Root>();
 
         // Add all filtered roots first (generation 1)
         filteredRoots.forEach(root => {
@@ -528,3 +552,4 @@ export function expandFilteredWithIndirectlyLinkedRoots(filteredRoots, allRoots,
         useVavToDoubled = originalUseVavToDoubled;
     }
 }
+

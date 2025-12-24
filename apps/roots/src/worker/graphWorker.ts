@@ -2,7 +2,7 @@
  * Web Worker for graph computation to prevent UI freezing
  */
 
-import { expandFilteredByMeaning, expandFilteredWithIndirectlyLinkedRoots, renderGraphData } from '../roots/myvis.js';
+import { expandFilteredByMeaning, expandFilteredWithIndirectlyLinkedRoots, renderGraphData } from '../roots/myvis';
 
 interface GraphComputeMessage {
   type: 'compute';
@@ -105,7 +105,7 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
         : rootsWithLetterLinks
             .filter((r: any) => r && r.generation !== undefined)
             .map((r: any) => r.generation);
-      
+
       const generationRange: { min: number; max: number } = generations.length > 0
         ? { min: Math.min(...generations), max: Math.max(...generations) }
         : { min: 1, max: 1 };
@@ -113,9 +113,9 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
       // PIPELINE STAGE 4: Filter by maxGeneration value
       const rootsFilteredByGeneration = shouldSkipExpansion
         ? gridFilteredRoots
-        : rootsWithLetterLinks.filter((root: any) => 
-            root.generation === undefined 
-              ? maxGeneration >= generationRange.min 
+        : rootsWithLetterLinks.filter((root: any) =>
+            root.generation === undefined
+              ? maxGeneration >= generationRange.min
               : root.generation <= maxGeneration
           );
 
@@ -125,7 +125,7 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
         : new Set(rootsWithMeaningLinks.map((r: any) => r.id));
       const w = shouldSkipExpansion
         ? 0
-        : rootsFilteredByGeneration.filter((r: any) => 
+        : rootsFilteredByGeneration.filter((r: any) =>
             !gridFilteredRootIds.has(r.id) && !meaningLinkRootIds.has(r.id)
           ).length;
 
@@ -145,10 +145,10 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
         showGenerations,
         1 // relatedMeaningsThreshold always 1
       );
-      
+
       // y = total roots after extra degrees but BEFORE pruning (for prune by grade tooltip)
       const y = data.nodes.length;
-      
+
       // Log summary before pruning
       // console.log('=== Graph Pipeline Summary ===');
       // console.log(`Stage 1 (Grid Filtered): ${gridFilteredRoots.length} roots`);
@@ -173,7 +173,7 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
         // Create maps: nodeId -> rootId and nodeId -> edges
         const nodeIdToRootId = new Map();
         const nodeIdToEdges = new Map();
-        
+
         // Map each node to its root ID based on rootsFilteredByGeneration list
         rootsFilteredByGeneration.forEach((root: any, index: number) => {
           const nodeId = index + 1; // populateNodes uses index + 1
@@ -193,37 +193,37 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
 
         // Find valid nodes: nodes that have BOTH letter-based AND meaning-based connections
         const validNodeIds = new Set();
-        
+
         // Pass 1: Mark all nodes in original grid filter as valid (these always stay)
         data.nodes.forEach((node: any) => {
           const nodeId = node.id;
           const rootId = nodeIdToRootId.get(nodeId);
-          
+
           if (rootId !== undefined && originalGridFilterRootIds.has(rootId)) {
             validNodeIds.add(nodeId);
           }
         });
-        
+
         // Pass 2: Find nodes that have BOTH:
         // - A letter-based edge (yellow, or any edge that's not white)
         // - A meaning-based edge (white) with sufficient grade
         // Note: edge.width is scaled (grade * 1.5 + 0.5)
         const minWidthForThreshold = pruneByGradeThreshold * 1.5 + 0.5;
-        
+
         data.nodes.forEach((node: any) => {
           const nodeId = node.id;
-          
+
           // Skip if already valid (in original grid filter)
           if (validNodeIds.has(nodeId)) {
             return;
           }
-          
+
           const edges = nodeIdToEdges.get(nodeId) || [];
-          
+
           // Check if this node has BOTH a letter-based edge AND a meaning-based edge with sufficient grade
           let hasLetterEdge = false;
           let hasMeaningEdge = false;
-          
+
           for (const edge of edges) {
             // Letter-based edge: not white (yellow or default)
             if (edge.color !== 'white') {
@@ -234,13 +234,13 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
               hasMeaningEdge = true;
             }
           }
-          
+
           // Keep if has BOTH letter-based AND meaning-based connections
           if (hasLetterEdge && hasMeaningEdge) {
             validNodeIds.add(nodeId);
           }
         });
-        
+
         // Pass 3: Iteratively add nodes connected to valid nodes by meaning-based edges
         // This allows transitive connections
         let changed = true;
@@ -248,14 +248,14 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
           changed = false;
           data.nodes.forEach((node: any) => {
             const nodeId = node.id;
-            
+
             // Skip if already valid
             if (validNodeIds.has(nodeId)) {
               return;
             }
-            
+
             const edges = nodeIdToEdges.get(nodeId) || [];
-            
+
             // Check if this node has a meaning-based edge with sufficient grade to a valid node
             for (const edge of edges) {
               if (edge.color === 'white' && edge.width >= minWidthForThreshold) {
@@ -284,17 +284,17 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
         data.edges = data.edges.filter((edge: any) =>
           validNodeIds.has(edge.from) && validNodeIds.has(edge.to)
         );
-        
+
         // Filter nodes: only keep valid nodes
         const nodesBeforePruning = data.nodes.length;
         data.nodes = data.nodes.filter((node: any) => validNodeIds.has(node.id));
         pruneRemoved = nodesBeforePruning - data.nodes.length;
-        
+
         // console.log(`Stage 6 (After Pruning): ${data.nodes.length} nodes (removed ${nodesBeforePruning - data.nodes.length}), ${data.edges.length} edges`);
       } else {
         // console.log(`Stage 6 (Pruning): Skipped (threshold = 0)`);
       }
-      
+
       // q = roots with no edges (for Remove Free tooltip)
       // Calculate this after pruning but BEFORE Remove Free is applied
       // This represents how many nodes would have no edges if Remove Free were NOT checked
@@ -305,7 +305,7 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
         nodesWithEdgesForQ.add(edge.to);
       });
       const q = data.nodes.filter((node: any) => !nodesWithEdgesForQ.has(node.id)).length;
-      
+
       // PIPELINE STAGE 7: Apply Remove Free - remove all nodes with no edges
       // Note: q is calculated above from data that hasn't had Remove Free applied yet
       if (otherChoices.removeFree) {
@@ -314,15 +314,15 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
           nodesWithEdges.add(edge.from);
           nodesWithEdges.add(edge.to);
         });
-        
+
         const nodesBeforeRemoveFree = data.nodes.length;
         data.nodes = data.nodes.filter((node: any) => nodesWithEdges.has(node.id));
-        
+
         // console.log(`Stage 7 (Remove Free): ${data.nodes.length} nodes (removed ${nodesBeforeRemoveFree - data.nodes.length} unlinked nodes)`);
       } else {
         // console.log(`Stage 7 (Remove Free): Skipped`);
       }
-      
+
       // Final summary
       // console.log(`=== Final Graph: ${data.nodes.length} nodes, ${data.edges.length} edges ===`);
 
