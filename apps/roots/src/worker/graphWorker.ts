@@ -29,6 +29,14 @@ interface GraphComputeResult {
     edgeMax: number;
     generationRange: { min: number; max: number };
     nodeIdToRootId: [number, number][]; // Array of [nodeId, rootId] tuples for search (serializable)
+    tooltipCounts: {
+      n: number; // Grid filter count
+      x: number; // Roots added by similar meanings (not in grid filter)
+      w: number; // Roots added only by extra degrees (not in grid filter or similar meanings)
+      y: number; // Total roots after all processing
+      q: number; // Roots with no edges (for Remove Free)
+      pruneRemoved: number; // Number of nodes removed by pruning (for Prune by grade tooltip)
+    };
   };
 }
 
@@ -55,13 +63,17 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
     try {
       // PIPELINE STAGE 1: Grid-filtered roots (input from grid filters)
       const gridFilteredRoots = filteredRoots;
-      
+      const n = gridFilteredRoots.length; // Grid filter count
+
       // PIPELINE STAGE 2: Apply Link by Meaning slider - add roots connected by meaning grades
       const rootsWithMeaningLinks = expandFilteredByMeaning(
         gridFilteredRoots,
         allRoots,
         linkByMeaningThreshold
       );
+      // x = roots added by similar meanings (not in original grid filter)
+      const gridFilteredRootIds = new Set(gridFilteredRoots.map((r: any) => r.id));
+      const x = rootsWithMeaningLinks.filter((r: any) => !gridFilteredRootIds.has(r.id)).length;
 
       // PIPELINE STAGE 3: Apply Max Generation slider - expand by letter-based connections
       const rootsWithLetterLinks = expandFilteredWithIndirectlyLinkedRoots(
@@ -87,19 +99,29 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
         }
         return root.generation <= maxGeneration;
       });
+      // w = roots added only by extra degrees (not in grid filter or similar meanings)
+      const meaningLinkRootIds = new Set(rootsWithMeaningLinks.map((r: any) => r.id));
+      const w = rootsFilteredByGeneration.filter((r: any) => 
+        !gridFilteredRootIds.has(r.id) && !meaningLinkRootIds.has(r.id)
+      ).length;
 
       const showGenerations = maxGeneration > generationRange.min;
 
       // PIPELINE STAGE 5: Create graph data (nodes and edges)
+      // Temporarily disable Remove Free to calculate q correctly
+      const otherChoicesWithoutRemoveFree = { ...otherChoices, removeFree: false };
       const { data, nodeMax, edgeMax } = renderGraphData(
         rootsFilteredByGeneration,
         mischalfim,
-        otherChoices,
+        otherChoicesWithoutRemoveFree,
         maxNodes,
         maxEdges,
         showGenerations,
         1 // relatedMeaningsThreshold always 1
       );
+      
+      // y = total roots after extra degrees but BEFORE pruning (for prune by grade tooltip)
+      const y = data.nodes.length;
       
       // Log summary before pruning
       // console.log('=== Graph Pipeline Summary ===');
@@ -112,6 +134,7 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
       // PIPELINE STAGE 6: Apply Prune by Grade slider
       // Remove nodes that are NOT linked by BOTH Osios Mischalfos AND requisite meaning grade
       // UNLESS they are in the original grid filter
+      let pruneRemoved = 0; // Number of nodes removed by pruning
       if (pruneByGradeThreshold > 0) {
         // Original grid filter set - these always stay
         const originalGridFilterRootIds = new Set();
@@ -239,13 +262,26 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
         // Filter nodes: only keep valid nodes
         const nodesBeforePruning = data.nodes.length;
         data.nodes = data.nodes.filter((node: any) => validNodeIds.has(node.id));
+        pruneRemoved = nodesBeforePruning - data.nodes.length;
         
         // console.log(`Stage 6 (After Pruning): ${data.nodes.length} nodes (removed ${nodesBeforePruning - data.nodes.length}), ${data.edges.length} edges`);
       } else {
         // console.log(`Stage 6 (Pruning): Skipped (threshold = 0)`);
       }
       
+      // q = roots with no edges (for Remove Free tooltip)
+      // Calculate this after pruning but BEFORE Remove Free is applied
+      // This represents how many nodes would have no edges if Remove Free were NOT checked
+      // Note: renderGraphData was called with removeFree=false, so data still has all nodes
+      const nodesWithEdgesForQ = new Set();
+      data.edges.forEach((edge: any) => {
+        nodesWithEdgesForQ.add(edge.from);
+        nodesWithEdgesForQ.add(edge.to);
+      });
+      const q = data.nodes.filter((node: any) => !nodesWithEdgesForQ.has(node.id)).length;
+      
       // PIPELINE STAGE 7: Apply Remove Free - remove all nodes with no edges
+      // Note: q is calculated above from data that hasn't had Remove Free applied yet
       if (otherChoices.removeFree) {
         const nodesWithEdges = new Set();
         data.edges.forEach((edge: any) => {
@@ -283,6 +319,14 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
             edgeMax,
             generationRange,
             nodeIdToRootId: nodeIdToRootIdArray,
+            tooltipCounts: {
+              n,
+              x,
+              w,
+              y,
+              q,
+              pruneRemoved,
+            },
           },
         };
 
