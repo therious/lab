@@ -12,7 +12,7 @@ import {NotifyWrapper} from "./NotifyWrapper";
 import {Modal} from "./Modal";
 import {RtGridView} from "./RtGridView.jsx";
 import {RtFiles} from "./RtFiles.jsx";
-import {RtStarView} from "./RtStarView.jsx";
+import {RtStarView} from "./RtStarView";
 
 const palette = {
       plum: '#4b54a1',

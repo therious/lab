@@ -10,7 +10,12 @@ type  NodeOptions = {shape:Shape, color:Color};
 type ArrowEndOptions = {enabled:boolean};
 export type EdgeOptions = {color:string, width:number, arrows: {to: ArrowEndOptions, from: ArrowEndOptions}};
 
-type InteractionOptions = {keyboard: {speed: {x:number, y:number, zoom: number}}};
+type InteractionOptions = {
+  keyboard: {speed: {x:number, y:number, zoom: number}};
+  dragNodes?: boolean;
+  dragView?: boolean;
+  zoomView?: boolean;
+};
 type PhysicsOptions = {
   enabled: boolean;
   stabilization?: {
@@ -68,7 +73,10 @@ export const defaultOptions:VisNetworkOptions = {
         y: 10,
         zoom: 0.02
       }
-    }
+    },
+    dragNodes: true, // Allow dragging nodes
+    dragView: true, // Allow panning the view
+    zoomView: true, // Allow zooming
   },
   layout: {
     improvedLayout: true, // Use improved layout algorithm
