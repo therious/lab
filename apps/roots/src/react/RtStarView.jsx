@@ -10,6 +10,7 @@ import {defaultOptions} from "../roots/options";
 import {CheckGroup} from "./CheckGroup";
 import {matchesDefinitionFilter} from "../roots/definitionFilter";
 import {getDictionaryWords, getDictionaryEntry} from "../roots/loadDictionary";
+import {Tooltip} from "./Tooltip";
 
 toRender.graphableRows = roots; // the full list
 const   defaultGraph = {nodes: [], edges: []};
@@ -31,12 +32,14 @@ export const  RtStarView = ()=>{
   const [reset, setReset] = useState(false);
 
   const [maxGeneration, setMaxGeneration] = useState(1);
+  const [localExtraDegrees, setLocalExtraDegrees] = useState(0);
 
   const [graph, setGraph] = useState(defaultGraph);
   const [options, setOptions] = useState(defaultOptions);
   const [isComputing, setIsComputing] = useState(false);
   const [generationRange, setGenerationRange] = useState({ min: 1, max: 1 });
   const [searchTerm, setSearchTerm] = useState('');
+  const [tooltipCounts, setTooltipCounts] = useState({ n: 0, x: 0, w: 0, y: 0, q: 0, pruneRemoved: 0 });
   const workerRef = useRef(null);
   const computationIdRef = useRef(0);
   const debounceTimeoutRef = useRef(null);
@@ -52,6 +55,16 @@ export const  RtStarView = ()=>{
     // Use requestAnimationFrame to ensure non-blocking update
     requestAnimationFrame(() => {
       setMaxGeneration(value);
+    });
+  },[]);
+  
+  const chExtraDegrees = useCallback((evt)=>{
+    const value = Number(evt.target.value);
+    // Shift: 0 = 1, 1 = 2, etc. (value + 1)
+    setLocalExtraDegrees(value);
+    // Update maxGeneration: 0 -> 1, 1 -> 2, etc.
+    requestAnimationFrame(() => {
+      setMaxGeneration(value + 1);
     });
   },[]);
   const chLinkByMeaning = useCallback((evt)=>{
@@ -110,13 +123,18 @@ export const  RtStarView = ()=>{
 
     workerRef.current.onmessage = (e) => {
       if (e.data.type === 'result') {
-        const { computationId, data, nodeMax, edgeMax, generationRange, nodeIdToRootId } = e.data.payload;
+        const { computationId, data, nodeMax, edgeMax, generationRange, nodeIdToRootId, tooltipCounts } = e.data.payload;
         // Only update if this is the latest computation
         if (computationId === computationIdRef.current) {
           // Store the computed data but don't render immediately
-          pendingGraphDataRef.current = { data, generationRange, nodeIdToRootId };
+          pendingGraphDataRef.current = { data, generationRange, nodeIdToRootId, tooltipCounts };
           setIsComputing(false);
           setReset(false);
+          
+          // Update tooltip counts
+          if (tooltipCounts) {
+            setTooltipCounts(tooltipCounts);
+          }
           
           // Store nodeId to rootId mapping (convert from array to Map)
           const mapping = new Map();
@@ -139,6 +157,10 @@ export const  RtStarView = ()=>{
               if (pendingGraphDataRef.current) {
                 setGraph(pendingGraphDataRef.current.data);
                 setGenerationRange(pendingGraphDataRef.current.generationRange);
+                // Update tooltip counts
+                if (pendingGraphDataRef.current.tooltipCounts) {
+                  setTooltipCounts(pendingGraphDataRef.current.tooltipCounts);
+                }
                 // Update mapping
                 const mapping = new Map();
                 if (pendingGraphDataRef.current.nodeIdToRootId && Array.isArray(pendingGraphDataRef.current.nodeIdToRootId)) {
@@ -168,18 +190,15 @@ export const  RtStarView = ()=>{
     };
   }, []);
 
-  // Update max generation when generation range changes (from worker)
+  // Update localExtraDegrees when maxGeneration changes (from other sources)
+  // This keeps the slider in sync if maxGeneration is set elsewhere
   useEffect(() => {
-    if (generationRange.max >= generationRange.min) {
-      setMaxGeneration(prev => {
-        // Only update if current value is outside the new range
-        if (prev < generationRange.min || prev > generationRange.max) {
-          return generationRange.min;
-        }
-        return prev;
-      });
+    // maxGeneration = localExtraDegrees + 1, so localExtraDegrees = maxGeneration - 1
+    const newExtraDegrees = Math.max(0, Math.min(6, maxGeneration - 1));
+    if (newExtraDegrees !== localExtraDegrees) {
+      setLocalExtraDegrees(newExtraDegrees);
     }
-  }, [generationRange]);
+  }, [maxGeneration, localExtraDegrees]);
 
   const renderReset = useCallback(()=>setReset(true),[]);
 
@@ -446,63 +465,103 @@ export const  RtStarView = ()=>{
         <button  onClick={actions.options.clearChoices}>Clear All</button>
         <span style={{marginLeft:'20px', fontWeight:'normal'}}>
           <span style={{marginRight:'15px', display: 'inline-block'}}>
-            <label style={{fontSize: '14px', marginRight: '5px'}}>Link by Meaning:</label>
-            <span style={{marginRight: '5px'}}>6</span>
-            <input 
-              type="range" 
-              min={0} 
-              max={6} 
-              value={6 - linkByMeaningThreshold} 
-              onChange={chLinkByMeaning}
-              style={{width: '120px', margin: '0 5px', verticalAlign: 'middle'}}
-            />
-            <span style={{marginLeft: '5px'}}>0</span>
-            <span style={{marginLeft: '5px', fontSize: '12px'}}>
-              {linkByMeaningThreshold >= 6 ? 'Filtered only' : `Grade ≥ ${linkByMeaningThreshold}`}
-            </span>
-          </span>
-          <span style={{marginRight:'15px', display: 'inline-block'}}>
-            <label style={{fontSize: '14px', marginRight: '5px'}}>Max generation:</label>
-            <input 
-              type="range" 
-              min={generationRange.min} 
-              max={generationRange.max} 
-              value={maxGeneration} 
-              onChange={chMaxGeneration}
-              style={{width: '120px', margin: '0 5px', verticalAlign: 'middle'}}
-            />
-            <span style={{marginLeft: '5px'}}>{maxGeneration} (max: {generationRange.max})</span>
-          </span>
-          <span style={{marginRight:'15px', display: 'inline-block'}}>
-            <label style={{fontSize: '14px', marginRight: '5px'}}>Prune by grade:</label>
-            <span style={{marginRight: '5px'}}>6</span>
-            <input 
-              type="range" 
-              min={0} 
-              max={6} 
-              value={6 - localPruneByGrade} 
-              onChange={chPruneByGrade}
-              style={{width: '120px', margin: '0 5px', verticalAlign: 'middle'}}
-            />
-            <span style={{marginLeft: '5px'}}>0</span>
-            <span style={{marginLeft: '5px', fontSize: '12px'}}>
-              {localPruneByGrade === 0 ? 'Off' : `Grade ≥ ${localPruneByGrade}`}
-            </span>
-          </span>
-          <span style={{marginRight:'15px', display: 'inline-block'}}>
-            <label style={{fontSize: '14px', marginRight: '5px', fontWeight: 'normal'}}>
-              <input
-                type="checkbox"
-                checked={otherChoices.removeFree || false}
-                onChange={(e) => actions.options.chooseOtherOne('removeFree', e.target.checked)}
-                style={{marginRight: '5px'}}
+            <Tooltip content={`Include additional roots (${tooltipCounts.x}) based on meanings similar to roots currently included in the grid filter (${tooltipCounts.n})`}>
+              <label style={{fontSize: '14px', marginRight: '5px', cursor: 'help'}}>Add similar meanings:</label>
+            </Tooltip>
+            <Tooltip content={`Include additional roots (${tooltipCounts.x}) based on meanings similar to roots currently included in the grid filter (${tooltipCounts.n})`}>
+              <input 
+                type="range" 
+                min={0} 
+                max={6} 
+                step={1}
+                value={6 - linkByMeaningThreshold} 
+                onChange={chLinkByMeaning}
+                style={{width: '120px', margin: '0 5px', verticalAlign: 'middle'}}
+                list={`linkByMeaning-ticks`}
               />
-              Remove Free
-            </label>
+            </Tooltip>
+            <datalist id={`linkByMeaning-ticks`}>
+              {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={val} label={val} />)}
+            </datalist>
+            <span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '85px'}}>
+              Grade ≥ {linkByMeaningThreshold}
+            </span>
+          </span>
+          <span style={{marginRight:'15px', display: 'inline-block'}}>
+            <Tooltip content={`Given the roots included by the grid (${tooltipCounts.n}) and the roots with similar meanings (${tooltipCounts.x}) bring in additional roots (${tooltipCounts.w}) that are related according to the checked אותיות מתחלפות criteria`}>
+              <label style={{fontSize: '14px', marginRight: '5px', cursor: 'help'}}>Extra degrees:</label>
+            </Tooltip>
+            <Tooltip content={`Given the roots included by the grid (${tooltipCounts.n}) and the roots with similar meanings (${tooltipCounts.x}) bring in additional roots (${tooltipCounts.w}) that are related according to the checked אותיות מתחלפות criteria`}>
+              <input 
+                type="range" 
+                min={0} 
+                max={6} 
+                step={1}
+                value={localExtraDegrees} 
+                onChange={chExtraDegrees}
+                style={{width: '120px', margin: '0 5px', verticalAlign: 'middle'}}
+                list={`extraDegrees-ticks`}
+              />
+            </Tooltip>
+            <datalist id={`extraDegrees-ticks`}>
+              {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={val} label={val} />)}
+            </datalist>
+            <span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '20px'}}>
+              {localExtraDegrees}
+            </span>
+          </span>
+          <span style={{marginRight:'15px', display: 'inline-block'}}>
+            {(() => {
+              const numMaxWidth = Math.max(
+                String(tooltipCounts.n).length,
+                String(tooltipCounts.x).length,
+                String(tooltipCounts.w).length
+              );
+              const tooltipContent = `Given the ${tooltipCounts.y} total roots now included:\n\n${String(tooltipCounts.n).padStart(numMaxWidth)} included in grid filter\n${String(tooltipCounts.x).padStart(numMaxWidth)} have similar meanings\n${String(tooltipCounts.w).padStart(numMaxWidth)} extra degrees of relation\n\nNow prune out roots (${tooltipCounts.pruneRemoved}) included by previous sliders whose related letter-based connections to other roots in current diagram do not have a sufficiently similar-graded meaning.`;
+              return (
+                <>
+                  <Tooltip content={tooltipContent} maxWidth={700}>
+                    <label style={{fontSize: '14px', marginRight: '5px', cursor: 'help'}}>Prune by grade:</label>
+                  </Tooltip>
+                  <Tooltip content={tooltipContent} maxWidth={700}>
+                    <input 
+                      type="range" 
+                      min={0} 
+                      max={6} 
+                      step={1}
+                      value={6 - localPruneByGrade} 
+                      onChange={chPruneByGrade}
+                      style={{width: '120px', margin: '0 5px', verticalAlign: 'middle'}}
+                      list={`pruneByGrade-ticks`}
+                    />
+                  </Tooltip>
+                </>
+              );
+            })()}
+            <datalist id={`pruneByGrade-ticks`}>
+              {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={val} label={val} />)}
+            </datalist>
+            <span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '85px'}}>
+              Grade ≥ {localPruneByGrade}
+            </span>
+          </span>
+          <span style={{marginRight:'15px', display: 'inline-block'}}>
+            <Tooltip content={`Remove roots (${tooltipCounts.q}) from diagram now left with no surviving connections based on the grid filter and the preceding sliders`}>
+              <label style={{fontSize: '14px', marginRight: '5px', fontWeight: 'normal', cursor: tooltipCounts.q > 0 ? 'help' : 'default', opacity: tooltipCounts.q > 0 ? 1 : 0.5}}>
+                <input
+                  type="checkbox"
+                  checked={otherChoices.removeFree || false}
+                  onChange={(e) => actions.options.chooseOtherOne('removeFree', e.target.checked)}
+                  style={{marginRight: '5px'}}
+                  disabled={tooltipCounts.q === 0}
+                />
+                Remove Free
+              </label>
+            </Tooltip>
           </span>
         </span>
         </h3>
-          <CheckGroup choices={otherChoices} setChoice={actions.options.chooseOtherOne}/>
+          <CheckGroup choices={Object.fromEntries(Object.entries(otherChoices).filter(([k]) => k !== 'removeFree'))} setChoice={actions.options.chooseOtherOne}/>
           <CheckGroup choices={choices} setChoice={actions.options.chooseOne}/>
         </div>
         <hr/>
