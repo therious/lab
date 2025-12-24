@@ -8,6 +8,8 @@ import "vis-network/styles/vis-network.css";
 import {toRender} from "../roots/myvis.js";
 import {defaultOptions} from "../roots/options";
 import {CheckGroup} from "./CheckGroup";
+import {matchesDefinitionFilter} from "../roots/definitionFilter";
+import {getDictionaryWords, getDictionaryEntry} from "../roots/loadDictionary";
 
 toRender.graphableRows = roots; // the full list
 const   defaultGraph = {nodes: [], edges: []};
@@ -34,11 +36,14 @@ export const  RtStarView = ()=>{
   const [options, setOptions] = useState(defaultOptions);
   const [isComputing, setIsComputing] = useState(false);
   const [generationRange, setGenerationRange] = useState({ min: 1, max: 1 });
+  const [searchTerm, setSearchTerm] = useState('');
   const workerRef = useRef(null);
   const computationIdRef = useRef(0);
   const debounceTimeoutRef = useRef(null);
   const pendingGraphDataRef = useRef(null); // Store computed graph data before rendering
   const graphUpdateTimeoutRef = useRef(null);
+  const networkRef = useRef(null); // Reference to vis-network instance
+  const nodeIdToRootIdRef = useRef(new Map()); // Map node IDs to root IDs for search
 
   const chMaxNodes = useCallback((evt)=>{actions.options.setMaxNodes(Number(evt.target.value))},[]);
   const chMaxEdges = useCallback((evt)=>{actions.options.setMaxEdges(Number(evt.target.value))},[]);
@@ -105,13 +110,22 @@ export const  RtStarView = ()=>{
 
     workerRef.current.onmessage = (e) => {
       if (e.data.type === 'result') {
-        const { computationId, data, nodeMax, edgeMax, generationRange } = e.data.payload;
+        const { computationId, data, nodeMax, edgeMax, generationRange, nodeIdToRootId } = e.data.payload;
         // Only update if this is the latest computation
         if (computationId === computationIdRef.current) {
           // Store the computed data but don't render immediately
-          pendingGraphDataRef.current = { data, generationRange };
+          pendingGraphDataRef.current = { data, generationRange, nodeIdToRootId };
           setIsComputing(false);
           setReset(false);
+          
+          // Store nodeId to rootId mapping (convert from array to Map)
+          const mapping = new Map();
+          if (nodeIdToRootId && Array.isArray(nodeIdToRootId)) {
+            nodeIdToRootId.forEach(([nodeId, rootId]) => {
+              mapping.set(nodeId, rootId);
+            });
+          }
+          nodeIdToRootIdRef.current = mapping;
           
           // Clear any pending graph update
           if (graphUpdateTimeoutRef.current) {
@@ -125,6 +139,14 @@ export const  RtStarView = ()=>{
               if (pendingGraphDataRef.current) {
                 setGraph(pendingGraphDataRef.current.data);
                 setGenerationRange(pendingGraphDataRef.current.generationRange);
+                // Update mapping
+                const mapping = new Map();
+                if (pendingGraphDataRef.current.nodeIdToRootId && Array.isArray(pendingGraphDataRef.current.nodeIdToRootId)) {
+                  pendingGraphDataRef.current.nodeIdToRootId.forEach(([nodeId, rootId]) => {
+                    mapping.set(nodeId, rootId);
+                  });
+                }
+                nodeIdToRootIdRef.current = mapping;
                 pendingGraphDataRef.current = null;
               }
             }, 50); // Small delay to batch rapid updates
@@ -234,8 +256,184 @@ export const  RtStarView = ()=>{
     }
   }), []);
 
+  // Update node colors based on search term
+  useEffect(() => {
+    // Use a ref to track if this effect is still valid (not cancelled)
+    let isCancelled = false;
+    
+    const updateNodeColors = () => {
+      if (isCancelled) return;
+      
+    if (!networkRef.current || !graph.nodes || graph.nodes.length === 0) {
+      return;
+    }
+
+      // Check if nodes DataSet is available
+      if (!networkRef.current.body || !networkRef.current.body.data || !networkRef.current.body.data.nodes) {
+        // Retry after a short delay
+        setTimeout(() => {
+          if (!isCancelled) {
+            updateNodeColors();
+          }
+        }, 100);
+        return;
+      }
+
+    const network = networkRef.current;
+    const nodesDataSet = network.body.data.nodes;
+    const updates = [];
+
+    if (!searchTerm || !searchTerm.trim()) {
+      // Clear all colors - reset to default
+      graph.nodes.forEach((node) => {
+        updates.push({
+          id: node.id,
+          color: {
+            background: 'white',
+            border: 'cyan',
+            highlight: {
+              background: 'pink',
+              border: 'red'
+            }
+          }
+        });
+      });
+    } else {
+      // Search through nodes
+      graph.nodes.forEach((node) => {
+        const nodeId = node.id;
+        const rootId = nodeIdToRootIdRef.current.get(nodeId);
+        
+        if (!rootId) {
+          // Reset to default if we can't find the root
+          updates.push({
+            id: nodeId,
+            color: {
+              background: 'white',
+              border: 'cyan',
+              highlight: {
+                background: 'pink',
+                border: 'red'
+              }
+            }
+          });
+          return;
+        }
+
+        // Find root data
+        const root = roots.find(r => r.id === rootId);
+        if (!root) {
+          return;
+        }
+
+        const rootDefinition = root.d || '';
+
+        // Check definition first (faster)
+        const matchesDefinition = matchesDefinitionFilter(rootDefinition, searchTerm);
+        
+        let matchesExamples = false;
+        if (!matchesDefinition) {
+          // Only check examples if definition doesn't match
+          const dictionaryWords = getDictionaryWords(rootId);
+          for (const word of dictionaryWords) {
+            const exampleText = word.e || '';
+            if (matchesDefinitionFilter(exampleText, searchTerm)) {
+              matchesExamples = true;
+              break;
+            }
+          }
+        }
+
+        if (matchesDefinition || matchesExamples) {
+          const matchType = matchesDefinition ? 'definition' : 'example';
+          updates.push({
+            id: nodeId,
+            matchType: matchType, // Store match type for summary
+            color: {
+              background: matchesDefinition ? 'orange' : 'yellow',
+              border: matchesDefinition ? 'darkorange' : 'gold',
+              highlight: {
+                background: matchesDefinition ? 'darkorange' : 'gold',
+                border: matchesDefinition ? 'red' : 'darkgoldenrod'
+              }
+            }
+          });
+        } else {
+          // Reset to default
+          updates.push({
+            id: nodeId,
+            color: {
+              background: 'white',
+              border: 'cyan',
+              highlight: {
+                background: 'pink',
+                border: 'red'
+              }
+            }
+          });
+        }
+      });
+    }
+
+      // Update nodes without re-rendering (non-blocking)
+      // Use DataSet.update() method instead of network.updateNodes()
+      if (updates.length > 0 && !isCancelled) {
+        const matchedUpdates = updates.filter(u => u.color.background !== 'white');
+        // if (matchedUpdates.length > 0) {
+        //   const definitionMatches = matchedUpdates.filter(u => u.matchType === 'definition').map(u => u.id);
+        //   const exampleMatches = matchedUpdates.filter(u => u.matchType === 'example').map(u => u.id);
+        //   console.log(`Search "${searchTerm}": ${matchedUpdates.length} matches (${definitionMatches.length} definition, ${exampleMatches.length} example). Node IDs: definition=[${definitionMatches.join(', ')}], example=[${exampleMatches.join(', ')}]`);
+        // }
+        // Use a small delay to ensure the network is ready
+        requestAnimationFrame(() => {
+          if (isCancelled) return;
+          
+          requestAnimationFrame(() => {
+            if (isCancelled) return;
+            
+            if (networkRef.current && networkRef.current.body && networkRef.current.body.data && networkRef.current.body.data.nodes) {
+            try {
+              const nodesDataSet = networkRef.current.body.data.nodes;
+              // Update each node using DataSet.update()
+              // Batch updates for better performance
+              updates.forEach((update) => {
+                if (!isCancelled) {
+                  // Only pass id and color to vis-network (remove matchType)
+                  const { id, color } = update;
+                  nodesDataSet.update({ id, color });
+                }
+                });
+              } catch (error) {
+                console.error('Error updating nodes:', error);
+              }
+              }
+          });
+        });
+      }
+    };
+    
+    // Start the update process
+    updateNodeColors();
+    
+    // Cleanup function to cancel any pending updates
+    return () => {
+      isCancelled = true;
+    };
+  }, [searchTerm, graph.nodes]);
+
+  // Get network instance via getNetwork prop (if supported) or events
+  const handleGetNetwork = useCallback((network) => {
+    networkRef.current = network;
+  }, []);
+
   const graphing = reset? (<></>):  (<div style={{  backgroundColor: 'midnightblue', height: "100%", width:"100%"}}>
-    <Graph events={events} graph={graph} options={options} style={{  backgroundColor: 'midnightblue'}} />
+    <Graph 
+      events={events} 
+      graph={graph} 
+      options={options} 
+      style={{  backgroundColor: 'midnightblue'}}
+      getNetwork={handleGetNetwork}
+    />
   </div>);
 
 //heading, active, name, choices,  setChoice
@@ -306,6 +504,25 @@ export const  RtStarView = ()=>{
         </h3>
           <CheckGroup choices={otherChoices} setChoice={actions.options.chooseOtherOne}/>
           <CheckGroup choices={choices} setChoice={actions.options.chooseOne}/>
+        </div>
+        <hr/>
+        <div style={{marginBottom: '10px'}}>
+          <label style={{marginRight: '10px'}}>Search nodes:</label>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search definitions and examples (supports |, &, -, &quot;&quot;)"
+            style={{width: '400px', padding: '5px'}}
+          />
+          {searchTerm && (
+            <button 
+              onClick={() => setSearchTerm('')}
+              style={{marginLeft: '10px', padding: '5px 10px'}}
+            >
+              Clear
+            </button>
+          )}
         </div>
         <hr/>
         <label>Maximum number of roots:</label>&nbsp;
