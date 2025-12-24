@@ -1,16 +1,7 @@
 import type { ColDef, ValueGetterParams, ITooltipParams } from 'ag-grid-community';
 import { definitionFilterMatcher } from '../agstuff/DefinitionFilterMatcher';
 import { getRootTooltipSync, getDictionaryWords } from '../roots/loadDictionary';
-
-type RootData = {
-  id: number;
-  r: string;
-  d?: string;
-  P: string;
-  E: string;
-  L: string;
-  examples?: string;
-};
+import type { RootData } from '../roots/types';
 
 type AbbreviatedColDef = {
   f: string; // field
