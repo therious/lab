@@ -3,6 +3,7 @@
  */
 
 import { expandFilteredByMeaning, expandFilteredWithIndirectlyLinkedRoots, renderGraphData } from '../roots/myvis';
+import { matchesDefinitionFilter } from '../roots/definitionFilter';
 
 interface GraphComputeMessage {
   type: 'compute';
@@ -18,6 +19,14 @@ interface GraphComputeMessage {
     maxEdges: number;
     pruneByGradeThreshold: number;
     maxNodesForExpansion: number;
+  };
+}
+
+interface SearchMessage {
+  type: 'search';
+  payload: {
+    searchId: number;
+    searchTerm: string;
   };
 }
 
@@ -41,9 +50,103 @@ interface GraphComputeResult {
   };
 }
 
+// Worker state - maintained between messages
 let currentComputationId = 0;
+let currentSearchId = 0;
+let nodeIdToRootIdMap: Map<number, number> = new Map();
+let allRootsCache: any[] = [];
+let currentNodes: any[] = [];
+let dictionaryCache: Map<number, any> | null = null;
+let dictionaryLoadingPromise: Promise<Map<number, any>> | null = null;
 
-self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
+// Load dictionary data in worker (workers can use fetch)
+async function loadDictionaryInWorker(): Promise<Map<number, any>> {
+  if (dictionaryCache) {
+    return dictionaryCache;
+  }
+
+  if (dictionaryLoadingPromise) {
+    return dictionaryLoadingPromise;
+  }
+
+  dictionaryLoadingPromise = (async () => {
+    try {
+      const paths = [
+        '/root-dictionary-definitions.yaml',
+        './root-dictionary-definitions.yaml',
+      ];
+
+      let response: Response | null = null;
+      for (const yamlPath of paths) {
+        try {
+          response = await fetch(yamlPath);
+          if (response.ok) break;
+        } catch (e) {
+          // Try next path
+        }
+      }
+
+      if (!response || !response.ok) {
+        dictionaryCache = new Map();
+        return dictionaryCache;
+      }
+
+      const fileContent = await response.text();
+      // Use dynamic import for yaml in worker
+      const yaml = await import('js-yaml');
+      const data = yaml.load(fileContent) as { roots: any[] };
+
+      if (!data || !data.roots || !Array.isArray(data.roots)) {
+        dictionaryCache = new Map();
+        return dictionaryCache;
+      }
+
+      dictionaryCache = new Map();
+      data.roots.forEach((entry: any) => {
+        dictionaryCache!.set(entry.id, entry);
+      });
+
+      return dictionaryCache;
+    } catch (error) {
+      console.error('Error loading dictionary in worker:', error);
+      dictionaryCache = new Map();
+      return dictionaryCache;
+    }
+  })();
+
+  return dictionaryLoadingPromise;
+}
+
+// Get dictionary words (synchronous, uses cache)
+function getDictionaryWordsInWorker(rootId: number): any[] {
+  if (!dictionaryCache) {
+    // Trigger async load
+    loadDictionaryInWorker().catch(console.error);
+    return [];
+  }
+  const entry = dictionaryCache.get(rootId);
+  return entry?.eg || [];
+}
+
+// Search result type
+type NodeColor = {
+  background: string;
+  border: string;
+  highlight: {
+    background: string;
+    border: string;
+  };
+};
+
+interface SearchResult {
+  type: 'searchResult';
+  payload: {
+    searchId: number;
+    nodeColors: Array<{ nodeId: number; color: NodeColor }>;
+  };
+}
+
+self.onmessage = function(e: MessageEvent<GraphComputeMessage | SearchMessage>) {
   if (e.data.type === 'compute') {
     const {
       computationId,
@@ -329,10 +432,17 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
       // Build nodeId to rootId mapping for search functionality
       // Convert Map to array for serialization (Maps can't be sent via postMessage)
       const nodeIdToRootIdArray: [number, number][] = [];
+      const nodeIdToRootIdMapLocal = new Map<number, number>();
       rootsFilteredByGeneration.forEach((root: any, index: number) => {
         const nodeId = index + 1; // populateNodes uses index + 1
         nodeIdToRootIdArray.push([nodeId, root.id]);
+        nodeIdToRootIdMapLocal.set(nodeId, root.id);
       });
+
+      // Update worker state for search functionality
+      nodeIdToRootIdMap = nodeIdToRootIdMapLocal;
+      allRootsCache = allRoots;
+      currentNodes = data.nodes;
 
       // Only send result if this is still the current computation
       if (currentComputationId === computationId) {
@@ -364,6 +474,147 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
         payload: { error: error.message || String(error) },
       });
     }
+  } else if (e.data.type === 'search') {
+    const { searchId, searchTerm } = e.data.payload;
+    
+    // Update current search ID - if a new search comes in, we'll ignore old results
+    currentSearchId = searchId;
+
+    // Ensure dictionary is loaded before searching
+    loadDictionaryInWorker().then(() => {
+      // Only proceed if this is still the current search
+      if (currentSearchId !== searchId) return;
+
+      try {
+        const nodeColors: Array<{ nodeId: number; color: NodeColor }> = [];
+
+      if (!searchTerm || !searchTerm.trim()) {
+        // Clear all colors - reset to default
+        currentNodes.forEach((node: any) => {
+          nodeColors.push({
+            nodeId: node.id,
+            color: {
+              background: 'white',
+              border: 'cyan',
+              highlight: {
+                background: 'pink',
+                border: 'red'
+              }
+            }
+          });
+        });
+      } else {
+        // Search through nodes
+        const trimmedSearchTerm = searchTerm.trim();
+        
+        currentNodes.forEach((node: any) => {
+          const nodeId = node.id;
+          const rootId = nodeIdToRootIdMap.get(nodeId);
+
+          if (!rootId) {
+            // Reset to default if we can't find the root
+            nodeColors.push({
+              nodeId,
+              color: {
+                background: 'white',
+                border: 'cyan',
+                highlight: {
+                  background: 'pink',
+                  border: 'red'
+                }
+              }
+            });
+            return;
+          }
+
+          // Find root data
+          const root = allRootsCache.find((r: any) => r.id === rootId);
+          if (!root) {
+            nodeColors.push({
+              nodeId,
+              color: {
+                background: 'white',
+                border: 'cyan',
+                highlight: {
+                  background: 'pink',
+                  border: 'red'
+                }
+              }
+            });
+            return;
+          }
+
+          const rootDefinition = root.d || '';
+
+          // Check definition first (faster)
+          const matchesDefinition = matchesDefinitionFilter(rootDefinition, trimmedSearchTerm);
+
+          let matchesExamples = false;
+          if (!matchesDefinition) {
+            // Only check examples if definition doesn't match
+            const dictionaryWords = getDictionaryWordsInWorker(rootId);
+            for (const word of dictionaryWords) {
+              const exampleText = word.e || '';
+              if (matchesDefinitionFilter(exampleText, trimmedSearchTerm)) {
+                matchesExamples = true;
+                break;
+              }
+            }
+          }
+
+          if (matchesDefinition || matchesExamples) {
+            nodeColors.push({
+              nodeId,
+              color: {
+                background: matchesDefinition ? 'orange' : 'yellow',
+                border: matchesDefinition ? 'darkorange' : 'gold',
+                highlight: {
+                  background: matchesDefinition ? 'darkorange' : 'gold',
+                  border: matchesDefinition ? 'red' : 'darkgoldenrod'
+                }
+              }
+            });
+          } else {
+            // Reset to default
+            nodeColors.push({
+              nodeId,
+              color: {
+                background: 'white',
+                border: 'cyan',
+                highlight: {
+                  background: 'pink',
+                  border: 'red'
+                }
+              }
+            });
+          }
+        });
+      }
+
+        // Only send result if this is still the current search
+        if (currentSearchId === searchId) {
+          const result: SearchResult = {
+            type: 'searchResult',
+            payload: {
+              searchId,
+              nodeColors,
+            },
+          };
+
+          self.postMessage(result);
+        }
+      } catch (error: any) {
+        self.postMessage({
+          type: 'error',
+          payload: { error: error.message || String(error) },
+        });
+      }
+    }).catch((error: any) => {
+      self.postMessage({
+        type: 'error',
+        payload: { error: error.message || String(error) },
+      });
+    });
   }
 };
 
