@@ -10,7 +10,7 @@
  * Handles: spaces (ignored unless in quotes), double quotes (word boundaries),
  *          operators: |, &, -, AND, OR, NOT, parentheses
  */
-function tokenize(expression) {
+export function tokenize(expression) {
     if (!expression || !expression.trim()) return [];
     
     const tokens = [];
@@ -99,7 +99,7 @@ function tokenize(expression) {
  * Uses recursive descent parsing
  * Handles: AND, OR, NOT (negation), parentheses, quoted strings
  */
-function parse(tokens) {
+export function parse(tokens) {
     let index = 0;
     
     function parseExpression() {
@@ -225,7 +225,7 @@ function matchQuoted(phrase, text) {
 /**
  * Evaluates the AST against a text value
  */
-function evaluate(ast, text) {
+export function evaluate(ast, text) {
     if (!text) text = '';
     const lowerText = text.toLowerCase();
     

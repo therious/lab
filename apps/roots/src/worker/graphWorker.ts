@@ -28,6 +28,7 @@ interface GraphComputeResult {
     nodeMax: number;
     edgeMax: number;
     generationRange: { min: number; max: number };
+    nodeIdToRootId: [number, number][]; // Array of [nodeId, rootId] tuples for search (serializable)
   };
 }
 
@@ -101,12 +102,12 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
       );
       
       // Log summary before pruning
-      console.log('=== Graph Pipeline Summary ===');
-      console.log(`Stage 1 (Grid Filtered): ${gridFilteredRoots.length} roots`);
-      console.log(`Stage 2 (With Meaning Links): ${rootsWithMeaningLinks.length} roots`);
-      console.log(`Stage 3 (With Letter Links): ${rootsWithLetterLinks.length} roots`);
-      console.log(`Stage 4 (Filtered by Generation): ${rootsFilteredByGeneration.length} roots`);
-      console.log(`Stage 5 (Graph Data): ${data.nodes.length} nodes, ${data.edges.length} edges`);
+      // console.log('=== Graph Pipeline Summary ===');
+      // console.log(`Stage 1 (Grid Filtered): ${gridFilteredRoots.length} roots`);
+      // console.log(`Stage 2 (With Meaning Links): ${rootsWithMeaningLinks.length} roots`);
+      // console.log(`Stage 3 (With Letter Links): ${rootsWithLetterLinks.length} roots`);
+      // console.log(`Stage 4 (Filtered by Generation): ${rootsFilteredByGeneration.length} roots`);
+      // console.log(`Stage 5 (Graph Data): ${data.nodes.length} nodes, ${data.edges.length} edges`);
 
       // PIPELINE STAGE 6: Apply Prune by Grade slider
       // Remove nodes that are NOT linked by BOTH Osios Mischalfos AND requisite meaning grade
@@ -239,9 +240,9 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
         const nodesBeforePruning = data.nodes.length;
         data.nodes = data.nodes.filter((node: any) => validNodeIds.has(node.id));
         
-        console.log(`Stage 6 (After Pruning): ${data.nodes.length} nodes (removed ${nodesBeforePruning - data.nodes.length}), ${data.edges.length} edges`);
+        // console.log(`Stage 6 (After Pruning): ${data.nodes.length} nodes (removed ${nodesBeforePruning - data.nodes.length}), ${data.edges.length} edges`);
       } else {
-        console.log(`Stage 6 (Pruning): Skipped (threshold = 0)`);
+        // console.log(`Stage 6 (Pruning): Skipped (threshold = 0)`);
       }
       
       // PIPELINE STAGE 7: Apply Remove Free - remove all nodes with no edges
@@ -255,13 +256,21 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
         const nodesBeforeRemoveFree = data.nodes.length;
         data.nodes = data.nodes.filter((node: any) => nodesWithEdges.has(node.id));
         
-        console.log(`Stage 7 (Remove Free): ${data.nodes.length} nodes (removed ${nodesBeforeRemoveFree - data.nodes.length} unlinked nodes)`);
+        // console.log(`Stage 7 (Remove Free): ${data.nodes.length} nodes (removed ${nodesBeforeRemoveFree - data.nodes.length} unlinked nodes)`);
       } else {
-        console.log(`Stage 7 (Remove Free): Skipped`);
+        // console.log(`Stage 7 (Remove Free): Skipped`);
       }
       
       // Final summary
-      console.log(`=== Final Graph: ${data.nodes.length} nodes, ${data.edges.length} edges ===`);
+      // console.log(`=== Final Graph: ${data.nodes.length} nodes, ${data.edges.length} edges ===`);
+
+      // Build nodeId to rootId mapping for search functionality
+      // Convert Map to array for serialization (Maps can't be sent via postMessage)
+      const nodeIdToRootIdArray: [number, number][] = [];
+      rootsFilteredByGeneration.forEach((root: any, index: number) => {
+        const nodeId = index + 1; // populateNodes uses index + 1
+        nodeIdToRootIdArray.push([nodeId, root.id]);
+      });
 
       // Only send result if this is still the current computation
       if (currentComputationId === computationId) {
@@ -273,6 +282,7 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
             nodeMax,
             edgeMax,
             generationRange,
+            nodeIdToRootId: nodeIdToRootIdArray,
           },
         };
 

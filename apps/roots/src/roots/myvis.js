@@ -51,7 +51,21 @@ function populateNodes(roots, nodeMax, showGenerations = false)
     return roots.slice(0, max).map((o,i)=>{
         // Use dictionary tooltip with example words
         const tooltip = getRootTooltipSync(o.id, o.d || '');
-        const node = {id:i+1, label:o.r, title:tooltip};
+        // Format: rootId: definition (then examples if available)
+        const rootId = o.id;
+        const definition = o.d || '';
+        // getRootTooltipSync returns "definition\n\nExample words:\n..." if examples exist, or just "definition" if not
+        // We want: "rootId: definition\n\nExample words:\n..." or just "rootId: definition"
+        let tooltipWithId;
+        if (tooltip === definition) {
+            // No examples, just definition
+            tooltipWithId = `${rootId}: ${definition}`;
+        } else {
+            // Has examples, replace the definition part with "rootId: definition"
+            tooltipWithId = tooltip.replace(definition, `${rootId}: ${definition}`);
+        }
+        const nodeId = i + 1;
+        const node = {id:nodeId, label:o.r, title:tooltipWithId};
 
         // If generation info is available and we should show it, add it to the label
         if (showGenerations && o.generation !== undefined) {
@@ -227,7 +241,7 @@ function populateEdges(roots, hardMax, edgeMax, relatedMeaningsThreshold = 6) {
    edgeCount = 0;
 
 
-  console.log('populate edges: hardMax', hardMax);
+  // console.log('populate edges: hardMax', hardMax);
     for (let i = 0, len = hardMax; i < len; ++i) {
         const src = roots[i];
         for(let j = 0, mlen = hardMax; j < mlen; ++j)
@@ -502,7 +516,7 @@ export function expandFilteredWithIndirectlyLinkedRoots(filteredRoots, allRoots,
         }
 
         if (iteration >= maxIterations) {
-            console.warn('expandFilteredWithIndirectlyLinkedRoots: Reached max iterations limit');
+            // console.warn('expandFilteredWithIndirectlyLinkedRoots: Reached max iterations limit');
         }
 
         // Return as array, maintaining order: filtered roots first, then newly linked roots
