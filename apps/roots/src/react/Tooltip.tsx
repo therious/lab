@@ -7,7 +7,7 @@ import React, { useState, useRef, useEffect, ReactNode, CSSProperties } from 're
  */
 type TooltipProps = {
   children: ReactNode;
-  content: string | null | undefined;
+  content: string | ReactNode | null | undefined;
   style?: CSSProperties;
   maxWidth?: number;
 };
@@ -24,12 +24,13 @@ export function Tooltip({ children, content, style = {}, maxWidth = 350 }: Toolt
     return <>{children}</>;
   }
 
-  // Format content - if it contains newlines, format as multi-line
+  // Format content - if it's a string with newlines, format as multi-line
+  // If it's already ReactNode, use it as-is
   const formattedContent: ReactNode = typeof content === 'string' 
-    ? content.split('\n').map((line, i) => (
+    ? content.split('\n').map((line, i, lines) => (
         <React.Fragment key={i}>
           {line}
-          {i < content.split('\n').length - 1 && <br />}
+          {i < lines.length - 1 && <br />}
         </React.Fragment>
       ))
     : content;

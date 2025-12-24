@@ -1,15 +1,14 @@
-import React, {useCallback, useEffect, useState, useMemo, useRef} from 'react';
+import React, {ReactNode, useCallback, useEffect, useState, useMemo, useRef} from 'react';
 import {actions} from "../actions-integration";
-import {selectors} from "../actions/selectors";
 import {useSelector} from "../actions-integration";
 import {roots} from '../roots/roots';
 import Graph from "react-vis-graph-wrapper";
 import "vis-network/styles/vis-network.css";
 import {toRender} from "../roots/myvis.js";
-import {defaultOptions, type VisNetworkOptions} from "../roots/options";
+import {defaultOptions} from "../roots/options";
 import {CheckGroup} from "./CheckGroup";
 import {matchesDefinitionFilter} from "../roots/definitionFilter";
-import {getDictionaryWords, getDictionaryEntry} from "../roots/loadDictionary";
+import {getDictionaryWords} from "../roots/loadDictionary";
 import {Tooltip} from "./Tooltip";
 import {MAX_NODES_FOR_EXPANSION} from "../roots/constants";
 
@@ -84,7 +83,7 @@ interface VisNetworkInstance {
   };
 }
 
-type WorkerMessage = 
+type WorkerMessage =
   | { type: 'result'; payload: { computationId: number; data: GraphData; nodeMax: number; edgeMax: number; generationRange: GenerationRange; nodeIdToRootId: [number, number][]; tooltipCounts: TooltipCounts } }
   | { type: 'error'; payload: { error: unknown } };
 
@@ -102,6 +101,47 @@ const defaultGraph: GraphData = {nodes: [], edges: []};
 
 
 
+
+// Reusable slider component with optional tooltip
+type SliderWithTooltipProps = {
+  label: string;
+  tooltipContent: string | ReactNode | null;
+  tooltipMaxWidth?: number;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (evt: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
+  ticksId: string;
+  valueDisplay?: ReactNode;
+};
+
+const SliderWithTooltip = ({ label, tooltipContent, tooltipMaxWidth, value, min, max, step, onChange, disabled, ticksId, valueDisplay }: SliderWithTooltipProps): JSX.Element => {
+  const slider = (
+    <span>
+      <label style={{fontSize: '14px', marginRight: '5px', cursor: tooltipContent ? 'help' : 'default', opacity: disabled ? 0.5 : 1}}>{label}</label>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={String(value)}
+        onChange={onChange}
+        disabled={disabled}
+        style={{width: '120px', margin: '0 5px', verticalAlign: 'middle', opacity: disabled ? 0.5 : 1}}
+        list={ticksId}
+      />
+      {valueDisplay}
+    </span>
+  );
+
+  return tooltipContent ? (
+    <Tooltip content={tooltipContent} maxWidth={tooltipMaxWidth}>
+      {slider}
+    </Tooltip>
+  ) : slider;
+};
 
 export const RtStarView = (): JSX.Element => {
 
@@ -130,7 +170,7 @@ export const RtStarView = (): JSX.Element => {
   const chMaxEdges = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
     actions.options.setMaxEdges(Number(evt.target.value));
   }, []);
-  
+
   const chMaxGeneration = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
     const value = Number(evt.target.value);
     // Use requestAnimationFrame to ensure non-blocking update
@@ -138,7 +178,7 @@ export const RtStarView = (): JSX.Element => {
       setMaxGeneration(value);
     });
   }, []);
-  
+
   const chExtraDegrees = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
     const value = Number(evt.target.value);
     // Shift: 0 = 1, 1 = 2, etc. (value + 1)
@@ -148,7 +188,7 @@ export const RtStarView = (): JSX.Element => {
       setMaxGeneration(value + 1);
     });
   }, []);
-  
+
   const chLinkByMeaning = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
     const sliderValue = Number(evt.target.value);
     const threshold = 6 - sliderValue; // Reverse: slider 0 = threshold 6, slider 6 = threshold 0
@@ -157,31 +197,31 @@ export const RtStarView = (): JSX.Element => {
       actions.options.setLinkByMeaningThreshold(threshold);
     });
   }, []);
-  
+
   // Local state for immediate slider updates (non-blocking)
   const [localPruneByGrade, setLocalPruneByGrade] = useState<number>(pruneByGradeThreshold);
   const pruneSyncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Sync local state to Redux with debounce (only when user stops dragging)
   useEffect(() => {
     if (pruneSyncTimeoutRef.current) {
       clearTimeout(pruneSyncTimeoutRef.current);
     }
-    
+
     if (localPruneByGrade !== pruneByGradeThreshold) {
       // Debounce Redux update - only update after user stops dragging
       pruneSyncTimeoutRef.current = setTimeout(() => {
         actions.options.setPruneByGradeThreshold(localPruneByGrade);
       }, 300); // 300ms after last change
     }
-    
+
     return () => {
       if (pruneSyncTimeoutRef.current) {
         clearTimeout(pruneSyncTimeoutRef.current);
       }
     };
   }, [localPruneByGrade, pruneByGradeThreshold]);
-  
+
   // Sync Redux state to local when it changes externally (but not from our own updates)
   useEffect(() => {
     // Only sync if the difference is significant (to avoid loops)
@@ -189,14 +229,14 @@ export const RtStarView = (): JSX.Element => {
       setLocalPruneByGrade(pruneByGradeThreshold);
     }
   }, [pruneByGradeThreshold]);
-  
+
   const chPruneByGrade = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
     const sliderValue = Number(evt.target.value);
     const threshold = 6 - sliderValue; // Reverse: slider 0 = threshold 6, slider 6 = threshold 0
     // Update local state immediately (non-blocking, no Redux update yet)
     setLocalPruneByGrade(threshold);
   }, []);
-  
+
   // Initialize worker
   useEffect(() => {
     workerRef.current = new Worker(
@@ -212,12 +252,12 @@ export const RtStarView = (): JSX.Element => {
           // Store the computed data but don't render immediately
           pendingGraphDataRef.current = { data, generationRange, nodeIdToRootId, tooltipCounts };
           setIsComputing(false);
-          
+
           // Update tooltip counts
           if (tooltipCounts) {
             setTooltipCounts(tooltipCounts);
           }
-          
+
           // Store nodeId to rootId mapping (convert from array to Map)
           const mapping = new Map<number, number>();
           if (nodeIdToRootId && Array.isArray(nodeIdToRootId)) {
@@ -226,12 +266,12 @@ export const RtStarView = (): JSX.Element => {
             });
           }
           nodeIdToRootIdRef.current = mapping;
-          
+
           // Clear any pending graph update
           if (graphUpdateTimeoutRef.current) {
             clearTimeout(graphUpdateTimeoutRef.current);
           }
-          
+
           // Update graph visualization with throttling using requestAnimationFrame
           // This batches updates and prevents blocking during rapid slider changes
           requestAnimationFrame(() => {
@@ -290,7 +330,7 @@ export const RtStarView = (): JSX.Element => {
 
     // Assert non-null: workerRef.current is guaranteed to be set when this runs
     const worker = workerRef.current!;
-    
+
     setIsComputing(true);
     // Note: computationIdRef.current is incremented in the useEffect before calling this
 
@@ -320,13 +360,13 @@ export const RtStarView = (): JSX.Element => {
     // Assert non-null: workerRef.current is guaranteed to be set when this runs
     // Cancel previous computation by incrementing ID immediately
     computationIdRef.current += 1;
-    
+
     // Clear any pending timeout
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
       debounceTimeoutRef.current = null;
     }
-    
+
     // Use requestAnimationFrame to ensure we're not blocking the UI thread
     // Then set a timeout for the actual computation
     requestAnimationFrame(() => {
@@ -334,7 +374,7 @@ export const RtStarView = (): JSX.Element => {
         computeGraph();
       }, 100); // 100ms debounce - enough to batch rapid changes
     });
-    
+
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
@@ -342,7 +382,7 @@ export const RtStarView = (): JSX.Element => {
       }
     };
   }, [maxGeneration, linkByMeaningThreshold, localPruneByGrade, maxEdges, computeGraph]);
-  
+
 
   const events = useMemo<GraphEvents>(() => ({
     select: ({ nodes, edges }: { nodes: number[]; edges: number[] }): void => {
@@ -357,10 +397,10 @@ export const RtStarView = (): JSX.Element => {
   useEffect(() => {
     // Use a ref to track if this effect is still valid (not cancelled)
     let isCancelled = false;
-    
+
     const updateNodeColors = (): void => {
       if (isCancelled) return;
-      
+
       if (!graph.nodes || graph.nodes.length === 0) {
         return;
       }
@@ -402,7 +442,7 @@ export const RtStarView = (): JSX.Element => {
       graph.nodes.forEach((node: GraphNode) => {
         const nodeId = node.id;
         const rootId = nodeIdToRootIdRef.current.get(nodeId);
-        
+
         if (!rootId) {
           // Reset to default if we can't find the root
           updates.push({
@@ -429,7 +469,7 @@ export const RtStarView = (): JSX.Element => {
 
         // Check definition first (faster)
         const matchesDefinition = matchesDefinitionFilter(rootDefinition, searchTerm);
-        
+
         let matchesExamples = false;
         if (!matchesDefinition) {
           // Only check examples if definition doesn't match
@@ -486,10 +526,10 @@ export const RtStarView = (): JSX.Element => {
         // Use a small delay to ensure the network is ready
         requestAnimationFrame(() => {
           if (isCancelled) return;
-          
+
           requestAnimationFrame(() => {
             if (isCancelled) return;
-            
+
             // Assert non-null: networkRef.current is guaranteed to be set when this runs
             try {
               const nodesDataSet = networkRef.current!.body.data.nodes;
@@ -509,10 +549,10 @@ export const RtStarView = (): JSX.Element => {
         });
       }
     };
-    
+
     // Start the update process
     updateNodeColors();
-    
+
     // Cleanup function to cancel any pending updates
     return () => {
       isCancelled = true;
@@ -525,10 +565,10 @@ export const RtStarView = (): JSX.Element => {
   }, []);
 
   const graphing = (<div style={{  backgroundColor: 'midnightblue', height: "100%", width:"100%"}}>
-    <Graph 
-      events={events} 
-      graph={graph} 
-      options={defaultOptions} 
+    <Graph
+      events={events}
+      graph={graph}
+      options={defaultOptions}
       style={{  backgroundColor: 'midnightblue'}}
       getNetwork={handleGetNetwork}
     />
@@ -544,52 +584,39 @@ export const RtStarView = (): JSX.Element => {
         <button  onClick={actions.options.clearChoices}>Clear All</button>
         <span style={{marginLeft:'20px', fontWeight:'normal'}}>
           <span style={{marginRight:'15px', display: 'inline-block'}}>
-            <Tooltip content={shouldDisableExpansion ? `Disabled: ${tooltipCounts.n} filtered roots exceeds ${MAX_NODES_FOR_EXPANSION} node limit for expansion operations` : `Include additional roots (${tooltipCounts.x}) based on meanings similar to roots currently included in the grid filter (${tooltipCounts.n})`}>
-              <label style={{fontSize: '14px', marginRight: '5px', cursor: 'help', opacity: shouldDisableExpansion ? 0.5 : 1}}>Add similar meanings:</label>
-            </Tooltip>
-            <Tooltip content={shouldDisableExpansion ? `Disabled: ${tooltipCounts.n} filtered roots exceeds ${MAX_NODES_FOR_EXPANSION} node limit for expansion operations` : `Include additional roots (${tooltipCounts.x}) based on meanings similar to roots currently included in the grid filter (${tooltipCounts.n})`}>
-              <input 
-                type="range" 
-                min={0} 
-                max={6} 
-                step={1}
-                value={6 - linkByMeaningThreshold} 
-                onChange={chLinkByMeaning}
-                disabled={shouldDisableExpansion}
-                style={{width: '120px', margin: '0 5px', verticalAlign: 'middle', opacity: shouldDisableExpansion ? 0.5 : 1}}
-                list={`linkByMeaning-ticks`}
-              />
-            </Tooltip>
-            <datalist id={`linkByMeaning-ticks`}>
+            <SliderWithTooltip
+              label="Add similar meanings:"
+              tooltipContent={shouldDisableExpansion ? null : `Include additional roots (${tooltipCounts.x}) based on meanings similar to roots currently included in the grid filter (${tooltipCounts.n})`}
+              value={6 - linkByMeaningThreshold}
+              min={0}
+              max={6}
+              step={1}
+              onChange={chLinkByMeaning}
+              disabled={shouldDisableExpansion}
+              ticksId="linkByMeaning-ticks"
+              valueDisplay={<span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '85px'}}>Grade ≥ {linkByMeaningThreshold}</span>}
+            />
+            <datalist id="linkByMeaning-ticks">
               {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={String(val)} label={String(val)} />)}
             </datalist>
-            <span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '85px'}}>
-              Grade ≥ {linkByMeaningThreshold}
-            </span>
           </span>
           <span style={{marginRight:'15px', display: 'inline-block'}}>
-            <Tooltip content={shouldDisableExpansion ? `Disabled: ${tooltipCounts.n} filtered roots exceeds ${MAX_NODES_FOR_EXPANSION} node limit for expansion operations` : `Given the roots included by the grid (${tooltipCounts.n}) and the roots with similar meanings (${tooltipCounts.x}) bring in additional roots (${tooltipCounts.w}) that are related according to the checked אותיות מתחלפות criteria`}>
-              <label style={{fontSize: '14px', marginRight: '5px', cursor: 'help', opacity: shouldDisableExpansion ? 0.5 : 1}}>Extra degrees:</label>
-            </Tooltip>
-            <Tooltip content={shouldDisableExpansion ? `Disabled: ${tooltipCounts.n} filtered roots exceeds ${MAX_NODES_FOR_EXPANSION} node limit for expansion operations` : `Given the roots included by the grid (${tooltipCounts.n}) and the roots with similar meanings (${tooltipCounts.x}) bring in additional roots (${tooltipCounts.w}) that are related according to the checked אותיות מתחלפות criteria`}>
-              <input 
-                type="range" 
-                min={0} 
-                max={6} 
-                step={1}
-                value={String(localExtraDegrees)} 
-                onChange={chExtraDegrees}
-                disabled={shouldDisableExpansion}
-                style={{width: '120px', margin: '0 5px', verticalAlign: 'middle', opacity: shouldDisableExpansion ? 0.5 : 1}}
-                list={`extraDegrees-ticks`}
-              />
-            </Tooltip>
-            <datalist id={`extraDegrees-ticks`}>
+            <SliderWithTooltip
+              label="Extra degrees:"
+              tooltipContent={shouldDisableExpansion ? null : <>Given the roots included by the grid ({tooltipCounts.n}) and the roots with similar meanings ({tooltipCounts.x}) bring in additional roots ({tooltipCounts.w}) that are related according to the enabled <span style={{ fontSize: '1.' +
+               '25em', fontWeight: 'bolder'}}>אותיות מתחלפות</span> criteria</>}
+              value={localExtraDegrees}
+              min={0}
+              max={6}
+              step={1}
+              onChange={chExtraDegrees}
+              disabled={shouldDisableExpansion}
+              ticksId="extraDegrees-ticks"
+              valueDisplay={<span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '20px'}}>{localExtraDegrees}</span>}
+            />
+            <datalist id="extraDegrees-ticks">
               {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={String(val)} label={String(val)} />)}
             </datalist>
-            <span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '20px'}}>
-              {localExtraDegrees}
-            </span>
           </span>
           <span style={{marginRight:'15px', display: 'inline-block'}}>
             {(() => {
@@ -598,28 +625,35 @@ export const RtStarView = (): JSX.Element => {
                 String(tooltipCounts.x).length,
                 String(tooltipCounts.w).length
               );
-              const tooltipContent = shouldDisableExpansion 
-                ? `Disabled: ${tooltipCounts.n} filtered roots exceeds ${MAX_NODES_FOR_EXPANSION} node limit for expansion operations`
-                : `Given the ${tooltipCounts.y} total roots now included:\n\n${String(tooltipCounts.n).padStart(numMaxWidth)} included in grid filter\n${String(tooltipCounts.x).padStart(numMaxWidth)} have similar meanings\n${String(tooltipCounts.w).padStart(numMaxWidth)} extra degrees of relation\n\nNow prune out roots (${tooltipCounts.pruneRemoved}) included by previous sliders whose related letter-based connections to other roots in current diagram do not have a sufficiently similar-graded meaning.`;
-              return (
+              const tooltipContent = shouldDisableExpansion ? null : (
                 <>
-                  <Tooltip content={tooltipContent} maxWidth={700}>
-                    <label style={{fontSize: '14px', marginRight: '5px', cursor: 'help', opacity: shouldDisableExpansion ? 0.5 : 1}}>Prune by grade:</label>
-                  </Tooltip>
-                  <Tooltip content={tooltipContent} maxWidth={700}>
-                    <input 
-                      type="range" 
-                      min={0} 
-                      max={6} 
-                      step={1}
-                      value={String(6 - localPruneByGrade)} 
-                      onChange={chPruneByGrade}
-                      disabled={shouldDisableExpansion}
-                      style={{width: '120px', margin: '0 5px', verticalAlign: 'middle', opacity: shouldDisableExpansion ? 0.5 : 1}}
-                      list={`pruneByGrade-ticks`}
-                    />
-                  </Tooltip>
+                  Given the {tooltipCounts.y} total roots now included:
+                  <br />
+                  <br />
+                  {String(tooltipCounts.n).padStart(numMaxWidth)} included in grid filter
+                  <br />
+                  {String(tooltipCounts.x).padStart(numMaxWidth)} have similar meanings
+                  <br />
+                  {String(tooltipCounts.w).padStart(numMaxWidth)} extra degrees of relation
+                  <br />
+                  <br />
+                  Now prune out roots ({tooltipCounts.pruneRemoved}) included by previous sliders whose related letter-based connections to other roots in current diagram do not have a sufficiently similar-graded meaning.
                 </>
+              );
+              return (
+                <SliderWithTooltip
+                  label="Prune by grade:"
+                  tooltipContent={tooltipContent}
+                  tooltipMaxWidth={700}
+                  value={6 - localPruneByGrade}
+                  min={0}
+                  max={6}
+                  step={1}
+                  onChange={chPruneByGrade}
+                  disabled={shouldDisableExpansion}
+                  ticksId="pruneByGrade-ticks"
+                  valueDisplay={<span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '85px'}}>Grade ≥ {localPruneByGrade}</span>}
+                />
               );
             })()}
             <datalist id={`pruneByGrade-ticks`}>
@@ -659,7 +693,7 @@ export const RtStarView = (): JSX.Element => {
             style={{width: '400px', padding: '5px'}}
           />
           {searchTerm && (
-            <button 
+            <button
               onClick={() => setSearchTerm('')}
               style={{marginLeft: '10px', padding: '5px 10px'}}
             >
