@@ -12,6 +12,12 @@ import {getDictionaryWords} from "../roots/loadDictionary";
 import {Tooltip} from "./Tooltip";
 import {MAX_NODES_FOR_EXPANSION} from "../roots/constants";
 
+// Hebrew text style for tooltips
+const hebrewTextStyle: React.CSSProperties = {
+  fontSize: '1.25em',
+  fontWeight: 'bolder'
+};
+
 // Type definitions
 type Root = {
   id: number;
@@ -579,7 +585,10 @@ export const RtStarView = (): JSX.Element => {
       <div key={`${graph.nodes.length}-${graph.edges.length}`} style={{marginTop:'30px'}}>
         <h1>Star view</h1>
         <div style={{ paddingBottom: '10px'}}>
-        <h3 style={{marginLeft:'14px', display:'inline'}}>Osios Mischalfos
+        <h3 style={{marginLeft:'14px', display:'inline'}}>
+          <Tooltip content={<>Osios Mischalfos (<span style={hebrewTextStyle}>אותיות מתחלפות</span>) are groups of Hebrew letters that can substitute for each other. When a root has one letter replaced with a related letter from the same group, it often produces a related meaning. These relationships are used to link roots together in the visualization.</>}>
+            <span style={{cursor: 'help'}}>Osios Mischalfos</span>
+          </Tooltip>
         <button  onClick={actions.options.allChoices}>Select All</button>
         <button  onClick={actions.options.clearChoices}>Clear All</button>
         <span style={{marginLeft:'20px', fontWeight:'normal'}}>
@@ -603,8 +612,7 @@ export const RtStarView = (): JSX.Element => {
           <span style={{marginRight:'15px', display: 'inline-block'}}>
             <SliderWithTooltip
               label="Extra degrees:"
-              tooltipContent={shouldDisableExpansion ? null : <>Given the roots included by the grid ({tooltipCounts.n}) and the roots with similar meanings ({tooltipCounts.x}) bring in additional roots ({tooltipCounts.w}) that are related according to the enabled <span style={{ fontSize: '1.' +
-               '25em', fontWeight: 'bolder'}}>אותיות מתחלפות</span> criteria</>}
+              tooltipContent={shouldDisableExpansion ? null : <>Given the roots included by the grid ({tooltipCounts.n}) and the roots with similar meanings ({tooltipCounts.x}) bring in additional roots ({tooltipCounts.w}) that are related according to the enabled <span style={hebrewTextStyle}>אותיות מתחלפות</span> criteria</>}
               value={localExtraDegrees}
               min={0}
               max={6}
