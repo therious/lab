@@ -1,17 +1,15 @@
-import React, {useCallback, useEffect} from 'react';
+import React, {useEffect} from 'react';
 import { Route, Routes, NavLink, useLocation } from "react-router-dom"
 
 import styled from 'styled-components';
 
 import {actions, useSelector} from '../actions-integration';
-import {JSONTree} from 'react-json-tree';
 
 import {SnackbarProvider} from "notistack";
 
 import {NotifyWrapper} from "./NotifyWrapper";
 import {Modal} from "./Modal";
 import {RtGridView} from "./RtGridView.jsx";
-import {RtFiles} from "./RtFiles.jsx";
 import {RtStarView} from "./RtStarView";
 
 const palette = {
@@ -120,30 +118,6 @@ const MyNavLink = ({to, children, curPath})=> {
 
 let messageCtr = 0;
 
-const NewTabLink  = ({href, children}) => <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>;
-
-const Intro = () =>{
-  const { local } = useSelector(s=>s);
-  const should = useCallback(()=>true,[]);
-  return (
-  <section>
-    <h1>Configuration Info</h1>
-    <div style={{width:'fit-content'}}>
-      <JSONTree data={local.config}
-                hideRoot={true} sortObjectKeys={false}
-                shouldExpandNodeInitially={should} />
-                <h1>Other Links</h1>
-                <ul>
-                 <li><NewTabLink href="https://www.lifein19x19.com/">Life In 19x19 Forum</NewTabLink></li>
-                  <li><NewTabLink href="https://senseis.xmp.net/">Sensei's Libary (A Go Wiki)</NewTabLink></li>
-
-                </ul>
-    </div>
-
-  </section>);
-}
-
-
 const  App = () => {
   const location = useLocation();
   // when app renders, plug in handler for updates to local storage
@@ -182,7 +156,6 @@ const  App = () => {
 
             <Navbar>
               <div style={{ margin: 'auto', width: '50%', display: 'inline-block'}}>
-                <MyNavLink curPath={location.pathname} to="/intro">Intro</MyNavLink>
                 <MyNavLink curPath={location.pathname} to="/grid">Grid View</MyNavLink>
                 <MyNavLink curPath={location.pathname} to="/star">Visualization</MyNavLink>
 
@@ -219,7 +192,6 @@ const  App = () => {
                 <>
                   <Routes>
                     <Route path="/"       element={<RtGridView/>}/>
-                    <Route path="/intro"  element={<Intro/>}/>
                     <Route path="/grid"  element={<RtGridView/>}/>
                     <Route path="/star"  element={<RtStarView/>}/>
 
