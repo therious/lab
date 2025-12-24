@@ -106,11 +106,9 @@ const defaultGraph: GraphData = {nodes: [], edges: []};
 export const RtStarView = (): JSX.Element => {
 
   const {
-    options: {choices, otherChoices, mischalfim, includeLinked, maxNodes, maxEdges, linkByMeaningThreshold, pruneByGradeThreshold}
+    options: {choices, otherChoices, mischalfim, includeLinked, maxEdges, linkByMeaningThreshold, pruneByGradeThreshold}
   } = useSelector(s=>s);
 
-
-  const [reset, setReset] = useState(false);
 
   const [maxGeneration, setMaxGeneration] = useState(1);
   const [localExtraDegrees, setLocalExtraDegrees] = useState(0);
@@ -129,10 +127,6 @@ export const RtStarView = (): JSX.Element => {
   const networkRef = useRef<VisNetworkInstance | null>(null); // Reference to vis-network instance
   const nodeIdToRootIdRef = useRef<Map<number, number>>(new Map()); // Map node IDs to root IDs for search
 
-  const chMaxNodes = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
-    actions.options.setMaxNodes(Number(evt.target.value));
-  }, []);
-  
   const chMaxEdges = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
     actions.options.setMaxEdges(Number(evt.target.value));
   }, []);
@@ -218,7 +212,6 @@ export const RtStarView = (): JSX.Element => {
           // Store the computed data but don't render immediately
           pendingGraphDataRef.current = { data, generationRange, nodeIdToRootId, tooltipCounts };
           setIsComputing(false);
-          setReset(false);
           
           // Update tooltip counts
           if (tooltipCounts) {
@@ -289,8 +282,6 @@ export const RtStarView = (): JSX.Element => {
     }
   }, [maxGeneration, localExtraDegrees]);
 
-  const renderReset = useCallback((): void => setReset(true), []);
-
   // Debounced computation function
   const computeGraph = useCallback((): void => {
     if (!toRender.graphableRows || !Array.isArray(toRender.graphableRows)) {
@@ -315,50 +306,42 @@ export const RtStarView = (): JSX.Element => {
         maxGeneration,
         mischalfim,
         otherChoices,
-        maxNodes,
+        maxNodes: roots.length, // No limit on number of roots
         maxEdges,
         pruneByGradeThreshold: localPruneByGrade,
         maxNodesForExpansion: MAX_NODES_FOR_EXPANSION,
       },
     });
-  }, [linkByMeaningThreshold, maxGeneration, mischalfim, otherChoices, maxNodes, maxEdges, localPruneByGrade]);
+  }, [linkByMeaningThreshold, maxGeneration, mischalfim, otherChoices, maxEdges, localPruneByGrade]);
 
-  const render = useCallback((): void => {
-    // Increment computation ID to cancel any in-flight computation
-    computationIdRef.current += 1;
-    computeGraph();
-  }, [computeGraph]);
-
-  // Auto-update graph when slider changes (if graph is already rendered)
+  // Auto-update graph when slider changes
   // Use debounce with cancellation for smooth slider dragging
   useEffect(() => {
-    if (!reset) {
-      // Assert non-null: workerRef.current is guaranteed to be set when this runs
-      // Cancel previous computation by incrementing ID immediately
-      computationIdRef.current += 1;
-      
-      // Clear any pending timeout
+    // Assert non-null: workerRef.current is guaranteed to be set when this runs
+    // Cancel previous computation by incrementing ID immediately
+    computationIdRef.current += 1;
+    
+    // Clear any pending timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+      debounceTimeoutRef.current = null;
+    }
+    
+    // Use requestAnimationFrame to ensure we're not blocking the UI thread
+    // Then set a timeout for the actual computation
+    requestAnimationFrame(() => {
+      debounceTimeoutRef.current = setTimeout(() => {
+        computeGraph();
+      }, 100); // 100ms debounce - enough to batch rapid changes
+    });
+    
+    return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
         debounceTimeoutRef.current = null;
       }
-      
-      // Use requestAnimationFrame to ensure we're not blocking the UI thread
-      // Then set a timeout for the actual computation
-      requestAnimationFrame(() => {
-        debounceTimeoutRef.current = setTimeout(() => {
-          computeGraph();
-        }, 100); // 100ms debounce - enough to batch rapid changes
-      });
-      
-      return () => {
-        if (debounceTimeoutRef.current) {
-          clearTimeout(debounceTimeoutRef.current);
-          debounceTimeoutRef.current = null;
-        }
-      };
-    }
-  }, [maxGeneration, linkByMeaningThreshold, localPruneByGrade, maxNodes, maxEdges, reset, computeGraph]);
+    };
+  }, [maxGeneration, linkByMeaningThreshold, localPruneByGrade, maxEdges, computeGraph]);
   
 
   const events = useMemo<GraphEvents>(() => ({
@@ -541,7 +524,7 @@ export const RtStarView = (): JSX.Element => {
     networkRef.current = network;
   }, []);
 
-  const graphing = reset? (<></>):  (<div style={{  backgroundColor: 'midnightblue', height: "100%", width:"100%"}}>
+  const graphing = (<div style={{  backgroundColor: 'midnightblue', height: "100%", width:"100%"}}>
     <Graph 
       events={events} 
       graph={graph} 
@@ -683,15 +666,12 @@ export const RtStarView = (): JSX.Element => {
               Clear
             </button>
           )}
+          <span style={{marginLeft: '20px'}}>
+            <label style={{marginRight: '10px'}}>Maximum connections:</label>
+            <input type="number" min={100} max={200_000} step={1_000} value={maxEdges} onChange={chMaxEdges}/>
+          </span>
         </div>
         <hr/>
-        <label>Maximum number of roots:</label>&nbsp;
-        <input type="number" min={1} max={2_001} step={50} value={maxNodes} onChange={chMaxNodes}/>&nbsp;
-        <label>connections:</label>&nbsp;
-        <input type="number" min={100} max={200_000} step={1_000} value={maxEdges} onChange={chMaxEdges}/>
-        <hr/>
-        <button disabled={!reset || isComputing} onClick={render}>Show results</button>
-        <button disabled={reset} onClick={renderReset}>Reset Graph</button>
         {isComputing && <span style={{marginLeft: '10px', color: '#888'}}>Computing...</span>}
         {graphing}
       </div>
