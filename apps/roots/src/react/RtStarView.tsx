@@ -392,7 +392,7 @@ export const RtStarView = (): JSX.Element => {
 
   const events = useMemo<GraphEvents>(() => ({
     select: ({ nodes, edges }: { nodes: number[]; edges: number[] }): void => {
-      console.log("Selected nodes/edges:", nodes, edges);
+      // console.log("Selected nodes/edges:", nodes, edges);
     },
     doubleClick: ({ pointer: { canvas } }: { pointer: { canvas: { x: number; y: number } } }): void => {
       // Handle double click if needed
