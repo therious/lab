@@ -4,7 +4,7 @@ import {useSelector} from "../actions-integration";
 import {roots} from '../roots/roots';
 import Graph from "react-vis-graph-wrapper";
 import "vis-network/styles/vis-network.css";
-import {toRender} from "../roots/myvis.js";
+import {toRender} from "../roots/myvis";
 import {defaultOptions} from "../roots/options";
 import {CheckGroup} from "./CheckGroup";
 import {matchesDefinitionFilter} from "../roots/definitionFilter";
@@ -98,7 +98,7 @@ type GraphEvents = {
   doubleClick: (params: { pointer: { canvas: { x: number; y: number } } }) => void;
 };
 
-toRender.graphableRows = roots; // the full list
+toRender.graphableRows = roots as unknown as Record<string, unknown>; // the full list
 const defaultGraph: GraphData = {nodes: [], edges: []};
 
 

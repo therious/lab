@@ -1,7 +1,18 @@
 /**
  * Created by hzamir on 9/28/14.
  */
-export const roots = [
+
+export type Root = {
+  L: string;
+  E: string;
+  P: string;
+  id: number;
+  d: string;
+  r: string;
+  generation?: number;
+};
+
+export const roots: Root[] = [
 {L:'\u05d1',E:'\u05d1',P:'\u05d0',id:1,d:'ripen; greedily absorb nourishment from the ground'},
 {L:'\u05d3',E:'\u05d1',P:'\u05d0',id:2,d:'lose valuable possession'},
 {L:'\u05d4',E:'\u05d1',P:'\u05d0',id:3,d:'submit to existing demand'},
@@ -1997,4 +2008,4 @@ export const roots = [
 {L:'\u05e0',E:'\u05e8',P:'\u05ea',id:1993,d:'raise high'},
 {L:'\u05e9',E:'\u05e8',P:'\u05ea',id:1994,d:'search'},
 {L:'\u05e2',E:'\u05e9',P:'\u05ea',id:1995,d:'decrease'}
-].map(o=>({...o, r:`${o.P}${o.E}${o.L}`}));
+].map((o):Root => ({...o, r:`${o.P}${o.E}${o.L}`}));
