@@ -11,49 +11,12 @@ import {matchesDefinitionFilter} from "../roots/definitionFilter";
 import {getDictionaryWords} from "../roots/loadDictionary";
 import {Tooltip} from "./Tooltip";
 import {MAX_NODES_FOR_EXPANSION} from "../roots/constants";
+import type {Root, GraphNode, GraphData} from "../roots/types";
 
 // Hebrew text style for tooltips
 const hebrewTextStyle: React.CSSProperties = {
   fontSize: '1.25em',
   fontWeight: 'bolder'
-};
-
-// Type definitions
-type Root = {
-  id: number;
-  r: string; // root (concatenated P+E+L)
-  d?: string; // definition
-  P: string; // first letter
-  E: string; // middle letter
-  L: string; // last letter
-  generation?: number; // generation number for visualization
-};
-
-type GraphNode = {
-  id: number;
-  label: string;
-  title?: string;
-  font?: { multi: boolean };
-  color?: {
-    background: string;
-    border: string;
-    highlight: {
-      background: string;
-      border: string;
-    };
-  };
-};
-
-type GraphEdge = {
-  from: number;
-  to: number;
-  color?: string;
-  width?: number;
-};
-
-type GraphData = {
-  nodes: GraphNode[];
-  edges: GraphEdge[];
 };
 
 type GenerationRange = {

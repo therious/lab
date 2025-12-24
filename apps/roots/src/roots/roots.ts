@@ -2,15 +2,9 @@
  * Created by hzamir on 9/28/14.
  */
 
-export type Root = {
-  L: string;
-  E: string;
-  P: string;
-  id: number;
-  d: string;
-  r: string;
-  generation?: number;
-};
+import type {Root} from './types';
+
+export {type Root} from './types';
 
 export const roots: Root[] = [
 {L:'\u05d1',E:'\u05d1',P:'\u05d0',id:1,d:'ripen; greedily absorb nourishment from the ground'},

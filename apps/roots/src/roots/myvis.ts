@@ -4,7 +4,7 @@
 import {Mischalef, arrMischalfim, vav} from "./mischalfim";
 import {getDefinitionSimilarityGrade, getMeaningConnectedRoots} from "./definition-similarity-grades";
 import { getRootTooltipSync } from './loadDictionary';
-import type {Root} from './roots';
+import type {Root, GraphNode, GraphEdge, GraphData} from './types';
 
 type MischalfimMap = Record<string, Record<string, number>>;
 
@@ -41,12 +41,6 @@ export function mischalef(a: string, b: string): boolean {
     return !!(ao && ao[b]);
 }
 
-type GraphNode = {
-    id: number;
-    label: string;
-    title: string;
-    font?: { multi: boolean };
-};
 
 function populateNodes(roots: Root[], nodeMax: number, showGenerations = false): GraphNode[] {
     const max = Math.min(nodeMax, roots.length);
@@ -161,12 +155,6 @@ let mappedNodes: Record<string, boolean> = {};
 let mappedEdges: Record<string, boolean> = {};
 let edgeCount: number = 0;
 
-type GraphEdge = {
-    from: number;
-    to: number;
-    width?: number;
-    color?: string;
-};
 
 function createEdge(aidx: number, bidx: number, edges: GraphEdge[], roots: Root[], relatedMeaningsThreshold = 6): GraphEdge | null {
     if(bidx < 0)
@@ -267,10 +255,6 @@ function populateEdges(roots: Root[], hardMax: number, edgeMax: number, relatedM
     return  edges;
 }
 
-type GraphData = {
-    nodes: GraphNode[];
-    edges: GraphEdge[];
-};
 
 type DiagramResult = {
     nodeMax: number;
