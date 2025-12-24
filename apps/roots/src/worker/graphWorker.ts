@@ -17,6 +17,7 @@ interface GraphComputeMessage {
     maxNodes: number;
     maxEdges: number;
     pruneByGradeThreshold: number;
+    maxNodesForExpansion: number;
   };
 }
 
@@ -55,6 +56,7 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
       maxNodes,
       maxEdges,
       pruneByGradeThreshold,
+      maxNodesForExpansion,
     } = e.data.payload;
 
     // Update current computation ID - if a new computation comes in, we'll ignore old results
@@ -65,47 +67,71 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage>) {
       const gridFilteredRoots = filteredRoots;
       const n = gridFilteredRoots.length; // Grid filter count
 
-      // PIPELINE STAGE 2: Apply Link by Meaning slider - add roots connected by meaning grades
-      const rootsWithMeaningLinks = expandFilteredByMeaning(
-        gridFilteredRoots,
-        allRoots,
-        linkByMeaningThreshold
-      );
-      // x = roots added by similar meanings (not in original grid filter)
+      // OPTIMIZATION: If grid-filtered roots exceed threshold, skip expensive expansion operations
+      // These operations (meaning links, extra degrees, pruning) are not useful with large node sets
+      // and cause significant performance degradation
+      const shouldSkipExpansion = n > maxNodesForExpansion;
+
+      // Create gridFilteredRootIds set once for use in both branches
       const gridFilteredRootIds = new Set(gridFilteredRoots.map((r: any) => r.id));
-      const x = rootsWithMeaningLinks.filter((r: any) => !gridFilteredRootIds.has(r.id)).length;
+
+      // PIPELINE STAGE 2: Apply Link by Meaning slider - add roots connected by meaning grades
+      const rootsWithMeaningLinks = shouldSkipExpansion
+        ? gridFilteredRoots
+        : expandFilteredByMeaning(
+            gridFilteredRoots,
+            allRoots,
+            linkByMeaningThreshold
+          );
+
+      // x = roots added by similar meanings (not in original grid filter)
+      const x = shouldSkipExpansion
+        ? 0
+        : rootsWithMeaningLinks.filter((r: any) => !gridFilteredRootIds.has(r.id)).length;
 
       // PIPELINE STAGE 3: Apply Max Generation slider - expand by letter-based connections
-      const rootsWithLetterLinks = expandFilteredWithIndirectlyLinkedRoots(
-        rootsWithMeaningLinks,
-        allRoots,
-        mischalfim,
-        otherChoices
-      );
+      const rootsWithLetterLinks = shouldSkipExpansion
+        ? gridFilteredRoots
+        : expandFilteredWithIndirectlyLinkedRoots(
+            rootsWithMeaningLinks,
+            allRoots,
+            mischalfim,
+            otherChoices
+          );
 
       // Calculate generation range for slider
-      const generations = rootsWithLetterLinks
-        .filter((r: any) => r && r.generation !== undefined)
-        .map((r: any) => r.generation);
-      const generationRange = {
-        min: generations.length > 0 ? Math.min(...generations) : 1,
-        max: generations.length > 0 ? Math.max(...generations) : 1,
-      };
+      const generations = shouldSkipExpansion
+        ? []
+        : rootsWithLetterLinks
+            .filter((r: any) => r && r.generation !== undefined)
+            .map((r: any) => r.generation);
+      
+      const generationRange: { min: number; max: number } = generations.length > 0
+        ? { min: Math.min(...generations), max: Math.max(...generations) }
+        : { min: 1, max: 1 };
 
       // PIPELINE STAGE 4: Filter by maxGeneration value
-      const rootsFilteredByGeneration = rootsWithLetterLinks.filter((root: any) => {
-        if (root.generation === undefined) {
-          return maxGeneration >= generationRange.min;
-        }
-        return root.generation <= maxGeneration;
-      });
-      // w = roots added only by extra degrees (not in grid filter or similar meanings)
-      const meaningLinkRootIds = new Set(rootsWithMeaningLinks.map((r: any) => r.id));
-      const w = rootsFilteredByGeneration.filter((r: any) => 
-        !gridFilteredRootIds.has(r.id) && !meaningLinkRootIds.has(r.id)
-      ).length;
+      const rootsFilteredByGeneration = shouldSkipExpansion
+        ? gridFilteredRoots
+        : rootsWithLetterLinks.filter((root: any) => 
+            root.generation === undefined 
+              ? maxGeneration >= generationRange.min 
+              : root.generation <= maxGeneration
+          );
 
-      const showGenerations = maxGeneration > generationRange.min;
+      // w = roots added only by extra degrees (not in grid filter or similar meanings)
+      const meaningLinkRootIds = shouldSkipExpansion
+        ? new Set<number>()
+        : new Set(rootsWithMeaningLinks.map((r: any) => r.id));
+      const w = shouldSkipExpansion
+        ? 0
+        : rootsFilteredByGeneration.filter((r: any) => 
+            !gridFilteredRootIds.has(r.id) && !meaningLinkRootIds.has(r.id)
+          ).length;
+
+      const showGenerations = shouldSkipExpansion
+        ? false
+        : maxGeneration > generationRange.min;
 
       // PIPELINE STAGE 5: Create graph data (nodes and edges)
       // Temporarily disable Remove Free to calculate q correctly

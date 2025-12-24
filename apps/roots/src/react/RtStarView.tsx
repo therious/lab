@@ -11,6 +11,7 @@ import {CheckGroup} from "./CheckGroup";
 import {matchesDefinitionFilter} from "../roots/definitionFilter";
 import {getDictionaryWords, getDictionaryEntry} from "../roots/loadDictionary";
 import {Tooltip} from "./Tooltip";
+import {MAX_NODES_FOR_EXPANSION} from "../roots/constants";
 
 // Type definitions
 type Root = {
@@ -119,6 +120,7 @@ export const RtStarView = (): JSX.Element => {
   const [generationRange, setGenerationRange] = useState<GenerationRange>({ min: 1, max: 1 });
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [tooltipCounts, setTooltipCounts] = useState<TooltipCounts>({ n: 0, x: 0, w: 0, y: 0, q: 0, pruneRemoved: 0 });
+  const shouldDisableExpansion = tooltipCounts.n > MAX_NODES_FOR_EXPANSION;
   const workerRef = useRef<Worker | null>(null);
   const computationIdRef = useRef<number>(0);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -316,6 +318,7 @@ export const RtStarView = (): JSX.Element => {
         maxNodes,
         maxEdges,
         pruneByGradeThreshold: localPruneByGrade,
+        maxNodesForExpansion: MAX_NODES_FOR_EXPANSION,
       },
     });
   }, [linkByMeaningThreshold, maxGeneration, mischalfim, otherChoices, maxNodes, maxEdges, localPruneByGrade]);
@@ -558,10 +561,10 @@ export const RtStarView = (): JSX.Element => {
         <button  onClick={actions.options.clearChoices}>Clear All</button>
         <span style={{marginLeft:'20px', fontWeight:'normal'}}>
           <span style={{marginRight:'15px', display: 'inline-block'}}>
-            <Tooltip content={`Include additional roots (${tooltipCounts.x}) based on meanings similar to roots currently included in the grid filter (${tooltipCounts.n})`}>
-              <label style={{fontSize: '14px', marginRight: '5px', cursor: 'help'}}>Add similar meanings:</label>
+            <Tooltip content={shouldDisableExpansion ? `Disabled: ${tooltipCounts.n} filtered roots exceeds ${MAX_NODES_FOR_EXPANSION} node limit for expansion operations` : `Include additional roots (${tooltipCounts.x}) based on meanings similar to roots currently included in the grid filter (${tooltipCounts.n})`}>
+              <label style={{fontSize: '14px', marginRight: '5px', cursor: 'help', opacity: shouldDisableExpansion ? 0.5 : 1}}>Add similar meanings:</label>
             </Tooltip>
-            <Tooltip content={`Include additional roots (${tooltipCounts.x}) based on meanings similar to roots currently included in the grid filter (${tooltipCounts.n})`}>
+            <Tooltip content={shouldDisableExpansion ? `Disabled: ${tooltipCounts.n} filtered roots exceeds ${MAX_NODES_FOR_EXPANSION} node limit for expansion operations` : `Include additional roots (${tooltipCounts.x}) based on meanings similar to roots currently included in the grid filter (${tooltipCounts.n})`}>
               <input 
                 type="range" 
                 min={0} 
@@ -569,7 +572,8 @@ export const RtStarView = (): JSX.Element => {
                 step={1}
                 value={6 - linkByMeaningThreshold} 
                 onChange={chLinkByMeaning}
-                style={{width: '120px', margin: '0 5px', verticalAlign: 'middle'}}
+                disabled={shouldDisableExpansion}
+                style={{width: '120px', margin: '0 5px', verticalAlign: 'middle', opacity: shouldDisableExpansion ? 0.5 : 1}}
                 list={`linkByMeaning-ticks`}
               />
             </Tooltip>
@@ -581,10 +585,10 @@ export const RtStarView = (): JSX.Element => {
             </span>
           </span>
           <span style={{marginRight:'15px', display: 'inline-block'}}>
-            <Tooltip content={`Given the roots included by the grid (${tooltipCounts.n}) and the roots with similar meanings (${tooltipCounts.x}) bring in additional roots (${tooltipCounts.w}) that are related according to the checked אותיות מתחלפות criteria`}>
-              <label style={{fontSize: '14px', marginRight: '5px', cursor: 'help'}}>Extra degrees:</label>
+            <Tooltip content={shouldDisableExpansion ? `Disabled: ${tooltipCounts.n} filtered roots exceeds ${MAX_NODES_FOR_EXPANSION} node limit for expansion operations` : `Given the roots included by the grid (${tooltipCounts.n}) and the roots with similar meanings (${tooltipCounts.x}) bring in additional roots (${tooltipCounts.w}) that are related according to the checked אותיות מתחלפות criteria`}>
+              <label style={{fontSize: '14px', marginRight: '5px', cursor: 'help', opacity: shouldDisableExpansion ? 0.5 : 1}}>Extra degrees:</label>
             </Tooltip>
-            <Tooltip content={`Given the roots included by the grid (${tooltipCounts.n}) and the roots with similar meanings (${tooltipCounts.x}) bring in additional roots (${tooltipCounts.w}) that are related according to the checked אותיות מתחלפות criteria`}>
+            <Tooltip content={shouldDisableExpansion ? `Disabled: ${tooltipCounts.n} filtered roots exceeds ${MAX_NODES_FOR_EXPANSION} node limit for expansion operations` : `Given the roots included by the grid (${tooltipCounts.n}) and the roots with similar meanings (${tooltipCounts.x}) bring in additional roots (${tooltipCounts.w}) that are related according to the checked אותיות מתחלפות criteria`}>
               <input 
                 type="range" 
                 min={0} 
@@ -592,7 +596,8 @@ export const RtStarView = (): JSX.Element => {
                 step={1}
                 value={String(localExtraDegrees)} 
                 onChange={chExtraDegrees}
-                style={{width: '120px', margin: '0 5px', verticalAlign: 'middle'}}
+                disabled={shouldDisableExpansion}
+                style={{width: '120px', margin: '0 5px', verticalAlign: 'middle', opacity: shouldDisableExpansion ? 0.5 : 1}}
                 list={`extraDegrees-ticks`}
               />
             </Tooltip>
@@ -610,11 +615,13 @@ export const RtStarView = (): JSX.Element => {
                 String(tooltipCounts.x).length,
                 String(tooltipCounts.w).length
               );
-              const tooltipContent = `Given the ${tooltipCounts.y} total roots now included:\n\n${String(tooltipCounts.n).padStart(numMaxWidth)} included in grid filter\n${String(tooltipCounts.x).padStart(numMaxWidth)} have similar meanings\n${String(tooltipCounts.w).padStart(numMaxWidth)} extra degrees of relation\n\nNow prune out roots (${tooltipCounts.pruneRemoved}) included by previous sliders whose related letter-based connections to other roots in current diagram do not have a sufficiently similar-graded meaning.`;
+              const tooltipContent = shouldDisableExpansion 
+                ? `Disabled: ${tooltipCounts.n} filtered roots exceeds ${MAX_NODES_FOR_EXPANSION} node limit for expansion operations`
+                : `Given the ${tooltipCounts.y} total roots now included:\n\n${String(tooltipCounts.n).padStart(numMaxWidth)} included in grid filter\n${String(tooltipCounts.x).padStart(numMaxWidth)} have similar meanings\n${String(tooltipCounts.w).padStart(numMaxWidth)} extra degrees of relation\n\nNow prune out roots (${tooltipCounts.pruneRemoved}) included by previous sliders whose related letter-based connections to other roots in current diagram do not have a sufficiently similar-graded meaning.`;
               return (
                 <>
                   <Tooltip content={tooltipContent} maxWidth={700}>
-                    <label style={{fontSize: '14px', marginRight: '5px', cursor: 'help'}}>Prune by grade:</label>
+                    <label style={{fontSize: '14px', marginRight: '5px', cursor: 'help', opacity: shouldDisableExpansion ? 0.5 : 1}}>Prune by grade:</label>
                   </Tooltip>
                   <Tooltip content={tooltipContent} maxWidth={700}>
                     <input 
@@ -624,7 +631,8 @@ export const RtStarView = (): JSX.Element => {
                       step={1}
                       value={String(6 - localPruneByGrade)} 
                       onChange={chPruneByGrade}
-                      style={{width: '120px', margin: '0 5px', verticalAlign: 'middle'}}
+                      disabled={shouldDisableExpansion}
+                      style={{width: '120px', margin: '0 5px', verticalAlign: 'middle', opacity: shouldDisableExpansion ? 0.5 : 1}}
                       list={`pruneByGrade-ticks`}
                     />
                   </Tooltip>
