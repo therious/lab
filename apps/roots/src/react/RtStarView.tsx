@@ -487,7 +487,23 @@ export const RtStarView = (): JSX.Element => {
             <Tooltip content="Use space bar or F4 to toggle play/pause">
               <button
                 onClick={togglePhysics}
-                style={{padding: '5px 10px'}}
+                style={{
+                  padding: '5px 10px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  backgroundColor: '#fff',
+                  cursor: 'pointer',
+                  boxShadow: 'none',
+                  outline: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f0f0f0';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#fff';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
               >
                 {isPhysicsEnabled ? '⏸ Pause' : '▶ Play'}
               </button>
