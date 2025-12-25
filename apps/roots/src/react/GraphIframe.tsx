@@ -19,6 +19,7 @@ interface GraphIframeProps {
 export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTooltipRequest, nodeColors, iframeRef: externalRef, iframeElementRef: externalElementRef, style }) => {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const blobUrlRef = useRef<string | null>(null);
+  const iframeReadyRef = useRef<boolean>(false);
 
   // Expose iframe element ref to parent
   useEffect(() => {
