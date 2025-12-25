@@ -139,8 +139,8 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
     }
 
     // Listen for messages from parent
-    window.addEventListener('message', (event) => {
-      if (event.data.type === 'updateGraph') {
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'updateGraph' && event.data.payload) {
         const newGraphData = event.data.payload;
         console.log('[iframe] Received graph data:', newGraphData.nodes.length, 'nodes,', newGraphData.edges.length, 'edges');
         if (networkInstance) {
@@ -197,9 +197,9 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
           console.log('[iframe] Network instance created with', graphData.nodes.length, 'nodes');
           
           // Handle node hover for tooltip requests
-          networkInstance.on('hoverNode', (params) => {
+          networkInstance.on('hoverNode', function(params) {
             const nodeId = params.node;
-            const node = graphData.nodes.find(n => n.id === nodeId);
+            const node = graphData.nodes.find(function(n) { return n.id === nodeId; });
             if (node && node.title && !node.title.includes('Example words')) {
               // Request tooltip from parent if not already enriched
               window.parent.postMessage({
@@ -258,7 +258,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
           if (networkInstance) {
             const allNodes = networkInstance.body.data.nodes.get();
             const updates = allNodes.map(function(node) {
-              const shouldHide = hide && !matchedNodeIds.includes(node.id);
+              const shouldHide = hide && matchedNodeIds.indexOf(node.id) === -1;
               // vis-network uses 'hidden' property, but we need to ensure it's properly set
               const update = { id: node.id };
               if (shouldHide) {
