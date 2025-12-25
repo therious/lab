@@ -119,17 +119,6 @@ export const RtStarView = (): JSX.Element => {
         // or if the grid hasn't set it yet
         if (!toRender.graphableRows || !Array.isArray(toRender.graphableRows) || (Array.isArray(toRender.graphableRows) && toRender.graphableRows.length === 0)) {
           toRender.graphableRows = allRoots as unknown as Record<string, unknown>;
-          // Trigger graph computation after initializing graphableRows
-          // Use a small delay to ensure allRootsRef is set
-          setTimeout(() => {
-            computationIdRef.current += 1;
-            if (debounceTimeoutRef.current) {
-              clearTimeout(debounceTimeoutRef.current);
-            }
-            debounceTimeoutRef.current = setTimeout(() => {
-              computeGraph();
-            }, 100);
-          }, 100);
         }
       }
     };
@@ -317,6 +306,11 @@ export const RtStarView = (): JSX.Element => {
       return;
     }
 
+    // Ensure allRootsRef is populated before computing
+    if (!allRootsRef.current || allRootsRef.current.length === 0) {
+      return;
+    }
+
     // Note: computationIdRef.current is incremented in the useEffect before calling this
 
     // Send computation request to worker with computation ID
@@ -430,7 +424,7 @@ export const RtStarView = (): JSX.Element => {
   }, [togglePhysics]);
 
   const graphing = (
-    <div style={{ backgroundColor: 'midnightblue', height: "100%", width: "100%" }}>
+    <div style={{ backgroundColor: 'midnightblue', height: "100%", width: "100%", minHeight: '400px' }}>
       <GraphIframe
         graph={graph}
         onReady={handleIframeReady}
@@ -438,7 +432,7 @@ export const RtStarView = (): JSX.Element => {
         nodeColors={nodeColors}
         iframeRef={iframeRef}
         iframeElementRef={iframeElementRef}
-        style={{ backgroundColor: 'midnightblue' }}
+        style={{ backgroundColor: 'midnightblue', height: '100%', width: '100%' }}
       />
     </div>
   );
@@ -614,7 +608,9 @@ export const RtStarView = (): JSX.Element => {
         </div>
         <hr/>
         {isComputing && <span style={{marginLeft: '10px', color: '#888'}}>Computing...</span>}
-        {graphing}
+        <div style={{ height: 'calc(100vh - 500px)', minHeight: '400px' }}>
+          {graphing}
+        </div>
       </div>
 
     );
