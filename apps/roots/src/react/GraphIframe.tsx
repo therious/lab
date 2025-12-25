@@ -308,15 +308,13 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
   // Listen for messages from iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Accept messages from our iframe or from blob: origin (for blob URLs)
-      const isFromOurIframe = iframeRef.current && (
-        event.source === iframeRef.current.contentWindow ||
-        event.origin === 'null' || // blob URLs sometimes have null origin
-        event.origin.startsWith('blob:')
-      );
+      // Log all messages for debugging
+      if (event.data && event.data.type) {
+        console.log('[GraphIframe] Received message:', event.data.type, 'from origin:', event.origin, 'source:', event.source === iframeRef.current?.contentWindow);
+      }
 
-      // Only process iframeReady and tooltipRequest messages
-      if (event.data.type === 'iframeReady') {
+      // Accept iframeReady from any origin (blob URLs can have different origins)
+      if (event.data && event.data.type === 'iframeReady') {
         // Verify it's from our iframe by checking if we have the iframe ref
         if (!iframeRef.current) {
           return;
@@ -337,8 +335,9 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
         } else {
           console.log('[GraphIframe] Not sending graph - iframe:', !!iframeRef.current?.contentWindow, 'graph:', !!graph, 'nodes:', graph?.nodes?.length || 0);
         }
-      } else if (event.data.type === 'tooltipRequest') {
+      } else if (event.data && event.data.type === 'tooltipRequest') {
         // Only process tooltip requests from our iframe
+        const isFromOurIframe = iframeRef.current && event.source === iframeRef.current.contentWindow;
         if (!isFromOurIframe) {
           return;
         }
