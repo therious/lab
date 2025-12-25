@@ -436,7 +436,7 @@ export const RtStarView = (): JSX.Element => {
   }, [togglePhysics]);
 
   const graphing = (
-    <div style={{ backgroundColor: 'midnightblue', height: "100%", width: "100%", minHeight: '400px' }}>
+    <div style={{ backgroundColor: 'midnightblue', height: "100%", width: "100%", minHeight: '400px', flex: 1, display: 'flex', flexDirection: 'column' }}>
       <GraphIframe
         graph={graph}
         onReady={handleIframeReady}
@@ -444,7 +444,7 @@ export const RtStarView = (): JSX.Element => {
         nodeColors={nodeColors}
         iframeRef={iframeRef}
         iframeElementRef={iframeElementRef}
-        style={{ backgroundColor: 'midnightblue', height: '100%', width: '100%' }}
+        style={{ backgroundColor: 'midnightblue', height: '100%', width: '100%', flex: 1 }}
       />
     </div>
   );
