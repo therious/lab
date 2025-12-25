@@ -27,8 +27,13 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
     }
   }, [externalElementRef]);
 
-  // Create blob URL with iframe content
+  // Create blob URL with iframe content - only once, don't recreate on graph changes
   useEffect(() => {
+    // If blob URL already exists, don't recreate
+    if (blobUrlRef.current) {
+      return;
+    }
+
     const iframeHTML = `
 <!DOCTYPE html>
 <html>
@@ -214,9 +219,9 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
     };
   }, [graph, onReady]);
 
-  // Update graph when it changes
+  // Update graph when it changes - only send if iframe is ready and graph has nodes
   useEffect(() => {
-    if (iframeRef.current?.contentWindow && graph) {
+    if (iframeRef.current?.contentWindow && graph && graph.nodes.length > 0) {
       iframeRef.current.contentWindow.postMessage({
         type: 'updateGraph',
         payload: graph
