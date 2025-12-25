@@ -482,6 +482,19 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage | SearchMessage>) 
     // Update current search ID - if a new search comes in, we'll ignore old results
     currentSearchId = searchId;
 
+    // Check if we have nodes to search - if not, return empty result
+    if (currentNodes.length === 0 || nodeIdToRootIdMap.size === 0 || allRootsCache.length === 0) {
+      console.warn('[graphWorker] Search cannot proceed - missing data. Nodes:', currentNodes.length, 'Map:', nodeIdToRootIdMap.size, 'Roots:', allRootsCache.length);
+      self.postMessage({
+        type: 'searchResult',
+        payload: {
+          searchId,
+          nodeColors: [],
+        },
+      });
+      return;
+    }
+
     // Ensure dictionary is loaded before searching
     loadDictionaryInWorker().then(() => {
       // Only proceed if this is still the current search
@@ -595,6 +608,8 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage | SearchMessage>) 
 
         // Only send result if this is still the current search
         if (currentSearchId === searchId) {
+          const matchedCount = nodeColors.filter(c => c.color.background === 'orange' || c.color.background === 'yellow').length;
+          console.log('[graphWorker] Search result:', searchId, 'matched:', matchedCount, 'total nodes:', nodeColors.length);
           const result: SearchResult = {
             type: 'searchResult',
             payload: {
