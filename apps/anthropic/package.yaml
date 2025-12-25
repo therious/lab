@@ -1,0 +1,15 @@
+name: anthropic
+private: true
+version: 0.0.0
+type: module
+author: Haim Zamir
+license: MIT
+scripts:
+  analyze: npx tsx src/analyze-meanings-claude.ts
+  estimate: npx tsx src/estimate-letter-connections-cost.ts
+  estimate-all: npx tsx src/estimate-ai-cost.ts
+  dictionary: npx tsx src/fetch-dictionary-definitions.ts
+dependencies:
+  '@anthropic-ai/sdk': ~0.24.0
+  tsx: ~4.7.0
+
