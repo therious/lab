@@ -148,18 +148,15 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
           const applied = applyIncrementalGraphUpdate(newGraphData);
           if (!applied) {
             // Fallback to full update if incremental failed
-            // Store physics state before updating
-            const currentPhysicsEnabled = networkInstance.physics.physicsEnabled;
+            // Use stored physics state
             networkInstance.setData({ nodes: new vis.DataSet(newGraphData.nodes), edges: new vis.DataSet(newGraphData.edges) });
             // Restore physics state
-            if (currentPhysicsEnabled !== undefined) {
-              networkInstance.setOptions({ 
-                physics: {
-                  enabled: currentPhysicsEnabled,
-                  stabilization: { enabled: false }
-                }
-              });
-            }
+            networkInstance.setOptions({ 
+              physics: {
+                enabled: currentPhysicsEnabled,
+                stabilization: { enabled: false }
+              }
+            });
           }
         } else {
           // Initial setup
