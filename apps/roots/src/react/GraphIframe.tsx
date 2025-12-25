@@ -234,6 +234,32 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
             }
           });
         }
+      } else if (event.data.type === 'recenter') {
+        // Recenter and fit all nodes to view
+        if (networkInstance) {
+          networkInstance.fit({
+            animation: {
+              duration: 500,
+              easingFunction: 'easeInOutQuad'
+            }
+          });
+        }
+      } else if (event.data.type === 'toggleNonMatchedNodes') {
+        // Hide or show non-search-matched nodes
+        const { hide, matchedNodeIds } = event.data.payload;
+        console.log('[iframe] toggleNonMatchedNodes:', hide, 'matched:', matchedNodeIds.length);
+        if (networkInstance) {
+          const allNodes = networkInstance.body.data.nodes.get();
+          const updates = allNodes.map(node => {
+            const shouldHide = hide && !matchedNodeIds.includes(node.id);
+            return {
+              id: node.id,
+              hidden: shouldHide
+            };
+          });
+          console.log('[iframe] Updating', updates.length, 'nodes, hiding', updates.filter(u => u.hidden).length);
+          networkInstance.body.data.nodes.update(updates);
+        }
       }
     });
 

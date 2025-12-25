@@ -503,31 +503,59 @@ export const RtStarView = (): JSX.Element => {
               Nodes: {graph.nodes.length} | Connections: {graph.edges.length}
             </span>
           </div>
-          <div style={{position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)'}}>
-            <Tooltip content="Use space bar or F4 to toggle play/pause">
-              <button
-                onClick={togglePhysics}
-                style={{
-                  padding: '5px 10px',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  backgroundColor: '#fff',
-                  cursor: 'pointer',
-                  boxShadow: 'none',
-                  outline: 'none'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#f0f0f0';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#fff';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                {isPhysicsEnabled ? '⏸ Pause' : '▶ Play'}
-              </button>
-            </Tooltip>
+          <div style={{position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', display: 'flex', gap: '10px', alignItems: 'center'}}>
+            <button
+              onClick={togglePhysics}
+              title="Use space bar or F4 to toggle play/pause"
+              style={{
+                padding: '5px 10px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                backgroundColor: '#fff',
+                cursor: 'pointer',
+                boxShadow: 'none',
+                outline: 'none',
+                textShadow: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f0f0f0';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.textShadow = 'none';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#fff';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.textShadow = 'none';
+              }}
+            >
+              {isPhysicsEnabled ? '⏸ Pause' : '▶ Play'}
+            </button>
+            <button
+              onClick={() => iframeRef.current?.recenter()}
+              title="Zoom and center all visible nodes"
+              style={{
+                padding: '5px 10px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                backgroundColor: '#fff',
+                cursor: 'pointer',
+                boxShadow: 'none',
+                outline: 'none',
+                textShadow: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f0f0f0';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.textShadow = 'none';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#fff';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.textShadow = 'none';
+              }}
+            >
+              🎯 Recenter
+            </button>
           </div>
         </div>
         <hr/>
