@@ -451,7 +451,7 @@ export const RtStarView = (): JSX.Element => {
 
 //heading, active, name, choices,  setChoice
    return  (
-      <div key={`${graph.nodes.length}-${graph.edges.length}`} style={{marginTop:'30px'}}>
+      <div style={{marginTop:'30px', height: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column'}}>
         <div style={{position: 'relative', marginLeft: '14px'}}>
           <div>
             <h1 style={{display: 'inline', margin: 0}}>Star View</h1>
@@ -620,7 +620,7 @@ export const RtStarView = (): JSX.Element => {
         </div>
         <hr/>
         {isComputing && <span style={{marginLeft: '10px', color: '#888'}}>Computing...</span>}
-        <div style={{ height: 'calc(100vh - 500px)', minHeight: '400px' }}>
+        <div style={{ flex: 1, minHeight: '400px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {graphing}
         </div>
       </div>
