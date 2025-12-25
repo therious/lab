@@ -267,7 +267,7 @@ export const RtStarView = (): JSX.Element => {
       setMaxGeneration(value);
     });
   }, []);
-
+  
   const chExtraDegrees = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
     const value = Number(evt.target.value);
     // Shift: 0 = 1, 1 = 2, etc. (value + 1)
@@ -290,27 +290,27 @@ export const RtStarView = (): JSX.Element => {
   // Local state for immediate slider updates (non-blocking)
   const [localPruneByGrade, setLocalPruneByGrade] = useState<number>(pruneByGradeThreshold);
   const pruneSyncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
+  
   // Sync local state to Redux with debounce (only when user stops dragging)
   useEffect(() => {
     if (pruneSyncTimeoutRef.current) {
       clearTimeout(pruneSyncTimeoutRef.current);
     }
-
+    
     if (localPruneByGrade !== pruneByGradeThreshold) {
       // Debounce Redux update - only update after user stops dragging
       pruneSyncTimeoutRef.current = setTimeout(() => {
         actions.options.setPruneByGradeThreshold(localPruneByGrade);
       }, 300); // 300ms after last change
     }
-
+    
     return () => {
       if (pruneSyncTimeoutRef.current) {
         clearTimeout(pruneSyncTimeoutRef.current);
       }
     };
   }, [localPruneByGrade, pruneByGradeThreshold]);
-
+  
   // Sync Redux state to local when it changes externally (but not from our own updates)
   useEffect(() => {
     // Only sync if the difference is significant (to avoid loops)
@@ -318,7 +318,7 @@ export const RtStarView = (): JSX.Element => {
       setLocalPruneByGrade(pruneByGradeThreshold);
     }
   }, [pruneByGradeThreshold]);
-
+  
   const chPruneByGrade = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
     const sliderValue = Number(evt.target.value);
     const threshold = 6 - sliderValue; // Reverse: slider 0 = threshold 6, slider 6 = threshold 0
@@ -353,16 +353,16 @@ export const RtStarView = (): JSX.Element => {
     // Send computation request to worker with computation ID
     // Use localPruneByGrade for immediate responsiveness
     const payload: GraphComputePayload = {
-      computationId: computationIdRef.current,
+        computationId: computationIdRef.current,
       filteredRoots: toRender.graphableRows as Root[],
       allRoots: allRootsRef.current,
-      linkByMeaningThreshold,
-      maxGeneration,
-      mischalfim,
-      otherChoices,
+        linkByMeaningThreshold,
+        maxGeneration,
+        mischalfim,
+        otherChoices,
       maxNodes: allRootsRef.current.length, // No limit on number of roots
-      maxEdges,
-      pruneByGradeThreshold: localPruneByGrade,
+        maxEdges,
+        pruneByGradeThreshold: localPruneByGrade,
       maxNodesForExpansion: MAX_NODES_FOR_EXPANSION,
     };
 
@@ -379,19 +379,24 @@ export const RtStarView = (): JSX.Element => {
     if (!allRootsRef.current || allRootsRef.current.length === 0) {
       return;
     }
-
-    // Assert non-null: workerRef.current is guaranteed to be set when this runs
-    // Cancel previous computation by incrementing ID immediately
-    computationIdRef.current += 1;
-
-    // Clear any pending timeout
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-      debounceTimeoutRef.current = null;
+    // Ensure Redux options are properly initialized
+    if (!areOptionsReady) {
+      console.log('[RtStarView] Waiting for options to be ready - mischalfim:', mischalfim?.length, 'otherChoices:', !!otherChoices);
+      return;
     }
 
-    // Use requestAnimationFrame to ensure we're not blocking the UI thread
-    // Then set a timeout for the actual computation
+    // Assert non-null: workerRef.current is guaranteed to be set when this runs
+      // Cancel previous computation by incrementing ID immediately
+      computationIdRef.current += 1;
+      
+      // Clear any pending timeout
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+        debounceTimeoutRef.current = null;
+      }
+      
+      // Use requestAnimationFrame to ensure we're not blocking the UI thread
+      // Then set a timeout for the actual computation
     // For checkbox changes (otherChoices, mischalfim), use shorter debounce for immediate feedback
     // For slider changes, use longer debounce to batch rapid changes
     const isCheckboxChange = 
@@ -402,23 +407,23 @@ export const RtStarView = (): JSX.Element => {
     
     const debounceTime = isCheckboxChange ? 50 : 100; // Faster for checkboxes, slower for sliders
     
-    requestAnimationFrame(() => {
-      debounceTimeoutRef.current = setTimeout(() => {
-        computeGraph();
+      requestAnimationFrame(() => {
+        debounceTimeoutRef.current = setTimeout(() => {
+          computeGraph();
         // Update previous values after computation
         prevMaxGenRef.current = maxGeneration;
         prevLinkByMeaningRef.current = linkByMeaningThreshold;
         prevPruneByGradeRef.current = localPruneByGrade;
         prevMaxEdgesRef.current = maxEdges;
       }, debounceTime);
-    });
-
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-        debounceTimeoutRef.current = null;
-      }
-    };
+      });
+      
+      return () => {
+        if (debounceTimeoutRef.current) {
+          clearTimeout(debounceTimeoutRef.current);
+          debounceTimeoutRef.current = null;
+        }
+      };
   }, [maxGeneration, linkByMeaningThreshold, localPruneByGrade, maxEdges, computeGraph, graphableRowsReady, otherChoices, mischalfim]);
 
 
@@ -486,7 +491,7 @@ export const RtStarView = (): JSX.Element => {
   const graphing = (
     <div style={{ backgroundColor: 'midnightblue', height: "100%", width: "100%", minHeight: '400px', flex: 1, display: 'flex', flexDirection: 'column' }}>
       <GraphIframe
-        graph={graph}
+      graph={graph} 
         onReady={handleIframeReady}
         onTooltipRequest={handleTooltipRequest}
         nodeColors={nodeColors}
@@ -576,14 +581,14 @@ export const RtStarView = (): JSX.Element => {
               label="Add similar meanings:"
               tooltipContent={shouldDisableExpansion ? null : `Include additional roots (${tooltipCounts.x}) based on meanings similar to roots currently included in the grid filter (${tooltipCounts.n})`}
               value={6 - linkByMeaningThreshold}
-              min={0}
-              max={6}
-              step={1}
-              onChange={chLinkByMeaning}
+                min={0} 
+                max={6} 
+                step={1}
+                onChange={chLinkByMeaning}
               disabled={shouldDisableExpansion}
               ticksId="linkByMeaning-ticks"
               valueDisplay={<span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '85px'}}>Grade ≥ {linkByMeaningThreshold}</span>}
-            />
+              />
             <datalist id="linkByMeaning-ticks">
               {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={String(val)} label={String(val)} />)}
             </datalist>
@@ -593,14 +598,14 @@ export const RtStarView = (): JSX.Element => {
               label="Extra degrees:"
               tooltipContent={shouldDisableExpansion ? null : <>Given the roots included by the grid ({tooltipCounts.n}) and the roots with similar meanings ({tooltipCounts.x}) bring in additional roots ({tooltipCounts.w}) that are related according to the enabled <span style={hebrewTextStyle}>אותיות מתחלפות</span> criteria</>}
               value={localExtraDegrees}
-              min={0}
-              max={6}
-              step={1}
-              onChange={chExtraDegrees}
+                min={0} 
+                max={6} 
+                step={1}
+                onChange={chExtraDegrees}
               disabled={shouldDisableExpansion}
               ticksId="extraDegrees-ticks"
               valueDisplay={<span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '20px'}}>{localExtraDegrees}</span>}
-            />
+              />
             <datalist id="extraDegrees-ticks">
               {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={String(val)} label={String(val)} />)}
             </datalist>
@@ -633,14 +638,14 @@ export const RtStarView = (): JSX.Element => {
                   tooltipContent={tooltipContent}
                   tooltipMaxWidth={700}
                   value={6 - localPruneByGrade}
-                  min={0}
-                  max={6}
-                  step={1}
-                  onChange={chPruneByGrade}
+                      min={0} 
+                      max={6} 
+                      step={1}
+                      onChange={chPruneByGrade}
                   disabled={shouldDisableExpansion}
                   ticksId="pruneByGrade-ticks"
                   valueDisplay={<span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '85px'}}>Grade ≥ {localPruneByGrade}</span>}
-                />
+                    />
               );
             })()}
             <datalist id={`pruneByGrade-ticks`}>
@@ -673,17 +678,17 @@ export const RtStarView = (): JSX.Element => {
         <div style={{marginBottom: '10px'}}>
           <Tooltip content="Find matching root definition terms, or example word definitions, highlighted in orange and yellow, respectively">
             <span style={{display: 'inline-block', position: 'relative'}}>
-              <label style={{marginRight: '10px'}}>Search nodes:</label>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search definitions and examples (supports |, &, -, &quot;&quot;)"
+          <label style={{marginRight: '10px'}}>Search nodes:</label>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search definitions and examples (supports |, &, -, &quot;&quot;)"
                 style={{width: '400px', padding: '5px 25px 5px 5px'}}
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
+          />
+          {searchTerm && (
+            <button 
+              onClick={() => setSearchTerm('')}
                   style={{
                     position: 'absolute',
                     right: '5px',
@@ -741,14 +746,14 @@ export const RtStarView = (): JSX.Element => {
                 title={hideNonMatched ? 'Show all nodes' : 'Hide non-matched nodes'}
               >
                 {hideNonMatched ? '👁️ Show All' : '👁️‍🗨️ Hide Others'}
-              </button>
+            </button>
             </>
           )}
         </div>
         <hr/>
         {isComputing && <span style={{marginLeft: '10px', color: '#888'}}>Computing...</span>}
         <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {graphing}
+        {graphing}
         </div>
       </div>
 
