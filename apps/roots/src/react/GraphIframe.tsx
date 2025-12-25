@@ -213,8 +213,23 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
         // Update node colors for search highlighting
         if (event.data.payload && event.data.payload.nodeColors) {
           const nodeColors = event.data.payload.nodeColors;
+          console.log('[iframe] Received node color updates:', nodeColors.length, 'nodes');
           if (networkInstance) {
-            const updates = nodeColors.map(function(item) { return { id: item.id, color: item.color }; });
+            // vis-network needs the full color object structure
+            const updates = nodeColors.map(function(item) {
+              return {
+                id: item.id,
+                color: {
+                  background: item.color.background || 'white',
+                  border: item.color.border || 'cyan',
+                  highlight: {
+                    background: item.color.highlight?.background || item.color.background || 'pink',
+                    border: item.color.highlight?.border || 'red'
+                  }
+                }
+              };
+            });
+            console.log('[iframe] Updating', updates.length, 'nodes with colors');
             networkInstance.body.data.nodes.update(updates);
           }
         }
