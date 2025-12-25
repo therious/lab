@@ -10,7 +10,7 @@ import type {Root, GraphData} from "../roots/types";
 import {useGraphWorker, type GraphComputePayload} from "../hooks/useGraphWorker";
 import type {GraphComputePayload as GraphComputePayloadType} from "../utils/graphWorker";
 import {useNodeSearch} from "../hooks/useNodeSearch";
-import {GraphIframe} from "./GraphIframe";
+// GraphIframe is now in PersistentGraphContainer - we just send updates to it
 import {generateTooltipUpdates} from "../utils/updateNodeTooltips";
 
 // Hebrew text style for tooltips
