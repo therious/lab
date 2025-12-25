@@ -202,6 +202,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
       }
 
       if (event.data.type === 'iframeReady') {
+        iframeReadyRef.current = true;
         if (onReady) {
           onReady();
         }
