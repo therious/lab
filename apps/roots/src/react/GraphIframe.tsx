@@ -11,7 +11,7 @@ interface GraphIframeProps {
   onReady?: () => void;
   onTooltipRequest?: (rootId: number, definition: string) => void;
   nodeColors?: Array<{ id: number; color: { background: string } }>;
-  iframeRef?: React.RefObject<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void }>;
+  iframeRef?: React.RefObject<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void; recenter: () => void; toggleNonMatchedNodes: (hide: boolean) => void }>;
   iframeElementRef?: React.RefObject<HTMLIFrameElement | null>;
   style?: React.CSSProperties;
 }
@@ -335,7 +335,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
   // Expose methods via ref if provided
   useEffect(() => {
     if (externalRef) {
-      (externalRef as React.MutableRefObject<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void }>).current = {
+      (externalRef as React.MutableRefObject<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void; recenter: () => void; toggleNonMatchedNodes: (hide: boolean, matchedNodeIds: number[]) => void }>).current = {
         setPhysics: (enabled: boolean) => {
           if (iframeRef.current?.contentWindow) {
             iframeRef.current.contentWindow.postMessage({
@@ -349,6 +349,22 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
             iframeRef.current.contentWindow.postMessage({
               type: 'updateTooltips',
               payload: { updates }
+            }, '*');
+          }
+        },
+        recenter: () => {
+          if (iframeRef.current?.contentWindow) {
+            iframeRef.current.contentWindow.postMessage({
+              type: 'recenter',
+              payload: {}
+            }, '*');
+          }
+        },
+        toggleNonMatchedNodes: (hide: boolean, matchedNodeIds: number[]) => {
+          if (iframeRef.current?.contentWindow) {
+            iframeRef.current.contentWindow.postMessage({
+              type: 'toggleNonMatchedNodes',
+              payload: { hide, matchedNodeIds }
             }, '*');
           }
         }
