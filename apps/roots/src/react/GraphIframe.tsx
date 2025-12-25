@@ -407,7 +407,8 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
 
   // Update node colors when they change (for search highlighting)
   useEffect(() => {
-    if (iframeRef.current?.contentWindow && nodeColors) {
+    if (iframeReadyRef.current && iframeRef.current?.contentWindow && nodeColors && nodeColors.length > 0) {
+      console.log('[GraphIframe] Sending node color updates:', nodeColors.length, 'nodes');
       iframeRef.current.contentWindow.postMessage({
         type: 'updateNodeColors',
         payload: { nodeColors }
