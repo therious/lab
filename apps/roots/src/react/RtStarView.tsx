@@ -92,7 +92,7 @@ export const RtStarView = (): JSX.Element => {
     setSearchResultHandler,
   } = useGraphWorker();
 
-  const iframeRef = useRef<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void } | null>(null);
+  const iframeRef = useRef<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void; recenter: () => void; toggleNonMatchedNodes: (hide: boolean, matchedNodeIds: number[]) => void } | null>(null);
   const iframeElementRef = useRef<HTMLIFrameElement | null>(null);
   const dataWorkerRef = useRef<Worker | null>(null);
   const allRootsRef = useRef<Root[]>([]);
@@ -189,12 +189,19 @@ export const RtStarView = (): JSX.Element => {
     });
   }, [setSearchResultHandler, searchIdRef, applyNodeColors]);
   
-  // Clear search match counts when search term is cleared
+  // Clear search match counts and show all nodes when search term is cleared
   useEffect(() => {
     if (!searchTerm || !searchTerm.trim()) {
       setSearchMatchCounts({ definitions: 0, examples: 0 });
+      setMatchedNodeIds([]);
+      setHideNonMatched(false);
+      // Show all nodes
+      if (iframeRef.current && graph.nodes.length > 0) {
+        const allNodeIds = graph.nodes.map(n => n.id);
+        iframeRef.current.toggleNonMatchedNodes(false, allNodeIds);
+      }
     }
-  }, [searchTerm]);
+  }, [searchTerm, graph]);
 
   // Update node tooltips when dictionary loads
   useEffect(() => {
@@ -653,9 +660,44 @@ export const RtStarView = (): JSX.Element => {
             </span>
           </Tooltip>
           {searchTerm && searchTerm.trim() && (
-            <span style={{marginLeft: '10px', fontSize: '14px'}}>
-              Matches: <span style={{display: 'inline-block', backgroundColor: 'orange', color: 'black', borderRadius: '10px', minWidth: '20px', height: '20px', lineHeight: '20px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', padding: '0 6px'}}>{searchMatchCounts.definitions}</span> definitions, <span style={{display: 'inline-block', backgroundColor: 'gold', color: 'black', borderRadius: '10px', minWidth: '20px', height: '20px', lineHeight: '20px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', padding: '0 6px'}}>{searchMatchCounts.examples}</span> examples
-            </span>
+            <>
+              <span style={{marginLeft: '10px', fontSize: '14px'}}>
+                Matches: <span style={{display: 'inline-block', backgroundColor: 'orange', color: 'black', borderRadius: '10px', minWidth: '20px', height: '20px', lineHeight: '20px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', padding: '0 6px'}}>{searchMatchCounts.definitions}</span> definitions, <span style={{display: 'inline-block', backgroundColor: 'gold', color: 'black', borderRadius: '10px', minWidth: '20px', height: '20px', lineHeight: '20px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', padding: '0 6px'}}>{searchMatchCounts.examples}</span> examples
+              </span>
+              <button
+                onClick={() => {
+                  const newHideState = !hideNonMatched;
+                  setHideNonMatched(newHideState);
+                  if (iframeRef.current && matchedNodeIds.length > 0) {
+                    iframeRef.current.toggleNonMatchedNodes(newHideState, matchedNodeIds);
+                  }
+                }}
+                disabled={matchedNodeIds.length === 0}
+                style={{
+                  marginLeft: '10px',
+                  padding: '5px 10px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  backgroundColor: hideNonMatched ? '#4CAF50' : '#fff',
+                  color: hideNonMatched ? '#fff' : '#000',
+                  cursor: matchedNodeIds.length > 0 ? 'pointer' : 'not-allowed',
+                  opacity: matchedNodeIds.length > 0 ? 1 : 0.5,
+                  boxShadow: 'none',
+                  outline: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  if (matchedNodeIds.length > 0) {
+                    e.currentTarget.style.backgroundColor = hideNonMatched ? '#45a049' : '#f0f0f0';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = hideNonMatched ? '#4CAF50' : '#fff';
+                }}
+                title={hideNonMatched ? 'Show all nodes' : 'Hide non-matched nodes'}
+              >
+                {hideNonMatched ? '👁️ Show All' : '👁️‍🗨️ Hide Others'}
+              </button>
+            </>
           )}
         </div>
         <hr/>
