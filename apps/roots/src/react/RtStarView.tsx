@@ -105,6 +105,8 @@ export const RtStarView = (): JSX.Element => {
   const [isPhysicsEnabled, setIsPhysicsEnabled] = useState<boolean>(true); // Track physics state
   const [searchMatchCounts, setSearchMatchCounts] = useState<{ definitions: number; examples: number }>({ definitions: 0, examples: 0 });
   const [nodeColors, setNodeColors] = useState<Array<{ id: number; color: { background: string } }>>([]);
+  const [matchedNodeIds, setMatchedNodeIds] = useState<number[]>([]);
+  const [hideNonMatched, setHideNonMatched] = useState<boolean>(false);
 
   // Initialize data worker for tooltip requests and roots data
   // Keep worker alive across navigation to preserve state
