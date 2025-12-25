@@ -68,18 +68,86 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
     console.log('[iframe] Script loaded, sending iframeReady message');
     window.parent.postMessage({ type: 'iframeReady' }, '*');
 
+    // Function to compute and apply incremental graph updates
+    function applyIncrementalGraphUpdate(newGraphData) {
+      if (!networkInstance) {
+        return false; // Network not ready, will be created in initial setup
+      }
+
+      // Compute diff between current and new graph
+      const oldNodes = networkInstance.body.data.nodes.get();
+      const oldEdges = networkInstance.body.data.edges.get();
+      const oldGraph = { nodes: oldNodes, edges: oldEdges };
+      
+      // Find differences
+      const nodesToAdd = newGraphData.nodes.filter(newNode => 
+        !oldNodes.find(oldNode => oldNode.id === newNode.id)
+      );
+      const nodesToRemove = oldNodes.filter(oldNode => 
+        !newGraphData.nodes.find(newNode => newNode.id === oldNode.id)
+      ).map(n => n.id);
+      
+      // For nodes that exist in both, preserve position but update other properties
+      const nodesToUpdate = newGraphData.nodes
+        .filter(newNode => oldNodes.find(oldNode => oldNode.id === newNode.id))
+        .map(newNode => {
+          const oldNode = oldNodes.find(n => n.id === newNode.id);
+          return {
+            ...newNode,
+            x: oldNode.x, // Preserve x position
+            y: oldNode.y, // Preserve y position
+          };
+        });
+
+      const edgesToAdd = newGraphData.edges.filter(newEdge => 
+        !oldEdges.find(oldEdge => 
+          oldEdge.from === newEdge.from && oldEdge.to === newEdge.to
+        )
+      );
+      const edgesToRemove = oldEdges.filter(oldEdge => 
+        !newGraphData.edges.find(newEdge => 
+          newEdge.from === oldEdge.from && newEdge.to === oldEdge.to
+        )
+      ).map(e => e.id);
+
+      // Apply incremental updates
+      if (nodesToRemove.length > 0) {
+        networkInstance.body.data.nodes.remove(nodesToRemove);
+      }
+      if (nodesToAdd.length > 0) {
+        networkInstance.body.data.nodes.add(nodesToAdd);
+      }
+      if (nodesToUpdate.length > 0) {
+        networkInstance.body.data.nodes.update(nodesToUpdate);
+      }
+      if (edgesToRemove.length > 0) {
+        networkInstance.body.data.edges.remove(edgesToRemove);
+      }
+      if (edgesToAdd.length > 0) {
+        networkInstance.body.data.edges.add(edgesToAdd);
+      }
+
+      // Update graphData reference
+      graphData = newGraphData;
+      
+      return true; // Successfully applied incrementally
+    }
+
     // Listen for messages from parent
     window.addEventListener('message', (event) => {
       if (event.data.type === 'updateGraph') {
-        graphData = event.data.payload;
-        console.log('[iframe] Received graph data:', graphData.nodes.length, 'nodes,', graphData.edges.length, 'edges');
+        const newGraphData = event.data.payload;
+        console.log('[iframe] Received graph data:', newGraphData.nodes.length, 'nodes,', newGraphData.edges.length, 'edges');
         if (networkInstance) {
-          // Update existing network without recreating - preserve physics state and view
-          const currentPhysics = networkInstance.getOptions().physics;
-          networkInstance.setData({ nodes: new vis.DataSet(graphData.nodes), edges: new vis.DataSet(graphData.edges) });
-          // Restore physics state after update
-          if (currentPhysics) {
-            networkInstance.setOptions({ physics: currentPhysics });
+          // Try incremental update first to preserve node positions
+          const applied = applyIncrementalGraphUpdate(newGraphData);
+          if (!applied) {
+            // Fallback to full update if incremental failed
+            const currentPhysics = networkInstance.getOptions().physics;
+            networkInstance.setData({ nodes: new vis.DataSet(newGraphData.nodes), edges: new vis.DataSet(newGraphData.edges) });
+            if (currentPhysics) {
+              networkInstance.setOptions({ physics: currentPhysics });
+            }
           }
         } else {
           // Initial setup
