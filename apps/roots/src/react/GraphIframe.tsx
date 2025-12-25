@@ -59,7 +59,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
   <script src="https://unpkg.com/vis-network@latest/standalone/umd/vis-network.min.js"></script>
   <link href="https://unpkg.com/vis-network@latest/styles/vis-network.min.css" rel="stylesheet" type="text/css" />
   <script>
-    let graphData = { nodes: [], edges: [] };
+    let graphData = { nodes: [], edges: [], hiddenNodes: [], hiddenEdges: [] };
     let networkInstance = null;
     let currentPhysicsEnabled = true; // Track physics state separately
     const container = document.getElementById('root');
@@ -134,8 +134,13 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
         networkInstance.body.data.edges.add(edgesToAdd);
       }
 
-      // Update graphData reference
-      graphData = newGraphData;
+      // Update graphData reference, preserving hidden nodes/edges if they exist
+      graphData = {
+        nodes: newGraphData.nodes,
+        edges: newGraphData.edges,
+        hiddenNodes: graphData.hiddenNodes || [],
+        hiddenEdges: graphData.hiddenEdges || []
+      };
       
       return true; // Successfully applied incrementally
     }
