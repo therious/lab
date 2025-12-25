@@ -12,6 +12,8 @@ import {MAX_NODES_FOR_EXPANSION} from "../roots/constants";
 import type {Root, GraphNode, GraphData} from "../roots/types";
 import {useGraphWorker, type GraphComputePayload} from "../hooks/useGraphWorker";
 import {useNodeSearch} from "../hooks/useNodeSearch";
+import {onDictionaryReady, isDictionaryLoaded} from "../roots/loadDictionary";
+import {generateTooltipUpdates, applyTooltipUpdates} from "../utils/updateNodeTooltips";
 
 // Hebrew text style for tooltips
 const hebrewTextStyle: React.CSSProperties = {
@@ -106,6 +108,7 @@ export const RtStarView = (): JSX.Element => {
     isComputing,
     graph,
     tooltipCounts,
+    nodeIdToRootIdRef,
     computeGraph: computeGraphBase,
     setSearchResultHandler,
   } = useGraphWorker();
@@ -131,6 +134,46 @@ export const RtStarView = (): JSX.Element => {
       }
     });
   }, [setSearchResultHandler, searchIdRef, applyNodeColors]);
+
+  // Update node tooltips when dictionary loads
+  useEffect(() => {
+    if (!networkRef.current || !graph.nodes || graph.nodes.length === 0) {
+      return;
+    }
+
+    const updateTooltips = (): void => {
+      if (!networkRef.current || !isDictionaryLoaded()) {
+        return;
+      }
+
+      // Generate tooltip updates for all nodes
+      const updates = generateTooltipUpdates(
+        graph,
+        nodeIdToRootIdRef.current,
+        roots as Root[]
+      );
+
+      // Apply updates if any
+      if (updates.length > 0) {
+        applyTooltipUpdates(networkRef.current, updates);
+      }
+    };
+
+    // If dictionary is already loaded, update immediately
+    if (isDictionaryLoaded()) {
+      // Small delay to ensure network is ready
+      requestAnimationFrame(() => {
+        updateTooltips();
+      });
+    } else {
+      // Otherwise, wait for dictionary to load
+      onDictionaryReady(() => {
+        requestAnimationFrame(() => {
+          updateTooltips();
+        });
+      });
+    }
+  }, [graph, nodeIdToRootIdRef]);
 
   const chMaxEdges = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
     actions.options.setMaxEdges(Number(evt.target.value));

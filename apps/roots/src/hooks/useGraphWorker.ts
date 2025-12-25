@@ -22,6 +22,7 @@ export interface UseGraphWorkerResult {
   isComputing: boolean;
   graph: GraphData;
   tooltipCounts: TooltipCounts;
+  nodeIdToRootIdRef: React.MutableRefObject<Map<number, number>>;
   computeGraph: (payload: GraphComputePayload) => void;
   setSearchResultHandler: (handler: (searchId: number, nodeColors: Array<{ nodeId: number; color: { background: string; border: string; highlight: { background: string; border: string } } }>) => void) => void;
 }
@@ -76,6 +77,7 @@ export function useGraphWorker(): UseGraphWorkerResult {
     isComputing,
     graph,
     tooltipCounts,
+    nodeIdToRootIdRef,
     computeGraph,
     setSearchResultHandler,
   };
