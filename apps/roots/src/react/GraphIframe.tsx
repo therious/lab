@@ -277,25 +277,66 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
         }
       } else if (event.data.type === 'toggleNonMatchedNodes') {
         // Hide or show non-search-matched nodes
+        // This actually removes/adds nodes from the DataSet so physics recalculates
         if (event.data.payload) {
           const hide = event.data.payload.hide;
           const matchedNodeIds = event.data.payload.matchedNodeIds || [];
           console.log('[iframe] toggleNonMatchedNodes:', hide, 'matched:', matchedNodeIds.length);
           if (networkInstance) {
             const allNodes = networkInstance.body.data.nodes.get();
-            const updates = allNodes.map(function(node) {
-              const shouldHide = hide && matchedNodeIds.indexOf(node.id) === -1;
-              // vis-network uses 'hidden' property, but we need to ensure it's properly set
-              const update = { id: node.id };
-              if (shouldHide) {
-                update.hidden = true;
-              } else {
-                update.hidden = false;
+            const allEdges = networkInstance.body.data.edges.get();
+            
+            if (hide) {
+              // Hide non-matched nodes: remove them from the DataSet
+              const nodesToHide = allNodes.filter(function(node) {
+                return matchedNodeIds.indexOf(node.id) === -1;
+              }).map(function(n) { return n.id; });
+              
+              // Also remove edges connected to hidden nodes
+              const edgesToRemove = allEdges.filter(function(edge) {
+                return nodesToHide.indexOf(edge.from) !== -1 || nodesToHide.indexOf(edge.to) !== -1;
+              }).map(function(e) { return e.id; });
+              
+              console.log('[iframe] Hiding', nodesToHide.length, 'nodes and', edgesToRemove.length, 'edges');
+              
+              if (edgesToRemove.length > 0) {
+                networkInstance.body.data.edges.remove(edgesToRemove);
               }
-              return update;
-            });
-            console.log('[iframe] Updating', updates.length, 'nodes, hiding', updates.filter(function(u) { return u.hidden; }).length);
-            networkInstance.body.data.nodes.update(updates);
+              if (nodesToHide.length > 0) {
+                networkInstance.body.data.nodes.remove(nodesToHide);
+              }
+              
+              // Store hidden nodes/edges for later restoration
+              graphData.hiddenNodes = allNodes.filter(function(node) {
+                return nodesToHide.indexOf(node.id) !== -1;
+              });
+              graphData.hiddenEdges = allEdges.filter(function(edge) {
+                return edgesToRemove.indexOf(edge.id) !== -1;
+              });
+            } else {
+              // Show all nodes: restore hidden nodes and edges
+              if (graphData.hiddenNodes && graphData.hiddenNodes.length > 0) {
+                console.log('[iframe] Restoring', graphData.hiddenNodes.length, 'nodes and', graphData.hiddenEdges ? graphData.hiddenEdges.length : 0, 'edges');
+                if (graphData.hiddenEdges && graphData.hiddenEdges.length > 0) {
+                  networkInstance.body.data.edges.add(graphData.hiddenEdges);
+                }
+                networkInstance.body.data.nodes.add(graphData.hiddenNodes);
+                graphData.hiddenNodes = [];
+                graphData.hiddenEdges = [];
+              }
+            }
+            
+            // Auto-recenter after toggling
+            setTimeout(function() {
+              if (networkInstance) {
+                networkInstance.fit({
+                  animation: {
+                    duration: 500,
+                    easingFunction: 'easeInOutQuad'
+                  }
+                });
+              }
+            }, 100);
           }
         }
       }
