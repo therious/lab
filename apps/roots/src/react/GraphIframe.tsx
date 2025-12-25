@@ -252,10 +252,14 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
           const allNodes = networkInstance.body.data.nodes.get();
           const updates = allNodes.map(node => {
             const shouldHide = hide && !matchedNodeIds.includes(node.id);
-            return {
-              id: node.id,
-              hidden: shouldHide
-            };
+            // vis-network uses 'hidden' property, but we need to ensure it's properly set
+            const update: any = { id: node.id };
+            if (shouldHide) {
+              update.hidden = true;
+            } else {
+              update.hidden = false;
+            }
+            return update;
           });
           console.log('[iframe] Updating', updates.length, 'nodes, hiding', updates.filter(u => u.hidden).length);
           networkInstance.body.data.nodes.update(updates);
