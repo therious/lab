@@ -143,10 +143,19 @@ self.onmessage = (e: MessageEvent) => {
   } else if (type === 'getDictionaryTooltip') {
     // Get dictionary tooltip for a specific root
     const { rootId, definition } = payload;
-    const tooltip = getRootTooltip(rootId, definition);
-    self.postMessage({
-      type: 'getDictionaryTooltipResult',
-      payload: { rootId, tooltip },
+    // Ensure dictionary is loaded
+    loadDictionaryInWorker().then(() => {
+      const tooltip = getRootTooltip(rootId, definition);
+      self.postMessage({
+        type: 'getDictionaryTooltipResult',
+        payload: { rootId, tooltip },
+      });
+    }).catch((error) => {
+      // Fallback to just definition if dictionary load fails
+      self.postMessage({
+        type: 'getDictionaryTooltipResult',
+        payload: { rootId, tooltip: definition },
+      });
     });
   } else if (type === 'getDictionaryWords') {
     // Get dictionary words for a specific root

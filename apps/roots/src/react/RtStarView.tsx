@@ -93,34 +93,55 @@ export const RtStarView = (): JSX.Element => {
 
   const iframeRef = useRef<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void } | null>(null);
   const dataWorkerRef = useRef<Worker | null>(null);
+  const allRootsRef = useRef<Root[]>([]);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isPhysicsEnabled, setIsPhysicsEnabled] = useState<boolean>(true); // Track physics state
   const [searchMatchCounts, setSearchMatchCounts] = useState<{ definitions: number; examples: number }>({ definitions: 0, examples: 0 });
   const [nodeColors, setNodeColors] = useState<Array<{ id: number; color: { background: string } }>>([]);
 
-  // Initialize data worker for tooltip requests
+  // Initialize data worker for tooltip requests and roots data
   useEffect(() => {
     dataWorkerRef.current = new Worker(
       new URL('../worker/dataWorker.ts', import.meta.url),
       { type: 'module' }
     );
 
+    // Request all roots for graph computation
+    dataWorkerRef.current.postMessage({ type: 'getAllRoots' });
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data.type === 'getAllRootsResult') {
+        const { roots: allRoots } = e.data.payload;
+        allRootsRef.current = allRoots as Root[];
+      }
+    };
+    dataWorkerRef.current.addEventListener('message', handleMessage);
+
     return () => {
       if (dataWorkerRef.current) {
+        dataWorkerRef.current.removeEventListener('message', handleMessage);
         dataWorkerRef.current.terminate();
       }
     };
   }, []);
 
+  // Create a dummy networkRef for useNodeSearch (it doesn't actually use it for search, just for applyNodeColors)
+  const dummyNetworkRef = useRef(null);
+  
   const {
     searchTerm,
     setSearchTerm,
     searchIdRef,
     applyNodeColors: applyNodeColorsBase,
-  } = useNodeSearch(graph, null, workerRef);
+  } = useNodeSearch(graph, dummyNetworkRef, workerRef);
 
-  // Override applyNodeColors to work with iframe
-  const applyNodeColors = useCallback((colors: Array<{ id: number; color: { background: string } }>) => {
-    setNodeColors(colors);
+  // Override applyNodeColors to work with iframe instead of direct network access
+  const applyNodeColors = useCallback((colors: Array<{ nodeId: number; color: { background: string; border: string; highlight: { background: string; border: string } } }>) => {
+    // Convert to format expected by iframe
+    const iframeColors = colors.map(({ nodeId, color }) => ({
+      id: nodeId,
+      color: { background: color.background }
+    }));
+    setNodeColors(iframeColors);
   }, []);
 
   const shouldDisableExpansion = tooltipCounts.n > MAX_NODES_FOR_EXPANSION;
@@ -174,9 +195,10 @@ export const RtStarView = (): JSX.Element => {
             allRoots as Root[]
           );
 
-          // Apply updates via iframe
+          // Apply updates via iframe (convert nodeId to id)
           if (updates.length > 0 && iframeRef.current) {
-            iframeRef.current.updateTooltips(updates);
+            const iframeUpdates = updates.map(({ nodeId, title }) => ({ id: nodeId, title }));
+            iframeRef.current.updateTooltips(iframeUpdates);
           }
         }
       };
@@ -283,12 +305,12 @@ export const RtStarView = (): JSX.Element => {
     const payload: GraphComputePayload = {
       computationId: computationIdRef.current,
       filteredRoots: toRender.graphableRows as Root[],
-      allRoots: roots as Root[],
+      allRoots: allRootsRef.current,
       linkByMeaningThreshold,
       maxGeneration,
       mischalfim,
       otherChoices,
-      maxNodes: roots.length, // No limit on number of roots
+      maxNodes: allRootsRef.current.length, // No limit on number of roots
       maxEdges,
       pruneByGradeThreshold: localPruneByGrade,
       maxNodesForExpansion: MAX_NODES_FOR_EXPANSION,
@@ -338,6 +360,7 @@ export const RtStarView = (): JSX.Element => {
     if (!dataWorkerRef.current) return;
 
     // Request tooltip from data worker
+    const requestId = Date.now(); // Use timestamp as unique ID
     dataWorkerRef.current.postMessage({
       type: 'getDictionaryTooltip',
       payload: { rootId, definition }
@@ -346,17 +369,13 @@ export const RtStarView = (): JSX.Element => {
     const handleMessage = (e: MessageEvent) => {
       if (e.data.type === 'getDictionaryTooltipResult' && e.data.payload.rootId === rootId) {
         const { tooltip } = e.data.payload;
-        // Send tooltip back to iframe
-        if (iframeRef.current) {
-          // Tooltip is sent via postMessage in GraphIframe's onTooltipRequest handler
-          // We need to send it directly to iframe
-          const iframe = document.querySelector('iframe[src^="blob:"]') as HTMLIFrameElement;
-          if (iframe?.contentWindow) {
-            iframe.contentWindow.postMessage({
-              type: 'tooltipResult',
-              payload: { rootId, tooltip }
-            }, '*');
-          }
+        // Send tooltip back to iframe via postMessage
+        const iframe = iframeRef.current ? document.querySelector('iframe[src^="blob:"]') as HTMLIFrameElement : null;
+        if (iframe?.contentWindow) {
+          iframe.contentWindow.postMessage({
+            type: 'tooltipResult',
+            payload: { rootId, tooltip }
+          }, '*');
         }
         if (dataWorkerRef.current) {
           dataWorkerRef.current.removeEventListener('message', handleMessage);
