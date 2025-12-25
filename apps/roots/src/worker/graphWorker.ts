@@ -477,6 +477,8 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage | SearchMessage>) 
   } else if (e.data.type === 'search') {
     const { searchId, searchTerm } = e.data.payload;
     
+    console.log('[graphWorker] Search request:', searchId, 'term:', searchTerm, 'currentNodes:', currentNodes.length, 'nodeIdToRootIdMap:', nodeIdToRootIdMap.size, 'allRootsCache:', allRootsCache.length);
+    
     // Update current search ID - if a new search comes in, we'll ignore old results
     currentSearchId = searchId;
 
