@@ -117,6 +117,21 @@ export function tokenize(expression: string): Token[] {
     // Handle remaining token
     flushCurrent();
     
+    // If still in quotes at the end, treat as if quote was closed
+    if (inQuotes && current) {
+        tokens.push({ type: 'quoted', value: current });
+    }
+    
+    // Remove trailing operators (|, &) - they're meaningless
+    while (tokens.length > 0) {
+        const last = tokens[tokens.length - 1];
+        if (last.type === 'or' || last.type === 'and') {
+            tokens.pop();
+        } else {
+            break;
+        }
+    }
+    
     return tokens;
 }
 
@@ -195,8 +210,10 @@ export function parse(tokens: Token[]): ASTNode {
         if (token.type === 'lparen') {
             const expr = parseExpression();
             const next = consume();
+            // If no closing paren, treat as if it was closed at the end (don't throw)
             if (next?.type !== 'rparen') {
-                throw new Error('Expected closing parenthesis');
+                // Just return the expression as if paren was closed
+                return expr;
             }
             return expr;
         }

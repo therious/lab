@@ -10,6 +10,8 @@ import {CheckGroup} from "./CheckGroup";
 import {Tooltip} from "./Tooltip";
 import {MAX_NODES_FOR_EXPANSION} from "../roots/constants";
 import type {Root, GraphNode, GraphData} from "../roots/types";
+import {useGraphWorker, type GraphComputePayload} from "../hooks/useGraphWorker";
+import {useNodeSearch} from "../hooks/useNodeSearch";
 
 // Hebrew text style for tooltips
 const hebrewTextStyle: React.CSSProperties = {
@@ -17,26 +19,6 @@ const hebrewTextStyle: React.CSSProperties = {
   fontWeight: 'bolder'
 };
 
-type GenerationRange = {
-  min: number;
-  max: number;
-};
-
-type TooltipCounts = {
-  n: number; // Grid filter count
-  x: number; // Roots added by similar meanings (not in grid filter)
-  w: number; // Roots added only by extra degrees (not in grid filter or similar meanings)
-  y: number; // Total roots after all processing
-  q: number; // Roots with no edges (for Remove Free)
-  pruneRemoved: number; // Number of nodes removed by pruning
-};
-
-type PendingGraphData = {
-  data: GraphData;
-  generationRange: GenerationRange;
-  nodeIdToRootId: [number, number][];
-  tooltipCounts: TooltipCounts;
-};
 
 // Using interface here because vis-network's Network type is an interface
 // and we need to match its structure for proper type compatibility
@@ -50,11 +32,6 @@ interface VisNetworkInstance {
   };
   setOptions?: (options: { physics?: { stabilization?: { enabled?: boolean } } }) => void;
 }
-
-type WorkerMessage =
-  | { type: 'result'; payload: { computationId: number; data: GraphData; nodeMax: number; edgeMax: number; generationRange: GenerationRange; nodeIdToRootId: [number, number][]; tooltipCounts: TooltipCounts } }
-  | { type: 'searchResult'; payload: { searchId: number; nodeColors: Array<{ nodeId: number; color: { background: string; border: string; highlight: { background: string; border: string } } }> } }
-  | { type: 'error'; payload: { error: unknown } };
 
 type GraphEvents = {
   select: (params: { nodes: number[]; edges: number[] }) => void;
@@ -122,21 +99,38 @@ export const RtStarView = (): JSX.Element => {
   const [maxGeneration, setMaxGeneration] = useState(1);
   const [localExtraDegrees, setLocalExtraDegrees] = useState(0);
 
-  const [graph, setGraph] = useState<GraphData>(defaultGraph);
-  const [isComputing, setIsComputing] = useState<boolean>(false);
-  const [generationRange, setGenerationRange] = useState<GenerationRange>({ min: 1, max: 1 });
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [tooltipCounts, setTooltipCounts] = useState<TooltipCounts>({ n: 0, x: 0, w: 0, y: 0, q: 0, pruneRemoved: 0 });
-  const shouldDisableExpansion = tooltipCounts.n > MAX_NODES_FOR_EXPANSION;
-  const workerRef = useRef<Worker | null>(null);
-  const computationIdRef = useRef<number>(0);
-  const searchIdRef = useRef<number>(0);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const searchDebounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const pendingGraphDataRef = useRef<PendingGraphData | null>(null); // Store computed graph data before rendering
-  const graphUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Use extracted hooks for worker and search functionality
+  const {
+    workerRef,
+    computationIdRef,
+    isComputing,
+    graph,
+    tooltipCounts,
+    computeGraph: computeGraphBase,
+    setSearchResultHandler,
+  } = useGraphWorker();
+
   const networkRef = useRef<VisNetworkInstance | null>(null); // Reference to vis-network instance
-  const nodeIdToRootIdRef = useRef<Map<number, number>>(new Map()); // Map node IDs to root IDs for search
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    searchIdRef,
+    applyNodeColors,
+  } = useNodeSearch(graph, networkRef, workerRef);
+
+  const shouldDisableExpansion = tooltipCounts.n > MAX_NODES_FOR_EXPANSION;
+
+  // Setup search result handler
+  useEffect(() => {
+    setSearchResultHandler((searchId, nodeColors) => {
+      // Only apply if this is the latest search (using generic utility)
+      if (searchId === searchIdRef.current) {
+        applyNodeColors(nodeColors);
+      }
+    });
+  }, [setSearchResultHandler, searchIdRef, applyNodeColors]);
 
   const chMaxEdges = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
     actions.options.setMaxEdges(Number(evt.target.value));
@@ -208,86 +202,6 @@ export const RtStarView = (): JSX.Element => {
     setLocalPruneByGrade(threshold);
   }, []);
 
-  // Initialize worker
-  useEffect(() => {
-    workerRef.current = new Worker(
-      new URL('../worker/graphWorker.ts', import.meta.url),
-      { type: 'module' }
-    );
-
-    workerRef.current.onmessage = (e: MessageEvent<WorkerMessage>): void => {
-      if (e.data.type === 'result') {
-        const { computationId, data, nodeMax, edgeMax, generationRange, nodeIdToRootId, tooltipCounts } = e.data.payload;
-        // Only update if this is the latest computation
-        if (computationId === computationIdRef.current) {
-          // Store the computed data but don't render immediately
-          pendingGraphDataRef.current = { data, generationRange, nodeIdToRootId, tooltipCounts };
-          setIsComputing(false);
-
-          // Update tooltip counts
-          if (tooltipCounts) {
-            setTooltipCounts(tooltipCounts);
-          }
-
-          // Store nodeId to rootId mapping (convert from array to Map)
-          const mapping = new Map<number, number>();
-          if (nodeIdToRootId && Array.isArray(nodeIdToRootId)) {
-            nodeIdToRootId.forEach(([nodeId, rootId]: [number, number]) => {
-              mapping.set(nodeId, rootId);
-            });
-          }
-          nodeIdToRootIdRef.current = mapping;
-
-          // Clear any pending graph update
-          if (graphUpdateTimeoutRef.current) {
-            clearTimeout(graphUpdateTimeoutRef.current);
-          }
-
-          // Update graph visualization with throttling using requestAnimationFrame
-          // This batches updates and prevents blocking during rapid slider changes
-          requestAnimationFrame(() => {
-            graphUpdateTimeoutRef.current = setTimeout(() => {
-              if (pendingGraphDataRef.current) {
-                setGraph(pendingGraphDataRef.current.data);
-                setGenerationRange(pendingGraphDataRef.current.generationRange);
-                // Update tooltip counts
-                if (pendingGraphDataRef.current.tooltipCounts) {
-                  setTooltipCounts(pendingGraphDataRef.current.tooltipCounts);
-                }
-                // Update mapping
-                const mapping = new Map<number, number>();
-                if (pendingGraphDataRef.current.nodeIdToRootId && Array.isArray(pendingGraphDataRef.current.nodeIdToRootId)) {
-                  pendingGraphDataRef.current.nodeIdToRootId.forEach(([nodeId, rootId]: [number, number]) => {
-                    mapping.set(nodeId, rootId);
-                  });
-                }
-                nodeIdToRootIdRef.current = mapping;
-                pendingGraphDataRef.current = null;
-              }
-            }, 50); // Small delay to batch rapid updates
-          });
-        }
-      } else if (e.data.type === 'searchResult') {
-        const { searchId, nodeColors } = e.data.payload;
-        // Only apply if this is the latest search
-        if (searchId === searchIdRef.current) {
-          applyNodeColors(nodeColors);
-        }
-      } else if (e.data.type === 'error') {
-        console.error('Worker error:', e.data.payload.error);
-        setIsComputing(false);
-      }
-    };
-
-    workerRef.current.onerror = (error: ErrorEvent): void => {
-      console.error('Worker error:', error);
-      setIsComputing(false);
-    };
-
-    return () => {
-      workerRef.current?.terminate();
-    };
-  }, []);
 
   // Update localExtraDegrees when maxGeneration changes (from other sources)
   // This keeps the slider in sync if maxGeneration is set elsewhere
@@ -305,31 +219,26 @@ export const RtStarView = (): JSX.Element => {
       return;
     }
 
-    // Assert non-null: workerRef.current is guaranteed to be set when this runs
-    const worker = workerRef.current!;
-
-    setIsComputing(true);
     // Note: computationIdRef.current is incremented in the useEffect before calling this
 
     // Send computation request to worker with computation ID
     // Use localPruneByGrade for immediate responsiveness
-    worker.postMessage({
-      type: 'compute',
-      payload: {
-        computationId: computationIdRef.current,
-        filteredRoots: toRender.graphableRows as Root[],
-        allRoots: roots as Root[],
-        linkByMeaningThreshold,
-        maxGeneration,
-        mischalfim,
-        otherChoices,
-        maxNodes: roots.length, // No limit on number of roots
-        maxEdges,
-        pruneByGradeThreshold: localPruneByGrade,
-        maxNodesForExpansion: MAX_NODES_FOR_EXPANSION,
-      },
-    });
-  }, [linkByMeaningThreshold, maxGeneration, mischalfim, otherChoices, maxEdges, localPruneByGrade]);
+    const payload: GraphComputePayload = {
+      computationId: computationIdRef.current,
+      filteredRoots: toRender.graphableRows as Root[],
+      allRoots: roots as Root[],
+      linkByMeaningThreshold,
+      maxGeneration,
+      mischalfim,
+      otherChoices,
+      maxNodes: roots.length, // No limit on number of roots
+      maxEdges,
+      pruneByGradeThreshold: localPruneByGrade,
+      maxNodesForExpansion: MAX_NODES_FOR_EXPANSION,
+    };
+
+    computeGraphBase(payload);
+  }, [linkByMeaningThreshold, maxGeneration, mischalfim, otherChoices, maxEdges, localPruneByGrade, computeGraphBase]);
 
   // Auto-update graph when slider changes
   // Use debounce with cancellation for smooth slider dragging
@@ -369,87 +278,6 @@ export const RtStarView = (): JSX.Element => {
       // Handle double click if needed
     }
   }), []);
-
-  // Helper function to apply node colors from worker
-  const applyNodeColors = useCallback((nodeColors: Array<{ nodeId: number; color: { background: string; border: string; highlight: { background: string; border: string } } }>): void => {
-    if (!networkRef.current) return;
-
-    try {
-      const network = networkRef.current;
-      const nodesDataSet = network.body.data.nodes;
-      
-      // Temporarily disable stabilization to prevent animation interruption
-      // This allows physics to continue running while we update colors
-      if (network.setOptions) {
-        network.setOptions({ physics: { stabilization: { enabled: false } } });
-      }
-      
-      // Batch all updates into a single call to prevent multiple physics recalculations
-      // DataSet.update() accepts an array, which is more efficient and doesn't interrupt animation
-      const updates = nodeColors.map(({ nodeId, color }) => ({ id: nodeId, color }));
-      nodesDataSet.update(updates);
-      
-      // Re-enable stabilization after a brief delay to allow updates to complete
-      // The physics simulation continues running, we're just preventing stabilization restart
-      if (network.setOptions) {
-        // Use requestAnimationFrame to ensure updates are applied before re-enabling
-        requestAnimationFrame(() => {
-          if (networkRef.current && networkRef.current.setOptions) {
-            networkRef.current.setOptions({ physics: { stabilization: { enabled: true } } });
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error updating node colors:', error);
-    }
-  }, []);
-
-  // Helper function to trigger search in worker
-  const triggerSearch = useCallback((term: string): void => {
-    if (!workerRef.current) return;
-
-    // Cancel previous search by incrementing ID
-    searchIdRef.current += 1;
-    const currentSearchId = searchIdRef.current;
-
-    // Send search request to worker
-    workerRef.current.postMessage({
-      type: 'search',
-      payload: {
-        searchId: currentSearchId,
-        searchTerm: term,
-      },
-    });
-  }, []);
-
-  // Debounced search effect - input updates immediately, search is debounced
-  useEffect(() => {
-    // Clear any pending search timeout
-    if (searchDebounceTimeoutRef.current) {
-      clearTimeout(searchDebounceTimeoutRef.current);
-      searchDebounceTimeoutRef.current = null;
-    }
-
-    // Only search if we have nodes and a worker
-    if (!graph.nodes || graph.nodes.length === 0 || !workerRef.current) {
-      return;
-    }
-
-    // Debounce the search - wait for user to stop typing
-    searchDebounceTimeoutRef.current = setTimeout(() => {
-      if (searchTerm !== undefined) {
-        triggerSearch(searchTerm);
-      }
-    }, 300); // 300ms debounce
-
-    // Cleanup function to cancel pending search
-    return () => {
-      if (searchDebounceTimeoutRef.current) {
-        clearTimeout(searchDebounceTimeoutRef.current);
-        searchDebounceTimeoutRef.current = null;
-      }
-    };
-  }, [searchTerm, graph.nodes, triggerSearch]);
 
   // Get network instance via getNetwork prop (if supported) or events
   const handleGetNetwork = useCallback((network: VisNetworkInstance): void => {
