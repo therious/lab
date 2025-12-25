@@ -364,10 +364,25 @@ export const RtStarView = (): JSX.Element => {
 
     // Use requestAnimationFrame to ensure we're not blocking the UI thread
     // Then set a timeout for the actual computation
+    // For checkbox changes (otherChoices, mischalfim), use shorter debounce for immediate feedback
+    // For slider changes, use longer debounce to batch rapid changes
+    const isCheckboxChange = 
+      (maxGeneration === (prevMaxGenRef.current || maxGeneration)) &&
+      (linkByMeaningThreshold === (prevLinkByMeaningRef.current || linkByMeaningThreshold)) &&
+      (localPruneByGrade === (prevPruneByGradeRef.current || localPruneByGrade)) &&
+      (maxEdges === (prevMaxEdgesRef.current || maxEdges));
+    
+    const debounceTime = isCheckboxChange ? 50 : 100; // Faster for checkboxes, slower for sliders
+    
     requestAnimationFrame(() => {
       debounceTimeoutRef.current = setTimeout(() => {
         computeGraph();
-      }, 100); // 100ms debounce - enough to batch rapid changes
+        // Update previous values after computation
+        prevMaxGenRef.current = maxGeneration;
+        prevLinkByMeaningRef.current = linkByMeaningThreshold;
+        prevPruneByGradeRef.current = localPruneByGrade;
+        prevMaxEdgesRef.current = maxEdges;
+      }, debounceTime);
     });
 
     return () => {
