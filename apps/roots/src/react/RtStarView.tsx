@@ -187,12 +187,21 @@ export const RtStarView = (): JSX.Element => {
   // Create a dummy networkRef for useNodeSearch (it doesn't actually use it for search, just for applyNodeColors)
   const dummyNetworkRef = useRef(null);
   
+  // Get searchTerm from Redux, with fallback to hook
+  const reduxSearchTerm = visualizationState?.searchTerm ?? '';
   const {
-    searchTerm,
-    setSearchTerm,
+    searchTerm: hookSearchTerm,
+    setSearchTerm: setHookSearchTerm,
     searchIdRef,
     applyNodeColors: applyNodeColorsBase,
   } = useNodeSearch(graph, dummyNetworkRef, workerRef);
+  
+  // Use Redux searchTerm if available, otherwise use hook's searchTerm
+  const searchTerm = reduxSearchTerm || hookSearchTerm;
+  const setSearchTerm = useCallback((value: string) => {
+    actions.visualization.setSearchTerm(value);
+    setHookSearchTerm(value);
+  }, [setHookSearchTerm]);
 
   // Override applyNodeColors to work with iframe instead of direct network access
   const applyNodeColors = useCallback((colors: Array<{ nodeId: number; color: { background: string; border: string; highlight: { background: string; border: string } } }>) => {
