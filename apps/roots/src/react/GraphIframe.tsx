@@ -227,15 +227,17 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
         }
       } else if (event.data.type === 'setPhysics') {
         // Toggle physics
-        const { enabled } = event.data.payload;
-        currentPhysicsEnabled = enabled; // Update stored state
-        if (networkInstance) {
-          networkInstance.setOptions({
-            physics: {
-              enabled: enabled,
-              stabilization: { enabled: false }
-            }
-          });
+        if (event.data.payload) {
+          const enabled = event.data.payload.enabled;
+          currentPhysicsEnabled = enabled; // Update stored state
+          if (networkInstance) {
+            networkInstance.setOptions({
+              physics: {
+                enabled: enabled,
+                stabilization: { enabled: false }
+              }
+            });
+          }
         }
       } else if (event.data.type === 'recenter') {
         // Recenter and fit all nodes to view
@@ -274,12 +276,13 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
     });
 
     // Handle tooltip result
-    window.addEventListener('message', (event) => {
-      if (event.data.type === 'tooltipResult') {
-        const { rootId, tooltip } = event.data.payload;
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'tooltipResult' && event.data.payload) {
+        const rootId = event.data.payload.rootId;
+        const tooltip = event.data.payload.tooltip;
         // Update node tooltip
         if (networkInstance) {
-          const node = graphData.nodes.find(n => n.id === rootId);
+          const node = graphData.nodes.find(function(n) { return n.id === rootId; });
           if (node) {
             node.title = tooltip;
             networkInstance.body.data.nodes.update([node]);
