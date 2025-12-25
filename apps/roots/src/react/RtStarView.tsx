@@ -229,7 +229,7 @@ export const RtStarView = (): JSX.Element => {
     if (!searchTerm || !searchTerm.trim()) {
       setSearchMatchCounts({ definitions: 0, examples: 0 });
       setMatchedNodeIds([]);
-      setHideNonMatched(false);
+      actions.options.setHideNonMatched(false);
       setNodeColors([]); // Clear node colors to remove highlighting
       // Show all nodes
       if (iframeRef.current && graph.nodes.length > 0) {
@@ -734,13 +734,13 @@ export const RtStarView = (): JSX.Element => {
                 Matches: <span style={{display: 'inline-block', backgroundColor: 'orange', color: 'black', borderRadius: '10px', minWidth: '20px', height: '20px', lineHeight: '20px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', padding: '0 6px'}}>{searchMatchCounts.definitions}</span> definitions, <span style={{display: 'inline-block', backgroundColor: 'gold', color: 'black', borderRadius: '10px', minWidth: '20px', height: '20px', lineHeight: '20px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', padding: '0 6px'}}>{searchMatchCounts.examples}</span> examples
               </span>
               <button
-                onClick={() => {
-                  const newHideState = !hideNonMatched;
-                  setHideNonMatched(newHideState);
-                  if (iframeRef.current && matchedNodeIds.length > 0) {
-                    iframeRef.current.toggleNonMatchedNodes(newHideState, matchedNodeIds);
-                  }
-                }}
+                  onClick={() => {
+                    const newHideState = !hideNonMatched;
+                    actions.options.setHideNonMatched(newHideState);
+                    if (iframeRef.current && matchedNodeIds.length > 0) {
+                      iframeRef.current.toggleNonMatchedNodes(newHideState, matchedNodeIds);
+                    }
+                  }}
                 disabled={matchedNodeIds.length === 0}
                 style={{
                   marginLeft: '10px',
