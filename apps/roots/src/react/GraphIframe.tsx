@@ -211,14 +211,17 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
         }
       } else if (event.data.type === 'updateNodeColors') {
         // Update node colors for search highlighting
-        const { nodeColors } = event.data.payload;
-        if (networkInstance && nodeColors) {
-          const updates = nodeColors.map(({ id, color }) => ({ id, color }));
-          networkInstance.body.data.nodes.update(updates);
+        if (event.data.payload && event.data.payload.nodeColors) {
+          const nodeColors = event.data.payload.nodeColors;
+          if (networkInstance) {
+            const updates = nodeColors.map(function(item) { return { id: item.id, color: item.color }; });
+            networkInstance.body.data.nodes.update(updates);
+          }
         }
       } else if (event.data.type === 'updateTooltips') {
         // Update node tooltips
-        const { updates } = event.data.payload;
+        if (event.data.payload && event.data.payload.updates) {
+          const updates = event.data.payload.updates;
         if (networkInstance && updates) {
           networkInstance.body.data.nodes.update(updates);
         }
@@ -246,23 +249,26 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
         }
       } else if (event.data.type === 'toggleNonMatchedNodes') {
         // Hide or show non-search-matched nodes
-        const { hide, matchedNodeIds } = event.data.payload;
-        console.log('[iframe] toggleNonMatchedNodes:', hide, 'matched:', matchedNodeIds.length);
-        if (networkInstance) {
-          const allNodes = networkInstance.body.data.nodes.get();
-          const updates = allNodes.map(node => {
-            const shouldHide = hide && !matchedNodeIds.includes(node.id);
-            // vis-network uses 'hidden' property, but we need to ensure it's properly set
-            const update = { id: node.id };
-            if (shouldHide) {
-              update.hidden = true;
-            } else {
-              update.hidden = false;
-            }
-            return update;
-          });
-          console.log('[iframe] Updating', updates.length, 'nodes, hiding', updates.filter(u => u.hidden).length);
-          networkInstance.body.data.nodes.update(updates);
+        if (event.data.payload) {
+          const hide = event.data.payload.hide;
+          const matchedNodeIds = event.data.payload.matchedNodeIds || [];
+          console.log('[iframe] toggleNonMatchedNodes:', hide, 'matched:', matchedNodeIds.length);
+          if (networkInstance) {
+            const allNodes = networkInstance.body.data.nodes.get();
+            const updates = allNodes.map(function(node) {
+              const shouldHide = hide && !matchedNodeIds.includes(node.id);
+              // vis-network uses 'hidden' property, but we need to ensure it's properly set
+              const update = { id: node.id };
+              if (shouldHide) {
+                update.hidden = true;
+              } else {
+                update.hidden = false;
+              }
+              return update;
+            });
+            console.log('[iframe] Updating', updates.length, 'nodes, hiding', updates.filter(function(u) { return u.hidden; }).length);
+            networkInstance.body.data.nodes.update(updates);
+          }
         }
       }
     });
