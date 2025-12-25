@@ -1,7 +1,6 @@
-import React, {useCallback, useState, useRef, useMemo} from 'react';
+import React, {useCallback, useState, useRef, useMemo, useEffect} from 'react';
 import {MyGrid} from "./MyGrid";
 import { createRootsColumnDefs} from "../xform/columndefs";
-import {roots} from '../roots/roots';
 import {toRender, expandFilteredWithLinkedRoots, expandFilteredWithIndirectlyLinkedRoots} from "../roots/myvis";
 import {Menu, Item, Separator, useContextMenu} from 'react-contexify';
 import {actions, useSelector} from '../actions-integration';
@@ -23,12 +22,14 @@ const getRowNodeId = params => {
 }
 const gridstyle = {height: '96%', width: '100%'};
 
-const rowData= roots;
 const kHeaderContextMenu = 'headerContextMenu';
 
 export const  RtGridView = () => {
   const [filter, setFilter]  = useState('');
-  const [filteredCount, setFilteredCount] = useState(rowData.length);
+  const [rowData, setRowData] = useState([]);
+  const [filteredCount, setFilteredCount] = useState(0);
+  const dataWorkerRef = useRef(null);
+  const allRootsRef = useRef([]);
   const [menuState, setMenuState] = useState({ hasColumnFilter: false, hasAnyFilter: false, hasAnySort: false });
   const [multiLineExamples, setMultiLineExamples] = useState(false);
   const gridApiRef = useRef(null);
@@ -38,6 +39,37 @@ export const  RtGridView = () => {
   // Get grid state from Redux
   const gridState = useSelector(s => s.grid);
   const { options: { mischalfim, otherChoices } } = useSelector(s => s);
+
+  // Initialize data worker and load rows
+  useEffect(() => {
+    dataWorkerRef.current = new Worker(
+      new URL('../worker/dataWorker.ts', import.meta.url),
+      { type: 'module' }
+    );
+
+    const handleMessage = (e) => {
+      if (e.data.type === 'getAllRowsResult') {
+        const { rowData: rows } = e.data.payload;
+        setRowData(rows);
+        setFilteredCount(rows.length);
+      } else if (e.data.type === 'getAllRootsResult') {
+        const { roots: allRoots } = e.data.payload;
+        allRootsRef.current = allRoots;
+      }
+    };
+
+    dataWorkerRef.current.onmessage = handleMessage;
+
+    // Request all rows and roots
+    dataWorkerRef.current.postMessage({ type: 'getAllRows' });
+    dataWorkerRef.current.postMessage({ type: 'getAllRoots' });
+
+    return () => {
+      if (dataWorkerRef.current) {
+        dataWorkerRef.current.terminate();
+      }
+    };
+  }, []);
 
   const onFilterChanged = useCallback(ev =>{
     const api = ev.api;
@@ -54,13 +86,16 @@ export const  RtGridView = () => {
     setFilteredCount(filteredRoots.length);
     toRender.graphableRows = filteredRoots;
 
-    // Create expanded linked list (directly linked) and store it for the visualization
-    const expandedLinkedRoots = expandFilteredWithLinkedRoots(filteredRoots, roots, mischalfim, otherChoices);
-    toRender.expandedLinkedRows = expandedLinkedRoots;
+    // Use cached roots for expansion calculations
+    if (allRootsRef.current.length > 0) {
+      // Create expanded linked list (directly linked) and store it for the visualization
+      const expandedLinkedRoots = expandFilteredWithLinkedRoots(filteredRoots, allRootsRef.current, mischalfim, otherChoices);
+      toRender.expandedLinkedRows = expandedLinkedRoots;
 
-    // Create indirectly linked list (transitive closure) and store it for the visualization
-    const indirectlyLinkedRoots = expandFilteredWithIndirectlyLinkedRoots(filteredRoots, roots, mischalfim, otherChoices);
-    toRender.indirectlyLinkedRows = indirectlyLinkedRoots;
+      // Create indirectly linked list (transitive closure) and store it for the visualization
+      const indirectlyLinkedRoots = expandFilteredWithIndirectlyLinkedRoots(filteredRoots, allRootsRef.current, mischalfim, otherChoices);
+      toRender.indirectlyLinkedRows = indirectlyLinkedRoots;
+    }
 
     // Save filter state to Redux
     if (gridApiRef.current) {
@@ -228,7 +263,7 @@ export const  RtGridView = () => {
    return  (
       <>
        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-         <span>Filtered/Total Roots: {`${filteredCount}/${rowData.length}`}</span>
+         <span>Filtered/Total Roots: {`${filteredCount}/${rowData.length || 0}`}</span>
          <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'normal' }}>
            <input
              type="checkbox"
@@ -244,7 +279,7 @@ export const  RtGridView = () => {
         onGridReady={onGridReady}
         onHeaderContextMenu={onHeaderContextMenu}
         style={gridstyle}
-        rowData={rowData}
+        rowData={rowData.length > 0 ? rowData : undefined}
         columnDefs={columnDefs}
         getRowId={getRowNodeId}
       >
