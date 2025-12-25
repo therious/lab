@@ -100,20 +100,22 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
           };
         });
 
-      const edgesToAdd = newGraphData.edges.filter(newEdge => 
-        !oldEdges.find(oldEdge => 
-          oldEdge.from === newEdge.from && oldEdge.to === newEdge.to
-        )
-      );
+      const edgesToAdd = newGraphData.edges.filter(function(newEdge) {
+        return !oldEdges.find(function(oldEdge) {
+          return oldEdge.from === newEdge.from && oldEdge.to === newEdge.to;
+        });
+      });
       // For edges, vis-network auto-generates IDs, so we need to use the actual edge objects
       // Filter edges that should be removed and get their IDs from the DataSet
       const edgesToRemove = oldEdges
-        .filter(oldEdge => 
-          !newGraphData.edges.find(newEdge => 
-            newEdge.from === oldEdge.from && newEdge.to === oldEdge.to
-          )
-        )
-        .map(e => e.id); // vis-network always provides an id
+        .filter(function(oldEdge) {
+          return !newGraphData.edges.find(function(newEdge) {
+            return newEdge.from === oldEdge.from && newEdge.to === oldEdge.to;
+          });
+        })
+        .map(function(e) { return e.id; }); // vis-network always provides an id
+
+      console.log('[iframe] Incremental update - edges to add:', edgesToAdd.length, 'edges to remove:', edgesToRemove.length, 'total new edges:', newGraphData.edges.length, 'total old edges:', oldEdges.length);
 
       // Apply incremental updates
       if (nodesToRemove.length > 0) {
