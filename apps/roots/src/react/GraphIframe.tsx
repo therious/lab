@@ -12,12 +12,20 @@ interface GraphIframeProps {
   onTooltipRequest?: (rootId: number, definition: string) => void;
   nodeColors?: Array<{ id: number; color: { background: string } }>;
   iframeRef?: React.RefObject<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void }>;
+  iframeElementRef?: React.RefObject<HTMLIFrameElement | null>;
   style?: React.CSSProperties;
 }
 
-export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTooltipRequest, nodeColors, iframeRef: externalRef, style }) => {
+export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTooltipRequest, nodeColors, iframeRef: externalRef, iframeElementRef: externalElementRef, style }) => {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const blobUrlRef = useRef<string | null>(null);
+
+  // Expose iframe element ref to parent
+  useEffect(() => {
+    if (externalElementRef) {
+      (externalElementRef as React.MutableRefObject<HTMLIFrameElement | null>).current = iframeRef.current;
+    }
+  }, [externalElementRef]);
 
   // Create blob URL with iframe content
   useEffect(() => {

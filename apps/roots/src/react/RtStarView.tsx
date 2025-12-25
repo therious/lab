@@ -92,6 +92,7 @@ export const RtStarView = (): JSX.Element => {
   } = useGraphWorker();
 
   const iframeRef = useRef<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void } | null>(null);
+  const iframeElementRef = useRef<HTMLIFrameElement | null>(null);
   const dataWorkerRef = useRef<Worker | null>(null);
   const allRootsRef = useRef<Root[]>([]);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -357,7 +358,7 @@ export const RtStarView = (): JSX.Element => {
 
   // Handle tooltip request from iframe
   const handleTooltipRequest = useCallback((rootId: number, definition: string) => {
-    if (!dataWorkerRef.current || !iframeRef.current?.contentWindow) return;
+    if (!dataWorkerRef.current || !iframeElementRef.current?.contentWindow) return;
 
     // Request tooltip from data worker
     dataWorkerRef.current.postMessage({
@@ -369,8 +370,8 @@ export const RtStarView = (): JSX.Element => {
       if (e.data.type === 'getDictionaryTooltipResult' && e.data.payload.rootId === rootId) {
         const { tooltip } = e.data.payload;
         // Send tooltip back to iframe via postMessage
-        if (iframeRef.current?.contentWindow) {
-          iframeRef.current.contentWindow.postMessage({
+        if (iframeElementRef.current?.contentWindow) {
+          iframeElementRef.current.contentWindow.postMessage({
             type: 'tooltipResult',
             payload: { rootId, tooltip }
           }, '*');
@@ -418,6 +419,7 @@ export const RtStarView = (): JSX.Element => {
         onTooltipRequest={handleTooltipRequest}
         nodeColors={nodeColors}
         iframeRef={iframeRef}
+        iframeElementRef={iframeElementRef}
         style={{ backgroundColor: 'midnightblue' }}
       />
     </div>
