@@ -291,24 +291,25 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
     blobUrlRef.current = url;
 
     if (iframeRef.current) {
-      iframeRef.current.src = url;
-      
       // Fallback: send graph data when iframe loads, even if iframeReady message isn't received
       const onLoadHandler = () => {
-        console.log('[GraphIframe] Iframe loaded, attempting to send graph data');
+        console.log('[GraphIframe] Iframe loaded event fired');
         setTimeout(() => {
-          if (iframeRef.current?.contentWindow && graph && graph.nodes.length > 0 && !iframeReadyRef.current) {
-            console.log('[GraphIframe] Fallback: Sending graph data after iframe load');
+          if (iframeRef.current?.contentWindow && graph && graph.nodes.length > 0) {
+            console.log('[GraphIframe] Fallback: Sending graph data after iframe load, nodes:', graph.nodes.length);
             iframeReadyRef.current = true; // Mark as ready
             iframeRef.current.contentWindow.postMessage({
               type: 'updateGraph',
               payload: graph
             }, '*');
+          } else {
+            console.log('[GraphIframe] Fallback: Cannot send - iframe:', !!iframeRef.current?.contentWindow, 'graph:', !!graph, 'nodes:', graph?.nodes?.length || 0);
           }
-        }, 500); // Wait 500ms for iframe script to initialize
+        }, 1000); // Wait 1s for iframe script to initialize
       };
       
       iframeRef.current.addEventListener('load', onLoadHandler);
+      iframeRef.current.src = url;
       
       return () => {
         if (iframeRef.current) {
