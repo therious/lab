@@ -63,6 +63,11 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
     let networkInstance = null;
     const container = document.getElementById('root');
 
+    // Notify parent that iframe is ready as soon as script loads
+    // This allows parent to send graph data even if network isn't created yet
+    console.log('[iframe] Script loaded, sending iframeReady message');
+    window.parent.postMessage({ type: 'iframeReady' }, '*');
+
     // Listen for messages from parent
     window.addEventListener('message', (event) => {
       if (event.data.type === 'updateGraph') {
@@ -126,10 +131,6 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
               }, '*');
             }
           });
-
-          // Notify parent that iframe is ready
-          console.log('[iframe] Sending iframeReady message');
-          window.parent.postMessage({ type: 'iframeReady' }, '*');
         }
       } else if (event.data.type === 'updateNodeColors') {
         // Update node colors for search highlighting
