@@ -174,6 +174,12 @@ export const RtStarView = (): JSX.Element => {
       if (searchId === searchIdRef.current) {
         applyNodeColors(nodeColors);
         
+        // Extract matched node IDs (nodes with orange or yellow background)
+        const matchedIds = nodeColors
+          .filter(({ color }) => color.background === 'orange' || color.background === 'yellow')
+          .map(({ nodeId }) => nodeId);
+        setMatchedNodeIds(matchedIds);
+        
         // Count matches: orange = definition matches, yellow = example matches
         let definitionMatches = 0;
         let exampleMatches = 0;
@@ -185,9 +191,14 @@ export const RtStarView = (): JSX.Element => {
           }
         });
         setSearchMatchCounts({ definitions: definitionMatches, examples: exampleMatches });
+        
+        // If hideNonMatched is enabled, update visibility to show newly matched nodes
+        if (hideNonMatched && iframeRef.current) {
+          iframeRef.current.toggleNonMatchedNodes(true, matchedIds);
+        }
       }
     });
-  }, [setSearchResultHandler, searchIdRef, applyNodeColors]);
+  }, [setSearchResultHandler, searchIdRef, applyNodeColors, hideNonMatched]);
   
   // Clear search match counts and show all nodes when search term is cleared
   useEffect(() => {
