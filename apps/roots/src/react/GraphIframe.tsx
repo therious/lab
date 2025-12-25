@@ -10,10 +10,12 @@ interface GraphIframeProps {
   graph: GraphData;
   onReady?: () => void;
   onTooltipRequest?: (rootId: number, definition: string) => void;
+  nodeColors?: Array<{ id: number; color: { background: string } }>;
+  iframeRef?: React.RefObject<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void }>;
   style?: React.CSSProperties;
 }
 
-export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTooltipRequest, style }) => {
+export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTooltipRequest, nodeColors, iframeRef: externalRef, style }) => {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const blobUrlRef = useRef<string | null>(null);
 
@@ -40,30 +42,96 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
 </head>
 <body>
   <div id="root"></div>
-  <script type="module">
-    import React from 'https://esm.sh/react@18';
-    import ReactDOM from 'https://esm.sh/react-dom@18/client';
-    import Graph from 'https://esm.sh/react-vis-graph-wrapper@1.0.2';
-    import 'https://esm.sh/vis-network@latest/styles/vis-network.css';
-
+  <script src="https://unpkg.com/vis-network@latest/standalone/umd/vis-network.min.js"></script>
+  <link href="https://unpkg.com/vis-network@latest/styles/vis-network.min.css" rel="stylesheet" type="text/css" />
+  <script>
     let graphData = { nodes: [], edges: [] };
     let networkInstance = null;
+    const container = document.getElementById('root');
 
     // Listen for messages from parent
     window.addEventListener('message', (event) => {
       if (event.data.type === 'updateGraph') {
         graphData = event.data.payload;
         if (networkInstance) {
-          networkInstance.body.data.nodes.update(graphData.nodes);
-          networkInstance.body.data.edges.update(graphData.edges);
+          networkInstance.setData({ nodes: new vis.DataSet(graphData.nodes), edges: new vis.DataSet(graphData.edges) });
+        } else {
+          // Initial setup
+          const data = { nodes: new vis.DataSet(graphData.nodes), edges: new vis.DataSet(graphData.edges) };
+          const options = {
+            width: '100%',
+            height: '100%',
+            nodes: {
+              color: {
+                background: 'white',
+                border: 'cyan',
+                highlight: {
+                  background: 'pink',
+                  border: 'red'
+                }
+              },
+              shape: 'circle'
+            },
+            edges: {
+              color: 'yellow',
+              width: 1,
+              arrows: { to: { enabled: false }, from: { enabled: false } }
+            },
+            interaction: {
+              keyboard: { speed: { x: 10, y: 10, zoom: 0.02 } },
+              dragNodes: true,
+              dragView: true,
+              zoomView: true
+            },
+            layout: { improvedLayout: true },
+            configure: { enabled: false },
+            physics: {
+              enabled: true,
+              stabilization: { enabled: false }
+            }
+          };
+          networkInstance = new vis.Network(container, data, options);
+          
+          // Handle node hover for tooltip requests
+          networkInstance.on('hoverNode', (params) => {
+            const nodeId = params.node;
+            const node = graphData.nodes.find(n => n.id === nodeId);
+            if (node && node.title && !node.title.includes('Example words')) {
+              // Request tooltip from parent if not already enriched
+              window.parent.postMessage({
+                type: 'tooltipRequest',
+                payload: { rootId: nodeId, definition: node.title }
+              }, '*');
+            }
+          });
+
+          // Notify parent that iframe is ready
+          window.parent.postMessage({ type: 'iframeReady' }, '*');
         }
-      } else if (event.data.type === 'requestTooltip') {
-        const { rootId, definition } = event.data.payload;
-        // Request tooltip from parent
-        window.parent.postMessage({
-          type: 'tooltipRequest',
-          payload: { rootId, definition }
-        }, '*');
+      } else if (event.data.type === 'updateNodeColors') {
+        // Update node colors for search highlighting
+        const { nodeColors } = event.data.payload;
+        if (networkInstance && nodeColors) {
+          const updates = nodeColors.map(({ id, color }) => ({ id, color }));
+          networkInstance.body.data.nodes.update(updates);
+        }
+      } else if (event.data.type === 'updateTooltips') {
+        // Update node tooltips
+        const { updates } = event.data.payload;
+        if (networkInstance && updates) {
+          networkInstance.body.data.nodes.update(updates);
+        }
+      } else if (event.data.type === 'setPhysics') {
+        // Toggle physics
+        const { enabled } = event.data.payload;
+        if (networkInstance) {
+          networkInstance.setOptions({
+            physics: {
+              enabled: enabled,
+              stabilization: { enabled: false }
+            }
+          });
+        }
       }
     });
 
@@ -81,55 +149,6 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
         }
       }
     });
-
-    const defaultOptions = {
-      width: '2000px',
-      height: '2000px',
-      nodes: {
-        color: {
-          background: 'white',
-          border: 'cyan',
-          highlight: {
-            background: 'pink',
-            border: 'red'
-          }
-        },
-        shape: 'circle'
-      },
-      edges: {
-        color: 'yellow',
-        width: 1,
-        arrows: { to: { enabled: false }, from: { enabled: false } }
-      },
-      interaction: {
-        keyboard: { speed: { x: 10, y: 10, zoom: 0.02 } },
-        dragNodes: true,
-        dragView: true,
-        zoomView: true
-      },
-      layout: { improvedLayout: true },
-      configure: { enabled: false }
-    };
-
-    const events = {
-      select: ({ nodes, edges }) => {},
-      doubleClick: ({ pointer: { canvas } }) => {},
-      init: (network) => {
-        networkInstance = network;
-        // Notify parent that iframe is ready
-        window.parent.postMessage({ type: 'iframeReady' }, '*');
-      }
-    };
-
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(
-      React.createElement(Graph, {
-        graph: graphData,
-        options: defaultOptions,
-        events: events,
-        style: { backgroundColor: 'midnightblue' }
-      })
-    );
   </script>
 </body>
 </html>
@@ -187,6 +206,40 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
       }, '*');
     }
   }, [graph]);
+
+  // Update node colors when they change (for search highlighting)
+  useEffect(() => {
+    if (iframeRef.current?.contentWindow && nodeColors) {
+      iframeRef.current.contentWindow.postMessage({
+        type: 'updateNodeColors',
+        payload: { nodeColors }
+      }, '*');
+    }
+  }, [nodeColors]);
+
+  // Expose methods via ref if provided
+  useEffect(() => {
+    if (externalRef) {
+      (externalRef as React.MutableRefObject<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void }>).current = {
+        setPhysics: (enabled: boolean) => {
+          if (iframeRef.current?.contentWindow) {
+            iframeRef.current.contentWindow.postMessage({
+              type: 'setPhysics',
+              payload: { enabled }
+            }, '*');
+          }
+        },
+        updateTooltips: (updates: Array<{ id: number; title: string }>) => {
+          if (iframeRef.current?.contentWindow) {
+            iframeRef.current.contentWindow.postMessage({
+              type: 'updateTooltips',
+              payload: { updates }
+            }, '*');
+          }
+        }
+      };
+    }
+  }, [externalRef]);
 
   return (
     <iframe
