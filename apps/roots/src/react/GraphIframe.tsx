@@ -169,9 +169,18 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
     };
   }, []);
 
+  // Store tooltip request handler ref to send responses back
+  const tooltipRequestHandlerRef = useRef<((rootId: number, definition: string) => void) | null>(null);
+  tooltipRequestHandlerRef.current = onTooltipRequest || null;
+
   // Listen for messages from iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      // Only process messages from our iframe
+      if (event.source !== iframeRef.current?.contentWindow) {
+        return;
+      }
+
       if (event.data.type === 'iframeReady') {
         if (onReady) {
           onReady();
@@ -185,8 +194,8 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
         }
       } else if (event.data.type === 'tooltipRequest') {
         const { rootId, definition } = event.data.payload;
-        if (onTooltipRequest) {
-          onTooltipRequest(rootId, definition);
+        if (tooltipRequestHandlerRef.current) {
+          tooltipRequestHandlerRef.current(rootId, definition);
         }
       }
     };
@@ -195,7 +204,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, [graph, onReady, onTooltipRequest]);
+  }, [graph, onReady]);
 
   // Update graph when it changes
   useEffect(() => {

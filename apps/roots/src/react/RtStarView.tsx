@@ -357,10 +357,9 @@ export const RtStarView = (): JSX.Element => {
 
   // Handle tooltip request from iframe
   const handleTooltipRequest = useCallback((rootId: number, definition: string) => {
-    if (!dataWorkerRef.current) return;
+    if (!dataWorkerRef.current || !iframeRef.current?.contentWindow) return;
 
     // Request tooltip from data worker
-    const requestId = Date.now(); // Use timestamp as unique ID
     dataWorkerRef.current.postMessage({
       type: 'getDictionaryTooltip',
       payload: { rootId, definition }
@@ -370,9 +369,8 @@ export const RtStarView = (): JSX.Element => {
       if (e.data.type === 'getDictionaryTooltipResult' && e.data.payload.rootId === rootId) {
         const { tooltip } = e.data.payload;
         // Send tooltip back to iframe via postMessage
-        const iframe = iframeRef.current ? document.querySelector('iframe[src^="blob:"]') as HTMLIFrameElement : null;
-        if (iframe?.contentWindow) {
-          iframe.contentWindow.postMessage({
+        if (iframeRef.current?.contentWindow) {
+          iframeRef.current.contentWindow.postMessage({
             type: 'tooltipResult',
             payload: { rootId, tooltip }
           }, '*');
