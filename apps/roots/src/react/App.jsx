@@ -11,6 +11,7 @@ import {NotifyWrapper} from "./NotifyWrapper";
 import {Modal} from "./Modal";
 import {RtGridView} from "./RtGridView.jsx";
 import {RtStarView} from "./RtStarView";
+import {PersistentGraphContainer} from "./PersistentGraphContainer";
 
 const palette = {
       plum: '#4b54a1',
@@ -182,6 +183,8 @@ const  App = () => {
 
 
           <CenterBody>
+            {/* Persistent graph container - always mounted to keep iframe alive */}
+            <PersistentGraphContainer />
 
             {notice && notice.level === 'fatal'?
               <Modal content={notice.msg} noClose/>
