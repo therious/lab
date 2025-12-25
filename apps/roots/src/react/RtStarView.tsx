@@ -76,6 +76,9 @@ export const RtStarView = (): JSX.Element => {
     options: {choices, otherChoices, mischalfim, includeLinked, maxEdges, linkByMeaningThreshold, pruneByGradeThreshold}
   } = useSelector(s=>s);
 
+  // Ensure mischalfim and otherChoices are properly initialized before computing graph
+  const areOptionsReady = mischalfim && Array.isArray(mischalfim) && mischalfim.length > 0 && otherChoices && typeof otherChoices === 'object';
+
 
   const [maxGeneration, setMaxGeneration] = useState(1);
   const [localExtraDegrees, setLocalExtraDegrees] = useState(0);
