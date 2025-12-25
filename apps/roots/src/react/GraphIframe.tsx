@@ -206,16 +206,14 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
         if (onReady) {
           onReady();
         }
-        // Send initial graph data only if graph has nodes
-        // Use a small delay to ensure iframe is fully ready
-        setTimeout(() => {
-          if (iframeRef.current?.contentWindow && graph && graph.nodes.length > 0) {
-            iframeRef.current.contentWindow.postMessage({
-              type: 'updateGraph',
-              payload: graph
-            }, '*');
-          }
-        }, 100);
+        // Send initial graph data immediately when iframe is ready
+        // The iframe sends this message only after it's fully initialized
+        if (iframeRef.current?.contentWindow && graph && graph.nodes.length > 0) {
+          iframeRef.current.contentWindow.postMessage({
+            type: 'updateGraph',
+            payload: graph
+          }, '*');
+        }
       } else if (event.data.type === 'tooltipRequest') {
         const { rootId, definition } = event.data.payload;
         if (tooltipRequestHandlerRef.current) {
