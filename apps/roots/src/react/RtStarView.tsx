@@ -103,11 +103,15 @@ export const RtStarView = (): JSX.Element => {
   const [nodeColors, setNodeColors] = useState<Array<{ id: number; color: { background: string } }>>([]);
 
   // Initialize data worker for tooltip requests and roots data
+  // Keep worker alive across navigation to preserve state
   useEffect(() => {
-    dataWorkerRef.current = new Worker(
-      new URL('../worker/dataWorker.ts', import.meta.url),
-      { type: 'module' }
-    );
+    // Only create worker if it doesn't exist
+    if (!dataWorkerRef.current) {
+      dataWorkerRef.current = new Worker(
+        new URL('../worker/dataWorker.ts', import.meta.url),
+        { type: 'module' }
+      );
+    }
 
     // Request all roots for graph computation
     dataWorkerRef.current.postMessage({ type: 'getAllRoots' });
@@ -129,9 +133,10 @@ export const RtStarView = (): JSX.Element => {
     dataWorkerRef.current.addEventListener('message', handleMessage);
 
     return () => {
+      // Don't terminate worker on unmount - keep it alive for navigation
+      // Only remove event listener
       if (dataWorkerRef.current) {
         dataWorkerRef.current.removeEventListener('message', handleMessage);
-        dataWorkerRef.current.terminate();
       }
     };
   }, []);
