@@ -32,7 +32,8 @@ interface VisNetworkInstance {
       };
     };
   };
-  setOptions?: (options: { physics?: { stabilization?: { enabled?: boolean } } }) => void;
+  setOptions?: (options: { physics?: { enabled?: boolean; stabilization?: { enabled?: boolean } } }) => void;
+  getOptions?: () => { physics?: { enabled?: boolean; stabilization?: { enabled?: boolean } } };
 }
 
 type GraphEvents = {
@@ -115,6 +116,7 @@ export const RtStarView = (): JSX.Element => {
 
   const networkRef = useRef<VisNetworkInstance | null>(null); // Reference to vis-network instance
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isPhysicsEnabled, setIsPhysicsEnabled] = useState<boolean>(true); // Track physics state
 
   const {
     searchTerm,
@@ -325,7 +327,51 @@ export const RtStarView = (): JSX.Element => {
   // Get network instance via getNetwork prop (if supported) or events
   const handleGetNetwork = useCallback((network: VisNetworkInstance): void => {
     networkRef.current = network;
+    // Initialize physics state from network if available
+    if (network.getOptions) {
+      const options = network.getOptions();
+      if (options?.physics?.enabled !== undefined) {
+        setIsPhysicsEnabled(options.physics.enabled);
+      }
+    }
   }, []);
+
+  // Toggle physics animation
+  const togglePhysics = useCallback((): void => {
+    if (!networkRef.current) return;
+
+    const newState = !isPhysicsEnabled;
+    setIsPhysicsEnabled(newState);
+
+    if (networkRef.current.setOptions) {
+      if (newState) {
+        // When playing: enable physics and disable stabilization so it runs forever
+        networkRef.current.setOptions(
+          { physics: { enabled: true, stabilization: { enabled: false } } }
+        );
+      } else {
+        // When paused: disable physics
+        networkRef.current.setOptions({ physics: { enabled: false } });
+      }
+    }
+  }, [isPhysicsEnabled]);
+
+  // Keyboard event handler for Space and F4
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      // Check for Space bar or F4 key
+      if (event.key === ' ' || event.key === 'Space' || event.key === 'F4') {
+        // Prevent default behavior for Space (page scroll)
+        if (event.key === ' ' || event.key === 'Space') {
+          event.preventDefault();
+        }
+        togglePhysics();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return ()=>window.removeEventListener('keydown', handleKeyDown);
+  }, [togglePhysics]);
 
   const graphing = (<div style={{  backgroundColor: 'midnightblue', height: "100%", width:"100%"}}>
     <Graph
@@ -449,14 +495,18 @@ export const RtStarView = (): JSX.Element => {
         </div>
         <hr/>
         <div style={{marginBottom: '10px'}}>
-          <label style={{marginRight: '10px'}}>Search nodes:</label>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search definitions and examples (supports |, &, -, &quot;&quot;)"
-            style={{width: '400px', padding: '5px'}}
-          />
+          <Tooltip content="Find matching root definition terms, or example word definitions, highlighted in orange and yellow, respectively">
+            <span style={{display: 'inline-block'}}>
+              <label style={{marginRight: '10px'}}>Search nodes:</label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search definitions and examples (supports |, &, -, &quot;&quot;)"
+                style={{width: '400px', padding: '5px'}}
+              />
+            </span>
+          </Tooltip>
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
@@ -468,6 +518,16 @@ export const RtStarView = (): JSX.Element => {
           <span style={{marginLeft: '20px'}}>
             <label style={{marginRight: '10px'}}>Maximum connections:</label>
             <input type="number" min={100} max={200_000} step={1_000} value={maxEdges} onChange={chMaxEdges}/>
+          </span>
+          <span style={{marginLeft: '20px'}}>
+            <Tooltip content="Use space bar or F4 to toggle play/pause">
+              <button
+                onClick={togglePhysics}
+                style={{padding: '5px 10px'}}
+              >
+                {isPhysicsEnabled ? '⏸ Pause' : '▶ Play'}
+              </button>
+            </Tooltip>
           </span>
         </div>
         <hr/>
