@@ -1,19 +1,15 @@
 import React, {ReactNode, useCallback, useEffect, useState, useMemo, useRef} from 'react';
 import {actions} from "../actions-integration";
 import {useSelector} from "../actions-integration";
-import {roots} from '../roots/roots';
-import Graph from "react-vis-graph-wrapper";
-import "vis-network/styles/vis-network.css";
 import {toRender} from "../roots/myvis";
-import {defaultOptions} from "../roots/options";
 import {CheckGroup} from "./CheckGroup";
 import {Tooltip} from "./Tooltip";
 import {MAX_NODES_FOR_EXPANSION} from "../roots/constants";
-import type {Root, GraphNode, GraphData} from "../roots/types";
+import type {Root, GraphData} from "../roots/types";
 import {useGraphWorker, type GraphComputePayload} from "../hooks/useGraphWorker";
 import {useNodeSearch} from "../hooks/useNodeSearch";
-import {onDictionaryReady, isDictionaryLoaded} from "../roots/loadDictionary";
-import {generateTooltipUpdates, applyTooltipUpdates} from "../utils/updateNodeTooltips";
+import {GraphIframe} from "./GraphIframe";
+import {generateTooltipUpdates} from "../utils/updateNodeTooltips";
 
 // Hebrew text style for tooltips
 const hebrewTextStyle: React.CSSProperties = {
@@ -22,26 +18,7 @@ const hebrewTextStyle: React.CSSProperties = {
 };
 
 
-// Using interface here because vis-network's Network type is an interface
-// and we need to match its structure for proper type compatibility
-interface VisNetworkInstance {
-  body: {
-    data: {
-      nodes: {
-        update: (node: { id: number; color?: GraphNode['color'] } | Array<{ id: number; color?: GraphNode['color'] }>) => void;
-      };
-    };
-  };
-  setOptions?: (options: { physics?: { enabled?: boolean; stabilization?: { enabled?: boolean } } }) => void;
-  getOptions?: () => { physics?: { enabled?: boolean; stabilization?: { enabled?: boolean } } };
-}
-
-type GraphEvents = {
-  select: (params: { nodes: number[]; edges: number[] }) => void;
-  doubleClick: (params: { pointer: { canvas: { x: number; y: number } } }) => void;
-};
-
-toRender.graphableRows = roots as unknown as Record<string, unknown>; // the full list
+toRender.graphableRows = [] as unknown as Record<string, unknown>; // Will be set by grid view
 const defaultGraph: GraphData = {nodes: [], edges: []};
 
 
@@ -114,17 +91,37 @@ export const RtStarView = (): JSX.Element => {
     setSearchResultHandler,
   } = useGraphWorker();
 
-  const networkRef = useRef<VisNetworkInstance | null>(null); // Reference to vis-network instance
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const iframeRef = useRef<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void } | null>(null);
+  const dataWorkerRef = useRef<Worker | null>(null);
   const [isPhysicsEnabled, setIsPhysicsEnabled] = useState<boolean>(true); // Track physics state
   const [searchMatchCounts, setSearchMatchCounts] = useState<{ definitions: number; examples: number }>({ definitions: 0, examples: 0 });
+  const [nodeColors, setNodeColors] = useState<Array<{ id: number; color: { background: string } }>>([]);
+
+  // Initialize data worker for tooltip requests
+  useEffect(() => {
+    dataWorkerRef.current = new Worker(
+      new URL('../worker/dataWorker.ts', import.meta.url),
+      { type: 'module' }
+    );
+
+    return () => {
+      if (dataWorkerRef.current) {
+        dataWorkerRef.current.terminate();
+      }
+    };
+  }, []);
 
   const {
     searchTerm,
     setSearchTerm,
     searchIdRef,
-    applyNodeColors,
-  } = useNodeSearch(graph, networkRef, workerRef);
+    applyNodeColors: applyNodeColorsBase,
+  } = useNodeSearch(graph, null, workerRef);
+
+  // Override applyNodeColors to work with iframe
+  const applyNodeColors = useCallback((colors: Array<{ id: number; color: { background: string } }>) => {
+    setNodeColors(colors);
+  }, []);
 
   const shouldDisableExpansion = tooltipCounts.n > MAX_NODES_FOR_EXPANSION;
 
@@ -159,41 +156,36 @@ export const RtStarView = (): JSX.Element => {
 
   // Update node tooltips when dictionary loads
   useEffect(() => {
-    if (!networkRef.current || !graph.nodes || graph.nodes.length === 0) {
+    if (!iframeRef.current || !graph.nodes || graph.nodes.length === 0) {
       return;
     }
 
-    const updateTooltips = (): void => {
-      if (!networkRef.current || !isDictionaryLoaded()) {
-        return;
-      }
+    // Request all roots from data worker to generate tooltips
+    if (dataWorkerRef.current) {
+      dataWorkerRef.current.postMessage({ type: 'getAllRoots' });
+      const handleMessage = (e: MessageEvent) => {
+        if (e.data.type === 'getAllRootsResult') {
+          const { roots: allRoots } = e.data.payload;
+          
+          // Generate tooltip updates for all nodes
+          const updates = generateTooltipUpdates(
+            graph,
+            nodeIdToRootIdRef.current,
+            allRoots as Root[]
+          );
 
-      // Generate tooltip updates for all nodes
-      const updates = generateTooltipUpdates(
-        graph,
-        nodeIdToRootIdRef.current,
-        roots as Root[]
-      );
-
-      // Apply updates if any
-      if (updates.length > 0) {
-        applyTooltipUpdates(networkRef.current, updates);
-      }
-    };
-
-    // If dictionary is already loaded, update immediately
-    if (isDictionaryLoaded()) {
-      // Small delay to ensure network is ready
-      requestAnimationFrame(() => {
-        updateTooltips();
-      });
-    } else {
-      // Otherwise, wait for dictionary to load
-      onDictionaryReady(() => {
-        requestAnimationFrame(() => {
-          updateTooltips();
-        });
-      });
+          // Apply updates via iframe
+          if (updates.length > 0 && iframeRef.current) {
+            iframeRef.current.updateTooltips(updates);
+          }
+        }
+      };
+      dataWorkerRef.current.addEventListener('message', handleMessage);
+      return () => {
+        if (dataWorkerRef.current) {
+          dataWorkerRef.current.removeEventListener('message', handleMessage);
+        }
+      };
     }
   }, [graph, nodeIdToRootIdRef]);
 
@@ -335,45 +327,53 @@ export const RtStarView = (): JSX.Element => {
   }, [maxGeneration, linkByMeaningThreshold, localPruneByGrade, maxEdges, computeGraph]);
 
 
-  const events = useMemo<GraphEvents>(() => ({
-    select: ({ nodes, edges }: { nodes: number[]; edges: number[] }): void => {
-      // console.log("Selected nodes/edges:", nodes, edges);
-    },
-    doubleClick: ({ pointer: { canvas } }: { pointer: { canvas: { x: number; y: number } } }): void => {
-      // Handle double click if needed
-    }
-  }), []);
+  // Handle iframe ready
+  const handleIframeReady = useCallback(() => {
+    // Iframe is ready, physics starts enabled by default
+    setIsPhysicsEnabled(true);
+  }, []);
 
-  // Get network instance via getNetwork prop (if supported) or events
-  const handleGetNetwork = useCallback((network: VisNetworkInstance): void => {
-    networkRef.current = network;
-    // Initialize physics state from network if available
-    if (network.getOptions) {
-      const options = network.getOptions();
-      if (options?.physics?.enabled !== undefined) {
-        setIsPhysicsEnabled(options.physics.enabled);
+  // Handle tooltip request from iframe
+  const handleTooltipRequest = useCallback((rootId: number, definition: string) => {
+    if (!dataWorkerRef.current) return;
+
+    // Request tooltip from data worker
+    dataWorkerRef.current.postMessage({
+      type: 'getDictionaryTooltip',
+      payload: { rootId, definition }
+    });
+
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data.type === 'getDictionaryTooltipResult' && e.data.payload.rootId === rootId) {
+        const { tooltip } = e.data.payload;
+        // Send tooltip back to iframe
+        if (iframeRef.current) {
+          // Tooltip is sent via postMessage in GraphIframe's onTooltipRequest handler
+          // We need to send it directly to iframe
+          const iframe = document.querySelector('iframe[src^="blob:"]') as HTMLIFrameElement;
+          if (iframe?.contentWindow) {
+            iframe.contentWindow.postMessage({
+              type: 'tooltipResult',
+              payload: { rootId, tooltip }
+            }, '*');
+          }
+        }
+        if (dataWorkerRef.current) {
+          dataWorkerRef.current.removeEventListener('message', handleMessage);
+        }
       }
-    }
+    };
+
+    dataWorkerRef.current.addEventListener('message', handleMessage);
   }, []);
 
   // Toggle physics animation
   const togglePhysics = useCallback((): void => {
-    if (!networkRef.current) return;
+    if (!iframeRef.current) return;
 
     const newState = !isPhysicsEnabled;
     setIsPhysicsEnabled(newState);
-
-    if (networkRef.current.setOptions) {
-      if (newState) {
-        // When playing: enable physics and disable stabilization so it runs forever
-        networkRef.current.setOptions(
-          { physics: { enabled: true, stabilization: { enabled: false } } }
-        );
-      } else {
-        // When paused: disable physics
-        networkRef.current.setOptions({ physics: { enabled: false } });
-      }
-    }
+    iframeRef.current.setPhysics(newState);
   }, [isPhysicsEnabled]);
 
   // Keyboard event handler for Space and F4
@@ -393,15 +393,18 @@ export const RtStarView = (): JSX.Element => {
     return ()=>window.removeEventListener('keydown', handleKeyDown);
   }, [togglePhysics]);
 
-  const graphing = (<div style={{  backgroundColor: 'midnightblue', height: "100%", width:"100%"}}>
-    <Graph
-      events={events}
-      graph={graph}
-      options={defaultOptions}
-      style={{  backgroundColor: 'midnightblue'}}
-      getNetwork={handleGetNetwork}
-    />
-  </div>);
+  const graphing = (
+    <div style={{ backgroundColor: 'midnightblue', height: "100%", width: "100%" }}>
+      <GraphIframe
+        graph={graph}
+        onReady={handleIframeReady}
+        onTooltipRequest={handleTooltipRequest}
+        nodeColors={nodeColors}
+        iframeRef={iframeRef}
+        style={{ backgroundColor: 'midnightblue' }}
+      />
+    </div>
+  );
 
 //heading, active, name, choices,  setChoice
    return  (
