@@ -26,8 +26,10 @@ export function setGlobalTooltipRequestHandler(handler: ((rootId: number, defini
 }
 
 export const PersistentGraphContainer: React.FC = () => {
-  const graph = useSelector((s) => s.visualization?.graph || { nodes: [], edges: [] }) as GraphData;
-  const nodeColors = useSelector((s) => s.visualization?.nodeColors || []);
+  // Graph state is kept in worker/iframe memory, not Redux
+  // This container keeps the iframe alive but doesn't manage graph state
+  const graph = { nodes: [], edges: [] } as GraphData;
+  const nodeColors: Array<{ id: number; color: { background: string } }> = [];
   
   const handleTooltipRequest = useCallback((rootId: number, definition: string) => {
     if (globalTooltipRequestHandler) {

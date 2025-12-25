@@ -14,7 +14,6 @@ import {
   type GraphComputePayload,
   type PendingGraphData,
 } from '../utils/graphWorker';
-import { actions } from '../actions-integration';
 
 export type { GraphComputePayload };
 export interface UseGraphWorkerResult {
@@ -40,22 +39,7 @@ export function useGraphWorker(): UseGraphWorkerResult {
   const nodeIdToRootIdRef = useRef<Map<number, number>>(new Map());
   const searchResultHandlerRef = useRef<((searchId: number, nodeColors: Array<{ nodeId: number; color: { background: string; border: string; highlight: { background: string; border: string } } }>) => void) | null>(null);
 
-  // Sync local state to Redux
-  useEffect(() => {
-    actions.visualization.setGraph(graph);
-  }, [graph]);
-
-  useEffect(() => {
-    actions.visualization.setIsComputing(isComputing);
-  }, [isComputing]);
-
-  useEffect(() => {
-    actions.visualization.setGenerationRange(generationRange);
-  }, [generationRange]);
-
-  useEffect(() => {
-    actions.visualization.setTooltipCounts(tooltipCounts);
-  }, [tooltipCounts]);
+  // Graph state is kept in worker memory, not Redux
 
   // Initialize worker using generic utility with state management
   useEffect(() => {

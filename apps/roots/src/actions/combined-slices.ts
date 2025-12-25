@@ -5,13 +5,12 @@ import {sliceConfig as optionsSlice,OptionsState} from "./options-slice";
 // -- app specific slices --
 import {sliceConfig as localSlice, LocalState} from "./local-slice";
 import {sliceConfig as gridSlice, GridState} from "./grid-slice";
-import {sliceConfig as visualizationSlice, VisualizationState} from "./visualization-slice";
 
 
 //-- app specific middlewares
 
 
-export const allSlices = [requestSlice, notifySlice, localSlice, optionsSlice, gridSlice, visualizationSlice];
+export const allSlices = [requestSlice, notifySlice, localSlice, optionsSlice, gridSlice];
 export const allMiddlewares = [ fatalMiddleware, loggingMiddleware];
 export const middlewareInits:any[] = [  ];
 
@@ -25,6 +24,5 @@ export type TotalState = {
      local: LocalState;
    options: OptionsState;
     grid: GridState;
-    visualization: VisualizationState;
 }
 

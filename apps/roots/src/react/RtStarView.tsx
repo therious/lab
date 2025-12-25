@@ -74,24 +74,18 @@ const SliderWithTooltip = ({ label, tooltipContent, tooltipMaxWidth, value, min,
 export const RtStarView = (): JSX.Element => {
 
   const {
-    options: {choices, otherChoices, mischalfim, includeLinked, maxEdges, linkByMeaningThreshold, pruneByGradeThreshold}
+    options: {choices, otherChoices, mischalfim, includeLinked, maxEdges, linkByMeaningThreshold, pruneByGradeThreshold, maxGeneration, localExtraDegrees, searchTerm: optionsSearchTerm, isPhysicsEnabled, hideNonMatched}
   } = useSelector(s=>s);
 
   // Ensure mischalfim and otherChoices are properly initialized before computing graph
   const areOptionsReady = mischalfim && Array.isArray(mischalfim) && mischalfim.length > 0 && otherChoices && typeof otherChoices === 'object';
-
-
-  // Get visualization state from Redux (with fallback to local state for migration)
-  const visualizationState = useSelector(s => s.visualization);
-  const maxGeneration = visualizationState?.maxGeneration ?? 1;
-  const localExtraDegrees = visualizationState?.localExtraDegrees ?? 0;
   
   const setMaxGeneration = useCallback((value: number) => {
-    actions.visualization.setMaxGeneration(value);
+    actions.options.setMaxGeneration(value);
   }, []);
   
   const setLocalExtraDegrees = useCallback((value: number) => {
-    actions.visualization.setLocalExtraDegrees(value);
+    actions.options.setLocalExtraDegrees(value);
   }, []);
 
   // Use extracted hooks for worker and search functionality
@@ -106,9 +100,9 @@ export const RtStarView = (): JSX.Element => {
     setSearchResultHandler,
   } = useGraphWorker();
 
-  // Use persistent iframe refs from App level, or create local ones as fallback
-  const iframeRef = persistentGraphIframeRef.current ? persistentGraphIframeRef : useRef<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void; recenter: () => void; toggleNonMatchedNodes: (hide: boolean, matchedNodeIds: number[]) => void } | null>(null);
-  const iframeElementRef = persistentGraphIframeElementRef.current ? persistentGraphIframeElementRef : useRef<HTMLIFrameElement | null>(null);
+  // Always use persistent iframe refs from App level - iframe persists across routes
+  const iframeRef = persistentGraphIframeRef;
+  const iframeElementRef = persistentGraphIframeElementRef;
   const dataWorkerRef = useRef<Worker | null>(null);
   const allRootsRef = useRef<Root[]>([]);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -118,32 +112,15 @@ export const RtStarView = (): JSX.Element => {
   const prevMaxEdgesRef = useRef<number>(0);
   const [graphableRowsReady, setGraphableRowsReady] = useState<boolean>(false);
   
-  // Get visualization state from Redux
-  const isPhysicsEnabled = visualizationState?.isPhysicsEnabled ?? true;
-  const searchMatchCounts = visualizationState?.searchMatchCounts ?? { definitions: 0, examples: 0 };
-  const nodeColors = visualizationState?.nodeColors ?? [];
-  const matchedNodeIds = visualizationState?.matchedNodeIds ?? [];
-  const hideNonMatched = visualizationState?.hideNonMatched ?? false;
-  
+  // UI state from options slice
   const setIsPhysicsEnabled = useCallback((value: boolean) => {
-    actions.visualization.setPhysicsEnabled(value);
+    actions.options.setPhysicsEnabled(value);
   }, []);
   
-  const setSearchMatchCounts = useCallback((value: { definitions: number; examples: number }) => {
-    actions.visualization.setSearchMatchCounts(value);
-  }, []);
-  
-  const setNodeColors = useCallback((value: Array<{ id: number; color: { background: string } }>) => {
-    actions.visualization.setNodeColors(value);
-  }, []);
-  
-  const setMatchedNodeIds = useCallback((value: number[]) => {
-    actions.visualization.setMatchedNodeIds(value);
-  }, []);
-  
-  const setHideNonMatched = useCallback((value: boolean) => {
-    actions.visualization.setHideNonMatched(value);
-  }, []);
+  // Search/match state - kept in component state (not Redux) as it's transient
+  const [searchMatchCounts, setSearchMatchCounts] = useState<{ definitions: number; examples: number }>({ definitions: 0, examples: 0 });
+  const [nodeColors, setNodeColors] = useState<Array<{ id: number; color: { background: string } }>>([]);
+  const [matchedNodeIds, setMatchedNodeIds] = useState<number[]>([]);
 
   // Initialize data worker for tooltip requests and roots data
   // Keep worker alive across navigation to preserve state
@@ -187,8 +164,7 @@ export const RtStarView = (): JSX.Element => {
   // Create a dummy networkRef for useNodeSearch (it doesn't actually use it for search, just for applyNodeColors)
   const dummyNetworkRef = useRef(null);
   
-  // Get searchTerm from Redux, with fallback to hook
-  const reduxSearchTerm = visualizationState?.searchTerm ?? '';
+  // Use searchTerm from options slice
   const {
     searchTerm: hookSearchTerm,
     setSearchTerm: setHookSearchTerm,
@@ -196,10 +172,10 @@ export const RtStarView = (): JSX.Element => {
     applyNodeColors: applyNodeColorsBase,
   } = useNodeSearch(graph, dummyNetworkRef, workerRef);
   
-  // Use Redux searchTerm if available, otherwise use hook's searchTerm
-  const searchTerm = reduxSearchTerm || hookSearchTerm;
+  // Sync hook's searchTerm with Redux options slice
+  const searchTerm = optionsSearchTerm || hookSearchTerm;
   const setSearchTerm = useCallback((value: string) => {
-    actions.visualization.setSearchTerm(value);
+    actions.options.setSearchTerm(value);
     setHookSearchTerm(value);
   }, [setHookSearchTerm]);
 

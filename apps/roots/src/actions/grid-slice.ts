@@ -3,6 +3,7 @@
 export interface GridState {
   filterModel: Record<string, any> | null;
   columnState: any[] | null;
+  filteredRootIds: number[] | null; // Root IDs currently filtered/selected in the grid
 }
 
 type GridCreator = (s: GridState, ...rest: any) => unknown;
@@ -20,11 +21,13 @@ interface SliceConfig {
 const initialState: GridState = {
   filterModel: null,
   columnState: null,
+  filteredRootIds: null,
 };
 
 const creators: GridCreators = {
   setGridState: (filterModel, columnState) => ({ filterModel, columnState }),
   clearGridState: () => ({ filterModel: null, columnState: null }),
+  setFilteredRootIds: (filteredRootIds: number[] | null) => ({ filteredRootIds }),
 };
 
 const reducers: GridReducers = {
@@ -37,6 +40,11 @@ const reducers: GridReducers = {
     ...s,
     filterModel: null,
     columnState: null,
+    filteredRootIds: null,
+  }),
+  setFilteredRootIds: (s, { filteredRootIds }) => ({
+    ...s,
+    filteredRootIds: filteredRootIds ?? null,
   }),
 };
 

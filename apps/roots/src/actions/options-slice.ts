@@ -11,6 +11,12 @@ export interface OptionsState {
   relatedMeaningsThreshold: number; // 6 = don't include, 5-1 = include grade >= threshold
   linkByMeaningThreshold: number; // 6 = only filtered, 5-0 = include roots with grade >= threshold
   pruneByGradeThreshold: number; // 6-0, default 0, removes nodes not connected by at least this grade
+  // Visualization UI state
+  maxGeneration: number;
+  localExtraDegrees: number;
+  searchTerm: string;
+  isPhysicsEnabled: boolean;
+  hideNonMatched: boolean;
 }
 
 type OptionsCreator = (...rest: any)=>unknown;
@@ -36,6 +42,12 @@ const initialState:OptionsState = {
   relatedMeaningsThreshold: 6,
   linkByMeaningThreshold: 6, // Default: only filtered roots
   pruneByGradeThreshold: 0, // Default: no pruning
+  // Visualization UI state
+  maxGeneration: 1,
+  localExtraDegrees: 0,
+  searchTerm: '',
+  isPhysicsEnabled: true,
+  hideNonMatched: false,
 };
 
 
@@ -52,6 +64,12 @@ const creators = {
   setRelatedMeaningsThreshold: (relatedMeaningsThreshold: number) => ({ relatedMeaningsThreshold }),
   setLinkByMeaningThreshold: (linkByMeaningThreshold: number) => ({ linkByMeaningThreshold }),
   setPruneByGradeThreshold: (pruneByGradeThreshold: number) => ({ pruneByGradeThreshold }),
+  // Visualization UI state creators
+  setMaxGeneration: (maxGeneration: number) => ({ maxGeneration }),
+  setLocalExtraDegrees: (localExtraDegrees: number) => ({ localExtraDegrees }),
+  setSearchTerm: (searchTerm: string) => ({ searchTerm }),
+  setPhysicsEnabled: (isPhysicsEnabled: boolean) => ({ isPhysicsEnabled }),
+  setHideNonMatched: (hideNonMatched: boolean) => ({ hideNonMatched }),
 };
 
 const reducers:OptionsReducers = {
@@ -100,6 +118,27 @@ const reducers:OptionsReducers = {
   setPruneByGradeThreshold: (s, { pruneByGradeThreshold }) => ({
     ...s,
     pruneByGradeThreshold,
+  }),
+  // Visualization UI state reducers
+  setMaxGeneration: (s, { maxGeneration }) => ({
+    ...s,
+    maxGeneration,
+  }),
+  setLocalExtraDegrees: (s, { localExtraDegrees }) => ({
+    ...s,
+    localExtraDegrees,
+  }),
+  setSearchTerm: (s, { searchTerm }) => ({
+    ...s,
+    searchTerm,
+  }),
+  setPhysicsEnabled: (s, { isPhysicsEnabled }) => ({
+    ...s,
+    isPhysicsEnabled,
+  }),
+  setHideNonMatched: (s, { hideNonMatched }) => ({
+    ...s,
+    hideNonMatched,
   }),
 
 };
