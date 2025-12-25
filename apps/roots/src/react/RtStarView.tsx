@@ -113,6 +113,24 @@ export const RtStarView = (): JSX.Element => {
       if (e.data.type === 'getAllRootsResult') {
         const { roots: allRoots } = e.data.payload;
         allRootsRef.current = allRoots as Root[];
+        
+        // Initialize graphableRows with all roots if it's empty
+        // This ensures the graph computes even if you navigate directly to visualization
+        // or if the grid hasn't set it yet
+        if (!toRender.graphableRows || !Array.isArray(toRender.graphableRows) || (Array.isArray(toRender.graphableRows) && toRender.graphableRows.length === 0)) {
+          toRender.graphableRows = allRoots as unknown as Record<string, unknown>;
+          // Trigger graph computation after initializing graphableRows
+          // Use a small delay to ensure allRootsRef is set
+          setTimeout(() => {
+            computationIdRef.current += 1;
+            if (debounceTimeoutRef.current) {
+              clearTimeout(debounceTimeoutRef.current);
+            }
+            debounceTimeoutRef.current = setTimeout(() => {
+              computeGraph();
+            }, 100);
+          }, 100);
+        }
       }
     };
     dataWorkerRef.current.addEventListener('message', handleMessage);
