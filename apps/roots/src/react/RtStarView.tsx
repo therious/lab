@@ -625,7 +625,7 @@ export const RtStarView = (): JSX.Element => {
         </div>
         <hr/>
         {isComputing && <span style={{marginLeft: '10px', color: '#888'}}>Computing...</span>}
-        <div style={{ flex: 1, minHeight: '400px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {graphing}
         </div>
       </div>
