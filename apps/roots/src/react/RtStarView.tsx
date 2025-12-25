@@ -376,7 +376,7 @@ export const RtStarView = (): JSX.Element => {
         debounceTimeoutRef.current = null;
       }
     };
-  }, [maxGeneration, linkByMeaningThreshold, localPruneByGrade, maxEdges, computeGraph, graphableRowsReady]);
+  }, [maxGeneration, linkByMeaningThreshold, localPruneByGrade, maxEdges, computeGraph, graphableRowsReady, otherChoices, mischalfim]);
 
 
   // Handle iframe ready
