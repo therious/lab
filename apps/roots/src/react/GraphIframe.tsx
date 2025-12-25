@@ -308,20 +308,19 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
   // Listen for messages from iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Check if message is from our iframe - be more lenient with source check
-      // since blob URLs might have different origin behavior
-      const isFromOurIframe = event.source === iframeRef.current?.contentWindow || 
-                              (iframeRef.current && event.source === iframeRef.current.contentWindow);
-      
-      if (!isFromOurIframe && iframeRef.current) {
-        // Also check by origin - blob URLs have blob: origin
-        const iframeOrigin = iframeRef.current.src.startsWith('blob:') ? 'blob:' : window.location.origin;
-        if (event.origin !== iframeOrigin && event.origin !== '*') {
+      // Accept messages from our iframe or from blob: origin (for blob URLs)
+      const isFromOurIframe = iframeRef.current && (
+        event.source === iframeRef.current.contentWindow ||
+        event.origin === 'null' || // blob URLs sometimes have null origin
+        event.origin.startsWith('blob:')
+      );
+
+      // Only process iframeReady and tooltipRequest messages
+      if (event.data.type === 'iframeReady') {
+        // Verify it's from our iframe by checking if we have the iframe ref
+        if (!iframeRef.current) {
           return;
         }
-      }
-
-      if (event.data.type === 'iframeReady') {
         console.log('[GraphIframe] Iframe ready message received, graph has', graph?.nodes?.length || 0, 'nodes');
         iframeReadyRef.current = true;
         if (onReady) {
@@ -339,6 +338,10 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
           console.log('[GraphIframe] Not sending graph - iframe:', !!iframeRef.current?.contentWindow, 'graph:', !!graph, 'nodes:', graph?.nodes?.length || 0);
         }
       } else if (event.data.type === 'tooltipRequest') {
+        // Only process tooltip requests from our iframe
+        if (!isFromOurIframe) {
+          return;
+        }
         const { rootId, definition } = event.data.payload;
         if (tooltipRequestHandlerRef.current) {
           tooltipRequestHandlerRef.current(rootId, definition);
