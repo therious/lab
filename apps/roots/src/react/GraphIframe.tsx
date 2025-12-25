@@ -308,13 +308,21 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
   // Listen for messages from iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Only process messages from our iframe
-      if (event.source !== iframeRef.current?.contentWindow) {
-        return;
+      // Check if message is from our iframe - be more lenient with source check
+      // since blob URLs might have different origin behavior
+      const isFromOurIframe = event.source === iframeRef.current?.contentWindow || 
+                              (iframeRef.current && event.source === iframeRef.current.contentWindow);
+      
+      if (!isFromOurIframe && iframeRef.current) {
+        // Also check by origin - blob URLs have blob: origin
+        const iframeOrigin = iframeRef.current.src.startsWith('blob:') ? 'blob:' : window.location.origin;
+        if (event.origin !== iframeOrigin && event.origin !== '*') {
+          return;
+        }
       }
 
       if (event.data.type === 'iframeReady') {
-        console.log('[GraphIframe] Iframe ready, graph has', graph?.nodes?.length || 0, 'nodes');
+        console.log('[GraphIframe] Iframe ready message received, graph has', graph?.nodes?.length || 0, 'nodes');
         iframeReadyRef.current = true;
         if (onReady) {
           onReady();
