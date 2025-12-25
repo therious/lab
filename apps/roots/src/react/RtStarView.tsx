@@ -208,6 +208,7 @@ export const RtStarView = (): JSX.Element => {
       setSearchMatchCounts({ definitions: 0, examples: 0 });
       setMatchedNodeIds([]);
       setHideNonMatched(false);
+      setNodeColors([]); // Clear node colors to remove highlighting
       // Show all nodes
       if (iframeRef.current && graph.nodes.length > 0) {
         const allNodeIds = graph.nodes.map(n => n.id);
