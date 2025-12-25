@@ -1,6 +1,7 @@
 import React, {ReactNode, useCallback, useEffect, useState, useMemo, useRef} from 'react';
 import {actions} from "../actions-integration";
 import {useSelector} from "../actions-integration";
+import {persistentGraphIframeRef, persistentGraphIframeElementRef} from "./PersistentGraphContainer";
 import {toRender} from "../roots/myvis";
 import {CheckGroup} from "./CheckGroup";
 import {Tooltip} from "./Tooltip";
@@ -80,8 +81,18 @@ export const RtStarView = (): JSX.Element => {
   const areOptionsReady = mischalfim && Array.isArray(mischalfim) && mischalfim.length > 0 && otherChoices && typeof otherChoices === 'object';
 
 
-  const [maxGeneration, setMaxGeneration] = useState(1);
-  const [localExtraDegrees, setLocalExtraDegrees] = useState(0);
+  // Get visualization state from Redux (with fallback to local state for migration)
+  const visualizationState = useSelector(s => s.visualization);
+  const maxGeneration = visualizationState?.maxGeneration ?? 1;
+  const localExtraDegrees = visualizationState?.localExtraDegrees ?? 0;
+  
+  const setMaxGeneration = useCallback((value: number) => {
+    actions.visualization.setMaxGeneration(value);
+  }, []);
+  
+  const setLocalExtraDegrees = useCallback((value: number) => {
+    actions.visualization.setLocalExtraDegrees(value);
+  }, []);
 
   // Use extracted hooks for worker and search functionality
   const {
@@ -95,8 +106,9 @@ export const RtStarView = (): JSX.Element => {
     setSearchResultHandler,
   } = useGraphWorker();
 
-  const iframeRef = useRef<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void; recenter: () => void; toggleNonMatchedNodes: (hide: boolean, matchedNodeIds: number[]) => void } | null>(null);
-  const iframeElementRef = useRef<HTMLIFrameElement | null>(null);
+  // Use persistent iframe refs from App level, or create local ones as fallback
+  const iframeRef = persistentGraphIframeRef.current ? persistentGraphIframeRef : useRef<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void; recenter: () => void; toggleNonMatchedNodes: (hide: boolean, matchedNodeIds: number[]) => void } | null>(null);
+  const iframeElementRef = persistentGraphIframeElementRef.current ? persistentGraphIframeElementRef : useRef<HTMLIFrameElement | null>(null);
   const dataWorkerRef = useRef<Worker | null>(null);
   const allRootsRef = useRef<Root[]>([]);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -105,11 +117,33 @@ export const RtStarView = (): JSX.Element => {
   const prevPruneByGradeRef = useRef<number>(6);
   const prevMaxEdgesRef = useRef<number>(0);
   const [graphableRowsReady, setGraphableRowsReady] = useState<boolean>(false);
-  const [isPhysicsEnabled, setIsPhysicsEnabled] = useState<boolean>(true); // Track physics state
-  const [searchMatchCounts, setSearchMatchCounts] = useState<{ definitions: number; examples: number }>({ definitions: 0, examples: 0 });
-  const [nodeColors, setNodeColors] = useState<Array<{ id: number; color: { background: string } }>>([]);
-  const [matchedNodeIds, setMatchedNodeIds] = useState<number[]>([]);
-  const [hideNonMatched, setHideNonMatched] = useState<boolean>(false);
+  
+  // Get visualization state from Redux
+  const isPhysicsEnabled = visualizationState?.isPhysicsEnabled ?? true;
+  const searchMatchCounts = visualizationState?.searchMatchCounts ?? { definitions: 0, examples: 0 };
+  const nodeColors = visualizationState?.nodeColors ?? [];
+  const matchedNodeIds = visualizationState?.matchedNodeIds ?? [];
+  const hideNonMatched = visualizationState?.hideNonMatched ?? false;
+  
+  const setIsPhysicsEnabled = useCallback((value: boolean) => {
+    actions.visualization.setPhysicsEnabled(value);
+  }, []);
+  
+  const setSearchMatchCounts = useCallback((value: { definitions: number; examples: number }) => {
+    actions.visualization.setSearchMatchCounts(value);
+  }, []);
+  
+  const setNodeColors = useCallback((value: Array<{ id: number; color: { background: string } }>) => {
+    actions.visualization.setNodeColors(value);
+  }, []);
+  
+  const setMatchedNodeIds = useCallback((value: number[]) => {
+    actions.visualization.setMatchedNodeIds(value);
+  }, []);
+  
+  const setHideNonMatched = useCallback((value: boolean) => {
+    actions.visualization.setHideNonMatched(value);
+  }, []);
 
   // Initialize data worker for tooltip requests and roots data
   // Keep worker alive across navigation to preserve state

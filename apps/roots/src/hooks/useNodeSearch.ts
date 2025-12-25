@@ -12,6 +12,7 @@ import {
   type VisNetworkInstance,
   type NodeColorUpdate,
 } from '../utils/nodeSearch';
+import { actions } from '../actions-integration';
 
 export interface UseNodeSearchResult {
   searchTerm: string;
@@ -27,7 +28,13 @@ export function useNodeSearch(graph: GraphData,
                               workerRef: React.MutableRefObject<Worker | null>
 ): UseNodeSearchResult
 {
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  // Get searchTerm from Redux if available, otherwise use local state
+  const [localSearchTerm, setLocalSearchTerm] = useState<string>('');
+  const searchTerm = localSearchTerm; // Will be replaced with Redux selector if needed
+  const setSearchTerm = useCallback((value: string) => {
+    setLocalSearchTerm(value);
+    actions.visualization.setSearchTerm(value);
+  }, []);
   const searchIdRef = useRef<number>(0);
   const searchDebounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
