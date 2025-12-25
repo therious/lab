@@ -67,6 +67,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
     window.addEventListener('message', (event) => {
       if (event.data.type === 'updateGraph') {
         graphData = event.data.payload;
+        console.log('[iframe] Received graph data:', graphData.nodes.length, 'nodes,', graphData.edges.length, 'edges');
         if (networkInstance) {
           // Update existing network without recreating - preserve physics state and view
           const currentPhysics = networkInstance.getOptions().physics;
@@ -111,6 +112,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
             }
           };
           networkInstance = new vis.Network(container, data, options);
+          console.log('[iframe] Network instance created with', graphData.nodes.length, 'nodes');
           
           // Handle node hover for tooltip requests
           networkInstance.on('hoverNode', (params) => {
@@ -126,6 +128,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
           });
 
           // Notify parent that iframe is ready
+          console.log('[iframe] Sending iframeReady message');
           window.parent.postMessage({ type: 'iframeReady' }, '*');
         }
       } else if (event.data.type === 'updateNodeColors') {
@@ -202,6 +205,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
       }
 
       if (event.data.type === 'iframeReady') {
+        console.log('[GraphIframe] Iframe ready, graph has', graph?.nodes?.length || 0, 'nodes');
         iframeReadyRef.current = true;
         if (onReady) {
           onReady();
@@ -209,10 +213,13 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
         // Send initial graph data immediately when iframe is ready
         // The iframe sends this message only after it's fully initialized
         if (iframeRef.current?.contentWindow && graph && graph.nodes.length > 0) {
+          console.log('[GraphIframe] Sending graph data to iframe:', graph.nodes.length, 'nodes');
           iframeRef.current.contentWindow.postMessage({
             type: 'updateGraph',
             payload: graph
           }, '*');
+        } else {
+          console.log('[GraphIframe] Not sending graph - iframe:', !!iframeRef.current?.contentWindow, 'graph:', !!graph, 'nodes:', graph?.nodes?.length || 0);
         }
       } else if (event.data.type === 'tooltipRequest') {
         const { rootId, definition } = event.data.payload;
@@ -232,10 +239,13 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
   // This handles the case where graph is computed after iframe becomes ready
   useEffect(() => {
     if (iframeReadyRef.current && iframeRef.current?.contentWindow && graph && graph.nodes.length > 0) {
+      console.log('[GraphIframe] Graph changed, sending update:', graph.nodes.length, 'nodes');
       iframeRef.current.contentWindow.postMessage({
         type: 'updateGraph',
         payload: graph
       }, '*');
+    } else {
+      console.log('[GraphIframe] Not sending graph update - ready:', iframeReadyRef.current, 'hasWindow:', !!iframeRef.current?.contentWindow, 'hasGraph:', !!graph, 'nodes:', graph?.nodes?.length || 0);
     }
   }, [graph]);
 
