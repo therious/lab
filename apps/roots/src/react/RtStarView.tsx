@@ -456,7 +456,7 @@ export const RtStarView = (): JSX.Element => {
 
 //heading, active, name, choices,  setChoice
    return  (
-      <div style={{marginTop:'30px', height: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column'}}>
+      <div style={{marginTop:'30px', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden'}}>
         <div style={{position: 'relative', marginLeft: '14px'}}>
           <div>
             <h1 style={{display: 'inline', margin: 0}}>Star View</h1>
