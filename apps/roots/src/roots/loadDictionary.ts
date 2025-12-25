@@ -7,6 +7,7 @@ import * as yaml from 'js-yaml';
 
 let dictionaryCache: Map<number, RootDictionaryEntry> | null = null;
 let loadingPromise: Promise<Map<number, RootDictionaryEntry>> | null = null;
+let dictionaryReadyCallbacks: Array<() => void> = [];
 
 // Initialize loading on module load
 if (typeof window !== 'undefined') {
@@ -86,6 +87,11 @@ async function loadDictionaryDataAsync(): Promise<Map<number, RootDictionaryEntr
       });
 
       console.log(`Loaded ${dictionaryCache.size} dictionary entries`);
+      
+      // Notify all callbacks that dictionary is ready
+      dictionaryReadyCallbacks.forEach(callback => callback());
+      dictionaryReadyCallbacks = [];
+      
       return dictionaryCache;
     } catch (error) {
       console.error('Error loading dictionary file:', error);
@@ -168,5 +174,38 @@ export function getRootTooltipSync(rootId: number, definition: string): string {
   }
 
   return `${definition}\n\nExample words:\n${words}`;
+}
+
+/**
+ * Check if dictionary is loaded
+ */
+export function isDictionaryLoaded(): boolean {
+  return dictionaryCache !== null && dictionaryCache.size > 0;
+}
+
+/**
+ * Register a callback to be called when dictionary finishes loading
+ * If dictionary is already loaded, callback is called immediately
+ */
+export function onDictionaryReady(callback: () => void): void {
+  if (isDictionaryLoaded()) {
+    callback();
+  } else {
+    dictionaryReadyCallbacks.push(callback);
+  }
+}
+
+/**
+ * Wait for dictionary to load (returns promise)
+ */
+export async function waitForDictionary(): Promise<Map<number, RootDictionaryEntry>> {
+  if (dictionaryCache) {
+    return dictionaryCache;
+  }
+  if (loadingPromise) {
+    return loadingPromise;
+  }
+  // Start loading if not already started
+  return loadDictionaryDataAsync();
 }
 
