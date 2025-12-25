@@ -7,6 +7,7 @@ import {Tooltip} from "./Tooltip";
 import {MAX_NODES_FOR_EXPANSION} from "../roots/constants";
 import type {Root, GraphData} from "../roots/types";
 import {useGraphWorker, type GraphComputePayload} from "../hooks/useGraphWorker";
+import type {GraphComputePayload as GraphComputePayloadType} from "../utils/graphWorker";
 import {useNodeSearch} from "../hooks/useNodeSearch";
 import {GraphIframe} from "./GraphIframe";
 import {generateTooltipUpdates} from "../utils/updateNodeTooltips";
@@ -96,6 +97,7 @@ export const RtStarView = (): JSX.Element => {
   const dataWorkerRef = useRef<Worker | null>(null);
   const allRootsRef = useRef<Root[]>([]);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [graphableRowsReady, setGraphableRowsReady] = useState<boolean>(false);
   const [isPhysicsEnabled, setIsPhysicsEnabled] = useState<boolean>(true); // Track physics state
   const [searchMatchCounts, setSearchMatchCounts] = useState<{ definitions: number; examples: number }>({ definitions: 0, examples: 0 });
   const [nodeColors, setNodeColors] = useState<Array<{ id: number; color: { background: string } }>>([]);
@@ -119,6 +121,8 @@ export const RtStarView = (): JSX.Element => {
         // or if the grid hasn't set it yet
         if (!toRender.graphableRows || !Array.isArray(toRender.graphableRows) || (Array.isArray(toRender.graphableRows) && toRender.graphableRows.length === 0)) {
           toRender.graphableRows = allRoots as unknown as Record<string, unknown>;
+          // Signal that graphableRows is ready
+          setGraphableRowsReady(true);
         }
       }
     };
@@ -332,9 +336,17 @@ export const RtStarView = (): JSX.Element => {
     computeGraphBase(payload);
   }, [linkByMeaningThreshold, maxGeneration, mischalfim, otherChoices, maxEdges, localPruneByGrade, computeGraphBase]);
 
-  // Auto-update graph when slider changes
+  // Auto-update graph when slider changes or when graphableRows becomes ready
   // Use debounce with cancellation for smooth slider dragging
   useEffect(() => {
+    // Ensure we have both graphableRows and allRoots before computing
+    if (!toRender.graphableRows || !Array.isArray(toRender.graphableRows) || toRender.graphableRows.length === 0) {
+      return;
+    }
+    if (!allRootsRef.current || allRootsRef.current.length === 0) {
+      return;
+    }
+
     // Assert non-null: workerRef.current is guaranteed to be set when this runs
     // Cancel previous computation by incrementing ID immediately
     computationIdRef.current += 1;
@@ -359,7 +371,7 @@ export const RtStarView = (): JSX.Element => {
         debounceTimeoutRef.current = null;
       }
     };
-  }, [maxGeneration, linkByMeaningThreshold, localPruneByGrade, maxEdges, computeGraph]);
+  }, [maxGeneration, linkByMeaningThreshold, localPruneByGrade, maxEdges, computeGraph, graphableRowsReady]);
 
 
   // Handle iframe ready
