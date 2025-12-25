@@ -167,6 +167,12 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
           }
         } else {
           // Initial setup
+          graphData = {
+            nodes: newGraphData.nodes,
+            edges: newGraphData.edges,
+            hiddenNodes: [],
+            hiddenEdges: []
+          };
           const data = { nodes: new vis.DataSet(graphData.nodes), edges: new vis.DataSet(graphData.edges) };
           const options = {
             width: '100%',
