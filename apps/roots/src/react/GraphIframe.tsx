@@ -222,8 +222,9 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
         // Update node tooltips
         if (event.data.payload && event.data.payload.updates) {
           const updates = event.data.payload.updates;
-        if (networkInstance && updates) {
-          networkInstance.body.data.nodes.update(updates);
+          if (networkInstance) {
+            networkInstance.body.data.nodes.update(updates);
+          }
         }
       } else if (event.data.type === 'setPhysics') {
         // Toggle physics
