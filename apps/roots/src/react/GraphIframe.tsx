@@ -328,10 +328,29 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
               // Show all nodes: restore hidden nodes and edges
               if (graphData.hiddenNodes && graphData.hiddenNodes.length > 0) {
                 console.log('[iframe] Restoring', graphData.hiddenNodes.length, 'nodes and', graphData.hiddenEdges ? graphData.hiddenEdges.length : 0, 'edges');
-                if (graphData.hiddenEdges && graphData.hiddenEdges.length > 0) {
-                  networkInstance.body.data.edges.add(graphData.hiddenEdges);
+                
+                // Get current nodes/edges to check for duplicates
+                const currentNodes = networkInstance.body.data.nodes.get();
+                const currentEdges = networkInstance.body.data.edges.get();
+                const currentNodeIds = new Set(currentNodes.map(function(n) { return n.id; }));
+                const currentEdgeIds = new Set(currentEdges.map(function(e) { return e.id; }));
+                
+                // Filter out nodes/edges that already exist
+                const nodesToAdd = graphData.hiddenNodes.filter(function(node) {
+                  return !currentNodeIds.has(node.id);
+                });
+                const edgesToAdd = graphData.hiddenEdges ? graphData.hiddenEdges.filter(function(edge) {
+                  return !currentEdgeIds.has(edge.id);
+                }) : [];
+                
+                console.log('[iframe] Adding', nodesToAdd.length, 'nodes and', edgesToAdd.length, 'edges (filtered duplicates)');
+                
+                if (edgesToAdd.length > 0) {
+                  networkInstance.body.data.edges.add(edgesToAdd);
                 }
-                networkInstance.body.data.nodes.add(graphData.hiddenNodes);
+                if (nodesToAdd.length > 0) {
+                  networkInstance.body.data.nodes.add(nodesToAdd);
+                }
                 graphData.hiddenNodes = [];
                 graphData.hiddenEdges = [];
               }
