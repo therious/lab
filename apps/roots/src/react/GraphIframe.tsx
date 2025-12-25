@@ -229,8 +229,9 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
   }, [graph, onReady]);
 
   // Update graph when it changes - only send if iframe is ready and graph has nodes
+  // This handles the case where graph is computed after iframe becomes ready
   useEffect(() => {
-    if (iframeRef.current?.contentWindow && graph && graph.nodes.length > 0 && iframeReadyRef.current) {
+    if (iframeReadyRef.current && iframeRef.current?.contentWindow && graph && graph.nodes.length > 0) {
       iframeRef.current.contentWindow.postMessage({
         type: 'updateGraph',
         payload: graph
