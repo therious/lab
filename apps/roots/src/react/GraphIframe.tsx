@@ -176,9 +176,17 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
               shape: 'circle'
             },
             edges: {
-              color: 'yellow',
-              width: 1,
-              arrows: { to: { enabled: false }, from: { enabled: false } }
+              color: {
+                color: 'yellow',
+                highlight: 'orange',
+                hover: 'orange'
+              },
+              width: 2,
+              arrows: { to: { enabled: false }, from: { enabled: false } },
+              smooth: {
+                type: 'continuous',
+                roundness: 0.5
+              }
             },
             interaction: {
               keyboard: { speed: { x: 10, y: 10, zoom: 0.02 } },
