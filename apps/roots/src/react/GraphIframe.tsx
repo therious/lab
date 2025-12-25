@@ -61,6 +61,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
   <script>
     let graphData = { nodes: [], edges: [] };
     let networkInstance = null;
+    let currentPhysicsEnabled = true; // Track physics state separately
     const container = document.getElementById('root');
 
     // Notify parent that iframe is ready as soon as script loads
@@ -227,6 +228,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
       } else if (event.data.type === 'setPhysics') {
         // Toggle physics
         const { enabled } = event.data.payload;
+        currentPhysicsEnabled = enabled; // Update stored state
         if (networkInstance) {
           networkInstance.setOptions({
             physics: {
