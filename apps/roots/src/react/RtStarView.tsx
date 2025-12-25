@@ -117,6 +117,7 @@ export const RtStarView = (): JSX.Element => {
   const networkRef = useRef<VisNetworkInstance | null>(null); // Reference to vis-network instance
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isPhysicsEnabled, setIsPhysicsEnabled] = useState<boolean>(true); // Track physics state
+  const [searchMatchCounts, setSearchMatchCounts] = useState<{ definitions: number; examples: number }>({ definitions: 0, examples: 0 });
 
   const {
     searchTerm,
@@ -133,9 +134,28 @@ export const RtStarView = (): JSX.Element => {
       // Only apply if this is the latest search (using generic utility)
       if (searchId === searchIdRef.current) {
         applyNodeColors(nodeColors);
+        
+        // Count matches: orange = definition matches, yellow = example matches
+        let definitionMatches = 0;
+        let exampleMatches = 0;
+        nodeColors.forEach(({ color }) => {
+          if (color.background === 'orange') {
+            definitionMatches++;
+          } else if (color.background === 'yellow') {
+            exampleMatches++;
+          }
+        });
+        setSearchMatchCounts({ definitions: definitionMatches, examples: exampleMatches });
       }
     });
   }, [setSearchResultHandler, searchIdRef, applyNodeColors]);
+  
+  // Clear search match counts when search term is cleared
+  useEffect(() => {
+    if (!searchTerm || !searchTerm.trim()) {
+      setSearchMatchCounts({ definitions: 0, examples: 0 });
+    }
+  }, [searchTerm]);
 
   // Update node tooltips when dictionary loads
   useEffect(() => {
@@ -386,7 +406,25 @@ export const RtStarView = (): JSX.Element => {
 //heading, active, name, choices,  setChoice
    return  (
       <div key={`${graph.nodes.length}-${graph.edges.length}`} style={{marginTop:'30px'}}>
-        <h1>Star view</h1>
+        <div style={{position: 'relative', marginLeft: '14px'}}>
+          <div>
+            <h1 style={{display: 'inline', margin: 0}}>Star View</h1>
+            <span style={{marginLeft: '20px', fontSize: '16px', fontWeight: 'normal'}}>
+              Nodes: {graph.nodes.length} | Connections: {graph.edges.length}
+            </span>
+          </div>
+          <div style={{position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)'}}>
+            <Tooltip content="Use space bar or F4 to toggle play/pause">
+              <button
+                onClick={togglePhysics}
+                style={{padding: '5px 10px'}}
+              >
+                {isPhysicsEnabled ? '⏸ Pause' : '▶ Play'}
+              </button>
+            </Tooltip>
+          </div>
+        </div>
+        <hr/>
         <div style={{ paddingBottom: '10px'}}>
         <h3 style={{marginLeft:'14px', display:'inline'}}>
           <Tooltip content={<>Osios Mischalfos (<span style={hebrewTextStyle}>אותיות מתחלפות</span>) are groups of Hebrew letters that can substitute for each other. When a root has one letter replaced with a related letter from the same group, it often produces a related meaning. These relationships are used to link roots together in the visualization.</>}>
@@ -496,39 +534,43 @@ export const RtStarView = (): JSX.Element => {
         <hr/>
         <div style={{marginBottom: '10px'}}>
           <Tooltip content="Find matching root definition terms, or example word definitions, highlighted in orange and yellow, respectively">
-            <span style={{display: 'inline-block'}}>
+            <span style={{display: 'inline-block', position: 'relative'}}>
               <label style={{marginRight: '10px'}}>Search nodes:</label>
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search definitions and examples (supports |, &, -, &quot;&quot;)"
-                style={{width: '400px', padding: '5px'}}
+                style={{width: '400px', padding: '5px 25px 5px 5px'}}
               />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  style={{
+                    position: 'absolute',
+                    right: '5px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '2px 5px',
+                    fontSize: '16px',
+                    lineHeight: '1',
+                    color: '#666'
+                  }}
+                  title="Clear search"
+                >
+                  ×
+                </button>
+              )}
             </span>
           </Tooltip>
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              style={{marginLeft: '10px', padding: '5px 10px'}}
-            >
-              Clear
-            </button>
+          {searchTerm && searchTerm.trim() && (
+            <span style={{marginLeft: '10px', fontSize: '14px'}}>
+              Matches: <span style={{display: 'inline-block', backgroundColor: 'orange', color: 'black', borderRadius: '10px', minWidth: '20px', height: '20px', lineHeight: '20px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', padding: '0 6px'}}>{searchMatchCounts.definitions}</span> definitions, <span style={{display: 'inline-block', backgroundColor: 'gold', color: 'black', borderRadius: '10px', minWidth: '20px', height: '20px', lineHeight: '20px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', padding: '0 6px'}}>{searchMatchCounts.examples}</span> examples
+            </span>
           )}
-          <span style={{marginLeft: '20px'}}>
-            <label style={{marginRight: '10px'}}>Maximum connections:</label>
-            <input type="number" min={100} max={200_000} step={1_000} value={maxEdges} onChange={chMaxEdges}/>
-          </span>
-          <span style={{marginLeft: '20px'}}>
-            <Tooltip content="Use space bar or F4 to toggle play/pause">
-              <button
-                onClick={togglePhysics}
-                style={{padding: '5px 10px'}}
-              >
-                {isPhysicsEnabled ? '⏸ Pause' : '▶ Play'}
-              </button>
-            </Tooltip>
-          </span>
         </div>
         <hr/>
         {isComputing && <span style={{marginLeft: '10px', color: '#888'}}>Computing...</span>}
