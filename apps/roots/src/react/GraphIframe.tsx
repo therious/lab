@@ -292,6 +292,32 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
 
     if (iframeRef.current) {
       iframeRef.current.src = url;
+      
+      // Fallback: send graph data when iframe loads, even if iframeReady message isn't received
+      const onLoadHandler = () => {
+        console.log('[GraphIframe] Iframe loaded, attempting to send graph data');
+        setTimeout(() => {
+          if (iframeRef.current?.contentWindow && graph && graph.nodes.length > 0 && !iframeReadyRef.current) {
+            console.log('[GraphIframe] Fallback: Sending graph data after iframe load');
+            iframeReadyRef.current = true; // Mark as ready
+            iframeRef.current.contentWindow.postMessage({
+              type: 'updateGraph',
+              payload: graph
+            }, '*');
+          }
+        }, 500); // Wait 500ms for iframe script to initialize
+      };
+      
+      iframeRef.current.addEventListener('load', onLoadHandler);
+      
+      return () => {
+        if (iframeRef.current) {
+          iframeRef.current.removeEventListener('load', onLoadHandler);
+        }
+        if (blobUrlRef.current) {
+          URL.revokeObjectURL(blobUrlRef.current);
+        }
+      };
     }
 
     return () => {
@@ -299,7 +325,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
         URL.revokeObjectURL(blobUrlRef.current);
       }
     };
-  }, []);
+  }, [graph]);
 
   // Store tooltip request handler ref to send responses back
   const tooltipRequestHandlerRef = useRef<((rootId: number, definition: string) => void) | null>(null);
