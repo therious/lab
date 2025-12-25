@@ -108,7 +108,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
         !newGraphData.edges.find(newEdge => 
           newEdge.from === oldEdge.from && newEdge.to === oldEdge.to
         )
-      ).map(e => e.id);
+      ).map(e => e.id || `${e.from}-${e.to}`); // Use id if available, otherwise create one
 
       // Apply incremental updates
       if (nodesToRemove.length > 0) {
