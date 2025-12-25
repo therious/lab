@@ -67,7 +67,13 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
       if (event.data.type === 'updateGraph') {
         graphData = event.data.payload;
         if (networkInstance) {
+          // Update existing network without recreating - preserve physics state and view
+          const currentPhysics = networkInstance.getOptions().physics;
           networkInstance.setData({ nodes: new vis.DataSet(graphData.nodes), edges: new vis.DataSet(graphData.edges) });
+          // Restore physics state after update
+          if (currentPhysics) {
+            networkInstance.setOptions({ physics: currentPhysics });
+          }
         } else {
           // Initial setup
           const data = { nodes: new vis.DataSet(graphData.nodes), edges: new vis.DataSet(graphData.edges) };
