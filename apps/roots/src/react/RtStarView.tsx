@@ -97,6 +97,10 @@ export const RtStarView = (): JSX.Element => {
   const dataWorkerRef = useRef<Worker | null>(null);
   const allRootsRef = useRef<Root[]>([]);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const prevMaxGenRef = useRef<number>(1);
+  const prevLinkByMeaningRef = useRef<number>(0);
+  const prevPruneByGradeRef = useRef<number>(6);
+  const prevMaxEdgesRef = useRef<number>(0);
   const [graphableRowsReady, setGraphableRowsReady] = useState<boolean>(false);
   const [isPhysicsEnabled, setIsPhysicsEnabled] = useState<boolean>(true); // Track physics state
   const [searchMatchCounts, setSearchMatchCounts] = useState<{ definitions: number; examples: number }>({ definitions: 0, examples: 0 });
