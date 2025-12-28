@@ -143,12 +143,8 @@ function findEdge(p: string, e: string, l: string, roots: Root[], index: number)
         if(mischalef(p, cand.P) || mischalef(e, cand.E) || mischalef(l, cand.L)) {
             return index;
         } else if(useVavToDoubled && doubledLast(p,e,l,cand)) {
-            // doubledLast also requires mischalfim to be active (checkboxes checked)
-            // If mischalfim is empty, no edges should be created
-            const mischalfimIsEmpty = Object.keys(mischalfim).length === 0;
-            if (!mischalfimIsEmpty) {
-                return index;
-            }
+            // doubledLast is controlled by vavToDoubled checkbox, not mischalfim
+            return index;
         }
     // } else if(pairMischalef(p,e,l,cand)) {  // not sure which cases this adds
     //     return index;

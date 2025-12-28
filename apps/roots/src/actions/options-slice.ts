@@ -82,7 +82,9 @@ const reducers:OptionsReducers = {
   clearChoices: (s) => {
     const choices = {...s.choices};
     Object.keys(choices).forEach(k=>choices[k]=false);
-    return {...s, choices, mischalfim:filterChosen(s.allmischalfim, choices)};
+    // Also clear vavToDoubled when clearing all checkboxes
+    const otherChoices = {...s.otherChoices, vavToDoubled: false};
+    return {...s, choices, mischalfim:filterChosen(s.allmischalfim, choices), otherChoices};
   },
   choose: (s, {choices})=>({...s, choices, mischalfim:filterChosen(s.allmischalfim, choices)}),
   chooseOne: (s, {choice, value} )=>
