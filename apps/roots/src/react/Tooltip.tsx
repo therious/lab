@@ -20,14 +20,9 @@ export function Tooltip({ children, content, style = {}, maxWidth = 350 }: Toolt
   const tooltipRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLSpanElement>(null);
 
-  // Early return after hooks - this is safe because hooks are always called
-  if (!content) {
-    return <>{children}</>;
-  }
-
   // Format content - if it's a string with newlines, format as multi-line
   // If it's already ReactNode, use it as-is
-  const formattedContent: ReactNode = typeof content === 'string' 
+  const formattedContent: ReactNode = content && typeof content === 'string' 
     ? content.split('\n').map((line, i, lines) => (
         <React.Fragment key={i}>
           {line}
@@ -38,7 +33,7 @@ export function Tooltip({ children, content, style = {}, maxWidth = 350 }: Toolt
 
   // Check position when tooltip becomes visible and adjust to prevent clipping
   useEffect(() => {
-    if (isVisible && tooltipRef.current && containerRef.current) {
+    if (content && isVisible && tooltipRef.current && containerRef.current) {
       // Use requestAnimationFrame to ensure tooltip is rendered before calculating position
       requestAnimationFrame(() => {
         if (tooltipRef.current && containerRef.current) {
@@ -93,7 +88,12 @@ export function Tooltip({ children, content, style = {}, maxWidth = 350 }: Toolt
         }
       });
     }
-  }, [isVisible, position]);
+  }, [content, isVisible, position]);
+
+  // Early return after all hooks - this is safe because hooks are always called
+  if (!content) {
+    return <>{children}</>;
+  }
 
   return (
     <span
