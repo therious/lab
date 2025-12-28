@@ -20,6 +20,7 @@ export function Tooltip({ children, content, style = {}, maxWidth = 350 }: Toolt
   const tooltipRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLSpanElement>(null);
 
+  // Early return after hooks - this is safe because hooks are always called
   if (!content) {
     return <>{children}</>;
   }
