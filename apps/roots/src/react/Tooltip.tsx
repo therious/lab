@@ -35,49 +35,62 @@ export function Tooltip({ children, content, style = {}, maxWidth = 350 }: Toolt
       ))
     : content;
 
-  // Check position when tooltip becomes visible
+  // Check position when tooltip becomes visible and adjust to prevent clipping
   useEffect(() => {
     if (isVisible && tooltipRef.current && containerRef.current) {
-      const tooltipRect = tooltipRef.current.getBoundingClientRect();
-      const containerRect = containerRef.current.getBoundingClientRect();
-      
-      // Check if there's enough space above (at least 10px margin)
-      const spaceAbove = containerRect.top;
-      const spaceBelow = window.innerHeight - containerRect.bottom;
-      const tooltipHeight = tooltipRect.height;
-      
-      // If not enough space above but enough below, position below
-      if (spaceAbove < tooltipHeight + 10 && spaceBelow > tooltipHeight + 10) {
-        setPosition('bottom');
-      } else {
-        setPosition('top');
-      }
-      
-      // Adjust tooltip position to prevent clipping at viewport edges
-      if (tooltipRef.current) {
-        const tooltipLeft = tooltipRect.left;
-        const tooltipRight = tooltipRect.right;
-        const viewportWidth = window.innerWidth;
-        
-        // If tooltip would be clipped on the left, adjust
-        if (tooltipLeft < 10) {
-          tooltipRef.current.style.left = `${10 - containerRect.left + (containerRect.width / 2)}px`;
-          tooltipRef.current.style.transform = 'translateX(0)';
+      // Use requestAnimationFrame to ensure tooltip is rendered before calculating position
+      requestAnimationFrame(() => {
+        if (tooltipRef.current && containerRef.current) {
+          const containerRect = containerRef.current.getBoundingClientRect();
+          const tooltipRect = tooltipRef.current.getBoundingClientRect();
+          const viewportWidth = window.innerWidth;
+          const viewportHeight = window.innerHeight;
+          
+          // Check if there's enough space above (at least 10px margin)
+          const spaceAbove = containerRect.top;
+          const spaceBelow = viewportHeight - containerRect.bottom;
+          const tooltipHeight = tooltipRect.height || 200; // Estimate if not yet rendered
+          
+          // If not enough space above but enough below, position below
+          if (spaceAbove < tooltipHeight + 10 && spaceBelow > tooltipHeight + 10) {
+            setPosition('bottom');
+          } else {
+            setPosition('top');
+          }
+          
+          // Adjust tooltip position to prevent clipping
+          // If tooltip would be clipped at top, use fixed positioning
+          if (position === 'top' && tooltipRect.top < 10) {
+            tooltipRef.current.style.position = 'fixed';
+            tooltipRef.current.style.top = `${Math.min(containerRect.bottom + 5, viewportHeight - tooltipRect.height - 10)}px`;
+            tooltipRef.current.style.bottom = 'auto';
+            const leftPos = containerRect.left + (containerRect.width / 2);
+            // Ensure tooltip doesn't go off left edge
+            if (leftPos < tooltipRect.width / 2 + 10) {
+              tooltipRef.current.style.left = `${tooltipRect.width / 2 + 10}px`;
+              tooltipRef.current.style.transform = 'translateX(-50%)';
+            }
+            // Ensure tooltip doesn't go off right edge
+            else if (leftPos > viewportWidth - tooltipRect.width / 2 - 10) {
+              tooltipRef.current.style.left = `${viewportWidth - tooltipRect.width / 2 - 10}px`;
+              tooltipRef.current.style.transform = 'translateX(-50%)';
+            }
+            else {
+              tooltipRef.current.style.left = `${leftPos}px`;
+              tooltipRef.current.style.transform = 'translateX(-50%)';
+            }
+          }
+          // If tooltip would be clipped on the left or right, adjust
+          else if (tooltipRect.left < 10) {
+            tooltipRef.current.style.left = `${10 - containerRect.left + (containerRect.width / 2)}px`;
+            tooltipRef.current.style.transform = 'translateX(0)';
+          }
+          else if (tooltipRect.right > viewportWidth - 10) {
+            tooltipRef.current.style.left = `${viewportWidth - 10 - containerRect.left - (containerRect.width / 2)}px`;
+            tooltipRef.current.style.transform = 'translateX(-100%)';
+          }
         }
-        // If tooltip would be clipped on the right, adjust
-        else if (tooltipRight > viewportWidth - 10) {
-          tooltipRef.current.style.left = `${viewportWidth - 10 - containerRect.left - (containerRect.width / 2)}px`;
-          tooltipRef.current.style.transform = 'translateX(-100%)';
-        }
-        // If tooltip would be clipped at top, use fixed positioning
-        if (position === 'top' && containerRect.top < tooltipHeight + 10) {
-          tooltipRef.current.style.position = 'fixed';
-          tooltipRef.current.style.top = `${containerRect.bottom + 5}px`;
-          tooltipRef.current.style.bottom = 'auto';
-          tooltipRef.current.style.left = `${containerRect.left + (containerRect.width / 2)}px`;
-          tooltipRef.current.style.transform = 'translateX(-50%)';
-        }
-      }
+      });
     }
   }, [isVisible, position]);
 
