@@ -47,7 +47,7 @@ type SliderWithTooltipProps = {
 
 const SliderWithTooltip = ({ label, tooltipContent, tooltipMaxWidth, value, min, max, step, onChange, disabled, ticksId, valueDisplay }: SliderWithTooltipProps): JSX.Element => {
   const [isDragging, setIsDragging] = useState(false);
-  
+
   const slider = (
     <span>
       <label style={{fontSize: '14px', marginRight: '5px', cursor: tooltipContent && !isDragging ? 'help' : 'default', opacity: disabled ? 0.5 : 1}}>{label}</label>
@@ -86,11 +86,11 @@ export const RtStarView = (): JSX.Element => {
   // Ensure mischalfim and otherChoices are properly initialized before computing graph
   // Note: mischalfim can be empty (all checkboxes unchecked) - that's valid, just means no edges
   const areOptionsReady = mischalfim && Array.isArray(mischalfim) && otherChoices && typeof otherChoices === 'object';
-  
+
   const setMaxGeneration = useCallback((value: number) => {
     actions.options.setMaxGeneration(value);
   }, []);
-  
+
   const setLocalExtraDegrees = useCallback((value: number) => {
     actions.options.setLocalExtraDegrees(value);
   }, []);
@@ -118,12 +118,12 @@ export const RtStarView = (): JSX.Element => {
   const prevPruneByGradeRef = useRef<number>(6);
   const prevMaxEdgesRef = useRef<number>(0);
   const [graphableRowsReady, setGraphableRowsReady] = useState<boolean>(false);
-  
+
   // UI state from options slice
   const setIsPhysicsEnabled = useCallback((value: boolean) => {
     actions.options.setPhysicsEnabled(value);
   }, []);
-  
+
   // Search/match state - kept in component state (not Redux) as it's transient
   const [searchMatchCounts, setSearchMatchCounts] = useState<{ definitions: number; examples: number }>({ definitions: 0, examples: 0 });
   const [nodeColors, setNodeColors] = useState<Array<{ id: number; color: { background: string } }>>([]);
@@ -146,7 +146,7 @@ export const RtStarView = (): JSX.Element => {
       if (e.data.type === 'getAllRootsResult') {
         const { roots: allRoots } = e.data.payload;
         allRootsRef.current = allRoots as Root[];
-        
+
         // Initialize graphableRows with all roots if it's empty
         // This ensures the graph computes even if you navigate directly to visualization
         // or if the grid hasn't set it yet
@@ -172,7 +172,7 @@ export const RtStarView = (): JSX.Element => {
 
   // Create a dummy networkRef for useNodeSearch (it doesn't actually use it for search, just for applyNodeColors)
   const dummyNetworkRef = useRef(null);
-  
+
   // Use searchTerm from options slice
   const {
     searchTerm: hookSearchTerm,
@@ -180,7 +180,7 @@ export const RtStarView = (): JSX.Element => {
     searchIdRef,
     applyNodeColors: applyNodeColorsBase,
   } = useNodeSearch(graph, dummyNetworkRef, workerRef);
-  
+
   // Sync hook's searchTerm with Redux options slice
   const searchTerm = optionsSearchTerm || hookSearchTerm;
   const setSearchTerm = useCallback((value: string) => {
@@ -206,13 +206,13 @@ export const RtStarView = (): JSX.Element => {
       // Only apply if this is the latest search (using generic utility)
       if (searchId === searchIdRef.current) {
         applyNodeColors(nodeColors);
-        
+
         // Extract matched node IDs (nodes with orange or yellow background)
         const matchedIds = nodeColors
           .filter(({ color }) => color.background === 'orange' || color.background === 'yellow')
           .map(({ nodeId }) => nodeId);
         setMatchedNodeIds(matchedIds);
-        
+
         // Count matches: orange = definition matches, yellow = example matches
         let definitionMatches = 0;
         let exampleMatches = 0;
@@ -224,7 +224,7 @@ export const RtStarView = (): JSX.Element => {
           }
         });
         setSearchMatchCounts({ definitions: definitionMatches, examples: exampleMatches });
-        
+
         // If hideNonMatched is enabled, update visibility to show newly matched nodes
         if (hideNonMatched && iframeRef.current) {
           iframeRef.current.toggleNonMatchedNodes(true, matchedIds);
@@ -232,7 +232,7 @@ export const RtStarView = (): JSX.Element => {
       }
     });
   }, [setSearchResultHandler, searchIdRef, applyNodeColors, hideNonMatched]);
-  
+
   // Clear search match counts and show all nodes when search term is cleared
   useEffect(() => {
     if (!searchTerm || !searchTerm.trim()) {
@@ -260,7 +260,7 @@ export const RtStarView = (): JSX.Element => {
       const handleMessage = (e: MessageEvent) => {
         if (e.data.type === 'getAllRootsResult') {
           const { roots: allRoots } = e.data.payload;
-          
+
           // Generate tooltip updates for all nodes
           const updates = generateTooltipUpdates(
             graph,
@@ -295,7 +295,7 @@ export const RtStarView = (): JSX.Element => {
       setMaxGeneration(value);
     });
   }, []);
-  
+
   const chExtraDegrees = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
     const value = Number(evt.target.value);
     // Shift: 0 = 1, 1 = 2, etc. (value + 1)
@@ -318,27 +318,27 @@ export const RtStarView = (): JSX.Element => {
   // Local state for immediate slider updates (non-blocking)
   const [localPruneByGrade, setLocalPruneByGrade] = useState<number>(pruneByGradeThreshold);
   const pruneSyncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Sync local state to Redux with debounce (only when user stops dragging)
   useEffect(() => {
     if (pruneSyncTimeoutRef.current) {
       clearTimeout(pruneSyncTimeoutRef.current);
     }
-    
+
     if (localPruneByGrade !== pruneByGradeThreshold) {
       // Debounce Redux update - only update after user stops dragging
       pruneSyncTimeoutRef.current = setTimeout(() => {
         actions.options.setPruneByGradeThreshold(localPruneByGrade);
       }, 300); // 300ms after last change
     }
-    
+
     return () => {
       if (pruneSyncTimeoutRef.current) {
         clearTimeout(pruneSyncTimeoutRef.current);
       }
     };
   }, [localPruneByGrade, pruneByGradeThreshold]);
-  
+
   // Sync Redux state to local when it changes externally (but not from our own updates)
   useEffect(() => {
     // Only sync if the difference is significant (to avoid loops)
@@ -346,7 +346,7 @@ export const RtStarView = (): JSX.Element => {
       setLocalPruneByGrade(pruneByGradeThreshold);
     }
   }, [pruneByGradeThreshold]);
-  
+
   const chPruneByGrade = useCallback((evt: React.ChangeEvent<HTMLInputElement>): void => {
     const sliderValue = Number(evt.target.value);
     const threshold = 6 - sliderValue; // Reverse: slider 0 = threshold 6, slider 6 = threshold 0
@@ -376,7 +376,7 @@ export const RtStarView = (): JSX.Element => {
 
     // Use graphableRows if available, otherwise use allRoots to preserve nodes
     // This ensures nodes remain stable when switching routes
-    const rootsToUse = (toRender.graphableRows && Array.isArray(toRender.graphableRows) && toRender.graphableRows.length > 0) 
+    const rootsToUse = (toRender.graphableRows && Array.isArray(toRender.graphableRows) && toRender.graphableRows.length > 0)
       ? (toRender.graphableRows as Root[])
       : allRootsRef.current;
 
@@ -414,37 +414,37 @@ export const RtStarView = (): JSX.Element => {
     }
     // If graphableRows is empty, use allRoots as fallback to preserve nodes
     // This ensures nodes remain stable when switching routes
-    const rootsToUse = (toRender.graphableRows && Array.isArray(toRender.graphableRows) && toRender.graphableRows.length > 0) 
-      ? toRender.graphableRows 
+    const rootsToUse = (toRender.graphableRows && Array.isArray(toRender.graphableRows) && toRender.graphableRows.length > 0)
+      ? toRender.graphableRows
       : allRootsRef.current;
 
     // Assert non-null: workerRef.current is guaranteed to be set when this runs
       // Cancel previous computation by incrementing ID immediately
       computationIdRef.current += 1;
-      
+
       // Clear any pending timeout
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
         debounceTimeoutRef.current = null;
       }
-      
+
       // Use requestAnimationFrame to ensure we're not blocking the UI thread
       // Then set a timeout for the actual computation
     // For checkbox changes (otherChoices, mischalfim), use shorter debounce for immediate feedback
     // For slider changes, use longer debounce to batch rapid changes
-    const isCheckboxChange = 
+    const isCheckboxChange =
       (maxGeneration === (prevMaxGenRef.current || maxGeneration)) &&
       (linkByMeaningThreshold === (prevLinkByMeaningRef.current || linkByMeaningThreshold)) &&
       (localPruneByGrade === (prevPruneByGradeRef.current || localPruneByGrade)) &&
       (maxEdges === (prevMaxEdgesRef.current || maxEdges));
-    
+
     const debounceTime = isCheckboxChange ? 50 : 100; // Faster for checkboxes, slower for sliders
-    
+
       requestAnimationFrame(() => {
         debounceTimeoutRef.current = setTimeout(() => {
           // Use graphableRows if available, otherwise use allRoots to preserve nodes
-          const rootsToUse = (toRender.graphableRows && Array.isArray(toRender.graphableRows) && toRender.graphableRows.length > 0) 
-            ? toRender.graphableRows 
+          const rootsToUse = (toRender.graphableRows && Array.isArray(toRender.graphableRows) && toRender.graphableRows.length > 0)
+            ? toRender.graphableRows
             : allRootsRef.current;
           // Only compute if we have roots to use
           if (rootsToUse && rootsToUse.length > 0) {
@@ -457,7 +457,7 @@ export const RtStarView = (): JSX.Element => {
         prevMaxEdgesRef.current = maxEdges;
       }, debounceTime);
       });
-      
+
       return () => {
         if (debounceTimeoutRef.current) {
           clearTimeout(debounceTimeoutRef.current);
@@ -475,7 +475,7 @@ export const RtStarView = (): JSX.Element => {
         type: 'updateGraph',
         payload: graph
       }, '*');
-      
+
       // After graph update, reapply hideNonMatched filter if enabled
       // This ensures newly added nodes that don't match the search are hidden
       if (hideNonMatched && matchedNodeIds.length > 0 && iframeRef.current) {
@@ -604,7 +604,7 @@ export const RtStarView = (): JSX.Element => {
       iframe.style.border = 'none';
       iframe.style.visibility = 'visible';
       console.log('[RtStarView] Positioned persistent iframe over graph container');
-      
+
       // Update position on resize
       const updatePosition = () => {
         const rect = graphContainer.getBoundingClientRect();
@@ -613,11 +613,11 @@ export const RtStarView = (): JSX.Element => {
         iframe.style.width = `${rect.width}px`;
         iframe.style.height = `${rect.height}px`;
       };
-      
+
       window.addEventListener('resize', updatePosition);
       const observer = new MutationObserver(updatePosition);
       observer.observe(graphContainer, { attributes: true, attributeFilter: ['style', 'class'] });
-      
+
       return () => {
         window.removeEventListener('resize', updatePosition);
         observer.disconnect();
@@ -722,7 +722,7 @@ export const RtStarView = (): JSX.Element => {
               <button onClick={actions.options.clearChoices}>Clear All</button>
             </h3>
           </div>
-          
+
           {/* Add similar meanings slider - three column layout */}
           <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
             {/* Stats row: empty space for label | stats over slider */}
@@ -758,7 +758,7 @@ export const RtStarView = (): JSX.Element => {
               <span style={{fontSize: '12px', whiteSpace: 'nowrap'}}>Grade ≥ {linkByMeaningThreshold}</span>
             </div>
           </div>
-          
+
           {/* Extra degrees slider - three column layout */}
           <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
             {/* Stats row: empty space for label | stats over slider */}
@@ -794,7 +794,7 @@ export const RtStarView = (): JSX.Element => {
               <span style={{fontSize: '12px', whiteSpace: 'nowrap'}}>{localExtraDegrees}</span>
             </div>
           </div>
-          
+
           {/* Prune by grade slider - three column layout */}
           <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
             {/* Stats row: empty space for label | stats over slider */}
@@ -863,7 +863,7 @@ export const RtStarView = (): JSX.Element => {
               <span style={{fontSize: '12px', whiteSpace: 'nowrap'}}>Grade ≥ {localPruneByGrade}</span>
             </div>
           </div>
-          
+
           {/* Remove Free checkbox - three column layout */}
           <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
             {/* Stats row: checkbox space | stats over "Remove Free" text */}
@@ -892,7 +892,36 @@ export const RtStarView = (): JSX.Element => {
             </div>
           </div>
         </div>
-          <CheckGroup choices={Object.fromEntries(Object.entries(otherChoices).filter(([k]) => k !== 'removeFree'))} setChoice={actions.options.chooseOtherOne}/>
+          {/* Render otherChoices checkboxes with tooltips for jumbled and atbash */}
+          <div>
+            {Object.entries(otherChoices)
+              .filter(([k]) => k !== 'removeFree')
+              .map(([k, v]) => {
+                const tooltipContent = k === 'jumbled'
+                  ? "Connect roots w/ same set of letters in any order"
+                  : k === 'atbash'
+                  ? "Use atbash (אתבש) to relate roots (א=ת, ב=ש, ג=ר)"
+                  : null;
+
+                const checkbox = (
+                  <span key={k} style={{margin: '10px', whiteSpace: 'nowrap'}}>
+                    <input
+                      type="checkbox"
+                      id={k}
+                      checked={v || false}
+                      onChange={(e) => actions.options.chooseOtherOne(k, e.target.checked)}
+                    />
+                    <label htmlFor={k} style={{cursor: tooltipContent ? 'help' : 'default'}}>{k}</label>
+                  </span>
+                );
+
+                return tooltipContent ? (
+                  <Tooltip key={k} content={tooltipContent}>
+                    {checkbox}
+                  </Tooltip>
+                ) : checkbox;
+              })}
+          </div>
           <CheckGroup choices={choices} setChoice={actions.options.chooseOne}/>
         </div>
         <hr/>
@@ -908,7 +937,7 @@ export const RtStarView = (): JSX.Element => {
                 style={{width: '400px', padding: '5px 25px 5px 5px'}}
           />
           {searchTerm && (
-            <button 
+            <button
               onClick={() => setSearchTerm('')}
                   style={{
                     position: 'absolute',
