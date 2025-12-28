@@ -391,6 +391,18 @@ export const RtStarView = (): JSX.Element => {
   // Auto-update graph when slider changes or when graphableRows becomes ready
   // Use debounce with cancellation for smooth slider dragging
   useEffect(() => {
+    // If mischalfim is empty (all checkboxes unchecked), clear the graph immediately
+    if (!mischalfim || mischalfim.length === 0) {
+      console.log('[RtStarView] All checkboxes unchecked, clearing graph');
+      if (iframeElementRef.current?.contentWindow) {
+        iframeElementRef.current.contentWindow.postMessage({
+          type: 'updateGraph',
+          payload: { nodes: [], edges: [] }
+        }, '*');
+      }
+      return;
+    }
+    
     // Ensure we have both graphableRows and allRoots before computing
     if (!toRender.graphableRows || !Array.isArray(toRender.graphableRows) || toRender.graphableRows.length === 0) {
       return;
