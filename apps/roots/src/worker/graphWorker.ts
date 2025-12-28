@@ -171,15 +171,17 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage | SearchMessage>) 
       const n = gridFilteredRoots.length; // Grid filter count
 
       // OPTIMIZATION: If grid-filtered roots exceed threshold, skip expensive expansion operations
-      // These operations (meaning links, extra degrees, pruning) are not useful with large node sets
+      // These operations (meaning links, extra degrees) are not useful with large node sets
       // and cause significant performance degradation
+      // NOTE: Prune by grade is always applied, even when expansion is skipped
       const shouldSkipExpansion = n > maxNodesForExpansion;
 
       // Create gridFilteredRootIds set once for use in both branches
       const gridFilteredRootIds = new Set(gridFilteredRoots.map((r: any) => r.id));
 
       // PIPELINE STAGE 2: Apply Link by Meaning slider - add roots connected by meaning grades
-      const rootsWithMeaningLinks = shouldSkipExpansion
+      // If linkByMeaningThreshold >= 6, skip meaning expansion (bypass this stage)
+      const rootsWithMeaningLinks = shouldSkipExpansion || linkByMeaningThreshold >= 6
         ? gridFilteredRoots
         : expandFilteredByMeaning(
             gridFilteredRoots,
@@ -188,13 +190,14 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage | SearchMessage>) 
           );
 
       // x = roots added by similar meanings (not in original grid filter)
-      const x = shouldSkipExpansion
+      const x = shouldSkipExpansion || linkByMeaningThreshold >= 6
         ? 0
         : rootsWithMeaningLinks.filter((r: any) => !gridFilteredRootIds.has(r.id)).length;
 
       // PIPELINE STAGE 3: Apply Max Generation slider - expand by letter-based connections
-      const rootsWithLetterLinks = shouldSkipExpansion
-        ? gridFilteredRoots
+      // If maxGeneration === 1, skip extra degrees expansion (bypass this stage)
+      const rootsWithLetterLinks = shouldSkipExpansion || maxGeneration === 1
+        ? rootsWithMeaningLinks
         : expandFilteredWithIndirectlyLinkedRoots(
             rootsWithMeaningLinks,
             allRoots,
@@ -223,16 +226,16 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage | SearchMessage>) 
           );
 
       // w = roots added only by extra degrees (not in grid filter or similar meanings)
-      const meaningLinkRootIds = shouldSkipExpansion
+      const meaningLinkRootIds = shouldSkipExpansion || linkByMeaningThreshold >= 6
         ? new Set<number>()
         : new Set(rootsWithMeaningLinks.map((r: any) => r.id));
-      const w = shouldSkipExpansion
+      const w = shouldSkipExpansion || maxGeneration === 1
         ? 0
         : rootsFilteredByGeneration.filter((r: any) =>
             !gridFilteredRootIds.has(r.id) && !meaningLinkRootIds.has(r.id)
           ).length;
 
-      const showGenerations = shouldSkipExpansion
+      const showGenerations = shouldSkipExpansion || maxGeneration === 1
         ? false
         : maxGeneration > generationRange.min;
 

@@ -745,7 +745,14 @@ export const RtStarView = (): JSX.Element => {
                 String(tooltipCounts.x).length,
                 String(tooltipCounts.w).length
               );
-              const tooltipContent = shouldDisableExpansion ? null : (
+              const tooltipContent = shouldDisableExpansion ? (
+                <>
+                  Prune out roots ({tooltipCounts.pruneRemoved}) whose related letter-based connections to other roots in current diagram do not have a sufficiently similar-graded meaning.
+                  <br />
+                  <br />
+                  This works on the current set of {tooltipCounts.y} roots (from grid filter and any enabled expansion sliders).
+                </>
+              ) : (
                 <>
                   Given the {tooltipCounts.y} total roots now included:
                   <br />
@@ -770,7 +777,7 @@ export const RtStarView = (): JSX.Element => {
                       max={6} 
                       step={1}
                       onChange={chPruneByGrade}
-                  disabled={shouldDisableExpansion}
+                  disabled={false}
                   ticksId="pruneByGrade-ticks"
                   valueDisplay={<span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '85px'}}>Grade ≥ {localPruneByGrade}</span>}
                     />
