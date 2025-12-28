@@ -703,162 +703,185 @@ export const RtStarView = (): JSX.Element => {
         </div>
         <hr/>
         <div style={{ paddingBottom: '10px'}}>
-        {/* Metrics row - aligned above controls */}
-        <div style={{marginLeft:'14px', marginBottom: '8px', display: 'flex', alignItems: 'flex-start', fontSize: '12px'}}>
-          {/* Osios Mischalfos metrics - align with heading + buttons */}
-          <div style={{width: '300px', display: 'inline-block', flexShrink: 0}}>
+        {/* Flex container that wraps */}
+        <div style={{marginLeft:'14px', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: '20px'}}>
+          {/* Osios Mischalfos section */}
+          <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
+            {/* Stats above */}
             {tooltipCounts.afterMischalfim && (
-              <span style={{color: '#000'}}>
+              <div style={{marginBottom: '8px', fontSize: '12px', color: '#000'}}>
                 Nodes: {tooltipCounts.afterMischalfim.nodes} | Connections: {tooltipCounts.afterMischalfim.edges}
-              </span>
+              </div>
             )}
+            {/* Heading and buttons */}
+            <h3 style={{margin: 0, display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap'}}>
+              <Tooltip content={<>Osios Mischalfos (<span style={hebrewTextStyle}>אותיות מתחלפות</span>) are groups of Hebrew letters that can substitute for each other. When a root has one letter replaced with a related letter from the same group, it often produces a related meaning. These relationships are used to link roots together in the visualization.</>}>
+                <span style={{cursor: 'help'}}>Osios Mischalfos</span>
+              </Tooltip>
+              <button onClick={actions.options.allChoices}>Select All</button>
+              <button onClick={actions.options.clearChoices}>Clear All</button>
+            </h3>
           </div>
-          {/* Add similar meanings metrics - align with slider */}
-          <div style={{width: '200px', marginRight: '15px', display: 'inline-block', flexShrink: 0, textAlign: 'center'}}>
+          
+          {/* Add similar meanings slider - three column layout */}
+          <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
+            {/* Stats above slider (middle column) */}
             {tooltipCounts.meaningStage && (
-              <span style={{color: (tooltipCounts.meaningStage.nodesAdded === 0 && tooltipCounts.meaningStage.edgesAdded === 0) || shouldDisableExpansion ? '#999' : '#000'}}>
+              <div style={{marginBottom: '8px', fontSize: '12px', textAlign: 'center', width: '100%', color: (tooltipCounts.meaningStage.nodesAdded === 0 && tooltipCounts.meaningStage.edgesAdded === 0) || shouldDisableExpansion ? '#999' : '#000'}}>
                 +{tooltipCounts.meaningStage.nodesAdded} = {tooltipCounts.meaningStage.nodesTotal} | +{tooltipCounts.meaningStage.edgesAdded} = {tooltipCounts.meaningStage.edgesTotal}
-              </span>
+              </div>
             )}
+            {/* Three column layout: label | slider | value */}
+            <div style={{display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'nowrap'}}>
+              <label style={{fontSize: '14px', cursor: shouldDisableExpansion ? 'default' : 'help', opacity: shouldDisableExpansion ? 0.5 : 1, whiteSpace: 'nowrap'}}>
+                Add similar meanings:
+              </label>
+              <Tooltip content={shouldDisableExpansion ? null : `Include additional roots (${tooltipCounts.x}) based on meanings similar to roots currently included in the grid filter (${tooltipCounts.n})`}>
+                <input
+                  type="range"
+                  min={0}
+                  max={6}
+                  step={1}
+                  value={String(6 - linkByMeaningThreshold)}
+                  onChange={chLinkByMeaning}
+                  disabled={shouldDisableExpansion}
+                  style={{width: '120px', margin: '0 5px', verticalAlign: 'middle', opacity: shouldDisableExpansion ? 0.5 : 1}}
+                  list="linkByMeaning-ticks"
+                />
+              </Tooltip>
+              <datalist id="linkByMeaning-ticks">
+                {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={String(val)} label={String(val)} />)}
+              </datalist>
+              <span style={{fontSize: '12px', whiteSpace: 'nowrap'}}>Grade ≥ {linkByMeaningThreshold}</span>
+            </div>
           </div>
-          {/* Extra degrees metrics - align with slider */}
-          <div style={{width: '200px', marginRight: '15px', display: 'inline-block', flexShrink: 0, textAlign: 'center'}}>
+          
+          {/* Extra degrees slider - three column layout */}
+          <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
+            {/* Stats above slider (middle column) */}
             {tooltipCounts.extraDegreesStage && (
-              <span style={{color: (tooltipCounts.extraDegreesStage.nodesAdded === 0 && tooltipCounts.extraDegreesStage.edgesAdded === 0) || shouldDisableExpansion ? '#999' : '#000'}}>
+              <div style={{marginBottom: '8px', fontSize: '12px', textAlign: 'center', width: '100%', color: (tooltipCounts.extraDegreesStage.nodesAdded === 0 && tooltipCounts.extraDegreesStage.edgesAdded === 0) || shouldDisableExpansion ? '#999' : '#000'}}>
                 +{tooltipCounts.extraDegreesStage.nodesAdded} = {tooltipCounts.extraDegreesStage.nodesTotal} | +{tooltipCounts.extraDegreesStage.edgesAdded} = {tooltipCounts.extraDegreesStage.edgesTotal}
-              </span>
+              </div>
             )}
+            {/* Three column layout: label | slider | value */}
+            <div style={{display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'nowrap'}}>
+              <label style={{fontSize: '14px', cursor: shouldDisableExpansion ? 'default' : 'help', opacity: shouldDisableExpansion ? 0.5 : 1, whiteSpace: 'nowrap'}}>
+                Extra degrees:
+              </label>
+              <Tooltip content={shouldDisableExpansion ? null : <>Given the roots included by the grid ({tooltipCounts.n}) and the roots with similar meanings ({tooltipCounts.x}) bring in additional roots ({tooltipCounts.w}) that are related according to the enabled <span style={hebrewTextStyle}>אותיות מתחלפות</span> criteria</>}>
+                <input
+                  type="range"
+                  min={0}
+                  max={6}
+                  step={1}
+                  value={String(localExtraDegrees)}
+                  onChange={chExtraDegrees}
+                  disabled={shouldDisableExpansion}
+                  style={{width: '120px', margin: '0 5px', verticalAlign: 'middle', opacity: shouldDisableExpansion ? 0.5 : 1}}
+                  list="extraDegrees-ticks"
+                />
+              </Tooltip>
+              <datalist id="extraDegrees-ticks">
+                {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={String(val)} label={String(val)} />)}
+              </datalist>
+              <span style={{fontSize: '12px', whiteSpace: 'nowrap'}}>{localExtraDegrees}</span>
+            </div>
           </div>
-          {/* Prune by grade metrics - align with slider */}
-          <div style={{width: '200px', marginRight: '15px', display: 'inline-block', flexShrink: 0, textAlign: 'center'}}>
+          
+          {/* Prune by grade slider - three column layout */}
+          <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
+            {/* Stats above slider (middle column) */}
             {tooltipCounts.pruneStage && (
-              <span style={{color: tooltipCounts.pruneStage.edgesRemoved === 0 ? '#999' : '#000'}}>
+              <div style={{marginBottom: '8px', fontSize: '12px', textAlign: 'center', width: '100%', color: tooltipCounts.pruneStage.edgesRemoved === 0 ? '#999' : '#000'}}>
                 -0 = {tooltipCounts.pruneStage.nodesTotal} | -{tooltipCounts.pruneStage.edgesRemoved} = {tooltipCounts.pruneStage.edgesTotal}
-              </span>
+              </div>
             )}
+            {/* Three column layout: label | slider | value */}
+            <div style={{display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'nowrap'}}>
+              <label style={{fontSize: '14px', cursor: 'help', whiteSpace: 'nowrap'}}>
+                Prune by grade:
+              </label>
+              {(() => {
+                const numMaxWidth = Math.max(
+                  String(tooltipCounts.n).length,
+                  String(tooltipCounts.x).length,
+                  String(tooltipCounts.w).length
+                );
+                const tooltipContent = shouldDisableExpansion ? (
+                  <>
+                    Prune out roots ({tooltipCounts.pruneRemoved}) whose related letter-based connections to other roots in current diagram do not have a sufficiently similar-graded meaning.
+                    <br />
+                    <br />
+                    This works on the current set of {tooltipCounts.y} roots (from grid filter and any enabled expansion sliders).
+                  </>
+                ) : (
+                  <>
+                    Given the {tooltipCounts.y} total roots now included:
+                    <br />
+                    <br />
+                    {String(tooltipCounts.n).padStart(numMaxWidth)} included in grid filter
+                    <br />
+                    {String(tooltipCounts.x).padStart(numMaxWidth)} have similar meanings
+                    <br />
+                    {String(tooltipCounts.w).padStart(numMaxWidth)} extra degrees of relation
+                    <br />
+                    <br />
+                    Now prune out roots ({tooltipCounts.pruneRemoved}) included by previous sliders whose related letter-based connections to other roots in current diagram do not have a sufficiently similar-graded meaning.
+                  </>
+                );
+                return (
+                  <>
+                    <Tooltip content={tooltipContent} maxWidth={700}>
+                      <input
+                        type="range"
+                        min={0}
+                        max={6}
+                        step={1}
+                        value={String(6 - localPruneByGrade)}
+                        onChange={chPruneByGrade}
+                        disabled={false}
+                        style={{width: '120px', margin: '0 5px', verticalAlign: 'middle'}}
+                        list="pruneByGrade-ticks"
+                      />
+                    </Tooltip>
+                    <datalist id="pruneByGrade-ticks">
+                      {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={String(val)} label={String(val)} />)}
+                    </datalist>
+                  </>
+                );
+              })()}
+              <span style={{fontSize: '12px', whiteSpace: 'nowrap'}}>Grade ≥ {localPruneByGrade}</span>
+            </div>
           </div>
-          {/* Remove Free metrics - align with checkbox */}
-          <div style={{width: '150px', marginRight: '15px', display: 'inline-block', flexShrink: 0, textAlign: 'center'}}>
+          
+          {/* Remove Free checkbox - three column layout */}
+          <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
+            {/* Stats above checkbox (middle column) */}
             {tooltipCounts.removeFreeStage && (
-              <span style={{color: tooltipCounts.removeFreeStage.nodesRemoved === 0 || tooltipCounts.q === 0 ? '#999' : '#000'}}>
+              <div style={{marginBottom: '8px', fontSize: '12px', textAlign: 'center', width: '100%', color: tooltipCounts.removeFreeStage.nodesRemoved === 0 || tooltipCounts.q === 0 ? '#999' : '#000'}}>
                 -{tooltipCounts.removeFreeStage.nodesRemoved} = {tooltipCounts.removeFreeStage.nodesTotal} | -0 = {tooltipCounts.removeFreeStage.edgesTotal}
-              </span>
+              </div>
             )}
+            {/* Three column layout: empty | checkbox+label | empty (for alignment) */}
+            <div style={{display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'nowrap'}}>
+              <span style={{width: '0', flexShrink: 0}}></span>
+              <Tooltip content={`Remove roots (${tooltipCounts.q}) from diagram now left with no surviving connections based on the grid filter and the preceding sliders`}>
+                <label style={{fontSize: '14px', marginRight: '5px', fontWeight: 'normal', cursor: tooltipCounts.q > 0 ? 'help' : 'default', opacity: tooltipCounts.q > 0 ? 1 : 0.5, whiteSpace: 'nowrap'}}>
+                  <input
+                    type="checkbox"
+                    checked={otherChoices.removeFree || false}
+                    onChange={(e) => actions.options.chooseOtherOne('removeFree', e.target.checked)}
+                    style={{marginRight: '5px'}}
+                    disabled={tooltipCounts.q === 0}
+                  />
+                  Remove Free
+                </label>
+              </Tooltip>
+              <span style={{width: '0', flexShrink: 0}}></span>
+            </div>
           </div>
         </div>
-        
-        {/* Controls row */}
-        <h3 style={{marginLeft:'14px', display:'flex', alignItems: 'center', flexWrap: 'wrap'}}>
-          <div style={{width: '300px', flexShrink: 0, display: 'inline-block'}}>
-            <Tooltip content={<>Osios Mischalfos (<span style={hebrewTextStyle}>אותיות מתחלפות</span>) are groups of Hebrew letters that can substitute for each other. When a root has one letter replaced with a related letter from the same group, it often produces a related meaning. These relationships are used to link roots together in the visualization.</>}>
-              <span style={{cursor: 'help'}}>Osios Mischalfos</span>
-            </Tooltip>
-            <button  onClick={actions.options.allChoices}>Select All</button>
-            <button  onClick={actions.options.clearChoices}>Clear All</button>
-          </div>
-          <span style={{marginLeft:'20px', fontWeight:'normal', display: 'flex', alignItems: 'center', flexWrap: 'wrap'}}>
-          <span style={{width: '200px', marginRight:'15px', display: 'inline-block', flexShrink: 0}}>
-            <SliderWithTooltip
-              label="Add similar meanings:"
-              tooltipContent={shouldDisableExpansion ? null : `Include additional roots (${tooltipCounts.x}) based on meanings similar to roots currently included in the grid filter (${tooltipCounts.n})`}
-              value={6 - linkByMeaningThreshold}
-                min={0} 
-                max={6} 
-                step={1}
-              onChange={chLinkByMeaning}
-              disabled={shouldDisableExpansion}
-              ticksId="linkByMeaning-ticks"
-              valueDisplay={<span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '85px'}}>Grade ≥ {linkByMeaningThreshold}</span>}
-              />
-            <datalist id="linkByMeaning-ticks">
-              {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={String(val)} label={String(val)} />)}
-            </datalist>
-          </span>
-          <span style={{marginRight:'15px', display: 'inline-block'}}>
-            <SliderWithTooltip
-              label="Extra degrees:"
-              tooltipContent={shouldDisableExpansion ? null : <>Given the roots included by the grid ({tooltipCounts.n}) and the roots with similar meanings ({tooltipCounts.x}) bring in additional roots ({tooltipCounts.w}) that are related according to the enabled <span style={hebrewTextStyle}>אותיות מתחלפות</span> criteria</>}
-              value={localExtraDegrees}
-                min={0} 
-                max={6} 
-                step={1}
-              onChange={chExtraDegrees}
-              disabled={shouldDisableExpansion}
-              ticksId="extraDegrees-ticks"
-              valueDisplay={<span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '20px'}}>{localExtraDegrees}</span>}
-              />
-            <datalist id="extraDegrees-ticks">
-              {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={String(val)} label={String(val)} />)}
-            </datalist>
-          </span>
-          <span style={{marginRight:'15px', display: 'inline-block'}}>
-            {(() => {
-              const numMaxWidth = Math.max(
-                String(tooltipCounts.n).length,
-                String(tooltipCounts.x).length,
-                String(tooltipCounts.w).length
-              );
-              const tooltipContent = shouldDisableExpansion ? (
-                <>
-                  Prune out roots ({tooltipCounts.pruneRemoved}) whose related letter-based connections to other roots in current diagram do not have a sufficiently similar-graded meaning.
-                  <br />
-                  <br />
-                  This works on the current set of {tooltipCounts.y} roots (from grid filter and any enabled expansion sliders).
-                </>
-              ) : (
-                <>
-                  Given the {tooltipCounts.y} total roots now included:
-                  <br />
-                  <br />
-                  {String(tooltipCounts.n).padStart(numMaxWidth)} included in grid filter
-                  <br />
-                  {String(tooltipCounts.x).padStart(numMaxWidth)} have similar meanings
-                  <br />
-                  {String(tooltipCounts.w).padStart(numMaxWidth)} extra degrees of relation
-                  <br />
-                  <br />
-                  Now prune out roots ({tooltipCounts.pruneRemoved}) included by previous sliders whose related letter-based connections to other roots in current diagram do not have a sufficiently similar-graded meaning.
-                </>
-              );
-              return (
-                <SliderWithTooltip
-                  label="Prune by grade:"
-                  tooltipContent={tooltipContent}
-                  tooltipMaxWidth={700}
-                  value={6 - localPruneByGrade}
-                      min={0} 
-                      max={6} 
-                      step={1}
-                  onChange={chPruneByGrade}
-                  disabled={false}
-                  ticksId="pruneByGrade-ticks"
-                  valueDisplay={<span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '85px'}}>Grade ≥ {localPruneByGrade}</span>}
-                    />
-              );
-            })()}
-            <datalist id={`pruneByGrade-ticks`}>
-              {[0, 1, 2, 3, 4, 5, 6].map(val => <option key={val} value={String(val)} label={String(val)} />)}
-            </datalist>
-            <span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '85px'}}>
-              Grade ≥ {localPruneByGrade}
-            </span>
-          </span>
-          <span style={{width: '150px', marginRight:'15px', display: 'inline-block', flexShrink: 0}}>
-            <Tooltip content={`Remove roots (${tooltipCounts.q}) from diagram now left with no surviving connections based on the grid filter and the preceding sliders`}>
-              <label style={{fontSize: '14px', marginRight: '5px', fontWeight: 'normal', cursor: tooltipCounts.q > 0 ? 'help' : 'default', opacity: tooltipCounts.q > 0 ? 1 : 0.5}}>
-                <input
-                  type="checkbox"
-                  checked={otherChoices.removeFree || false}
-                  onChange={(e) => actions.options.chooseOtherOne('removeFree', e.target.checked)}
-                  style={{marginRight: '5px'}}
-                  disabled={tooltipCounts.q === 0}
-                />
-                Remove Free
-              </label>
-            </Tooltip>
-          </span>
-        </span>
-        </h3>
           <CheckGroup choices={Object.fromEntries(Object.entries(otherChoices).filter(([k]) => k !== 'removeFree'))} setChoice={actions.options.chooseOtherOne}/>
           <CheckGroup choices={choices} setChoice={actions.options.chooseOne}/>
         </div>
