@@ -725,15 +725,18 @@ export const RtStarView = (): JSX.Element => {
           
           {/* Add similar meanings slider - three column layout */}
           <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
-            {/* Stats above slider (middle column) */}
-            {tooltipCounts.meaningStage && (
-              <div style={{marginBottom: '8px', fontSize: '12px', textAlign: 'center', width: '100%', color: (tooltipCounts.meaningStage.nodesAdded === 0 && tooltipCounts.meaningStage.edgesAdded === 0) || shouldDisableExpansion ? '#999' : '#000'}}>
-                +{tooltipCounts.meaningStage.nodesAdded} = {tooltipCounts.meaningStage.nodesTotal} | +{tooltipCounts.meaningStage.edgesAdded} = {tooltipCounts.meaningStage.edgesTotal}
-              </div>
-            )}
-            {/* Three column layout: label | slider | value */}
+            {/* Stats row: empty space for label | stats over slider */}
+            <div style={{display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '8px', flexWrap: 'nowrap'}}>
+              <div style={{width: '160px', textAlign: 'right'}}></div>
+              {tooltipCounts.meaningStage && (
+                <div style={{fontSize: '12px', textAlign: 'center', color: (tooltipCounts.meaningStage.nodesAdded === 0 && tooltipCounts.meaningStage.edgesAdded === 0) || shouldDisableExpansion ? '#999' : '#000'}}>
+                  +{tooltipCounts.meaningStage.nodesAdded} = {tooltipCounts.meaningStage.nodesTotal} | +{tooltipCounts.meaningStage.edgesAdded} = {tooltipCounts.meaningStage.edgesTotal}
+                </div>
+              )}
+            </div>
+            {/* Control row: label (right-justified) | slider | value */}
             <div style={{display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'nowrap'}}>
-              <label style={{fontSize: '14px', cursor: shouldDisableExpansion ? 'default' : 'help', opacity: shouldDisableExpansion ? 0.5 : 1, whiteSpace: 'nowrap'}}>
+              <label style={{fontSize: '14px', cursor: shouldDisableExpansion ? 'default' : 'help', opacity: shouldDisableExpansion ? 0.5 : 1, whiteSpace: 'nowrap', width: '160px', textAlign: 'right'}}>
                 Add similar meanings:
               </label>
               <Tooltip content={shouldDisableExpansion ? null : `Include additional roots (${tooltipCounts.x}) based on meanings similar to roots currently included in the grid filter (${tooltipCounts.n})`}>
@@ -758,15 +761,18 @@ export const RtStarView = (): JSX.Element => {
           
           {/* Extra degrees slider - three column layout */}
           <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
-            {/* Stats above slider (middle column) */}
-            {tooltipCounts.extraDegreesStage && (
-              <div style={{marginBottom: '8px', fontSize: '12px', textAlign: 'center', width: '100%', color: (tooltipCounts.extraDegreesStage.nodesAdded === 0 && tooltipCounts.extraDegreesStage.edgesAdded === 0) || shouldDisableExpansion ? '#999' : '#000'}}>
-                +{tooltipCounts.extraDegreesStage.nodesAdded} = {tooltipCounts.extraDegreesStage.nodesTotal} | +{tooltipCounts.extraDegreesStage.edgesAdded} = {tooltipCounts.extraDegreesStage.edgesTotal}
-              </div>
-            )}
-            {/* Three column layout: label | slider | value */}
+            {/* Stats row: empty space for label | stats over slider */}
+            <div style={{display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '8px', flexWrap: 'nowrap'}}>
+              <div style={{width: '120px', textAlign: 'right'}}></div>
+              {tooltipCounts.extraDegreesStage && (
+                <div style={{fontSize: '12px', textAlign: 'center', color: (tooltipCounts.extraDegreesStage.nodesAdded === 0 && tooltipCounts.extraDegreesStage.edgesAdded === 0) || shouldDisableExpansion ? '#999' : '#000'}}>
+                  +{tooltipCounts.extraDegreesStage.nodesAdded} = {tooltipCounts.extraDegreesStage.nodesTotal} | +{tooltipCounts.extraDegreesStage.edgesAdded} = {tooltipCounts.extraDegreesStage.edgesTotal}
+                </div>
+              )}
+            </div>
+            {/* Control row: label (right-justified) | slider | value */}
             <div style={{display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'nowrap'}}>
-              <label style={{fontSize: '14px', cursor: shouldDisableExpansion ? 'default' : 'help', opacity: shouldDisableExpansion ? 0.5 : 1, whiteSpace: 'nowrap'}}>
+              <label style={{fontSize: '14px', cursor: shouldDisableExpansion ? 'default' : 'help', opacity: shouldDisableExpansion ? 0.5 : 1, whiteSpace: 'nowrap', width: '120px', textAlign: 'right'}}>
                 Extra degrees:
               </label>
               <Tooltip content={shouldDisableExpansion ? null : <>Given the roots included by the grid ({tooltipCounts.n}) and the roots with similar meanings ({tooltipCounts.x}) bring in additional roots ({tooltipCounts.w}) that are related according to the enabled <span style={hebrewTextStyle}>אותיות מתחלפות</span> criteria</>}>
@@ -791,15 +797,18 @@ export const RtStarView = (): JSX.Element => {
           
           {/* Prune by grade slider - three column layout */}
           <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
-            {/* Stats above slider (middle column) */}
-            {tooltipCounts.pruneStage && (
-              <div style={{marginBottom: '8px', fontSize: '12px', textAlign: 'center', width: '100%', color: tooltipCounts.pruneStage.edgesRemoved === 0 ? '#999' : '#000'}}>
-                -0 = {tooltipCounts.pruneStage.nodesTotal} | -{tooltipCounts.pruneStage.edgesRemoved} = {tooltipCounts.pruneStage.edgesTotal}
-              </div>
-            )}
-            {/* Three column layout: label | slider | value */}
+            {/* Stats row: empty space for label | stats over slider */}
+            <div style={{display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '8px', flexWrap: 'nowrap'}}>
+              <div style={{width: '120px', textAlign: 'right'}}></div>
+              {tooltipCounts.pruneStage && (
+                <div style={{fontSize: '12px', textAlign: 'center', color: tooltipCounts.pruneStage.edgesRemoved === 0 ? '#999' : '#000'}}>
+                  -0 = {tooltipCounts.pruneStage.nodesTotal} | -{tooltipCounts.pruneStage.edgesRemoved} = {tooltipCounts.pruneStage.edgesTotal}
+                </div>
+              )}
+            </div>
+            {/* Control row: label (right-justified) | slider | value */}
             <div style={{display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'nowrap'}}>
-              <label style={{fontSize: '14px', cursor: 'help', whiteSpace: 'nowrap'}}>
+              <label style={{fontSize: '14px', cursor: 'help', whiteSpace: 'nowrap', width: '120px', textAlign: 'right'}}>
                 Prune by grade:
               </label>
               {(() => {
@@ -857,13 +866,16 @@ export const RtStarView = (): JSX.Element => {
           
           {/* Remove Free checkbox - three column layout */}
           <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
-            {/* Stats above checkbox (middle column) */}
-            {tooltipCounts.removeFreeStage && (
-              <div style={{marginBottom: '8px', fontSize: '12px', textAlign: 'center', width: '100%', color: tooltipCounts.removeFreeStage.nodesRemoved === 0 || tooltipCounts.q === 0 ? '#999' : '#000'}}>
-                -{tooltipCounts.removeFreeStage.nodesRemoved} = {tooltipCounts.removeFreeStage.nodesTotal} | -0 = {tooltipCounts.removeFreeStage.edgesTotal}
-              </div>
-            )}
-            {/* Three column layout: empty | checkbox+label | empty (for alignment) */}
+            {/* Stats row: empty space | stats over "Remove Free" text */}
+            <div style={{display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '8px', flexWrap: 'nowrap'}}>
+              <div style={{width: '0', flexShrink: 0}}></div>
+              {tooltipCounts.removeFreeStage && (
+                <div style={{fontSize: '12px', textAlign: 'center', color: tooltipCounts.removeFreeStage.nodesRemoved === 0 || tooltipCounts.q === 0 ? '#999' : '#000'}}>
+                  -{tooltipCounts.removeFreeStage.nodesRemoved} = {tooltipCounts.removeFreeStage.nodesTotal} | -0 = {tooltipCounts.removeFreeStage.edgesTotal}
+                </div>
+              )}
+            </div>
+            {/* Control row: empty | checkbox+label */}
             <div style={{display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'nowrap'}}>
               <span style={{width: '0', flexShrink: 0}}></span>
               <Tooltip content={`Remove roots (${tooltipCounts.q}) from diagram now left with no surviving connections based on the grid filter and the preceding sliders`}>
@@ -878,7 +890,6 @@ export const RtStarView = (): JSX.Element => {
                   Remove Free
                 </label>
               </Tooltip>
-              <span style={{width: '0', flexShrink: 0}}></span>
             </div>
           </div>
         </div>
