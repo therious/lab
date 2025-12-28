@@ -123,6 +123,17 @@ function doubledLast(p: string, e: string, l: string, root: Root): boolean {
     return (e === vav && root.L === l && p === root.P &&  root.E === root.L );
 }
 
+// Check if two roots are jumbled (anagrams) - same letters in different order
+function isJumbled(p: string, e: string, l: string, cand: Root): boolean {
+    // Get all letters from source root
+    const sourceLetters = [p, e, l].sort();
+    // Get all letters from candidate root
+    const candLetters = [cand.P, cand.E, cand.L].sort();
+    // Compare sorted arrays - if they're equal, roots are jumbled
+    return sourceLetters.length === candLetters.length && 
+           sourceLetters.every((letter, index) => letter === candLetters[index]);
+}
+
 // maybe revise with option that first letter is identical, and not always connect because first letter is also mischalef
 function pairMischalef(p: string, e: string, l: string, cand: Root): boolean {
      return !!(e === l &&       // doubled src last letters
@@ -131,11 +142,17 @@ function pairMischalef(p: string, e: string, l: string, cand: Root): boolean {
        (p === cand.P || mischalef(p, cand.P)));
 }
 let  useVavToDoubled: boolean = true;
+let useJumbled: boolean = false;
 let removeFree: boolean = false;
 
 // return index of matching item from
 function findEdge(p: string, e: string, l: string, roots: Root[], index: number): number {
     const cand = roots[index];
+
+    // Check jumbled first (independent of atLeastTwoMatch)
+    if (useJumbled && isJumbled(p, e, l, cand)) {
+        return index;
+    }
 
     if (atLeastTwoMatch(p, e, l, cand)) { // if two of the three letters of shoresh are the same
 
@@ -294,12 +311,14 @@ function diagram(list: Root[], nodeMax: number, edgeMax: number, showGenerations
 
 type OtherChoices = {
     vavToDoubled?: boolean;
+    jumbled?: boolean;
     removeFree?: boolean;
 };
 
 export function renderGraphData(list: Root[], amischalfim: Mischalef[], otherChoices: OtherChoices, maxNodes: number, maxEdges: number, showGenerations = false, relatedMeaningsThreshold = 6): DiagramResult {
     mischalfim = buildMischalfim(amischalfim);
     useVavToDoubled = otherChoices.vavToDoubled ?? true;
+    useJumbled = otherChoices.jumbled ?? false;
     removeFree = otherChoices.removeFree ?? false;
     return diagram(list, maxNodes, maxEdges, showGenerations, relatedMeaningsThreshold);
 }
@@ -442,6 +461,7 @@ export function expandFilteredWithLinkedRoots(filteredRoots: Root[], allRoots: R
         // Restore globals
         mischalfim = originalMischalfim;
         useVavToDoubled = originalUseVavToDoubled;
+        useJumbled = originalUseJumbled;
     }
 }
 
@@ -535,6 +555,7 @@ export function expandFilteredWithIndirectlyLinkedRoots(filteredRoots: Root[], a
         // Restore globals
         mischalfim = originalMischalfim;
         useVavToDoubled = originalUseVavToDoubled;
+        useJumbled = originalUseJumbled;
     }
 }
 
