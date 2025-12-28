@@ -698,44 +698,44 @@ export const RtStarView = (): JSX.Element => {
         <hr/>
         <div style={{ paddingBottom: '10px'}}>
         {/* Metrics row - aligned above controls */}
-        <div style={{marginLeft:'14px', marginBottom: '8px', display: 'flex', alignItems: 'center', fontSize: '12px', color: '#666'}}>
+        <div style={{marginLeft:'14px', marginBottom: '8px', display: 'flex', alignItems: 'center', fontSize: '12px'}}>
           {/* Osios Mischalfos metrics */}
           <div style={{minWidth: '300px', display: 'inline-block'}}>
             {tooltipCounts.afterMischalfim && (
-              <span>
+              <span style={{color: '#000'}}>
                 Nodes: {tooltipCounts.afterMischalfim.nodes} | Connections: {tooltipCounts.afterMischalfim.edges}
               </span>
             )}
           </div>
           {/* Add similar meanings metrics */}
-          <div style={{minWidth: '200px', marginRight: '15px', display: 'inline-block'}}>
-            {tooltipCounts.meaningStage && (tooltipCounts.meaningStage.nodesAdded > 0 || tooltipCounts.meaningStage.edgesAdded > 0) && (
-              <span>
-                +n = {tooltipCounts.meaningStage.nodesAdded} | +c = {tooltipCounts.meaningStage.edgesAdded}
+          <div style={{minWidth: '200px', marginRight: '15px', display: 'inline-block', textAlign: 'center'}}>
+            {tooltipCounts.meaningStage && (
+              <span style={{color: (tooltipCounts.meaningStage.nodesAdded === 0 && tooltipCounts.meaningStage.edgesAdded === 0) || shouldDisableExpansion ? '#999' : '#000'}}>
+                +n = {tooltipCounts.meaningStage.nodesAdded} = {tooltipCounts.meaningStage.nodesTotal} | +c = {tooltipCounts.meaningStage.edgesAdded} = {tooltipCounts.meaningStage.edgesTotal}
               </span>
             )}
           </div>
           {/* Extra degrees metrics */}
-          <div style={{minWidth: '200px', marginRight: '15px', display: 'inline-block'}}>
-            {tooltipCounts.extraDegreesStage && (tooltipCounts.extraDegreesStage.nodesAdded > 0 || tooltipCounts.extraDegreesStage.edgesAdded > 0) && (
-              <span>
-                +n = {tooltipCounts.extraDegreesStage.nodesAdded} | +c = {tooltipCounts.extraDegreesStage.edgesAdded}
+          <div style={{minWidth: '200px', marginRight: '15px', display: 'inline-block', textAlign: 'center'}}>
+            {tooltipCounts.extraDegreesStage && (
+              <span style={{color: (tooltipCounts.extraDegreesStage.nodesAdded === 0 && tooltipCounts.extraDegreesStage.edgesAdded === 0) || shouldDisableExpansion ? '#999' : '#000'}}>
+                +n = {tooltipCounts.extraDegreesStage.nodesAdded} = {tooltipCounts.extraDegreesStage.nodesTotal} | +c = {tooltipCounts.extraDegreesStage.edgesAdded} = {tooltipCounts.extraDegreesStage.edgesTotal}
               </span>
             )}
           </div>
           {/* Prune by grade metrics */}
-          <div style={{minWidth: '200px', marginRight: '15px', display: 'inline-block'}}>
-            {tooltipCounts.pruneStage && tooltipCounts.pruneStage.edgesRemoved > 0 && (
-              <span>
-                -c = {tooltipCounts.pruneStage.edgesRemoved}
+          <div style={{minWidth: '200px', marginRight: '15px', display: 'inline-block', textAlign: 'center'}}>
+            {tooltipCounts.pruneStage && (
+              <span style={{color: tooltipCounts.pruneStage.edgesRemoved === 0 ? '#999' : '#000'}}>
+                -c = {tooltipCounts.pruneStage.edgesRemoved} = {tooltipCounts.pruneStage.edgesTotal}
               </span>
             )}
           </div>
           {/* Remove Free metrics */}
-          <div style={{minWidth: '150px', marginRight: '15px', display: 'inline-block'}}>
-            {tooltipCounts.removeFreeStage && tooltipCounts.removeFreeStage.nodesRemoved > 0 && (
-              <span>
-                -n = {tooltipCounts.removeFreeStage.nodesRemoved}
+          <div style={{minWidth: '150px', marginRight: '15px', display: 'inline-block', textAlign: 'center'}}>
+            {tooltipCounts.removeFreeStage && (
+              <span style={{color: tooltipCounts.removeFreeStage.nodesRemoved === 0 || tooltipCounts.q === 0 ? '#999' : '#000'}}>
+                -n = {tooltipCounts.removeFreeStage.nodesRemoved} = {tooltipCounts.removeFreeStage.nodesTotal}
               </span>
             )}
           </div>
@@ -821,7 +821,7 @@ export const RtStarView = (): JSX.Element => {
                       min={0} 
                       max={6} 
                       step={1}
-                      onChange={chPruneByGrade}
+                  onChange={chPruneByGrade}
                   disabled={false}
                   ticksId="pruneByGrade-ticks"
                   valueDisplay={<span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '85px'}}>Grade ≥ {localPruneByGrade}</span>}

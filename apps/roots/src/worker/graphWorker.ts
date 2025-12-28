@@ -415,16 +415,24 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage | SearchMessage>) 
               meaningStage: {
                 nodesAdded: meaningNodesAdded,
                 edgesAdded: meaningEdgesAdded,
+                nodesTotal: dataAfterMeaning.nodes.length,
+                edgesTotal: dataAfterMeaning.edges.length,
               },
               extraDegreesStage: {
                 nodesAdded: extraDegreesNodesAdded,
                 edgesAdded: extraDegreesEdgesAdded,
+                nodesTotal: dataAfterExtraDegrees.nodes.length,
+                edgesTotal: dataAfterExtraDegrees.edges.length,
               },
               pruneStage: {
                 edgesRemoved: pruneRemoved,
+                edgesTotal: data.edges.length, // After pruning
+                nodesTotal: data.nodes.length, // Nodes unchanged by pruning
               },
               removeFreeStage: {
                 nodesRemoved: removeFreeNodesRemoved,
+                nodesTotal: data.nodes.length, // After remove free (final)
+                edgesTotal: data.edges.length, // Edges unchanged by remove free
               },
             },
           },

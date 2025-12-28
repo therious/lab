@@ -19,10 +19,10 @@ export type TooltipCounts = {
   pruneRemoved: number; // Number of edges removed by pruning
   // Pipeline stage metrics
   afterMischalfim?: { nodes: number; edges: number }; // After grid filter + mischalfim checkboxes
-  meaningStage?: { nodesAdded: number; edgesAdded: number }; // Link by Meaning stage
-  extraDegreesStage?: { nodesAdded: number; edgesAdded: number }; // Extra Degrees stage
-  pruneStage?: { edgesRemoved: number }; // Prune by Grade stage
-  removeFreeStage?: { nodesRemoved: number }; // Remove Free stage
+  meaningStage?: { nodesAdded: number; edgesAdded: number; nodesTotal: number; edgesTotal: number }; // Link by Meaning stage
+  extraDegreesStage?: { nodesAdded: number; edgesAdded: number; nodesTotal: number; edgesTotal: number }; // Extra Degrees stage
+  pruneStage?: { edgesRemoved: number; edgesTotal: number; nodesTotal: number }; // Prune by Grade stage
+  removeFreeStage?: { nodesRemoved: number; nodesTotal: number; edgesTotal: number }; // Remove Free stage
 };
 
 export type GraphComputePayload = {
