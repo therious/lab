@@ -893,16 +893,17 @@ export const RtStarView = (): JSX.Element => {
             </div>
           </div>
         </div>
-          <CheckGroup 
-            choices={Object.fromEntries(Object.entries(otherChoices).filter(([k]) => k !== 'removeFree'))} 
+          <CheckGroup
+            choices={Object.fromEntries(Object.entries(otherChoices).filter(([k]) => k !== 'removeFree'))}
             setChoice={actions.options.chooseOtherOne}
             titles={{
+            vavToDoubled: `Doubled end consonants are often related to ע״ו root`,
               jumbled: "Connect roots w/ same set of letters in any order",
               atbash: "Use atbash (אתבש) to relate roots (א=ת, ב=ש, ג=ר)"
             }}
           />
-          <CheckGroup 
-            choices={choices} 
+          <CheckGroup
+            choices={choices}
             setChoice={actions.options.chooseOne}
             titles={allmischalfim ? choiceTitles(allmischalfim) : undefined}
           />
