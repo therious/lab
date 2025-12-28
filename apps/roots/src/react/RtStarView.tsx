@@ -446,9 +446,10 @@ export const RtStarView = (): JSX.Element => {
   }, [maxGeneration, linkByMeaningThreshold, localPruneByGrade, maxEdges, computeGraph, graphableRowsReady, otherChoices, mischalfim]);
 
   // Send graph updates to persistent iframe when graph changes
+  // Always send updates when graph changes, even if nodes.length is 0 (to clear the graph)
   useEffect(() => {
-    if (iframeElementRef.current?.contentWindow && graph.nodes.length > 0) {
-      console.log('[RtStarView] Sending graph update to persistent iframe:', graph.nodes.length, 'nodes');
+    if (iframeElementRef.current?.contentWindow) {
+      console.log('[RtStarView] Sending graph update to persistent iframe:', graph.nodes.length, 'nodes', graph.edges.length, 'edges');
       iframeElementRef.current.contentWindow.postMessage({
         type: 'updateGraph',
         payload: graph
