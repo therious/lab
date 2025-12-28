@@ -507,25 +507,47 @@ export const RtStarView = (): JSX.Element => {
     return ()=>window.removeEventListener('keydown', handleKeyDown);
   }, [togglePhysics]);
 
-  // Move persistent iframe to our container when it's ready
+  // Position the persistent iframe in our container using CSS instead of moving it
+  // Moving iframes in the DOM can break blob URLs, so we use CSS positioning instead
   useEffect(() => {
     const graphContainer = document.getElementById('graph-container');
     if (graphContainer && persistentGraphIframeElementRef.current) {
       const iframe = persistentGraphIframeElementRef.current;
-      // Only move if not already in the container
-      if (iframe.parentElement !== graphContainer) {
-        graphContainer.appendChild(iframe);
-        // Style it to fill the container
-        iframe.style.position = 'absolute';
-        iframe.style.top = '0';
-        iframe.style.left = '0';
-        iframe.style.width = '100%';
-        iframe.style.height = '100%';
-        iframe.style.pointerEvents = 'auto';
-        iframe.style.zIndex = '0';
-        iframe.style.border = 'none';
-        console.log('[RtStarView] Moved persistent iframe to graph container');
-      }
+      // Don't move the iframe - just style it to be visible and positioned correctly
+      // The iframe stays in PersistentGraphContainer, but we make it visible and position it
+      iframe.style.position = 'fixed';
+      // Calculate position relative to graph-container
+      const containerRect = graphContainer.getBoundingClientRect();
+      iframe.style.top = `${containerRect.top}px`;
+      iframe.style.left = `${containerRect.left}px`;
+      iframe.style.width = `${containerRect.width}px`;
+      iframe.style.height = `${containerRect.height}px`;
+      iframe.style.pointerEvents = 'auto';
+      iframe.style.zIndex = '1';
+      iframe.style.border = 'none';
+      iframe.style.visibility = 'visible';
+      console.log('[RtStarView] Positioned persistent iframe over graph container');
+      
+      // Update position on resize
+      const updatePosition = () => {
+        const rect = graphContainer.getBoundingClientRect();
+        iframe.style.top = `${rect.top}px`;
+        iframe.style.left = `${rect.left}px`;
+        iframe.style.width = `${rect.width}px`;
+        iframe.style.height = `${rect.height}px`;
+      };
+      
+      window.addEventListener('resize', updatePosition);
+      const observer = new MutationObserver(updatePosition);
+      observer.observe(graphContainer, { attributes: true, attributeFilter: ['style', 'class'] });
+      
+      return () => {
+        window.removeEventListener('resize', updatePosition);
+        observer.disconnect();
+        // Hide iframe when component unmounts
+        iframe.style.visibility = 'hidden';
+        iframe.style.pointerEvents = 'none';
+      };
     }
   }, [persistentGraphIframeElementRef.current]);
 
