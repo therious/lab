@@ -866,20 +866,19 @@ export const RtStarView = (): JSX.Element => {
           
           {/* Remove Free checkbox - three column layout */}
           <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
-            {/* Stats row: empty space | stats over "Remove Free" text */}
+            {/* Stats row: checkbox space | stats over "Remove Free" text */}
             <div style={{display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '8px', flexWrap: 'nowrap'}}>
-              <div style={{width: '0', flexShrink: 0}}></div>
+              <div style={{width: '20px', flexShrink: 0}}></div>
               {tooltipCounts.removeFreeStage && (
                 <div style={{fontSize: '12px', textAlign: 'center', color: tooltipCounts.removeFreeStage.nodesRemoved === 0 || tooltipCounts.q === 0 ? '#999' : '#000'}}>
                   -{tooltipCounts.removeFreeStage.nodesRemoved} = {tooltipCounts.removeFreeStage.nodesTotal} | -0 = {tooltipCounts.removeFreeStage.edgesTotal}
                 </div>
               )}
             </div>
-            {/* Control row: empty | checkbox+label */}
+            {/* Control row: checkbox | label */}
             <div style={{display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'nowrap'}}>
-              <span style={{width: '0', flexShrink: 0}}></span>
               <Tooltip content={`Remove roots (${tooltipCounts.q}) from diagram now left with no surviving connections based on the grid filter and the preceding sliders`}>
-                <label style={{fontSize: '14px', marginRight: '5px', fontWeight: 'normal', cursor: tooltipCounts.q > 0 ? 'help' : 'default', opacity: tooltipCounts.q > 0 ? 1 : 0.5, whiteSpace: 'nowrap'}}>
+                <label style={{fontSize: '14px', marginRight: '5px', fontWeight: 'normal', cursor: tooltipCounts.q > 0 ? 'help' : 'default', opacity: tooltipCounts.q > 0 ? 1 : 0.5, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center'}}>
                   <input
                     type="checkbox"
                     checked={otherChoices.removeFree || false}
