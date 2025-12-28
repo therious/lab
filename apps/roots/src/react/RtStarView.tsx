@@ -51,7 +51,7 @@ const SliderWithTooltip = ({ label, tooltipContent, tooltipMaxWidth, value, min,
 
   const slider = (
     <span>
-      <label style={{fontSize: '14px', marginRight: '5px', cursor: tooltipContent && !isDragging ? 'help' : 'default', opacity: disabled ? 0.5 : 1}}>{label}</label>
+      <label style={{fontSize: '14px', marginRight: '5px', opacity: disabled ? 0.5 : 1}}>{label}</label>
       <input
         type="range"
         min={min}
@@ -717,7 +717,7 @@ export const RtStarView = (): JSX.Element => {
             {/* Heading and buttons */}
             <h3 style={{margin: 0, display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap'}}>
               <Tooltip content={<>Osios Mischalfos (<span style={hebrewTextStyle}>אותיות מתחלפות</span>) are groups of Hebrew letters that can substitute for each other. When a root has one letter replaced with a related letter from the same group, it often produces a related meaning. These relationships are used to link roots together in the visualization.</>}>
-                <span style={{cursor: 'help'}}>Osios Mischalfos</span>
+                <span>Osios Mischalfos</span>
               </Tooltip>
               <button onClick={actions.options.allChoices}>Select All</button>
               <button onClick={actions.options.clearChoices}>Clear All</button>
@@ -737,7 +737,7 @@ export const RtStarView = (): JSX.Element => {
             </div>
             {/* Control row: label (right-justified) | slider | value */}
             <div style={{display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'nowrap'}}>
-              <label style={{fontSize: '14px', cursor: shouldDisableExpansion ? 'default' : 'help', opacity: shouldDisableExpansion ? 0.5 : 1, whiteSpace: 'nowrap', width: '160px', textAlign: 'right'}}>
+              <label style={{fontSize: '14px', opacity: shouldDisableExpansion ? 0.5 : 1, whiteSpace: 'nowrap', width: '160px', textAlign: 'right'}}>
                 Add similar meanings:
               </label>
               <Tooltip content={shouldDisableExpansion ? null : `Include additional roots (${tooltipCounts.x}) based on meanings similar to roots currently included in the grid filter (${tooltipCounts.n})`}>
@@ -773,7 +773,7 @@ export const RtStarView = (): JSX.Element => {
             </div>
             {/* Control row: label (right-justified) | slider | value */}
             <div style={{display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'nowrap'}}>
-              <label style={{fontSize: '14px', cursor: shouldDisableExpansion ? 'default' : 'help', opacity: shouldDisableExpansion ? 0.5 : 1, whiteSpace: 'nowrap', width: '120px', textAlign: 'right'}}>
+              <label style={{fontSize: '14px', opacity: shouldDisableExpansion ? 0.5 : 1, whiteSpace: 'nowrap', width: '120px', textAlign: 'right'}}>
                 Extra degrees:
               </label>
               <Tooltip content={shouldDisableExpansion ? null : <>Given the roots included by the grid ({tooltipCounts.n}) and the roots with similar meanings ({tooltipCounts.x}) bring in additional roots ({tooltipCounts.w}) that are related according to the enabled <span style={hebrewTextStyle}>אותיות מתחלפות</span> criteria</>}>
@@ -879,7 +879,7 @@ export const RtStarView = (): JSX.Element => {
             {/* Control row: checkbox | label */}
             <div style={{display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'nowrap'}}>
               <Tooltip content={`Remove roots (${tooltipCounts.q}) from diagram now left with no surviving connections based on the grid filter and the preceding sliders`}>
-                <label style={{fontSize: '14px', marginRight: '5px', fontWeight: 'normal', cursor: tooltipCounts.q > 0 ? 'help' : 'default', opacity: tooltipCounts.q > 0 ? 1 : 0.5, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center'}}>
+                <label style={{fontSize: '14px', marginRight: '5px', fontWeight: 'normal', opacity: tooltipCounts.q > 0 ? 1 : 0.5, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center'}}>
                   <input
                     type="checkbox"
                     checked={otherChoices.removeFree || false}

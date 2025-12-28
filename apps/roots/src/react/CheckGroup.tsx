@@ -34,7 +34,7 @@ export const CheckGroup = ({ heading, active, name, choices, setChoice, titles }
   const cc = Object.entries(choices).map(([k, v]) => (
     <Span key={k}>
       <input disabled={active === false} type="checkbox" name={name} id={k} value={k} onChange={cb} checked={v} />
-      <label htmlFor={k} title={titles?.[k]} style={{cursor: titles?.[k] ? 'help' : 'default'}}>{k}</label>
+      <label htmlFor={k} title={titles?.[k]}>{k}</label>
     </Span>
   ));
   
