@@ -37,20 +37,23 @@ export const PersistentGraphContainer: React.FC = () => {
     }
   }, []);
   
-  // Keep iframe mounted - it will be displayed in RtStarView's layout
+  // Keep iframe mounted but hidden - it will be displayed in RtStarView's layout
   // The iframe persists across route changes, preserving graph state
+  // We keep it in the DOM but hidden, and RtStarView will show it via CSS
   return (
-    <GraphIframe
-      graph={graph}
-      nodeColors={nodeColors}
-      iframeRef={persistentGraphIframeRef}
-      iframeElementRef={persistentGraphIframeElementRef}
-      onReady={() => {
-        console.log('[PersistentGraphContainer] Iframe ready - graph state will persist across routes');
-      }}
-      onTooltipRequest={handleTooltipRequest}
-      style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: -1, pointerEvents: 'none' }}
-    />
+    <div style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden', pointerEvents: 'none' }}>
+      <GraphIframe
+        graph={graph}
+        nodeColors={nodeColors}
+        iframeRef={persistentGraphIframeRef}
+        iframeElementRef={persistentGraphIframeElementRef}
+        onReady={() => {
+          console.log('[PersistentGraphContainer] Iframe ready - graph state will persist across routes');
+        }}
+        onTooltipRequest={handleTooltipRequest}
+        style={{ width: '100%', height: '100%' }}
+      />
+    </div>
   );
 };
 
