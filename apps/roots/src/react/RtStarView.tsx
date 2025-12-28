@@ -78,7 +78,8 @@ export const RtStarView = (): JSX.Element => {
   } = useSelector(s=>s);
 
   // Ensure mischalfim and otherChoices are properly initialized before computing graph
-  const areOptionsReady = mischalfim && Array.isArray(mischalfim) && mischalfim.length > 0 && otherChoices && typeof otherChoices === 'object';
+  // Note: mischalfim can be empty (all checkboxes unchecked) - that's valid, just means no edges
+  const areOptionsReady = mischalfim && Array.isArray(mischalfim) && otherChoices && typeof otherChoices === 'object';
   
   const setMaxGeneration = useCallback((value: number) => {
     actions.options.setMaxGeneration(value);
@@ -358,10 +359,6 @@ export const RtStarView = (): JSX.Element => {
 
   // Debounced computation function
   const computeGraph = useCallback((): void => {
-    if (!toRender.graphableRows || !Array.isArray(toRender.graphableRows)) {
-      return;
-    }
-
     // Ensure allRootsRef is populated before computing
     if (!allRootsRef.current || allRootsRef.current.length === 0) {
       return;
@@ -369,11 +366,17 @@ export const RtStarView = (): JSX.Element => {
 
     // Note: computationIdRef.current is incremented in the useEffect before calling this
 
+    // Use graphableRows if available, otherwise use allRoots to preserve nodes
+    // This ensures nodes remain stable when switching routes
+    const rootsToUse = (toRender.graphableRows && Array.isArray(toRender.graphableRows) && toRender.graphableRows.length > 0) 
+      ? (toRender.graphableRows as Root[])
+      : allRootsRef.current;
+
     // Send computation request to worker with computation ID
     // Use localPruneByGrade for immediate responsiveness
     const payload: GraphComputePayload = {
         computationId: computationIdRef.current,
-      filteredRoots: toRender.graphableRows as Root[],
+      filteredRoots: rootsToUse,
       allRoots: allRootsRef.current,
         linkByMeaningThreshold,
         maxGeneration,
@@ -385,16 +388,14 @@ export const RtStarView = (): JSX.Element => {
       maxNodesForExpansion: MAX_NODES_FOR_EXPANSION,
     };
 
+    console.log('[RtStarView] Computing graph with', rootsToUse.length, 'roots, mischalfim:', mischalfim.length, 'otherChoices:', otherChoices);
     computeGraphBase(payload);
   }, [linkByMeaningThreshold, maxGeneration, mischalfim, otherChoices, maxEdges, localPruneByGrade, computeGraphBase]);
 
   // Auto-update graph when slider changes or when graphableRows becomes ready
   // Use debounce with cancellation for smooth slider dragging
   useEffect(() => {
-    // Ensure we have both graphableRows and allRoots before computing
-    if (!toRender.graphableRows || !Array.isArray(toRender.graphableRows) || toRender.graphableRows.length === 0) {
-      return;
-    }
+    // Ensure we have allRoots before computing (graphableRows can be empty - that's valid)
     if (!allRootsRef.current || allRootsRef.current.length === 0) {
       return;
     }
@@ -403,6 +404,11 @@ export const RtStarView = (): JSX.Element => {
       console.log('[RtStarView] Waiting for options to be ready - mischalfim:', mischalfim?.length, 'otherChoices:', !!otherChoices);
       return;
     }
+    // If graphableRows is empty, use allRoots as fallback to preserve nodes
+    // This ensures nodes remain stable when switching routes
+    const rootsToUse = (toRender.graphableRows && Array.isArray(toRender.graphableRows) && toRender.graphableRows.length > 0) 
+      ? toRender.graphableRows 
+      : allRootsRef.current;
 
     // Assert non-null: workerRef.current is guaranteed to be set when this runs
       // Cancel previous computation by incrementing ID immediately
@@ -428,7 +434,14 @@ export const RtStarView = (): JSX.Element => {
     
       requestAnimationFrame(() => {
         debounceTimeoutRef.current = setTimeout(() => {
-          computeGraph();
+          // Use graphableRows if available, otherwise use allRoots to preserve nodes
+          const rootsToUse = (toRender.graphableRows && Array.isArray(toRender.graphableRows) && toRender.graphableRows.length > 0) 
+            ? toRender.graphableRows 
+            : allRootsRef.current;
+          // Only compute if we have roots to use
+          if (rootsToUse && rootsToUse.length > 0) {
+            computeGraph();
+          }
         // Update previous values after computation
         prevMaxGenRef.current = maxGeneration;
         prevLinkByMeaningRef.current = linkByMeaningThreshold;
