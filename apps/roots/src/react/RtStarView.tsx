@@ -809,7 +809,7 @@ export const RtStarView = (): JSX.Element => {
             </div>
             {/* Control row: label (right-justified) | slider | value */}
             <div style={{display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'nowrap'}}>
-              <label style={{fontSize: '14px', cursor: 'help', whiteSpace: 'nowrap', width: '120px', textAlign: 'right'}}>
+              <label style={{fontSize: '14px', whiteSpace: 'nowrap', width: '120px', textAlign: 'right'}}>
                 Prune by grade:
               </label>
               {(() => {
