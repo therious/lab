@@ -144,11 +144,13 @@ export const RtStarView = (): JSX.Element => {
         // Initialize graphableRows with all roots if it's empty
         // This ensures the graph computes even if you navigate directly to visualization
         // or if the grid hasn't set it yet
+        // Note: We preserve graphableRows across routes, so this only runs on first load
         if (!toRender.graphableRows || !Array.isArray(toRender.graphableRows) || (Array.isArray(toRender.graphableRows) && toRender.graphableRows.length === 0)) {
           toRender.graphableRows = allRoots as unknown as Record<string, unknown>;
-          // Signal that graphableRows is ready
-          setGraphableRowsReady(true);
+          console.log('[RtStarView] Initialized graphableRows with all roots:', allRoots.length);
         }
+        // Signal that graphableRows is ready (even if it was already set from grid)
+        setGraphableRowsReady(true);
       }
     };
     dataWorkerRef.current.addEventListener('message', handleMessage);
