@@ -134,6 +134,25 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
         networkInstance.body.data.edges.add(edgesToAdd);
       }
 
+      // Ensure physics stays enabled after incremental updates
+      if (currentPhysicsEnabled) {
+        networkInstance.setOptions({
+          physics: {
+            enabled: true,
+            stabilization: { enabled: false },
+            solver: 'barnesHut',
+            barnesHut: {
+              gravitationalConstant: -2000,
+              centralGravity: 0.3,
+              springLength: 95,
+              springConstant: 0.04,
+              damping: 0.09,
+              avoidOverlap: 0
+            }
+          }
+        });
+      }
+
       // Update graphData reference, preserving hidden nodes/edges if they exist
       graphData = {
         nodes: newGraphData.nodes,
@@ -211,11 +230,33 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
             configure: { enabled: false },
             physics: {
               enabled: true,
-              stabilization: { enabled: false }
+              stabilization: { enabled: false },
+              solver: 'barnesHut',
+              barnesHut: {
+                gravitationalConstant: -2000,
+                centralGravity: 0.3,
+                springLength: 95,
+                springConstant: 0.04,
+                damping: 0.09,
+                avoidOverlap: 0
+              }
             }
           };
           networkInstance = new vis.Network(container, data, options);
           console.log('[iframe] Network instance created with', graphData.nodes.length, 'nodes');
+          
+          // Ensure physics stays enabled after stabilization
+          networkInstance.on('stabilizationEnd', function() {
+            console.log('[iframe] Stabilization ended, ensuring physics stays enabled');
+            if (networkInstance && currentPhysicsEnabled) {
+              networkInstance.setOptions({
+                physics: {
+                  enabled: true,
+                  stabilization: { enabled: false }
+                }
+              });
+            }
+          });
           
           // Handle node hover for tooltip requests
           networkInstance.on('hoverNode', function(params) {
