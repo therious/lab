@@ -52,8 +52,34 @@ export function Tooltip({ children, content, style = {}, maxWidth = 350 }: Toolt
       } else {
         setPosition('top');
       }
+      
+      // Adjust tooltip position to prevent clipping at viewport edges
+      if (tooltipRef.current) {
+        const tooltipLeft = tooltipRect.left;
+        const tooltipRight = tooltipRect.right;
+        const viewportWidth = window.innerWidth;
+        
+        // If tooltip would be clipped on the left, adjust
+        if (tooltipLeft < 10) {
+          tooltipRef.current.style.left = `${10 - containerRect.left + (containerRect.width / 2)}px`;
+          tooltipRef.current.style.transform = 'translateX(0)';
+        }
+        // If tooltip would be clipped on the right, adjust
+        else if (tooltipRight > viewportWidth - 10) {
+          tooltipRef.current.style.left = `${viewportWidth - 10 - containerRect.left - (containerRect.width / 2)}px`;
+          tooltipRef.current.style.transform = 'translateX(-100%)';
+        }
+        // If tooltip would be clipped at top, use fixed positioning
+        if (position === 'top' && containerRect.top < tooltipHeight + 10) {
+          tooltipRef.current.style.position = 'fixed';
+          tooltipRef.current.style.top = `${containerRect.bottom + 5}px`;
+          tooltipRef.current.style.bottom = 'auto';
+          tooltipRef.current.style.left = `${containerRect.left + (containerRect.width / 2)}px`;
+          tooltipRef.current.style.transform = 'translateX(-50%)';
+        }
+      }
     }
-  }, [isVisible]);
+  }, [isVisible, position]);
 
   return (
     <span

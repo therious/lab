@@ -46,9 +46,11 @@ type SliderWithTooltipProps = {
 };
 
 const SliderWithTooltip = ({ label, tooltipContent, tooltipMaxWidth, value, min, max, step, onChange, disabled, ticksId, valueDisplay }: SliderWithTooltipProps): JSX.Element => {
+  const [isDragging, setIsDragging] = useState(false);
+  
   const slider = (
     <span>
-      <label style={{fontSize: '14px', marginRight: '5px', cursor: tooltipContent ? 'help' : 'default', opacity: disabled ? 0.5 : 1}}>{label}</label>
+      <label style={{fontSize: '14px', marginRight: '5px', cursor: tooltipContent && !isDragging ? 'help' : 'default', opacity: disabled ? 0.5 : 1}}>{label}</label>
       <input
         type="range"
         min={min}
@@ -56,6 +58,9 @@ const SliderWithTooltip = ({ label, tooltipContent, tooltipMaxWidth, value, min,
         step={step}
         value={String(value)}
         onChange={onChange}
+        onMouseDown={() => setIsDragging(true)}
+        onMouseUp={() => setIsDragging(false)}
+        onMouseLeave={() => setIsDragging(false)}
         disabled={disabled}
         style={{width: '120px', margin: '0 5px', verticalAlign: 'middle', opacity: disabled ? 0.5 : 1}}
         list={ticksId}
@@ -64,7 +69,8 @@ const SliderWithTooltip = ({ label, tooltipContent, tooltipMaxWidth, value, min,
     </span>
   );
 
-  return tooltipContent ? (
+  // Don't show tooltip while dragging
+  return tooltipContent && !isDragging ? (
     <Tooltip content={tooltipContent} maxWidth={tooltipMaxWidth}>
       {slider}
     </Tooltip>
@@ -698,41 +704,41 @@ export const RtStarView = (): JSX.Element => {
         <hr/>
         <div style={{ paddingBottom: '10px'}}>
         {/* Metrics row - aligned above controls */}
-        <div style={{marginLeft:'14px', marginBottom: '8px', display: 'flex', alignItems: 'center', fontSize: '12px'}}>
-          {/* Osios Mischalfos metrics */}
-          <div style={{minWidth: '300px', display: 'inline-block'}}>
+        <div style={{marginLeft:'14px', marginBottom: '8px', display: 'flex', alignItems: 'flex-start', fontSize: '12px'}}>
+          {/* Osios Mischalfos metrics - align with heading + buttons */}
+          <div style={{width: '300px', display: 'inline-block', flexShrink: 0}}>
             {tooltipCounts.afterMischalfim && (
               <span style={{color: '#000'}}>
                 Nodes: {tooltipCounts.afterMischalfim.nodes} | Connections: {tooltipCounts.afterMischalfim.edges}
               </span>
             )}
           </div>
-          {/* Add similar meanings metrics */}
-          <div style={{minWidth: '200px', marginRight: '15px', display: 'inline-block', textAlign: 'center'}}>
+          {/* Add similar meanings metrics - align with slider */}
+          <div style={{width: '200px', marginRight: '15px', display: 'inline-block', flexShrink: 0, textAlign: 'center'}}>
             {tooltipCounts.meaningStage && (
               <span style={{color: (tooltipCounts.meaningStage.nodesAdded === 0 && tooltipCounts.meaningStage.edgesAdded === 0) || shouldDisableExpansion ? '#999' : '#000'}}>
                 +{tooltipCounts.meaningStage.nodesAdded} = {tooltipCounts.meaningStage.nodesTotal} | +{tooltipCounts.meaningStage.edgesAdded} = {tooltipCounts.meaningStage.edgesTotal}
               </span>
             )}
           </div>
-          {/* Extra degrees metrics */}
-          <div style={{minWidth: '200px', marginRight: '15px', display: 'inline-block', textAlign: 'center'}}>
+          {/* Extra degrees metrics - align with slider */}
+          <div style={{width: '200px', marginRight: '15px', display: 'inline-block', flexShrink: 0, textAlign: 'center'}}>
             {tooltipCounts.extraDegreesStage && (
               <span style={{color: (tooltipCounts.extraDegreesStage.nodesAdded === 0 && tooltipCounts.extraDegreesStage.edgesAdded === 0) || shouldDisableExpansion ? '#999' : '#000'}}>
                 +{tooltipCounts.extraDegreesStage.nodesAdded} = {tooltipCounts.extraDegreesStage.nodesTotal} | +{tooltipCounts.extraDegreesStage.edgesAdded} = {tooltipCounts.extraDegreesStage.edgesTotal}
               </span>
             )}
           </div>
-          {/* Prune by grade metrics */}
-          <div style={{minWidth: '200px', marginRight: '15px', display: 'inline-block', textAlign: 'center'}}>
+          {/* Prune by grade metrics - align with slider */}
+          <div style={{width: '200px', marginRight: '15px', display: 'inline-block', flexShrink: 0, textAlign: 'center'}}>
             {tooltipCounts.pruneStage && (
               <span style={{color: tooltipCounts.pruneStage.edgesRemoved === 0 ? '#999' : '#000'}}>
                 -0 = {tooltipCounts.pruneStage.nodesTotal} | -{tooltipCounts.pruneStage.edgesRemoved} = {tooltipCounts.pruneStage.edgesTotal}
               </span>
             )}
           </div>
-          {/* Remove Free metrics */}
-          <div style={{minWidth: '150px', marginRight: '15px', display: 'inline-block', textAlign: 'center'}}>
+          {/* Remove Free metrics - align with checkbox */}
+          <div style={{width: '150px', marginRight: '15px', display: 'inline-block', flexShrink: 0, textAlign: 'center'}}>
             {tooltipCounts.removeFreeStage && (
               <span style={{color: tooltipCounts.removeFreeStage.nodesRemoved === 0 || tooltipCounts.q === 0 ? '#999' : '#000'}}>
                 -{tooltipCounts.removeFreeStage.nodesRemoved} = {tooltipCounts.removeFreeStage.nodesTotal} | -0 = {tooltipCounts.removeFreeStage.edgesTotal}
@@ -742,14 +748,16 @@ export const RtStarView = (): JSX.Element => {
         </div>
         
         {/* Controls row */}
-        <h3 style={{marginLeft:'14px', display:'inline'}}>
-          <Tooltip content={<>Osios Mischalfos (<span style={hebrewTextStyle}>אותיות מתחלפות</span>) are groups of Hebrew letters that can substitute for each other. When a root has one letter replaced with a related letter from the same group, it often produces a related meaning. These relationships are used to link roots together in the visualization.</>}>
-            <span style={{cursor: 'help'}}>Osios Mischalfos</span>
-          </Tooltip>
-        <button  onClick={actions.options.allChoices}>Select All</button>
-        <button  onClick={actions.options.clearChoices}>Clear All</button>
-        <span style={{marginLeft:'20px', fontWeight:'normal'}}>
-          <span style={{marginRight:'15px', display: 'inline-block'}}>
+        <h3 style={{marginLeft:'14px', display:'flex', alignItems: 'center', flexWrap: 'wrap'}}>
+          <div style={{width: '300px', flexShrink: 0, display: 'inline-block'}}>
+            <Tooltip content={<>Osios Mischalfos (<span style={hebrewTextStyle}>אותיות מתחלפות</span>) are groups of Hebrew letters that can substitute for each other. When a root has one letter replaced with a related letter from the same group, it often produces a related meaning. These relationships are used to link roots together in the visualization.</>}>
+              <span style={{cursor: 'help'}}>Osios Mischalfos</span>
+            </Tooltip>
+            <button  onClick={actions.options.allChoices}>Select All</button>
+            <button  onClick={actions.options.clearChoices}>Clear All</button>
+          </div>
+          <span style={{marginLeft:'20px', fontWeight:'normal', display: 'flex', alignItems: 'center', flexWrap: 'wrap'}}>
+          <span style={{width: '200px', marginRight:'15px', display: 'inline-block', flexShrink: 0}}>
             <SliderWithTooltip
               label="Add similar meanings:"
               tooltipContent={shouldDisableExpansion ? null : `Include additional roots (${tooltipCounts.x}) based on meanings similar to roots currently included in the grid filter (${tooltipCounts.n})`}
@@ -835,7 +843,7 @@ export const RtStarView = (): JSX.Element => {
               Grade ≥ {localPruneByGrade}
             </span>
           </span>
-          <span style={{marginRight:'15px', display: 'inline-block'}}>
+          <span style={{width: '150px', marginRight:'15px', display: 'inline-block', flexShrink: 0}}>
             <Tooltip content={`Remove roots (${tooltipCounts.q}) from diagram now left with no surviving connections based on the grid filter and the preceding sliders`}>
               <label style={{fontSize: '14px', marginRight: '5px', fontWeight: 'normal', cursor: tooltipCounts.q > 0 ? 'help' : 'default', opacity: tooltipCounts.q > 0 ? 1 : 0.5}}>
                 <input
