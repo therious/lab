@@ -390,7 +390,7 @@ export const RtStarView = (): JSX.Element => {
       maxNodesForExpansion: MAX_NODES_FOR_EXPANSION,
     };
 
-    console.log('[RtStarView] Computing graph with', rootsToUse.length, 'roots, mischalfim:', mischalfim.length, 'otherChoices:', otherChoices);
+    console.log('[RtStarView] Computing graph with', rootsToUse.length, 'roots, mischalfim:', mischalfim.length, 'otherChoices:', JSON.stringify(otherChoices));
     computeGraphBase(payload);
   }, [linkByMeaningThreshold, maxGeneration, mischalfim, otherChoices, maxEdges, localPruneByGrade, computeGraphBase]);
 
