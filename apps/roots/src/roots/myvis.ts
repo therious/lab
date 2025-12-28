@@ -403,15 +403,18 @@ export function expandFilteredWithLinkedRoots(filteredRoots: Root[], allRoots: R
         return filteredRoots.map(root => ({ ...root, generation: 1 }));
     }
 
-    // Build mischalfim and set useVavToDoubled for the linking logic
+    // Build mischalfim and set useVavToDoubled and useJumbled for the linking logic
     const currentMischalfim = buildMischalfim(amischalfim || []);
     const currentUseVavToDoubled = (otherChoices && otherChoices.vavToDoubled !== undefined) ? otherChoices.vavToDoubled : true;
+    const currentUseJumbled = (otherChoices && otherChoices.jumbled !== undefined) ? otherChoices.jumbled : false;
 
     // Temporarily set globals for findEdge function
     const originalMischalfim = mischalfim;
     const originalUseVavToDoubled = useVavToDoubled;
+    const originalUseJumbled = useJumbled;
     mischalfim = currentMischalfim;
     useVavToDoubled = currentUseVavToDoubled;
+    useJumbled = currentUseJumbled;
 
     try {
         // Use a Map to track unique roots by id, preserving order
@@ -477,15 +480,18 @@ export function expandFilteredWithIndirectlyLinkedRoots(filteredRoots: Root[], a
         return filteredRoots.map(root => ({ ...root, generation: 1 }));
     }
 
-    // Build mischalfim and set useVavToDoubled for the linking logic
+    // Build mischalfim and set useVavToDoubled and useJumbled for the linking logic
     const currentMischalfim = buildMischalfim(amischalfim || []);
     const currentUseVavToDoubled = (otherChoices && otherChoices.vavToDoubled !== undefined) ? otherChoices.vavToDoubled : true;
+    const currentUseJumbled = (otherChoices && otherChoices.jumbled !== undefined) ? otherChoices.jumbled : false;
 
     // Temporarily set globals for findEdge function
     const originalMischalfim = mischalfim;
     const originalUseVavToDoubled = useVavToDoubled;
+    const originalUseJumbled = useJumbled;
     mischalfim = currentMischalfim;
     useVavToDoubled = currentUseVavToDoubled;
+    useJumbled = currentUseJumbled;
 
     try {
         // Use a Map to track unique roots by id with their generation
