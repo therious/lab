@@ -445,6 +445,49 @@ export const RtStarView = (): JSX.Element => {
       };
   }, [maxGeneration, linkByMeaningThreshold, localPruneByGrade, maxEdges, computeGraph, graphableRowsReady, otherChoices, mischalfim]);
 
+  // Send graph updates to persistent iframe when graph changes
+  useEffect(() => {
+    if (iframeElementRef.current?.contentWindow && graph.nodes.length > 0) {
+      console.log('[RtStarView] Sending graph update to persistent iframe:', graph.nodes.length, 'nodes');
+      iframeElementRef.current.contentWindow.postMessage({
+        type: 'updateGraph',
+        payload: graph
+      }, '*');
+    }
+  }, [graph, iframeElementRef]);
+
+  // Send node color updates to persistent iframe
+  useEffect(() => {
+    if (iframeElementRef.current?.contentWindow && nodeColors.length > 0) {
+      iframeElementRef.current.contentWindow.postMessage({
+        type: 'updateNodeColors',
+        payload: { nodeColors }
+      }, '*');
+    }
+  }, [nodeColors, iframeElementRef]);
+
+  // Listen for iframe ready message from persistent iframe
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'iframeReady') {
+        console.log('[RtStarView] Persistent iframe ready, sending graph if available');
+        // Restore physics state
+        if (iframeRef.current) {
+          iframeRef.current.setPhysics(isPhysicsEnabled);
+        }
+        // Send current graph if we have one
+        if (graph.nodes.length > 0 && iframeElementRef.current?.contentWindow) {
+          console.log('[RtStarView] Sending initial graph to iframe:', graph.nodes.length, 'nodes');
+          iframeElementRef.current.contentWindow.postMessage({
+            type: 'updateGraph',
+            payload: graph
+          }, '*');
+        }
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [graph, isPhysicsEnabled, iframeRef, iframeElementRef]);
 
   // Handle iframe ready
   const handleIframeReady = useCallback(() => {
