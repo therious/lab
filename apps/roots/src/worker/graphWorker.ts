@@ -264,139 +264,35 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage | SearchMessage>) 
       // console.log(`Stage 5 (Graph Data): ${data.nodes.length} nodes, ${data.edges.length} edges`);
 
       // PIPELINE STAGE 6: Apply Prune by Grade slider
-      // Remove nodes that are NOT linked by BOTH Osios Mischalfos AND requisite meaning grade
-      // UNLESS they are in the original grid filter
-      let pruneRemoved = 0; // Number of nodes removed by pruning
+      // Remove edges that do not have a meaning grade >= pruneByGradeThreshold
+      // Note: edge.width is scaled (grade * 1.5 + 0.5), so we need to calculate the minimum width
+      let pruneRemoved = 0; // Number of edges removed by pruning
       if (pruneByGradeThreshold > 0) {
-        // Original grid filter set - these always stay
-        const originalGridFilterRootIds = new Set();
-        gridFilteredRoots.forEach((root: any) => {
-          if (root && root.id !== undefined && root.id !== null) {
-            originalGridFilterRootIds.add(root.id);
-          }
-        });
-
-        // Create maps: nodeId -> rootId and nodeId -> edges
-        const nodeIdToRootId = new Map();
-        const nodeIdToEdges = new Map();
-
-        // Map each node to its root ID based on rootsFilteredByGeneration list
-        rootsFilteredByGeneration.forEach((root: any, index: number) => {
-          const nodeId = index + 1; // populateNodes uses index + 1
-          nodeIdToRootId.set(nodeId, root.id);
-          nodeIdToEdges.set(nodeId, []);
-        });
-
-        // Build edge map: nodeId -> array of edges
-        data.edges.forEach((edge: any) => {
-          if (nodeIdToEdges.has(edge.from)) {
-            nodeIdToEdges.get(edge.from)!.push(edge);
-          }
-          if (nodeIdToEdges.has(edge.to)) {
-            nodeIdToEdges.get(edge.to)!.push(edge);
-          }
-        });
-
-        // Find valid nodes: nodes that have BOTH letter-based AND meaning-based connections
-        const validNodeIds = new Set();
-
-        // Pass 1: Mark all nodes in original grid filter as valid (these always stay)
-        data.nodes.forEach((node: any) => {
-          const nodeId = node.id;
-          const rootId = nodeIdToRootId.get(nodeId);
-
-          if (rootId !== undefined && originalGridFilterRootIds.has(rootId)) {
-            validNodeIds.add(nodeId);
-          }
-        });
-
-        // Pass 2: Find nodes that have BOTH:
-        // - A letter-based edge (yellow, or any edge that's not white)
-        // - A meaning-based edge (white) with sufficient grade
-        // Note: edge.width is scaled (grade * 1.5 + 0.5)
+        // Calculate minimum width for threshold
+        // edge.width = grade * 1.5 + 0.5
+        // So for grade >= threshold: width >= threshold * 1.5 + 0.5
         const minWidthForThreshold = pruneByGradeThreshold * 1.5 + 0.5;
 
-        data.nodes.forEach((node: any) => {
-          const nodeId = node.id;
+        // Count edges before pruning
+        const edgesBeforePruning = data.edges.length;
 
-          // Skip if already valid (in original grid filter)
-          if (validNodeIds.has(nodeId)) {
-            return;
-          }
-
-          const edges = nodeIdToEdges.get(nodeId) || [];
-
-          // Check if this node has BOTH a letter-based edge AND a meaning-based edge with sufficient grade
-          let hasLetterEdge = false;
-          let hasMeaningEdge = false;
-
-          for (const edge of edges) {
-            // Letter-based edge: not white (yellow or default)
-            if (edge.color !== 'white') {
-              hasLetterEdge = true;
-            }
-            // Meaning-based edge: white with sufficient grade
-            if (edge.color === 'white' && edge.width >= minWidthForThreshold) {
-              hasMeaningEdge = true;
-            }
-          }
-
-          // Keep if has BOTH letter-based AND meaning-based connections
-          if (hasLetterEdge && hasMeaningEdge) {
-            validNodeIds.add(nodeId);
+        // Filter edges: only keep edges with meaning grade >= threshold
+        // White edges have meaning grades, non-white edges are letter-based only (grade 0)
+        data.edges = data.edges.filter((edge: any) => {
+          // If edge is white, it has a meaning grade - check if grade >= threshold
+          if (edge.color === 'white') {
+            // edge.width = grade * 1.5 + 0.5, so check if width >= minWidthForThreshold
+            return edge.width >= minWidthForThreshold;
+          } else {
+            // Letter-based edges (non-white) have no meaning grade (grade 0)
+            // Remove them if threshold > 0
+            return false;
           }
         });
 
-        // Pass 3: Iteratively add nodes connected to valid nodes by meaning-based edges
-        // This allows transitive connections
-        let changed = true;
-        while (changed) {
-          changed = false;
-          data.nodes.forEach((node: any) => {
-            const nodeId = node.id;
+        pruneRemoved = edgesBeforePruning - data.edges.length;
 
-            // Skip if already valid
-            if (validNodeIds.has(nodeId)) {
-              return;
-            }
-
-            const edges = nodeIdToEdges.get(nodeId) || [];
-
-            // Check if this node has a meaning-based edge with sufficient grade to a valid node
-            for (const edge of edges) {
-              if (edge.color === 'white' && edge.width >= minWidthForThreshold) {
-                const otherNodeId = edge.from === nodeId ? edge.to : edge.from;
-                if (validNodeIds.has(otherNodeId)) {
-                  // Also check that this node has a letter-based edge
-                  let hasLetterEdge = false;
-                  for (const e of edges) {
-                    if (e.color !== 'white') {
-                      hasLetterEdge = true;
-                      break;
-                    }
-                  }
-                  if (hasLetterEdge) {
-                    validNodeIds.add(nodeId);
-                    changed = true;
-                    break;
-                  }
-                }
-              }
-            }
-          });
-        }
-
-        // Filter edges: only keep edges between valid nodes
-        data.edges = data.edges.filter((edge: any) =>
-          validNodeIds.has(edge.from) && validNodeIds.has(edge.to)
-        );
-
-        // Filter nodes: only keep valid nodes
-        const nodesBeforePruning = data.nodes.length;
-        data.nodes = data.nodes.filter((node: any) => validNodeIds.has(node.id));
-        pruneRemoved = nodesBeforePruning - data.nodes.length;
-
-        // console.log(`Stage 6 (After Pruning): ${data.nodes.length} nodes (removed ${nodesBeforePruning - data.nodes.length}), ${data.edges.length} edges`);
+        // console.log(`Stage 6 (After Pruning): ${data.edges.length} edges (removed ${pruneRemoved}), ${data.nodes.length} nodes`);
       } else {
         // console.log(`Stage 6 (Pruning): Skipped (threshold = 0)`);
       }
