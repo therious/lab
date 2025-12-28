@@ -35,7 +35,7 @@ const initialState:OptionsState = {
   mischalfim: arrMischalfim,
   allmischalfim: arrMischalfim,
   choices: allChoices(arrMischalfim),
-  otherChoices: {vavToDoubled: true, jumbled: false, removeFree:false},
+  otherChoices: {vavToDoubled: true, jumbled: false, atbash: false, removeFree:false},
   includeLinked: false,
   maxNodes: 2001,
   maxEdges: 200_000,
@@ -82,8 +82,8 @@ const reducers:OptionsReducers = {
   clearChoices: (s) => {
     const choices = {...s.choices};
     Object.keys(choices).forEach(k=>choices[k]=false);
-    // Also clear vavToDoubled and jumbled when clearing all checkboxes
-    const otherChoices = {...s.otherChoices, vavToDoubled: false, jumbled: false};
+    // Also clear vavToDoubled, jumbled, and atbash when clearing all checkboxes
+    const otherChoices = {...s.otherChoices, vavToDoubled: false, jumbled: false, atbash: false};
     return {...s, choices, mischalfim:filterChosen(s.allmischalfim, choices), otherChoices};
   },
   choose: (s, {choices})=>({...s, choices, mischalfim:filterChosen(s.allmischalfim, choices)}),

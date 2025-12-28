@@ -134,6 +134,71 @@ function isJumbled(p: string, e: string, l: string, cand: Root): boolean {
            sourceLetters.every((letter, index) => letter === candLetters[index]);
 }
 
+// Atbash mapping: Hebrew alphabet reversed (א↔ת, ב↔ש, ג↔ר, etc.)
+// Shin and Sin are treated as the same letter for atbash purposes
+const atbashMap: Record<string, string> = {
+    '\u05d0': '\u05ea', // א (Alef) ↔ ת (Taf)
+    '\u05d1': '\u05e9', // ב (Bet) ↔ ש (Shin) - also matches sin
+    '\u05d2': '\u05e8', // ג (Gimmel) ↔ ר (Resh)
+    '\u05d3': '\u05e7', // ד (Dalet) ↔ ק (Qof)
+    '\u05d4': '\u05e6', // ה (He) ↔ צ (Tzadi)
+    '\u05d5': '\u05e4', // ו (Vav) ↔ פ (Pe)
+    '\u05d6': '\u05e2', // ז (Zayin) ↔ ע (Ayin)
+    '\u05d7': '\u05e1', // ח (Chet) ↔ ס (Samekh)
+    '\u05d8': '\u05e0', // ט (Tet) ↔ נ (Nun)
+    '\u05d9': '\u05de', // י (Yod) ↔ מ (Mem)
+    '\u05db': '\u05dc', // כ (Kaf) ↔ ל (Lamed)
+    '\u05dc': '\u05db', // ל (Lamed) ↔ כ (Kaf)
+    '\u05de': '\u05d9', // מ (Mem) ↔ י (Yod)
+    '\u05e0': '\u05d8', // נ (Nun) ↔ ט (Tet)
+    '\u05e1': '\u05d7', // ס (Samekh) ↔ ח (Chet)
+    '\u05e2': '\u05d6', // ע (Ayin) ↔ ז (Zayin)
+    '\u05e4': '\u05d5', // פ (Pe) ↔ ו (Vav)
+    '\u05e6': '\u05d4', // צ (Tzadi) ↔ ה (He)
+    '\u05e7': '\u05d3', // ק (Qof) ↔ ד (Dalet)
+    '\u05e8': '\u05d2', // ר (Resh) ↔ ג (Gimmel)
+    '\u05e9': '\u05d1', // ש (Shin) ↔ ב (Bet)
+    '\ufb2b': '\u05d1', // שׂ (Sin) ↔ ב (Bet) - treated same as shin
+    '\u05ea': '\u05d0', // ת (Taf) ↔ א (Alef)
+};
+
+// Normalize letter for atbash: treat shin and sin as the same
+function normalizeForAtbash(letter: string): string {
+    // Treat sin (שׂ) as shin (ש) for atbash purposes
+    if (letter === '\ufb2b') { // sin
+        return '\u05e9'; // shin
+    }
+    return letter;
+}
+
+// Get atbash of a letter
+function getAtbash(letter: string): string | undefined {
+    const normalized = normalizeForAtbash(letter);
+    return atbashMap[normalized];
+}
+
+// Check if two roots are in atbash correspondence - all three letters must match
+function isAtbash(p: string, e: string, l: string, cand: Root): boolean {
+    // All three positions must be in atbash correspondence
+    const pAtbash = getAtbash(p);
+    const eAtbash = getAtbash(e);
+    const lAtbash = getAtbash(l);
+    
+    if (!pAtbash || !eAtbash || !lAtbash) {
+        return false; // If any letter doesn't have an atbash mapping, can't be atbash
+    }
+    
+    // Normalize candidate letters for comparison (treat sin as shin)
+    const candPNormalized = normalizeForAtbash(cand.P);
+    const candENormalized = normalizeForAtbash(cand.E);
+    const candLNormalized = normalizeForAtbash(cand.L);
+    
+    // Check if all three positions match
+    return pAtbash === candPNormalized && 
+           eAtbash === candENormalized && 
+           lAtbash === candLNormalized;
+}
+
 // maybe revise with option that first letter is identical, and not always connect because first letter is also mischalef
 function pairMischalef(p: string, e: string, l: string, cand: Root): boolean {
      return !!(e === l &&       // doubled src last letters
@@ -143,13 +208,19 @@ function pairMischalef(p: string, e: string, l: string, cand: Root): boolean {
 }
 let  useVavToDoubled: boolean = true;
 let useJumbled: boolean = false;
+let useAtbash: boolean = false;
 let removeFree: boolean = false;
 
 // return index of matching item from
 function findEdge(p: string, e: string, l: string, roots: Root[], index: number): number {
     const cand = roots[index];
 
-    // Check jumbled first (independent of atLeastTwoMatch)
+    // Check atbash first (independent of atLeastTwoMatch) - all three letters must match
+    if (useAtbash && isAtbash(p, e, l, cand)) {
+        return index;
+    }
+
+    // Check jumbled (independent of atLeastTwoMatch)
     if (useJumbled && isJumbled(p, e, l, cand)) {
         return index;
     }
@@ -312,6 +383,7 @@ function diagram(list: Root[], nodeMax: number, edgeMax: number, showGenerations
 type OtherChoices = {
     vavToDoubled?: boolean;
     jumbled?: boolean;
+    atbash?: boolean;
     removeFree?: boolean;
 };
 
@@ -319,6 +391,7 @@ export function renderGraphData(list: Root[], amischalfim: Mischalef[], otherCho
     mischalfim = buildMischalfim(amischalfim);
     useVavToDoubled = otherChoices.vavToDoubled ?? true;
     useJumbled = otherChoices.jumbled ?? false;
+    useAtbash = otherChoices.atbash ?? false;
     removeFree = otherChoices.removeFree ?? false;
     return diagram(list, maxNodes, maxEdges, showGenerations, relatedMeaningsThreshold);
 }
@@ -403,18 +476,22 @@ export function expandFilteredWithLinkedRoots(filteredRoots: Root[], allRoots: R
         return filteredRoots.map(root => ({ ...root, generation: 1 }));
     }
 
-    // Build mischalfim and set useVavToDoubled and useJumbled for the linking logic
+    // Build mischalfim and set useVavToDoubled, useJumbled, and useAtbash for the linking logic
     const currentMischalfim = buildMischalfim(amischalfim || []);
     const currentUseVavToDoubled = (otherChoices && otherChoices.vavToDoubled !== undefined) ? otherChoices.vavToDoubled : true;
     const currentUseJumbled = (otherChoices && otherChoices.jumbled !== undefined) ? otherChoices.jumbled : false;
+    const currentUseAtbash = (otherChoices && otherChoices.atbash !== undefined) ? otherChoices.atbash : false;
 
     // Temporarily set globals for findEdge function
     const originalMischalfim = mischalfim;
     const originalUseVavToDoubled = useVavToDoubled;
     const originalUseJumbled = useJumbled;
+    const originalUseAtbash = useAtbash;
     mischalfim = currentMischalfim;
     useVavToDoubled = currentUseVavToDoubled;
     useJumbled = currentUseJumbled;
+    useAtbash = currentUseAtbash;
+    useAtbash = otherChoices.atbash ?? false;
 
     try {
         // Use a Map to track unique roots by id, preserving order
@@ -465,6 +542,7 @@ export function expandFilteredWithLinkedRoots(filteredRoots: Root[], allRoots: R
         mischalfim = originalMischalfim;
         useVavToDoubled = originalUseVavToDoubled;
         useJumbled = originalUseJumbled;
+        useAtbash = originalUseAtbash;
     }
 }
 
@@ -480,18 +558,22 @@ export function expandFilteredWithIndirectlyLinkedRoots(filteredRoots: Root[], a
         return filteredRoots.map(root => ({ ...root, generation: 1 }));
     }
 
-    // Build mischalfim and set useVavToDoubled and useJumbled for the linking logic
+    // Build mischalfim and set useVavToDoubled, useJumbled, and useAtbash for the linking logic
     const currentMischalfim = buildMischalfim(amischalfim || []);
     const currentUseVavToDoubled = (otherChoices && otherChoices.vavToDoubled !== undefined) ? otherChoices.vavToDoubled : true;
     const currentUseJumbled = (otherChoices && otherChoices.jumbled !== undefined) ? otherChoices.jumbled : false;
+    const currentUseAtbash = (otherChoices && otherChoices.atbash !== undefined) ? otherChoices.atbash : false;
 
     // Temporarily set globals for findEdge function
     const originalMischalfim = mischalfim;
     const originalUseVavToDoubled = useVavToDoubled;
     const originalUseJumbled = useJumbled;
+    const originalUseAtbash = useAtbash;
     mischalfim = currentMischalfim;
     useVavToDoubled = currentUseVavToDoubled;
     useJumbled = currentUseJumbled;
+    useAtbash = currentUseAtbash;
+    useAtbash = otherChoices.atbash ?? false;
 
     try {
         // Use a Map to track unique roots by id with their generation
@@ -562,6 +644,7 @@ export function expandFilteredWithIndirectlyLinkedRoots(filteredRoots: Root[], a
         mischalfim = originalMischalfim;
         useVavToDoubled = originalUseVavToDoubled;
         useJumbled = originalUseJumbled;
+        useAtbash = originalUseAtbash;
     }
 }
 
