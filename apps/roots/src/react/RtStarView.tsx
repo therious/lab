@@ -711,7 +711,7 @@ export const RtStarView = (): JSX.Element => {
           <div style={{minWidth: '200px', marginRight: '15px', display: 'inline-block', textAlign: 'center'}}>
             {tooltipCounts.meaningStage && (
               <span style={{color: (tooltipCounts.meaningStage.nodesAdded === 0 && tooltipCounts.meaningStage.edgesAdded === 0) || shouldDisableExpansion ? '#999' : '#000'}}>
-                +n = {tooltipCounts.meaningStage.nodesAdded} = {tooltipCounts.meaningStage.nodesTotal} | +c = {tooltipCounts.meaningStage.edgesAdded} = {tooltipCounts.meaningStage.edgesTotal}
+                +{tooltipCounts.meaningStage.nodesAdded} = {tooltipCounts.meaningStage.nodesTotal} | +{tooltipCounts.meaningStage.edgesAdded} = {tooltipCounts.meaningStage.edgesTotal}
               </span>
             )}
           </div>
@@ -719,7 +719,7 @@ export const RtStarView = (): JSX.Element => {
           <div style={{minWidth: '200px', marginRight: '15px', display: 'inline-block', textAlign: 'center'}}>
             {tooltipCounts.extraDegreesStage && (
               <span style={{color: (tooltipCounts.extraDegreesStage.nodesAdded === 0 && tooltipCounts.extraDegreesStage.edgesAdded === 0) || shouldDisableExpansion ? '#999' : '#000'}}>
-                +n = {tooltipCounts.extraDegreesStage.nodesAdded} = {tooltipCounts.extraDegreesStage.nodesTotal} | +c = {tooltipCounts.extraDegreesStage.edgesAdded} = {tooltipCounts.extraDegreesStage.edgesTotal}
+                +{tooltipCounts.extraDegreesStage.nodesAdded} = {tooltipCounts.extraDegreesStage.nodesTotal} | +{tooltipCounts.extraDegreesStage.edgesAdded} = {tooltipCounts.extraDegreesStage.edgesTotal}
               </span>
             )}
           </div>
@@ -727,7 +727,7 @@ export const RtStarView = (): JSX.Element => {
           <div style={{minWidth: '200px', marginRight: '15px', display: 'inline-block', textAlign: 'center'}}>
             {tooltipCounts.pruneStage && (
               <span style={{color: tooltipCounts.pruneStage.edgesRemoved === 0 ? '#999' : '#000'}}>
-                -c = {tooltipCounts.pruneStage.edgesRemoved} = {tooltipCounts.pruneStage.edgesTotal}
+                -0 = {tooltipCounts.pruneStage.nodesTotal} | -{tooltipCounts.pruneStage.edgesRemoved} = {tooltipCounts.pruneStage.edgesTotal}
               </span>
             )}
           </div>
@@ -735,7 +735,7 @@ export const RtStarView = (): JSX.Element => {
           <div style={{minWidth: '150px', marginRight: '15px', display: 'inline-block', textAlign: 'center'}}>
             {tooltipCounts.removeFreeStage && (
               <span style={{color: tooltipCounts.removeFreeStage.nodesRemoved === 0 || tooltipCounts.q === 0 ? '#999' : '#000'}}>
-                -n = {tooltipCounts.removeFreeStage.nodesRemoved} = {tooltipCounts.removeFreeStage.nodesTotal}
+                -{tooltipCounts.removeFreeStage.nodesRemoved} = {tooltipCounts.removeFreeStage.nodesTotal} | -0 = {tooltipCounts.removeFreeStage.edgesTotal}
               </span>
             )}
           </div>
