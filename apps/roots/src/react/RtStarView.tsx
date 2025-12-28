@@ -507,19 +507,33 @@ export const RtStarView = (): JSX.Element => {
     return ()=>window.removeEventListener('keydown', handleKeyDown);
   }, [togglePhysics]);
 
+  // Move persistent iframe to our container when it's ready
+  useEffect(() => {
+    const graphContainer = document.getElementById('graph-container');
+    if (graphContainer && persistentGraphIframeElementRef.current) {
+      const iframe = persistentGraphIframeElementRef.current;
+      // Only move if not already in the container
+      if (iframe.parentElement !== graphContainer) {
+        graphContainer.appendChild(iframe);
+        // Style it to fill the container
+        iframe.style.position = 'absolute';
+        iframe.style.top = '0';
+        iframe.style.left = '0';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.pointerEvents = 'auto';
+        iframe.style.zIndex = '0';
+        iframe.style.border = 'none';
+        console.log('[RtStarView] Moved persistent iframe to graph container');
+      }
+    }
+  }, [persistentGraphIframeElementRef.current]);
+
   // Display the persistent iframe element in our layout
   // The iframe is created by PersistentGraphContainer and kept alive across routes
   const graphing = (
-    <div style={{ backgroundColor: 'midnightblue', height: "100%", width: "100%", minHeight: '400px', flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-      {/* The iframe element is managed by PersistentGraphContainer, we just need to display it */}
-      {/* We'll clone/move it here, or use CSS to show the persistent one */}
-      <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-        {/* The persistent iframe will be shown here via CSS positioning */}
-        {/* For now, we'll render a placeholder and the persistent container will handle rendering */}
-        <div style={{ width: '100%', height: '100%', backgroundColor: 'midnightblue' }}>
-          {/* Graph is rendered in persistent iframe, which is always mounted */}
-        </div>
-      </div>
+    <div style={{ backgroundColor: 'midnightblue', height: "100%", width: "100%", minHeight: '400px', flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
+      <div id="graph-container" style={{ width: '100%', height: '100%', position: 'relative' }} />
     </div>
   );
 
