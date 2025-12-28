@@ -240,6 +240,17 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage | SearchMessage>) 
         : maxGeneration > generationRange.min;
 
       // PIPELINE STAGE 5: Create graph data (nodes and edges)
+      // First, create graph with just grid-filtered roots + mischalfim to get baseline metrics
+      const { data: dataAfterMischalfim } = renderGraphData(
+        gridFilteredRoots,
+        mischalfim,
+        { ...otherChoices, removeFree: false },
+        maxNodes,
+        maxEdges,
+        false,
+        1
+      );
+
       // Temporarily disable Remove Free to calculate q correctly
       const otherChoicesWithoutRemoveFree = { ...otherChoices, removeFree: false };
       const { data, nodeMax, edgeMax } = renderGraphData(
@@ -251,6 +262,40 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage | SearchMessage>) 
         showGenerations,
         1 // relatedMeaningsThreshold always 1
       );
+
+      // Calculate metrics for meaning expansion stage
+      const meaningNodesBefore = gridFilteredRoots.length;
+      const meaningNodesAfter = rootsWithMeaningLinks.length;
+      const meaningNodesAdded = Math.max(0, meaningNodesAfter - meaningNodesBefore);
+      
+      // Create temporary graph to count edges added by meaning expansion
+      const { data: dataAfterMeaning } = renderGraphData(
+        rootsWithMeaningLinks,
+        mischalfim,
+        otherChoicesWithoutRemoveFree,
+        maxNodes,
+        maxEdges,
+        false,
+        1
+      );
+      const meaningEdgesAdded = Math.max(0, dataAfterMeaning.edges.length - dataAfterMischalfim.edges.length);
+
+      // Calculate metrics for extra degrees stage
+      const extraDegreesNodesBefore = rootsWithMeaningLinks.length;
+      const extraDegreesNodesAfter = rootsFilteredByGeneration.length;
+      const extraDegreesNodesAdded = Math.max(0, extraDegreesNodesAfter - extraDegreesNodesBefore);
+      
+      // Create temporary graph to count edges added by extra degrees
+      const { data: dataAfterExtraDegrees } = renderGraphData(
+        rootsFilteredByGeneration,
+        mischalfim,
+        otherChoicesWithoutRemoveFree,
+        maxNodes,
+        maxEdges,
+        showGenerations,
+        1
+      );
+      const extraDegreesEdgesAdded = Math.max(0, dataAfterExtraDegrees.edges.length - dataAfterMeaning.edges.length);
 
       // y = total roots after extra degrees but BEFORE pruning (for prune by grade tooltip)
       const y = data.nodes.length;
@@ -310,6 +355,7 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage | SearchMessage>) 
 
       // PIPELINE STAGE 7: Apply Remove Free - remove all nodes with no edges
       // Note: q is calculated above from data that hasn't had Remove Free applied yet
+      let removeFreeNodesRemoved = 0;
       if (otherChoices.removeFree) {
         const nodesWithEdges = new Set();
         data.edges.forEach((edge: any) => {
@@ -319,8 +365,9 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage | SearchMessage>) 
 
         const nodesBeforeRemoveFree = data.nodes.length;
         data.nodes = data.nodes.filter((node: any) => nodesWithEdges.has(node.id));
+        removeFreeNodesRemoved = nodesBeforeRemoveFree - data.nodes.length;
 
-        // console.log(`Stage 7 (Remove Free): ${data.nodes.length} nodes (removed ${nodesBeforeRemoveFree - data.nodes.length} unlinked nodes)`);
+        // console.log(`Stage 7 (Remove Free): ${data.nodes.length} nodes (removed ${removeFreeNodesRemoved} unlinked nodes)`);
       } else {
         // console.log(`Stage 7 (Remove Free): Skipped`);
       }
@@ -361,6 +408,24 @@ self.onmessage = function(e: MessageEvent<GraphComputeMessage | SearchMessage>) 
               y,
               q,
               pruneRemoved,
+              afterMischalfim: {
+                nodes: dataAfterMischalfim.nodes.length,
+                edges: dataAfterMischalfim.edges.length,
+              },
+              meaningStage: {
+                nodesAdded: meaningNodesAdded,
+                edgesAdded: meaningEdgesAdded,
+              },
+              extraDegreesStage: {
+                nodesAdded: extraDegreesNodesAdded,
+                edgesAdded: extraDegreesEdgesAdded,
+              },
+              pruneStage: {
+                edgesRemoved: pruneRemoved,
+              },
+              removeFreeStage: {
+                nodesRemoved: removeFreeNodesRemoved,
+              },
             },
           },
         };

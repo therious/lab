@@ -33,7 +33,14 @@ export function useGraphWorker(): UseGraphWorkerResult {
   const [isComputing, setIsComputing] = useState<boolean>(false);
   const [graph, setGraph] = useState<GraphData>({ nodes: [], edges: [] });
   const [generationRange, setGenerationRange] = useState<GenerationRange>({ min: 1, max: 1 });
-  const [tooltipCounts, setTooltipCounts] = useState<TooltipCounts>({ n: 0, x: 0, w: 0, y: 0, q: 0, pruneRemoved: 0 });
+  const [tooltipCounts, setTooltipCounts] = useState<TooltipCounts>({ 
+    n: 0, x: 0, w: 0, y: 0, q: 0, pruneRemoved: 0,
+    afterMischalfim: { nodes: 0, edges: 0 },
+    meaningStage: { nodesAdded: 0, edgesAdded: 0 },
+    extraDegreesStage: { nodesAdded: 0, edgesAdded: 0 },
+    pruneStage: { edgesRemoved: 0 },
+    removeFreeStage: { nodesRemoved: 0 },
+  });
   const pendingGraphDataRef = useRef<PendingGraphData | null>(null);
   const graphUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const nodeIdToRootIdRef = useRef<Map<number, number>>(new Map());

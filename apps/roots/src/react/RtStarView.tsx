@@ -701,10 +701,20 @@ export const RtStarView = (): JSX.Element => {
           <Tooltip content={<>Osios Mischalfos (<span style={hebrewTextStyle}>אותיות מתחלפות</span>) are groups of Hebrew letters that can substitute for each other. When a root has one letter replaced with a related letter from the same group, it often produces a related meaning. These relationships are used to link roots together in the visualization.</>}>
             <span style={{cursor: 'help'}}>Osios Mischalfos</span>
           </Tooltip>
+          {tooltipCounts.afterMischalfim && (
+            <span style={{marginLeft: '20px', fontSize: '14px', fontWeight: 'normal'}}>
+              Nodes: {tooltipCounts.afterMischalfim.nodes} | Connections: {tooltipCounts.afterMischalfim.edges}
+            </span>
+          )}
         <button  onClick={actions.options.allChoices}>Select All</button>
         <button  onClick={actions.options.clearChoices}>Clear All</button>
         <span style={{marginLeft:'20px', fontWeight:'normal'}}>
           <span style={{marginRight:'15px', display: 'inline-block'}}>
+            {tooltipCounts.meaningStage && (tooltipCounts.meaningStage.nodesAdded > 0 || tooltipCounts.meaningStage.edgesAdded > 0) && (
+              <span style={{marginRight: '10px', fontSize: '12px', color: '#666'}}>
+                +n = {tooltipCounts.meaningStage.nodesAdded} | +c = {tooltipCounts.meaningStage.edgesAdded}
+              </span>
+            )}
             <SliderWithTooltip
               label="Add similar meanings:"
               tooltipContent={shouldDisableExpansion ? null : `Include additional roots (${tooltipCounts.x}) based on meanings similar to roots currently included in the grid filter (${tooltipCounts.n})`}
@@ -712,7 +722,7 @@ export const RtStarView = (): JSX.Element => {
                 min={0} 
                 max={6} 
                 step={1}
-                onChange={chLinkByMeaning}
+              onChange={chLinkByMeaning}
               disabled={shouldDisableExpansion}
               ticksId="linkByMeaning-ticks"
               valueDisplay={<span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '85px'}}>Grade ≥ {linkByMeaningThreshold}</span>}
@@ -722,6 +732,11 @@ export const RtStarView = (): JSX.Element => {
             </datalist>
           </span>
           <span style={{marginRight:'15px', display: 'inline-block'}}>
+            {tooltipCounts.extraDegreesStage && (tooltipCounts.extraDegreesStage.nodesAdded > 0 || tooltipCounts.extraDegreesStage.edgesAdded > 0) && (
+              <span style={{marginRight: '10px', fontSize: '12px', color: '#666'}}>
+                +n = {tooltipCounts.extraDegreesStage.nodesAdded} | +c = {tooltipCounts.extraDegreesStage.edgesAdded}
+              </span>
+            )}
             <SliderWithTooltip
               label="Extra degrees:"
               tooltipContent={shouldDisableExpansion ? null : <>Given the roots included by the grid ({tooltipCounts.n}) and the roots with similar meanings ({tooltipCounts.x}) bring in additional roots ({tooltipCounts.w}) that are related according to the enabled <span style={hebrewTextStyle}>אותיות מתחלפות</span> criteria</>}
@@ -729,7 +744,7 @@ export const RtStarView = (): JSX.Element => {
                 min={0} 
                 max={6} 
                 step={1}
-                onChange={chExtraDegrees}
+              onChange={chExtraDegrees}
               disabled={shouldDisableExpansion}
               ticksId="extraDegrees-ticks"
               valueDisplay={<span style={{marginLeft: '5px', fontSize: '12px', display: 'inline-block', width: '20px'}}>{localExtraDegrees}</span>}
@@ -739,6 +754,11 @@ export const RtStarView = (): JSX.Element => {
             </datalist>
           </span>
           <span style={{marginRight:'15px', display: 'inline-block'}}>
+            {tooltipCounts.pruneStage && tooltipCounts.pruneStage.edgesRemoved > 0 && (
+              <span style={{marginRight: '10px', fontSize: '12px', color: '#666'}}>
+                -c = {tooltipCounts.pruneStage.edgesRemoved}
+              </span>
+            )}
             {(() => {
               const numMaxWidth = Math.max(
                 String(tooltipCounts.n).length,
@@ -791,6 +811,11 @@ export const RtStarView = (): JSX.Element => {
             </span>
           </span>
           <span style={{marginRight:'15px', display: 'inline-block'}}>
+            {tooltipCounts.removeFreeStage && tooltipCounts.removeFreeStage.nodesRemoved > 0 && (
+              <span style={{marginRight: '10px', fontSize: '12px', color: '#666'}}>
+                -n = {tooltipCounts.removeFreeStage.nodesRemoved}
+              </span>
+            )}
             <Tooltip content={`Remove roots (${tooltipCounts.q}) from diagram now left with no surviving connections based on the grid filter and the preceding sliders`}>
               <label style={{fontSize: '14px', marginRight: '5px', fontWeight: 'normal', cursor: tooltipCounts.q > 0 ? 'help' : 'default', opacity: tooltipCounts.q > 0 ? 1 : 0.5}}>
                 <input
