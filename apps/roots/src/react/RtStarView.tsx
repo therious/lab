@@ -469,8 +469,20 @@ export const RtStarView = (): JSX.Element => {
         type: 'updateGraph',
         payload: graph
       }, '*');
+      
+      // After graph update, reapply hideNonMatched filter if enabled
+      // This ensures newly added nodes that don't match the search are hidden
+      if (hideNonMatched && matchedNodeIds.length > 0 && iframeRef.current) {
+        // Use setTimeout to ensure graph update is processed first
+        setTimeout(() => {
+          if (iframeRef.current) {
+            console.log('[RtStarView] Reapplying hideNonMatched filter after graph update, matched:', matchedNodeIds.length);
+            iframeRef.current.toggleNonMatchedNodes(true, matchedNodeIds);
+          }
+        }, 100);
+      }
     }
-  }, [graph, iframeElementRef]);
+  }, [graph, iframeElementRef, hideNonMatched, matchedNodeIds, iframeRef]);
 
   // Send node color updates to persistent iframe
   useEffect(() => {
