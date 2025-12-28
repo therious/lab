@@ -180,7 +180,16 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
             networkInstance.setOptions({ 
               physics: {
                 enabled: currentPhysicsEnabled,
-                stabilization: { enabled: false }
+                stabilization: { enabled: false },
+                solver: 'barnesHut',
+                barnesHut: {
+                  gravitationalConstant: -2000,
+                  centralGravity: 0.3,
+                  springLength: 95,
+                  springConstant: 0.04,
+                  damping: 0.09,
+                  avoidOverlap: 0
+                }
               }
             });
           }
@@ -312,7 +321,16 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
             networkInstance.setOptions({
               physics: {
                 enabled: enabled,
-                stabilization: { enabled: false }
+                stabilization: { enabled: false },
+                solver: 'barnesHut',
+                barnesHut: {
+                  gravitationalConstant: -2000,
+                  centralGravity: 0.3,
+                  springLength: 95,
+                  springConstant: 0.04,
+                  damping: 0.09,
+                  avoidOverlap: 0
+                }
               }
             });
           }
