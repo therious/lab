@@ -21,9 +21,10 @@ type CheckGroupProps = {
   name?: string;
   choices: Record<string, boolean>;
   setChoice: (id: string, checked: boolean) => void;
+  titles?: Record<string, string>;
 };
 
-export const CheckGroup = ({ heading, active, name, choices, setChoice }: CheckGroupProps): JSX.Element => {
+export const CheckGroup = ({ heading, active, name, choices, setChoice, titles }: CheckGroupProps): JSX.Element => {
   const cb = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setChoice(e.target.id, e.target.checked);
   }, [setChoice]);
@@ -33,7 +34,7 @@ export const CheckGroup = ({ heading, active, name, choices, setChoice }: CheckG
   const cc = Object.entries(choices).map(([k, v]) => (
     <Span key={k}>
       <input disabled={active === false} type="checkbox" name={name} id={k} value={k} onChange={cb} checked={v} />
-      <label htmlFor={k}>{k}</label>
+      <label htmlFor={k} title={titles?.[k]} style={{cursor: titles?.[k] ? 'help' : 'default'}}>{k}</label>
     </Span>
   ));
   

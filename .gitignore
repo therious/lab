@@ -35,3 +35,4 @@ libs/ag-grid/index.ts
 # docs folder may contain notes, works in progress, or files that are "dirty" with secrets
 # keep these in ignored exclude folder to prevent commit
 docs/exclude
+.specstory/

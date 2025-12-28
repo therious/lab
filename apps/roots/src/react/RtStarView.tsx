@@ -5,6 +5,7 @@ import {persistentGraphIframeRef, persistentGraphIframeElementRef} from "./Persi
 import {toRender} from "../roots/myvis";
 import {CheckGroup} from "./CheckGroup";
 import {Tooltip} from "./Tooltip";
+import {choiceTitles} from "../roots/mischalfim";
 import {MAX_NODES_FOR_EXPANSION} from "../roots/constants";
 import type {Root, GraphData} from "../roots/types";
 import {useGraphWorker, type GraphComputePayload} from "../hooks/useGraphWorker";
@@ -80,7 +81,7 @@ const SliderWithTooltip = ({ label, tooltipContent, tooltipMaxWidth, value, min,
 export const RtStarView = (): JSX.Element => {
 
   const {
-    options: {choices, otherChoices, mischalfim, includeLinked, maxEdges, linkByMeaningThreshold, pruneByGradeThreshold, maxGeneration, localExtraDegrees, searchTerm: optionsSearchTerm, isPhysicsEnabled, hideNonMatched}
+    options: {choices, otherChoices, mischalfim, allmischalfim, includeLinked, maxEdges, linkByMeaningThreshold, pruneByGradeThreshold, maxGeneration, localExtraDegrees, searchTerm: optionsSearchTerm, isPhysicsEnabled, hideNonMatched}
   } = useSelector(s=>s);
 
   // Ensure mischalfim and otherChoices are properly initialized before computing graph
@@ -892,37 +893,19 @@ export const RtStarView = (): JSX.Element => {
             </div>
           </div>
         </div>
-          {/* Render otherChoices checkboxes with tooltips for jumbled and atbash */}
-          <div>
-            {Object.entries(otherChoices)
-              .filter(([k]) => k !== 'removeFree')
-              .map(([k, v]) => {
-                const tooltipContent = k === 'jumbled'
-                  ? "Connect roots w/ same set of letters in any order"
-                  : k === 'atbash'
-                  ? "Use atbash (אתבש) to relate roots (א=ת, ב=ש, ג=ר)"
-                  : null;
-
-                const checkbox = (
-                  <span key={k} style={{margin: '10px', whiteSpace: 'nowrap'}}>
-                    <input
-                      type="checkbox"
-                      id={k}
-                      checked={v || false}
-                      onChange={(e) => actions.options.chooseOtherOne(k, e.target.checked)}
-                    />
-                    <label htmlFor={k} style={{cursor: tooltipContent ? 'help' : 'default'}}>{k}</label>
-                  </span>
-                );
-
-                return tooltipContent ? (
-                  <Tooltip key={k} content={tooltipContent}>
-                    {checkbox}
-                  </Tooltip>
-                ) : checkbox;
-              })}
-          </div>
-          <CheckGroup choices={choices} setChoice={actions.options.chooseOne}/>
+          <CheckGroup 
+            choices={Object.fromEntries(Object.entries(otherChoices).filter(([k]) => k !== 'removeFree'))} 
+            setChoice={actions.options.chooseOtherOne}
+            titles={{
+              jumbled: "Connect roots w/ same set of letters in any order",
+              atbash: "Use atbash (אתבש) to relate roots (א=ת, ב=ש, ג=ר)"
+            }}
+          />
+          <CheckGroup 
+            choices={choices} 
+            setChoice={actions.options.chooseOne}
+            titles={allmischalfim ? choiceTitles(allmischalfim) : undefined}
+          />
         </div>
         <hr/>
         <div style={{marginBottom: '10px'}}>
