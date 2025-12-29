@@ -998,61 +998,6 @@ export const RtStarView = (): JSX.Element => {
               </label>
             </span>
           )}
-          {!searchTerm || !searchTerm.trim() ? (
-            <div style={{marginLeft: '10px', display: 'flex', alignItems: 'center', gap: '10px'}}>
-              <label style={{fontSize: '14px', fontWeight: 'normal'}}>Show:</label>
-              <label style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '14px'}}>
-                <input
-                  type="radio"
-                  name="viewMode"
-                  value="everything"
-                  checked={viewMode === 'everything'}
-                  onChange={(e) => {
-                    const newMode = e.target.value as 'everything' | 'matchingOnly' | 'matchingAndConnected';
-                    actions.options.setViewMode(newMode);
-                    if (iframeRef.current) {
-                      iframeRef.current.setViewMode(newMode, matchedNodeIds, graph);
-                    }
-                  }}
-                />
-                Everything
-              </label>
-              <label style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: matchedNodeIds.length > 0 ? 'pointer' : 'not-allowed', fontSize: '14px', opacity: matchedNodeIds.length > 0 ? 1 : 0.5}}>
-                <input
-                  type="radio"
-                  name="viewMode"
-                  value="matchingOnly"
-                  checked={viewMode === 'matchingOnly'}
-                  disabled={matchedNodeIds.length === 0}
-                  onChange={(e) => {
-                    const newMode = e.target.value as 'everything' | 'matchingOnly' | 'matchingAndConnected';
-                    actions.options.setViewMode(newMode);
-                    if (iframeRef.current && matchedNodeIds.length > 0) {
-                      iframeRef.current.setViewMode(newMode, matchedNodeIds, graph);
-                    }
-                  }}
-                />
-                Matching Only
-              </label>
-              <label style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: matchedNodeIds.length > 0 ? 'pointer' : 'not-allowed', fontSize: '14px', opacity: matchedNodeIds.length > 0 ? 1 : 0.5}}>
-                <input
-                  type="radio"
-                  name="viewMode"
-                  value="matchingAndConnected"
-                  checked={viewMode === 'matchingAndConnected'}
-                  disabled={matchedNodeIds.length === 0}
-                  onChange={(e) => {
-                    const newMode = e.target.value as 'everything' | 'matchingOnly' | 'matchingAndConnected';
-                    actions.options.setViewMode(newMode);
-                    if (iframeRef.current && matchedNodeIds.length > 0) {
-                      iframeRef.current.setViewMode(newMode, matchedNodeIds, graph);
-                    }
-                  }}
-                />
-                Matching + Connected
-              </label>
-            </div>
-          ) : null}
           {searchTerm && searchTerm.trim() && (
             <>
             </>
