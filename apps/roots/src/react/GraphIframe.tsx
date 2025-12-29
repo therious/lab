@@ -66,55 +66,6 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
     
     // Track if we're currently dragging to avoid interfering with drag operations
     let isDragging = false;
-    let ensurePhysicsTimeout = null;
-    let lastPhysicsCheck = 0;
-    
-    // Helper function to ensure physics stays enabled
-    // Only call this when not dragging to avoid interfering with drag operations
-    // Uses throttling to avoid calling setOptions too frequently
-    function ensurePhysicsEnabled() {
-      if (networkInstance && currentPhysicsEnabled && !isDragging) {
-        const now = Date.now();
-        // Throttle: only check every 500ms to avoid interfering with dragging
-        if (now - lastPhysicsCheck < 500) {
-          return;
-        }
-        lastPhysicsCheck = now;
-        
-        // Clear any pending timeout
-        if (ensurePhysicsTimeout) {
-          clearTimeout(ensurePhysicsTimeout);
-        }
-        // Use a delay to avoid interfering with ongoing operations
-        ensurePhysicsTimeout = setTimeout(function() {
-          if (networkInstance && currentPhysicsEnabled && !isDragging) {
-            try {
-              const currentOptions = networkInstance.getOptions();
-              // Only update if physics is actually disabled
-              if (!currentOptions.physics || !currentOptions.physics.enabled) {
-                networkInstance.setOptions({
-                  physics: {
-                    enabled: true,
-                    stabilization: { enabled: false },
-                    solver: 'barnesHut',
-                    barnesHut: {
-                      gravitationalConstant: -2000,
-                      centralGravity: 0.3,
-                      springLength: 95,
-                      springConstant: 0.04,
-                      damping: 0.09,
-                      avoidOverlap: 0
-                    }
-                  }
-                });
-              }
-            } catch (e) {
-              // Ignore errors during drag operations
-            }
-          }
-        }, 200);
-      }
-    }
 
     // Notify parent that iframe is ready as soon as script loads
     // This allows parent to send graph data even if network isn't created yet
@@ -186,8 +137,8 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
         networkInstance.body.data.edges.add(edgesToAdd);
       }
 
-      // Ensure physics stays enabled after incremental updates
-      ensurePhysicsEnabled();
+      // Physics should stay enabled automatically after incremental updates
+      // Don't call ensurePhysicsEnabled() here - it interferes with scroll/zoom events
 
       // Update graphData reference, preserving hidden nodes/edges if they exist
       graphData = {
@@ -293,24 +244,12 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
           // Track dragging state to avoid interfering with drag operations
           networkInstance.on('dragStart', function() {
             isDragging = true;
-            if (ensurePhysicsTimeout) {
-              clearTimeout(ensurePhysicsTimeout);
-              ensurePhysicsTimeout = null;
-            }
           });
           
           networkInstance.on('dragEnd', function() {
             isDragging = false;
             // Immediately and forcefully re-enable physics after drag ends
-            // Don't use throttling - we need physics to restart right away
             if (networkInstance && currentPhysicsEnabled) {
-              // Clear any pending throttled calls
-              if (ensurePhysicsTimeout) {
-                clearTimeout(ensurePhysicsTimeout);
-                ensurePhysicsTimeout = null;
-              }
-              lastPhysicsCheck = 0; // Reset throttle counter
-              
               // Force re-enable physics immediately
               networkInstance.setOptions({
                 physics: {
@@ -535,8 +474,8 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
               });
             }
             
-            // Ensure physics stays enabled after node/edge changes
-            ensurePhysicsEnabled();
+            // Physics should stay enabled automatically after node/edge changes
+            // Don't call ensurePhysicsEnabled() here - it interferes with scroll/zoom events
             
             // Auto-recenter after changing view mode
             setTimeout(function() {
