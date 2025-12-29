@@ -81,7 +81,7 @@ const SliderWithTooltip = ({ label, tooltipContent, tooltipMaxWidth, value, min,
 export const RtStarView = (): JSX.Element => {
 
   const {
-    options: {choices, otherChoices, mischalfim, allmischalfim, includeLinked, maxEdges, linkByMeaningThreshold, pruneByGradeThreshold, maxGeneration, localExtraDegrees, searchTerm: optionsSearchTerm, isPhysicsEnabled, hideNonMatched}
+    options: {choices, otherChoices, mischalfim, allmischalfim, includeLinked, maxEdges, linkByMeaningThreshold, pruneByGradeThreshold, maxGeneration, localExtraDegrees, searchTerm: optionsSearchTerm, isPhysicsEnabled, viewMode}
   } = useSelector(s=>s);
 
   // Ensure mischalfim and otherChoices are properly initialized before computing graph
@@ -226,25 +226,24 @@ export const RtStarView = (): JSX.Element => {
         });
         setSearchMatchCounts({ definitions: definitionMatches, examples: exampleMatches });
 
-        // If hideNonMatched is enabled, update visibility to show newly matched nodes
-        if (hideNonMatched && iframeRef.current) {
-          iframeRef.current.toggleNonMatchedNodes(true, matchedIds);
+        // If viewMode is not 'everything', update visibility based on view mode
+        if (viewMode !== 'everything' && iframeRef.current) {
+          iframeRef.current.setViewMode(viewMode, matchedIds, graph);
         }
       }
     });
-  }, [setSearchResultHandler, searchIdRef, applyNodeColors, hideNonMatched]);
+  }, [setSearchResultHandler, searchIdRef, applyNodeColors, viewMode, graph]);
 
   // Clear search match counts and show all nodes when search term is cleared
   useEffect(() => {
     if (!searchTerm || !searchTerm.trim()) {
       setSearchMatchCounts({ definitions: 0, examples: 0 });
       setMatchedNodeIds([]);
-      actions.options.setHideNonMatched(false);
+      actions.options.setViewMode('everything');
       setNodeColors([]); // Clear node colors to remove highlighting
       // Show all nodes
       if (iframeRef.current && graph.nodes.length > 0) {
-        const allNodeIds = graph.nodes.map(n => n.id);
-        iframeRef.current.toggleNonMatchedNodes(false, allNodeIds);
+        iframeRef.current.setViewMode('everything', [], graph);
       }
     }
   }, [searchTerm, graph]);
@@ -477,19 +476,19 @@ export const RtStarView = (): JSX.Element => {
         payload: graph
       }, '*');
 
-      // After graph update, reapply hideNonMatched filter if enabled
-      // This ensures newly added nodes that don't match the search are hidden
-      if (hideNonMatched && matchedNodeIds.length > 0 && iframeRef.current) {
+      // After graph update, reapply viewMode filter if not 'everything'
+      // This ensures newly added nodes are filtered according to the current view mode
+      if (viewMode !== 'everything' && matchedNodeIds.length > 0 && iframeRef.current) {
         // Use setTimeout to ensure graph update is processed first
         setTimeout(() => {
           if (iframeRef.current) {
-            console.log('[RtStarView] Reapplying hideNonMatched filter after graph update, matched:', matchedNodeIds.length);
-            iframeRef.current.toggleNonMatchedNodes(true, matchedNodeIds);
+            console.log('[RtStarView] Reapplying viewMode filter after graph update, mode:', viewMode, 'matched:', matchedNodeIds.length);
+            iframeRef.current.setViewMode(viewMode, matchedNodeIds, graph);
           }
         }, 100);
       }
     }
-  }, [graph, iframeElementRef, hideNonMatched, matchedNodeIds, iframeRef]);
+  }, [graph, iframeElementRef, viewMode, matchedNodeIds, iframeRef]);
 
   // Send node color updates to persistent iframe
   useEffect(() => {
@@ -918,7 +917,7 @@ export const RtStarView = (): JSX.Element => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search definitions and examples (supports |, &, -, &quot;&quot;)"
-                style={{width: '400px', padding: '5px 25px 5px 5px'}}
+                style={{width: '200px', padding: '5px 25px 5px 5px'}}
           />
           {searchTerm && (
             <button
@@ -944,43 +943,118 @@ export const RtStarView = (): JSX.Element => {
             </span>
           </Tooltip>
           {searchTerm && searchTerm.trim() && (
-            <>
-              <span style={{marginLeft: '10px', fontSize: '14px'}}>
-                Matches: <span style={{display: 'inline-block', backgroundColor: 'orange', color: 'black', borderRadius: '10px', minWidth: '20px', height: '20px', lineHeight: '20px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', padding: '0 6px'}}>{searchMatchCounts.definitions}</span> definitions, <span style={{display: 'inline-block', backgroundColor: 'gold', color: 'black', borderRadius: '10px', minWidth: '20px', height: '20px', lineHeight: '20px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', padding: '0 6px'}}>{searchMatchCounts.examples}</span> examples
-              </span>
-              <button
-                  onClick={() => {
-                    const newHideState = !hideNonMatched;
-                    actions.options.setHideNonMatched(newHideState);
-                    if (iframeRef.current && matchedNodeIds.length > 0) {
-                      iframeRef.current.toggleNonMatchedNodes(newHideState, matchedNodeIds);
+            <span style={{marginLeft: '10px', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '10px'}}>
+              Matches: <span style={{display: 'inline-block', backgroundColor: 'orange', color: 'black', borderRadius: '10px', minWidth: '20px', height: '20px', lineHeight: '20px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', padding: '0 6px'}}>{searchMatchCounts.definitions}</span> definitions, <span style={{display: 'inline-block', backgroundColor: 'gold', color: 'black', borderRadius: '10px', minWidth: '20px', height: '20px', lineHeight: '20px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', padding: '0 6px'}}>{searchMatchCounts.examples}</span> examples
+              <label style={{fontSize: '14px', fontWeight: 'normal', marginLeft: '10px'}}>Show:</label>
+              <label style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '14px'}}>
+                <input
+                  type="radio"
+                  name="viewMode"
+                  value="everything"
+                  checked={viewMode === 'everything'}
+                  onChange={(e) => {
+                    const newMode = e.target.value as 'everything' | 'matchingOnly' | 'matchingAndConnected';
+                    actions.options.setViewMode(newMode);
+                    if (iframeRef.current) {
+                      iframeRef.current.setViewMode(newMode, matchedNodeIds, graph);
                     }
                   }}
-                disabled={matchedNodeIds.length === 0}
-                style={{
-                  marginLeft: '10px',
-                  padding: '5px 10px',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  backgroundColor: hideNonMatched ? '#4CAF50' : '#fff',
-                  color: hideNonMatched ? '#fff' : '#000',
-                  cursor: matchedNodeIds.length > 0 ? 'pointer' : 'not-allowed',
-                  opacity: matchedNodeIds.length > 0 ? 1 : 0.5,
-                  boxShadow: 'none',
-                  outline: 'none'
-                }}
-                onMouseEnter={(e) => {
-                  if (matchedNodeIds.length > 0) {
-                    e.currentTarget.style.backgroundColor = hideNonMatched ? '#45a049' : '#f0f0f0';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = hideNonMatched ? '#4CAF50' : '#fff';
-                }}
-                title={hideNonMatched ? 'Show all nodes' : 'Hide non-matched nodes'}
-              >
-                {hideNonMatched ? '👁️ Show All' : '👁️‍🗨️ Hide Others'}
-            </button>
+                />
+                Everything
+              </label>
+              <label style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: matchedNodeIds.length > 0 ? 'pointer' : 'not-allowed', fontSize: '14px', opacity: matchedNodeIds.length > 0 ? 1 : 0.5}}>
+                <input
+                  type="radio"
+                  name="viewMode"
+                  value="matchingOnly"
+                  checked={viewMode === 'matchingOnly'}
+                  disabled={matchedNodeIds.length === 0}
+                  onChange={(e) => {
+                    const newMode = e.target.value as 'everything' | 'matchingOnly' | 'matchingAndConnected';
+                    actions.options.setViewMode(newMode);
+                    if (iframeRef.current && matchedNodeIds.length > 0) {
+                      iframeRef.current.setViewMode(newMode, matchedNodeIds, graph);
+                    }
+                  }}
+                />
+                Matching Only
+              </label>
+              <label style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: matchedNodeIds.length > 0 ? 'pointer' : 'not-allowed', fontSize: '14px', opacity: matchedNodeIds.length > 0 ? 1 : 0.5}}>
+                <input
+                  type="radio"
+                  name="viewMode"
+                  value="matchingAndConnected"
+                  checked={viewMode === 'matchingAndConnected'}
+                  disabled={matchedNodeIds.length === 0}
+                  onChange={(e) => {
+                    const newMode = e.target.value as 'everything' | 'matchingOnly' | 'matchingAndConnected';
+                    actions.options.setViewMode(newMode);
+                    if (iframeRef.current && matchedNodeIds.length > 0) {
+                      iframeRef.current.setViewMode(newMode, matchedNodeIds, graph);
+                    }
+                  }}
+                />
+                Matching + Connected
+              </label>
+            </span>
+          )}
+          {!searchTerm || !searchTerm.trim() ? (
+            <div style={{marginLeft: '10px', display: 'flex', alignItems: 'center', gap: '10px'}}>
+              <label style={{fontSize: '14px', fontWeight: 'normal'}}>Show:</label>
+              <label style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '14px'}}>
+                <input
+                  type="radio"
+                  name="viewMode"
+                  value="everything"
+                  checked={viewMode === 'everything'}
+                  onChange={(e) => {
+                    const newMode = e.target.value as 'everything' | 'matchingOnly' | 'matchingAndConnected';
+                    actions.options.setViewMode(newMode);
+                    if (iframeRef.current) {
+                      iframeRef.current.setViewMode(newMode, matchedNodeIds, graph);
+                    }
+                  }}
+                />
+                Everything
+              </label>
+              <label style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: matchedNodeIds.length > 0 ? 'pointer' : 'not-allowed', fontSize: '14px', opacity: matchedNodeIds.length > 0 ? 1 : 0.5}}>
+                <input
+                  type="radio"
+                  name="viewMode"
+                  value="matchingOnly"
+                  checked={viewMode === 'matchingOnly'}
+                  disabled={matchedNodeIds.length === 0}
+                  onChange={(e) => {
+                    const newMode = e.target.value as 'everything' | 'matchingOnly' | 'matchingAndConnected';
+                    actions.options.setViewMode(newMode);
+                    if (iframeRef.current && matchedNodeIds.length > 0) {
+                      iframeRef.current.setViewMode(newMode, matchedNodeIds, graph);
+                    }
+                  }}
+                />
+                Matching Only
+              </label>
+              <label style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: matchedNodeIds.length > 0 ? 'pointer' : 'not-allowed', fontSize: '14px', opacity: matchedNodeIds.length > 0 ? 1 : 0.5}}>
+                <input
+                  type="radio"
+                  name="viewMode"
+                  value="matchingAndConnected"
+                  checked={viewMode === 'matchingAndConnected'}
+                  disabled={matchedNodeIds.length === 0}
+                  onChange={(e) => {
+                    const newMode = e.target.value as 'everything' | 'matchingOnly' | 'matchingAndConnected';
+                    actions.options.setViewMode(newMode);
+                    if (iframeRef.current && matchedNodeIds.length > 0) {
+                      iframeRef.current.setViewMode(newMode, matchedNodeIds, graph);
+                    }
+                  }}
+                />
+                Matching + Connected
+              </label>
+            </div>
+          ) : null}
+          {searchTerm && searchTerm.trim() && (
+            <>
             </>
           )}
         </div>

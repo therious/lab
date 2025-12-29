@@ -16,7 +16,7 @@ export interface OptionsState {
   localExtraDegrees: number;
   searchTerm: string;
   isPhysicsEnabled: boolean;
-  hideNonMatched: boolean;
+  viewMode: 'everything' | 'matchingOnly' | 'matchingAndConnected';
 }
 
 type OptionsCreator = (...rest: any)=>unknown;
@@ -47,7 +47,7 @@ const initialState:OptionsState = {
   localExtraDegrees: 0,
   searchTerm: '',
   isPhysicsEnabled: true,
-  hideNonMatched: false,
+  viewMode: 'everything',
 };
 
 
@@ -69,7 +69,7 @@ const creators = {
   setLocalExtraDegrees: (localExtraDegrees: number) => ({ localExtraDegrees }),
   setSearchTerm: (searchTerm: string) => ({ searchTerm }),
   setPhysicsEnabled: (isPhysicsEnabled: boolean) => ({ isPhysicsEnabled }),
-  setHideNonMatched: (hideNonMatched: boolean) => ({ hideNonMatched }),
+  setViewMode: (viewMode: 'everything' | 'matchingOnly' | 'matchingAndConnected') => ({ viewMode }),
 };
 
 const reducers:OptionsReducers = {
@@ -138,9 +138,9 @@ const reducers:OptionsReducers = {
     ...s,
     isPhysicsEnabled,
   }),
-  setHideNonMatched: (s, { hideNonMatched }) => ({
+  setViewMode: (s, { viewMode }) => ({
     ...s,
-    hideNonMatched,
+    viewMode,
   }),
 
 };

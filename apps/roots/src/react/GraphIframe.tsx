@@ -11,7 +11,7 @@ interface GraphIframeProps {
   onReady?: () => void;
   onTooltipRequest?: (rootId: number, definition: string) => void;
   nodeColors?: Array<{ id: number; color: { background: string } }>;
-  iframeRef?: React.RefObject<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void; recenter: () => void; toggleNonMatchedNodes: (hide: boolean) => void }>;
+  iframeRef?: React.RefObject<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void; recenter: () => void; setViewMode: (viewMode: 'everything' | 'matchingOnly' | 'matchingAndConnected', matchedNodeIds: number[], graph: { nodes: Array<{ id: number }>, edges: Array<{ from: number, to: number }> }) => void }>;
   iframeElementRef?: React.RefObject<HTMLIFrameElement | null>;
   style?: React.CSSProperties;
 }
@@ -63,6 +63,58 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
     let networkInstance = null;
     let currentPhysicsEnabled = true; // Track physics state separately
     const container = document.getElementById('root');
+    
+    // Track if we're currently dragging to avoid interfering with drag operations
+    let isDragging = false;
+    let ensurePhysicsTimeout = null;
+    let lastPhysicsCheck = 0;
+    
+    // Helper function to ensure physics stays enabled
+    // Only call this when not dragging to avoid interfering with drag operations
+    // Uses throttling to avoid calling setOptions too frequently
+    function ensurePhysicsEnabled() {
+      if (networkInstance && currentPhysicsEnabled && !isDragging) {
+        const now = Date.now();
+        // Throttle: only check every 500ms to avoid interfering with dragging
+        if (now - lastPhysicsCheck < 500) {
+          return;
+        }
+        lastPhysicsCheck = now;
+        
+        // Clear any pending timeout
+        if (ensurePhysicsTimeout) {
+          clearTimeout(ensurePhysicsTimeout);
+        }
+        // Use a delay to avoid interfering with ongoing operations
+        ensurePhysicsTimeout = setTimeout(function() {
+          if (networkInstance && currentPhysicsEnabled && !isDragging) {
+            try {
+              const currentOptions = networkInstance.getOptions();
+              // Only update if physics is actually disabled
+              if (!currentOptions.physics || !currentOptions.physics.enabled) {
+                networkInstance.setOptions({
+                  physics: {
+                    enabled: true,
+                    stabilization: { enabled: false },
+                    solver: 'barnesHut',
+                    barnesHut: {
+                      gravitationalConstant: -2000,
+                      centralGravity: 0.3,
+                      springLength: 95,
+                      springConstant: 0.04,
+                      damping: 0.09,
+                      avoidOverlap: 0
+                    }
+                  }
+                });
+              }
+            } catch (e) {
+              // Ignore errors during drag operations
+            }
+          }
+        }, 200);
+      }
+    }
 
     // Notify parent that iframe is ready as soon as script loads
     // This allows parent to send graph data even if network isn't created yet
@@ -135,23 +187,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
       }
 
       // Ensure physics stays enabled after incremental updates
-      if (currentPhysicsEnabled) {
-        networkInstance.setOptions({
-          physics: {
-            enabled: true,
-            stabilization: { enabled: false },
-            solver: 'barnesHut',
-            barnesHut: {
-              gravitationalConstant: -2000,
-              centralGravity: 0.3,
-              springLength: 95,
-              springConstant: 0.04,
-              damping: 0.09,
-              avoidOverlap: 0
-            }
-          }
-        });
-      }
+      ensurePhysicsEnabled();
 
       // Update graphData reference, preserving hidden nodes/edges if they exist
       graphData = {
@@ -254,10 +290,50 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
           networkInstance = new vis.Network(container, data, options);
           console.log('[iframe] Network instance created with', graphData.nodes.length, 'nodes');
           
+          // Track dragging state to avoid interfering with drag operations
+          networkInstance.on('dragStart', function() {
+            isDragging = true;
+            if (ensurePhysicsTimeout) {
+              clearTimeout(ensurePhysicsTimeout);
+              ensurePhysicsTimeout = null;
+            }
+          });
+          
+          networkInstance.on('dragEnd', function() {
+            isDragging = false;
+            // Immediately and forcefully re-enable physics after drag ends
+            // Don't use throttling - we need physics to restart right away
+            if (networkInstance && currentPhysicsEnabled) {
+              // Clear any pending throttled calls
+              if (ensurePhysicsTimeout) {
+                clearTimeout(ensurePhysicsTimeout);
+                ensurePhysicsTimeout = null;
+              }
+              lastPhysicsCheck = 0; // Reset throttle counter
+              
+              // Force re-enable physics immediately
+              networkInstance.setOptions({
+                physics: {
+                  enabled: true,
+                  stabilization: { enabled: false },
+                  solver: 'barnesHut',
+                  barnesHut: {
+                    gravitationalConstant: -2000,
+                    centralGravity: 0.3,
+                    springLength: 95,
+                    springConstant: 0.04,
+                    damping: 0.09,
+                    avoidOverlap: 0
+                  }
+                }
+              });
+            }
+          });
+          
           // Ensure physics stays enabled after stabilization
           networkInstance.on('stabilizationEnd', function() {
             console.log('[iframe] Stabilization ended, ensuring physics stays enabled');
-            if (networkInstance && currentPhysicsEnabled) {
+            if (networkInstance && currentPhysicsEnabled && !isDragging) {
               networkInstance.setOptions({
                 physics: {
                   enabled: true,
@@ -302,6 +378,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
             });
             console.log('[iframe] Updating', updates.length, 'nodes with colors');
             networkInstance.body.data.nodes.update(updates);
+            // Don't call ensurePhysicsEnabled here - it's too aggressive and interferes with dragging
           }
         }
       } else if (event.data.type === 'updateTooltips') {
@@ -310,6 +387,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
           const updates = event.data.payload.updates;
           if (networkInstance) {
             networkInstance.body.data.nodes.update(updates);
+            // Don't call ensurePhysicsEnabled here - it's too aggressive and interferes with dragging
           }
         }
       } else if (event.data.type === 'setPhysics') {
@@ -345,45 +423,19 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
             }
           });
         }
-      } else if (event.data.type === 'toggleNonMatchedNodes') {
-        // Hide or show non-search-matched nodes
+      } else if (event.data.type === 'setViewMode') {
+        // Set view mode: everything, matchingOnly, or matchingAndConnected
         // This actually removes/adds nodes from the DataSet so physics recalculates
         if (event.data.payload) {
-          const hide = event.data.payload.hide;
+          const viewMode = event.data.payload.viewMode;
           const matchedNodeIds = event.data.payload.matchedNodeIds || [];
-          console.log('[iframe] toggleNonMatchedNodes:', hide, 'matched:', matchedNodeIds.length);
+          const graph = event.data.payload.graph || { nodes: [], edges: [] };
+          console.log('[iframe] setViewMode:', viewMode, 'matched:', matchedNodeIds.length);
           if (networkInstance) {
             const allNodes = networkInstance.body.data.nodes.get();
             const allEdges = networkInstance.body.data.edges.get();
             
-            if (hide) {
-              // Hide non-matched nodes: remove them from the DataSet
-              const nodesToHide = allNodes.filter(function(node) {
-                return matchedNodeIds.indexOf(node.id) === -1;
-              }).map(function(n) { return n.id; });
-              
-              // Also remove edges connected to hidden nodes
-              const edgesToRemove = allEdges.filter(function(edge) {
-                return nodesToHide.indexOf(edge.from) !== -1 || nodesToHide.indexOf(edge.to) !== -1;
-              }).map(function(e) { return e.id; });
-              
-              console.log('[iframe] Hiding', nodesToHide.length, 'nodes and', edgesToRemove.length, 'edges');
-              
-              if (edgesToRemove.length > 0) {
-                networkInstance.body.data.edges.remove(edgesToRemove);
-              }
-              if (nodesToHide.length > 0) {
-                networkInstance.body.data.nodes.remove(nodesToHide);
-              }
-              
-              // Store hidden nodes/edges for later restoration
-              graphData.hiddenNodes = allNodes.filter(function(node) {
-                return nodesToHide.indexOf(node.id) !== -1;
-              });
-              graphData.hiddenEdges = allEdges.filter(function(edge) {
-                return edgesToRemove.indexOf(edge.id) !== -1;
-              });
-            } else {
+            if (viewMode === 'everything') {
               // Show all nodes: restore hidden nodes and edges
               if (graphData.hiddenNodes && graphData.hiddenNodes.length > 0) {
                 console.log('[iframe] Restoring', graphData.hiddenNodes.length, 'nodes and', graphData.hiddenEdges ? graphData.hiddenEdges.length : 0, 'edges');
@@ -413,9 +465,80 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
                 graphData.hiddenNodes = [];
                 graphData.hiddenEdges = [];
               }
+            } else if (viewMode === 'matchingOnly') {
+              // Hide non-matched nodes: remove them from the DataSet
+              const nodesToHide = allNodes.filter(function(node) {
+                return matchedNodeIds.indexOf(node.id) === -1;
+              }).map(function(n) { return n.id; });
+              
+              // Also remove edges connected to hidden nodes
+              const edgesToRemove = allEdges.filter(function(edge) {
+                return nodesToHide.indexOf(edge.from) !== -1 || nodesToHide.indexOf(edge.to) !== -1;
+              }).map(function(e) { return e.id; });
+              
+              console.log('[iframe] Hiding', nodesToHide.length, 'nodes and', edgesToRemove.length, 'edges');
+              
+              if (edgesToRemove.length > 0) {
+                networkInstance.body.data.edges.remove(edgesToRemove);
+              }
+              if (nodesToHide.length > 0) {
+                networkInstance.body.data.nodes.remove(nodesToHide);
+              }
+              
+              // Store hidden nodes/edges for later restoration
+              graphData.hiddenNodes = allNodes.filter(function(node) {
+                return nodesToHide.indexOf(node.id) !== -1;
+              });
+              graphData.hiddenEdges = allEdges.filter(function(edge) {
+                return edgesToRemove.indexOf(edge.id) !== -1;
+              });
+            } else if (viewMode === 'matchingAndConnected') {
+              // Show matched nodes + all nodes connected to them
+              const matchedNodeIdsSet = new Set(matchedNodeIds);
+              const nodesToKeep = new Set(matchedNodeIds);
+              
+              // Find all nodes connected to matched nodes
+              graph.edges.forEach(function(edge) {
+                if (matchedNodeIdsSet.has(edge.from)) {
+                  nodesToKeep.add(edge.to);
+                }
+                if (matchedNodeIdsSet.has(edge.to)) {
+                  nodesToKeep.add(edge.from);
+                }
+              });
+              
+              // Hide nodes that are not in the keep set
+              const nodesToHide = allNodes.filter(function(node) {
+                return !nodesToKeep.has(node.id);
+              }).map(function(n) { return n.id; });
+              
+              // Remove edges connected to hidden nodes, but keep edges between visible nodes
+              const edgesToRemove = allEdges.filter(function(edge) {
+                return nodesToHide.indexOf(edge.from) !== -1 || nodesToHide.indexOf(edge.to) !== -1;
+              }).map(function(e) { return e.id; });
+              
+              console.log('[iframe] Matching + Connected: keeping', nodesToKeep.size, 'nodes, hiding', nodesToHide.length, 'nodes and', edgesToRemove.length, 'edges');
+              
+              if (edgesToRemove.length > 0) {
+                networkInstance.body.data.edges.remove(edgesToRemove);
+              }
+              if (nodesToHide.length > 0) {
+                networkInstance.body.data.nodes.remove(nodesToHide);
+              }
+              
+              // Store hidden nodes/edges for later restoration
+              graphData.hiddenNodes = allNodes.filter(function(node) {
+                return nodesToHide.indexOf(node.id) !== -1;
+              });
+              graphData.hiddenEdges = allEdges.filter(function(edge) {
+                return edgesToRemove.indexOf(edge.id) !== -1;
+              });
             }
             
-            // Auto-recenter after toggling
+            // Ensure physics stays enabled after node/edge changes
+            ensurePhysicsEnabled();
+            
+            // Auto-recenter after changing view mode
             setTimeout(function() {
               if (networkInstance) {
                 networkInstance.fit({
@@ -574,7 +697,7 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
   // Expose methods via ref if provided
   useEffect(() => {
     if (externalRef) {
-      (externalRef as React.MutableRefObject<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void; recenter: () => void; toggleNonMatchedNodes: (hide: boolean, matchedNodeIds: number[]) => void }>).current = {
+      (externalRef as React.MutableRefObject<{ setPhysics: (enabled: boolean) => void; updateTooltips: (updates: Array<{ id: number; title: string }>) => void; recenter: () => void; setViewMode: (viewMode: 'everything' | 'matchingOnly' | 'matchingAndConnected', matchedNodeIds: number[], graph: { nodes: Array<{ id: number }>, edges: Array<{ from: number, to: number }> }) => void }>).current = {
         setPhysics: (enabled: boolean) => {
           if (iframeRef.current?.contentWindow) {
             iframeRef.current.contentWindow.postMessage({
@@ -599,11 +722,11 @@ export const GraphIframe: React.FC<GraphIframeProps> = ({ graph, onReady, onTool
             }, '*');
           }
         },
-        toggleNonMatchedNodes: (hide: boolean, matchedNodeIds: number[]) => {
+        setViewMode: (viewMode: 'everything' | 'matchingOnly' | 'matchingAndConnected', matchedNodeIds: number[], graph: { nodes: Array<{ id: number }>, edges: Array<{ from: number, to: number }> }) => {
           if (iframeRef.current?.contentWindow) {
             iframeRef.current.contentWindow.postMessage({
-              type: 'toggleNonMatchedNodes',
-              payload: { hide, matchedNodeIds }
+              type: 'setViewMode',
+              payload: { viewMode, matchedNodeIds, graph }
             }, '*');
           }
         }

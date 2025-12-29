@@ -13,7 +13,7 @@ export const persistentGraphIframeRef = React.createRef<{
   setPhysics: (enabled: boolean) => void;
   updateTooltips: (updates: Array<{ id: number; title: string }>) => void;
   recenter: () => void;
-  toggleNonMatchedNodes: (hide: boolean, matchedNodeIds: number[]) => void;
+  setViewMode: (viewMode: 'everything' | 'matchingOnly' | 'matchingAndConnected', matchedNodeIds: number[], graph: { nodes: Array<{ id: number }>, edges: Array<{ from: number, to: number }> }) => void;
 }>();
 
 export const persistentGraphIframeElementRef = React.createRef<HTMLIFrameElement | null>();
