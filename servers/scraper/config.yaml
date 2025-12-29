@@ -1,0 +1,12 @@
+scraper: DuckDuckGoScraper
+delayMs: 2000
+parameters:
+  - apple
+  - banana
+  - orange
+  - grape
+  - strawberry
+baseUrl: https://duckduckgo.com
+bootSequence:
+  - DuckDuckGoScraper
+

@@ -1,0 +1,8 @@
+scraper: PealimScraper
+baseUrl: https://www.pealim.com
+delayMs: 2000
+roots:
+  - ברז
+bootSequence:
+  - PealimScraper
+note: Roots that produced no results - need alternative source
