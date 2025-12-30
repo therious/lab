@@ -7,6 +7,7 @@ import {DraggableCandidate} from './DraggableCandidate';
 import {ScoreBand} from './ScoreBand';
 import {useResponsiveSpacing} from './useResponsiveSpacing';
 import {dropTargetForElements} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import {TOOLTIPS} from './tooltips';
 
 const Container = styled.div`
   display: flex;
@@ -183,37 +184,37 @@ const BAND_CONFIG = [
     score: '5',
     label: 'Excellent',
     color: '#2e7d32', // Darker, more saturated green
-    tooltip: 'Highly qualified candidates with exceptional competence and strong track record. Note: There is no strategic benefit to exaggerating how good a candidate is - rate them honestly based on their actual qualifications and performance.',
+    tooltip: TOOLTIPS.excellent,
   },
   {
     score: '4',
     label: 'Good',
     color: '#8bc34a',
-    tooltip: 'Well-qualified candidates who demonstrate solid competence and are capable of performing the job duties effectively.',
+    tooltip: TOOLTIPS.good,
   },
   {
     score: '3',
     label: 'Mediocre',
     color: '#ffeb3b',
-    tooltip: 'Candidates with adequate qualifications who are unlikely to cause significant harm in office, though they may lack exceptional competence or vision.',
+    tooltip: TOOLTIPS.mediocre,
   },
   {
     score: '2',
     label: 'Bad',
     color: '#ff9800',
-    tooltip: 'Candidates with concerning qualifications or performance issues that raise doubts about their ability to perform the job duties adequately.',
+    tooltip: TOOLTIPS.bad,
   },
   {
     score: '1',
     label: 'Very Bad',
     color: '#ff6b6b',
-    tooltip: 'Candidates with serious qualification deficiencies or problematic track records. Note: There is no strategic benefit to exaggerating how bad a candidate is - rate them honestly based on their actual qualifications and performance.',
+    tooltip: TOOLTIPS.veryBad,
   },
   {
     score: '0',
     label: 'Unqualified/Unacceptable',
     color: '#444444', // Medium dark grey
-    tooltip: 'Candidates who are unqualified or unacceptable for office, regardless of their policy positions.',
+    tooltip: TOOLTIPS.unqualified,
   },
 ];
 
@@ -379,7 +380,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
         </LeftPanel>
         <RightPanel>
           <UnrankedSection ref={unrankedSectionRef} $isOver={isUnrankedOver}>
-            <UnrankedLabel title="Candidates you are unfamiliar with or have not yet ranked. Important: Unranked candidates receive no strategic advantage in the voting process over candidates you actively dislike. You should express an opinion about candidates you are unfamiliar with to ensure your vote accurately reflects your preferences.">Unranked Candidates</UnrankedLabel>
+                    <UnrankedLabel title={TOOLTIPS.unranked}>Unranked Candidates</UnrankedLabel>
             {vote.unranked && vote.unranked.length > 0 ? (
               vote.unranked.map((candidateName: string) => (
                 <DraggableCandidate
