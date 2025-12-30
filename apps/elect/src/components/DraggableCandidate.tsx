@@ -1,5 +1,6 @@
 import React, {useRef, useEffect, useState} from 'react';
 import {draggable} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import {setCustomNativeDragPreview} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import styled from 'styled-components';
 
 const CandidateCard = styled.div<{$isDragging: boolean; $isJustMoved: boolean; $isFadingOut: boolean; $height: number; $padding: number; $horizontal: boolean}>`
@@ -75,8 +76,32 @@ export function DraggableCandidate({candidateName, electionTitle, currentScore, 
         electionTitle,
         currentScore,
       }),
-      onDragStart: () => {
+      onDragStart: ({source}) => {
         setIsDragging(true);
+        
+        // Create a custom drag preview with highlight styling
+        const preview = element.cloneNode(true) as HTMLElement;
+        preview.style.backgroundColor = '#e3f2fd';
+        preview.style.border = '2px solid #2196f3';
+        preview.style.boxShadow = '0 2px 8px rgba(33, 150, 243, 0.3)';
+        preview.style.opacity = '1';
+        preview.style.position = 'fixed';
+        preview.style.top = '-9999px';
+        preview.style.left = '-9999px';
+        document.body.appendChild(preview);
+        
+        // Use the library's utility to set the custom preview
+        setCustomNativeDragPreview({
+          source,
+          render: ({container}) => {
+            container.appendChild(preview);
+            return () => {
+              if (document.body.contains(preview)) {
+                document.body.removeChild(preview);
+              }
+            };
+          },
+        });
       },
       onDrop: () => setIsDragging(false),
     });
