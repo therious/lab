@@ -78,23 +78,34 @@ export function DraggableCandidate({candidateName, electionTitle, currentScore, 
       onGenerateDragPreview: ({nativeSetDragImage}) => {
         // Create a styled clone for the drag preview
         const rect = element.getBoundingClientRect();
+        const computedStyle = window.getComputedStyle(element);
         const clone = element.cloneNode(true) as HTMLElement;
         
-        // Apply highlight styles to clone
+        // Get actual width and height from computed styles
+        const actualWidth = rect.width;
+        const actualHeight = rect.height;
+        
+        // Apply highlight styles to clone with fixed dimensions
         clone.style.backgroundColor = '#e3f2fd';
         clone.style.border = '2px solid #2196f3';
         clone.style.boxShadow = '0 2px 8px rgba(33, 150, 243, 0.3)';
         clone.style.position = 'fixed';
         clone.style.top = '-9999px';
         clone.style.left = '-9999px';
+        clone.style.width = `${actualWidth}px`;
+        clone.style.height = `${actualHeight}px`;
+        clone.style.minWidth = `${actualWidth}px`;
+        clone.style.maxWidth = `${actualWidth}px`;
         clone.style.opacity = '1';
+        clone.style.boxSizing = 'border-box';
+        clone.style.flex = 'none'; // Prevent flex expansion
         document.body.appendChild(clone);
         
         // Use the clone as drag image
         if (nativeSetDragImage) {
           // Calculate offset to center the preview on cursor
-          const offsetX = rect.width / 2;
-          const offsetY = rect.height / 2;
+          const offsetX = actualWidth / 2;
+          const offsetY = actualHeight / 2;
           nativeSetDragImage(clone, offsetX, offsetY);
         }
         
