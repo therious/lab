@@ -26,7 +26,8 @@ export class PealimScraper implements IScraper {
 
   /**
    * Transforms a 3-letter Hebrew root into a Pealim search URL.
-   * @param parameter - A 3-letter Hebrew root (e.g., "פעל")
+   * Note: Pealim URLs use ש (shin) not שׂ (sin), so we convert שׂ to ש.
+   * @param parameter - A 3-letter Hebrew root (e.g., "פעל" or "חפש" with שׂ)
    * @returns The complete URL to scrape
    */
   parameterToUrl(parameter: string): string {
@@ -34,9 +35,12 @@ export class PealimScraper implements IScraper {
       throw new Error(`Root must be exactly 3 letters, got: ${parameter}`);
     }
 
-    const r1 = encodeURIComponent(parameter[0]);
-    const r2 = encodeURIComponent(parameter[1]);
-    const rf = encodeURIComponent(parameter[2]);
+    // Convert שׂ to ש for URL (Pealim only accepts ש in URLs)
+    const urlParameter = parameter.replace(/שׂ/g, 'ש');
+
+    const r1 = encodeURIComponent(urlParameter[0]);
+    const r2 = encodeURIComponent(urlParameter[1]);
+    const rf = encodeURIComponent(urlParameter[2]);
 
     return `${this.baseUrl}/dict/?pos=all&num-radicals=3&r1=${r1}&r2=${r2}&rf=${rf}`;
   }
