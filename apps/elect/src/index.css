@@ -18,7 +18,12 @@ body {
 }
 
 /* Style the drag preview created by pragmatic-drag-and-drop */
-[data-pdnd-drag-preview] {
+/* Try various possible selectors the library might use */
+[data-pdnd-drag-preview],
+[data-pdnd],
+[data-dragging="true"],
+.pdnd-preview,
+.pdnd-drag-preview {
   background-color: #e3f2fd !important;
   border: 2px solid #2196f3 !important;
   box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3) !important;

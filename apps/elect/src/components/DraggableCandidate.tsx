@@ -78,6 +78,9 @@ export function DraggableCandidate({candidateName, electionTitle, currentScore, 
       onDragStart: () => {
         setIsDragging(true);
         
+        // Add data attribute for CSS targeting
+        element.setAttribute('data-dragging', 'true');
+        
         // Temporarily apply highlight styles to element for drag preview
         // The library will capture these styles for the preview
         const originalStyles = {
@@ -90,11 +93,17 @@ export function DraggableCandidate({candidateName, electionTitle, currentScore, 
         element.style.border = '2px solid #2196f3';
         element.style.boxShadow = '0 2px 8px rgba(33, 150, 243, 0.3)';
         
+        // Log to inspect what the library creates
+        setTimeout(() => {
+          console.log('Drag preview elements:', document.querySelectorAll('[data-pdnd], [data-dragging], .pdnd-preview'));
+        }, 100);
+        
         // Restore original styles after browser captures preview
         requestAnimationFrame(() => {
           element.style.backgroundColor = originalStyles.backgroundColor || '';
           element.style.border = originalStyles.border || '';
           element.style.boxShadow = originalStyles.boxShadow || '';
+          element.removeAttribute('data-dragging');
         });
       },
       onDrop: () => setIsDragging(false),
