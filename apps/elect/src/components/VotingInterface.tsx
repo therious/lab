@@ -191,6 +191,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
               score="0"
               label="Unqualified/Unacceptable"
               color={BAND_CONFIG[5].color}
+              tooltip={BAND_CONFIG[5].tooltip}
               candidates={vote['0'] || []}
               electionTitle={electionTitle}
               onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, '0', toIndex)}
