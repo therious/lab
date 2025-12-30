@@ -100,15 +100,21 @@ const BandsContainer = styled.div<{$gap: number}>`
   flex-direction: column;
   gap: ${props => props.$gap}px;
   grid-column: 2;
+  grid-row: 2 / 7; /* Span rows 2-6 for the 5 approve bands */
   flex: 1;
   min-height: 0;
   width: 100%;
+  position: relative;
+  z-index: 2;
 `;
 
 const RejectBandWrapper = styled.div`
   grid-column: 2;
+  grid-row: 8; /* After the 5 approve bands (rows 2-6) and reject label (row 7) */
   width: 100%;
   min-width: 0;
+  position: relative;
+  z-index: 1;
 `;
 
 const UnrankedSection = styled.div`

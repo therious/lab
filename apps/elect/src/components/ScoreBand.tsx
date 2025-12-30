@@ -22,6 +22,9 @@ const BandContainer = styled.div<{$isOver: boolean; $color: string; $padding: nu
   gap: ${props => props.$gap}px;
   position: relative;
   align-items: ${props => props.$horizontal ? 'center' : 'stretch'};
+  overflow: hidden;
+  min-width: 0;
+  box-sizing: border-box;
 `;
 
 const BandLabel = styled.div<{$isReject: boolean}>`
@@ -30,6 +33,19 @@ const BandLabel = styled.div<{$isReject: boolean}>`
   margin-bottom: 0.25rem;
   color: ${props => props.$isReject ? '#fff' : '#333'};
   cursor: help;
+`;
+
+const throbKeyframes = `
+  @keyframes throb {
+    0%, 100% {
+      opacity: 1;
+      transform: scaleY(1);
+    }
+    50% {
+      opacity: 0.4;
+      transform: scaleY(1.5);
+    }
+  }
 `;
 
 const InsertionLine = styled.div<{$top: number; $visible: boolean; $color: string}>`
@@ -49,6 +65,10 @@ const InsertionLine = styled.div<{$top: number; $visible: boolean; $color: strin
     0 0 0 2px ${props => props.$color || '#007bff'},
     0 0 12px rgba(0, 0, 0, 0.6),
     0 0 6px rgba(0, 0, 0, 0.4);
+  ${props => props.$visible ? `
+    animation: throb 0.8s ease-in-out infinite;
+  ` : ''}
+  ${throbKeyframes}
 `;
 
 const CandidateWrapper = styled.div<{$isDraggedOver: boolean; $horizontal: boolean}>`
@@ -65,6 +85,19 @@ const CandidateWrapper = styled.div<{$isDraggedOver: boolean; $horizontal: boole
   `}
 `;
 
+const triangleThrobKeyframes = `
+  @keyframes triangleThrob {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.3;
+      transform: scale(1.3);
+    }
+  }
+`;
+
 const Triangle = styled.div<{$highlighted: boolean}>`
   width: 0;
   height: 0;
@@ -76,17 +109,20 @@ const Triangle = styled.div<{$highlighted: boolean}>`
   transition: border-left-color 0.2s;
   ${props => props.$highlighted ? `
     filter: drop-shadow(0 0 4px rgba(0, 123, 255, 0.8));
-    animation: throb 1s ease-in-out infinite;
+    animation: triangleThrob 0.8s ease-in-out infinite;
   ` : ''}
-  
-  @keyframes throb {
+  ${triangleThrobKeyframes}
+`;
+
+const insertionTriangleThrobKeyframes = `
+  @keyframes insertionTriangleThrob {
     0%, 100% {
       opacity: 1;
       transform: scale(1);
     }
     50% {
-      opacity: 0.6;
-      transform: scale(1.2);
+      opacity: 0.3;
+      transform: scale(1.4);
     }
   }
 `;
@@ -104,19 +140,9 @@ const InsertionTriangle = styled.div<{$side: 'left' | 'right'; $visible: boolean
   filter: drop-shadow(0 0 6px rgba(0, 123, 255, 0.9));
   z-index: 10;
   ${props => props.$visible ? `
-    animation: throb 1s ease-in-out infinite;
+    animation: insertionTriangleThrob 0.8s ease-in-out infinite;
   ` : ''}
-  
-  @keyframes throb {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.6;
-      transform: scale(1.2);
-    }
-  }
+  ${insertionTriangleThrobKeyframes}
 `;
 
 interface ScoreBandProps {
