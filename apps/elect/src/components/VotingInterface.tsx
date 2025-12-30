@@ -160,7 +160,7 @@ const BAND_CONFIG = [
   {
     score: '0',
     label: 'Unqualified/Unacceptable',
-    color: '#0a0a0a', // Very very dark grey
+    color: '#444444', // Medium dark grey
     tooltip: 'Candidates who are unqualified or unacceptable for office, regardless of their policy positions.',
   },
 ];
