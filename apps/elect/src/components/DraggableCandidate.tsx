@@ -11,6 +11,93 @@ const RankBadge = styled.div`
   flex-shrink: 0;
 `;
 
+const CandidateCard = styled.div<{$isDragging: boolean; $isJustMoved: boolean; $isFadingOut: boolean; $height: number; $padding: number; $horizontal: boolean}>`
+  padding: ${props => props.$padding}px;
+  margin: 0;
+  height: ${props => props.$height}px;
+  min-height: ${props => props.$height}px;
+  max-height: ${props => props.$height}px;
+  ${props => props.$horizontal ? `
+    flex: 1;
+    min-width: 0;
+  ` : `
+    width: 100%;
+  `}
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: ${props => {
+    if (props.$isJustMoved) return '#e3f2fd';
+    if (props.$isFadingOut) return '#fff';
+    return '#fff';
+  }};
+  border: ${props => {
+    if (props.$isJustMoved) return '2px solid #2196f3';
+    if (props.$isFadingOut) return '1px solid #ccc';
+    return '1px solid #ccc';
+  }};
+  border-radius: 4px;
+  cursor: grab;
+  user-select: none;
+  transition: ${props => {
+    if (props.$isJustMoved || props.$isFadingOut) {
+      return 'background-color 0.5s ease-out, border 0.5s ease-out, box-shadow 0.5s ease-out';
+    }
+    return 'background-color 0.2s, border 0.2s';
+  }};
+  box-sizing: border-box;
+  box-shadow: ${props => {
+    if (props.$isJustMoved) return '0 2px 8px rgba(33, 150, 243, 0.3)';
+    if (props.$isFadingOut) return 'none';
+    return 'none';
+  }};
+  opacity: ${props => props.$isDragging ? '0.5' : '1'};
+  
+  &:active {
+    cursor: grabbing;
+  }
+`;
+
+const DragHandle = styled.div`
+  width: 12px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  cursor: grab;
+  opacity: 0.4;
+  transition: opacity 0.2s;
+  
+  &::before,
+  &::after {
+    content: '';
+    width: 3px;
+    height: 3px;
+    background-color: #999;
+    border-radius: 50%;
+  }
+  
+  &::before {
+    margin-bottom: 1px;
+  }
+  
+  &::after {
+    margin-top: 1px;
+  }
+  
+  ${CandidateCard}:hover & {
+    opacity: 0.7;
+  }
+  
+  ${CandidateCard}:active & {
+    cursor: grabbing;
+    opacity: 1;
+  }
+`;
+
 const AffiliationText = styled.div`
   font-size: 0.8rem;
   color: #888;
@@ -184,6 +271,7 @@ export function DraggableCandidate({candidateName, electionTitle, currentScore, 
 
   return (
     <CandidateCard ref={ref} $isDragging={isDragging} $isJustMoved={isJustMoved} $isFadingOut={isFadingOut} $height={height} $padding={padding} $horizontal={horizontal}>
+      <DragHandle />
       {rank !== undefined && <RankBadge>{rank}</RankBadge>}
       <CandidateName>{candidateName}</CandidateName>
       {affiliation && <AffiliationText>{affiliation}</AffiliationText>}
