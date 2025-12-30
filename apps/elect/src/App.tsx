@@ -86,7 +86,7 @@ const ScoreBadge = styled.span<{$color: string}>`
 `;
 
 function SummaryView() {
-  const {elections, votes} = useSelector<TotalState>(s => s.election);
+  const {elections, votes} = useSelector((s: TotalState) => s.election);
 
   const BAND_LABELS: Record<string, string> = {
     '5': 'Excellent',
@@ -109,7 +109,7 @@ function SummaryView() {
   return (
     <SummaryContainer>
       <h1>Election Summary</h1>
-      {elections.map(election => {
+      {elections.map((election: Election) => {
         const vote = votes[election.title];
         if (!vote) return null;
         
@@ -150,8 +150,8 @@ function SummaryView() {
 function ElectionView() {
   const location = useLocation();
   const electionTitle = decodeURIComponent(location.pathname.split('/election/')[1] || '');
-  const {elections} = useSelector<TotalState>(s => s.election);
-  const election = elections.find(e => e.title === electionTitle);
+  const {elections} = useSelector((s: TotalState) => s.election);
+  const election = elections.find((e: Election) => e.title === electionTitle);
 
   if (!election) {
     return <div>Election not found</div>;
@@ -168,7 +168,7 @@ function ElectionView() {
 }
 
 export default function App() {
-  const {elections} = useSelector<TotalState>(s => s.election);
+  const {elections} = useSelector((s: TotalState) => s.election);
   const location = useLocation();
 
   useEffect(() => {
@@ -185,7 +185,7 @@ export default function App() {
         <NavLink to="/summary" $active={location.pathname === '/summary' || location.pathname === '/'}>
           Summary
         </NavLink>
-        {elections.map(election => (
+        {elections.map((election: Election) => (
           <NavLink
             key={election.title}
             to={`/election/${encodeURIComponent(election.title)}`}

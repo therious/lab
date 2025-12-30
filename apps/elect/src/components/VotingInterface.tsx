@@ -111,8 +111,8 @@ const BAND_CONFIG = [
 ];
 
 export function VotingInterface({electionTitle}: VotingInterfaceProps) {
-  const {elections, votes} = useSelector<TotalState>(s => s.election);
-  const election = elections.find(e => e.title === electionTitle);
+  const {elections, votes} = useSelector((s: TotalState) => s.election);
+  const election = elections.find((e: {title: string}) => e.title === electionTitle);
   const vote = votes[electionTitle];
 
   if (!election || !vote) {
@@ -170,7 +170,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
           <UnrankedSection>
             <UnrankedLabel>Unranked Candidates</UnrankedLabel>
             {vote.unranked && vote.unranked.length > 0 ? (
-              vote.unranked.map(candidateName => (
+              vote.unranked.map((candidateName: string) => (
                 <DraggableCandidate
                   key={candidateName}
                   candidateName={candidateName}

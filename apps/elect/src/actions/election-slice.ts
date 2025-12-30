@@ -23,7 +23,7 @@ const initialState: ElectionState = {
   votes: {},
 };
 
-type ElectionCreator = (s: ElectionState, ...rest: any) => unknown;
+type ElectionCreator = (...rest: any) => unknown;
 type ElectionCreators = Record<string, ElectionCreator>;
 type ElectionReducer = (s: ElectionState, ...rest: any) => ElectionState;
 type ElectionReducers = Record<string, ElectionReducer>;
