@@ -1,4 +1,4 @@
-import React, {useRef} from 'react';
+import React, {useRef, useState} from 'react';
 import styled from 'styled-components';
 import {useSelector} from '../actions-integration';
 import {actions} from '../actions-integration';
@@ -182,6 +182,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
   const vote = votes[electionTitle];
   const leftPanelRef = useRef<HTMLDivElement>(null);
   const bandsContainerRef = useRef<HTMLDivElement>(null);
+  const [justMovedCandidate, setJustMovedCandidate] = useState<string | null>(null);
 
   if (!election || !vote) {
     return <div>Election not found</div>;
@@ -197,10 +198,17 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
 
   const handleReset = () => {
     actions.election.resetElection(electionTitle);
+    setJustMovedCandidate(null);
   };
 
   const handleDrop = (candidateName: string, fromScore: string, toScore: string, toIndex: number) => {
     actions.election.moveCandidate(electionTitle, candidateName, fromScore, toScore, toIndex);
+    // Mark this candidate as just moved
+    setJustMovedCandidate(candidateName);
+  };
+
+  const handleJustMovedEnd = () => {
+    setJustMovedCandidate(null);
   };
 
   const handleReorder = (score: string, fromIndex: number, toIndex: number) => {
@@ -233,6 +241,8 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                   candidateHeight={spacing.candidateHeight}
                   candidatePadding={spacing.candidatePadding}
                   horizontal={spacing.horizontal}
+                  justMovedCandidate={justMovedCandidate || undefined}
+                  onJustMovedEnd={handleJustMovedEnd}
                   onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, score, toIndex)}
                   onReorder={(fromIndex, toIndex) => handleReorder(score, fromIndex, toIndex)}
                 />
@@ -254,6 +264,8 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                 candidateHeight={spacing.candidateHeight}
                 candidatePadding={spacing.candidatePadding}
                 horizontal={spacing.horizontal}
+                justMovedCandidate={justMovedCandidate || undefined}
+                onJustMovedEnd={handleJustMovedEnd}
                 onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, '0', toIndex)}
                 onReorder={(fromIndex, toIndex) => handleReorder('0', fromIndex, toIndex)}
               />
