@@ -36,8 +36,8 @@ body {
   background-image: url('/favicon.svg');
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 60% auto;
-  opacity: 0.03;
+  background-size: 30% auto;
+  opacity: 0.08;
   pointer-events: none;
   z-index: 0;
 }
