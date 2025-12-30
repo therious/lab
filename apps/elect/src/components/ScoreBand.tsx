@@ -282,16 +282,23 @@ export function ScoreBand({
     return dropTargetForElements({
       element,
       getData: () => ({score, electionTitle}),
-      onDragEnter: () => {
+      onDragEnter: ({location}) => {
         setIsOver(true);
         // Calculate initial insertion index based on current mouse position
-        const rect = element.getBoundingClientRect();
-        const clientY = window.event instanceof MouseEvent ? window.event.clientY : rect.top + rect.height / 2;
-        const clientX = window.event instanceof MouseEvent ? window.event.clientX : rect.left + rect.width / 2;
-        const index = calculateInsertionIndex(clientY, clientX);
-        setInsertionIndex(index);
-        if (!horizontal) {
-          setInsertionTop(calculateInsertionTop(index));
+        if (location.current.dropTargets.length > 0) {
+          const clientY = location.current.input.clientY;
+          const clientX = location.current.input.clientX;
+          const index = calculateInsertionIndex(clientY, clientX);
+          setInsertionIndex(index);
+          if (!horizontal) {
+            setInsertionTop(calculateInsertionTop(index));
+          }
+        } else {
+          // Fallback: show at first position
+          setInsertionIndex(0);
+          if (!horizontal) {
+            setInsertionTop(calculateInsertionTop(0));
+          }
         }
       },
       onDrag: ({location, source}) => {
