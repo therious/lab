@@ -62,6 +62,23 @@ const moveCandidate = (state: ElectionState, {payload}: {payload: {electionTitle
     const vote = draft.votes[payload.electionTitle];
     if (!vote) return;
 
+    // If moving within the same band, handle reordering
+    if (payload.fromScore === payload.toScore && payload.fromScore !== 'unranked') {
+      const band = vote[payload.fromScore];
+      const fromIndex = band.indexOf(payload.candidateName);
+      if (fromIndex === -1) return;
+      
+      let toIndex = payload.toIndex ?? band.length;
+      // Adjust toIndex if moving within the same array
+      if (fromIndex < toIndex) {
+        toIndex--;
+      }
+      
+      const [removed] = band.splice(fromIndex, 1);
+      band.splice(toIndex, 0, removed);
+      return;
+    }
+
     // Remove from source
     if (payload.fromScore === 'unranked') {
       vote.unranked = vote.unranked.filter(name => name !== payload.candidateName);

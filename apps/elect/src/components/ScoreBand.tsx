@@ -64,8 +64,7 @@ export function ScoreBand({score, label, color, candidates, electionTitle, onDro
         if (data && typeof data === 'object' && 'candidateName' in data && 'currentScore' in data) {
           const candidateName = data.candidateName as string;
           const fromScore = data.currentScore as string;
-          // Calculate drop index based on mouse position
-          // For now, append to end
+          // For now, append to end - can be improved to calculate insertion index
           onDrop(candidateName, fromScore, candidates.length);
         }
       },
@@ -76,12 +75,13 @@ export function ScoreBand({score, label, color, candidates, electionTitle, onDro
     <BandContainer ref={ref} $isOver={isOver} $color={color}>
       <BandLabel>{label}</BandLabel>
       {candidates.map((candidate, index) => (
-        <DraggableCandidate
-          key={`${score}-${candidate}-${index}`}
-          candidateName={candidate}
-          electionTitle={electionTitle}
-          currentScore={score}
-        />
+        <div key={`${score}-${candidate}-${index}`} data-candidate-index={index}>
+          <DraggableCandidate
+            candidateName={candidate}
+            electionTitle={electionTitle}
+            currentScore={score}
+          />
+        </div>
       ))}
     </BandContainer>
   );
