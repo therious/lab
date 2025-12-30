@@ -158,6 +158,7 @@ interface ScoreBandProps {
   candidatePadding?: number;
   horizontal?: boolean;
   flexGrow?: number;
+  candidateRanks?: Record<string, number>;
   justMovedCandidate?: string;
   onJustMovedEnd?: () => void;
   onDrop: (candidateName: string, fromScore: string, toIndex: number) => void;
@@ -177,6 +178,7 @@ export function ScoreBand({
   candidatePadding = 12,
   horizontal = false,
   flexGrow,
+  candidateRanks,
   justMovedCandidate,
   onJustMovedEnd,
   onDrop,
@@ -392,6 +394,7 @@ export function ScoreBand({
               height={candidateHeight}
               padding={candidatePadding}
               horizontal={horizontal}
+              rank={candidateRanks?.[candidate]}
               isJustMoved={justMovedCandidate === candidate}
               onJustMovedEnd={onJustMovedEnd}
             />

@@ -285,6 +285,25 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
     actions.election.reorderCandidate(electionTitle, score, fromIndex, toIndex);
   };
 
+  // Calculate ranks for all candidates across bands 0-5
+  // Rank 1 = most preferred (top of band 5), increasing down to least preferred (bottom of band 0)
+  const candidateRanks = React.useMemo(() => {
+    const ranks: Record<string, number> = {};
+    let currentRank = 1;
+    
+    // Iterate through bands from 5 (best) down to 0 (worst)
+    for (let score = 5; score >= 0; score--) {
+      const bandCandidates = vote[score.toString()] || [];
+      // Within each band, first candidate is most preferred, last is least preferred
+      bandCandidates.forEach(candidateName => {
+        ranks[candidateName] = currentRank;
+        currentRank++;
+      });
+    }
+    
+    return ranks;
+  }, [vote]);
+
   return (
     <Container>
       <TopPanel>
@@ -319,6 +338,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                     candidatePadding={spacing.candidatePadding}
                     horizontal={spacing.horizontal}
                     flexGrow={flexGrow}
+                    candidateRanks={candidateRanks}
                     justMovedCandidate={justMovedCandidate || undefined}
                     onJustMovedEnd={handleJustMovedEnd}
                     onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, score, toIndex)}
@@ -346,6 +366,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                     candidatePadding={spacing.candidatePadding}
                     horizontal={spacing.horizontal}
                     flexGrow={flexGrow}
+                    candidateRanks={candidateRanks}
                     justMovedCandidate={justMovedCandidate || undefined}
                     onJustMovedEnd={handleJustMovedEnd}
                     onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, '0', toIndex)}

@@ -2,6 +2,15 @@ import React, {useRef, useEffect, useState} from 'react';
 import {draggable} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import styled from 'styled-components';
 
+const RankBadge = styled.div`
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: #666;
+  min-width: 1.5rem;
+  text-align: center;
+  flex-shrink: 0;
+`;
+
 const CandidateCard = styled.div<{$isDragging: boolean; $isJustMoved: boolean; $isFadingOut: boolean; $height: number; $padding: number; $horizontal: boolean}>`
   padding: ${props => props.$padding}px;
   margin: 0;
@@ -16,6 +25,7 @@ const CandidateCard = styled.div<{$isDragging: boolean; $isJustMoved: boolean; $
   `}
   display: flex;
   align-items: center;
+  gap: 0.5rem;
   background-color: ${props => {
     if (props.$isJustMoved) return '#e3f2fd';
     if (props.$isFadingOut) return '#fff';
@@ -55,11 +65,12 @@ interface DraggableCandidateProps {
   height?: number;
   padding?: number;
   horizontal?: boolean;
+  rank?: number;
   isJustMoved?: boolean;
   onJustMovedEnd?: () => void;
 }
 
-export function DraggableCandidate({candidateName, electionTitle, currentScore, height = 48, padding = 12, horizontal = false, isJustMoved = false, onJustMovedEnd}: DraggableCandidateProps) {
+export function DraggableCandidate({candidateName, electionTitle, currentScore, height = 48, padding = 12, horizontal = false, rank, isJustMoved = false, onJustMovedEnd}: DraggableCandidateProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
@@ -152,6 +163,7 @@ export function DraggableCandidate({candidateName, electionTitle, currentScore, 
 
   return (
     <CandidateCard ref={ref} $isDragging={isDragging} $isJustMoved={isJustMoved} $isFadingOut={isFadingOut} $height={height} $padding={padding} $horizontal={horizontal}>
+      {rank !== undefined && <RankBadge>{rank}</RankBadge>}
       {candidateName}
     </CandidateCard>
   );
