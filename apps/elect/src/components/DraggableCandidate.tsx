@@ -1,5 +1,6 @@
 import React, {useRef, useEffect, useState} from 'react';
 import {draggable} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import {disableNativeDragPreview} from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
 import styled from 'styled-components';
 
 const CandidateCard = styled.div<{$isDragging: boolean; $isJustMoved: boolean; $isFadingOut: boolean; $height: number; $padding: number; $horizontal: boolean}>`
@@ -79,15 +80,11 @@ export function DraggableCandidate({candidateName, electionTitle, currentScore, 
         electionTitle,
         currentScore,
       }),
-      onDragStart: ({nativeSetDragImage, location}) => {
+      onDragStart: ({source, location}) => {
         setIsDragging(true);
         
-        // Hide native drag preview by using an empty transparent image
-        const emptyImg = new Image();
-        emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-        if (nativeSetDragImage) {
-          nativeSetDragImage(emptyImg, 0, 0);
-        }
+        // Disable native drag preview using library utility
+        disableNativeDragPreview({source});
         
         // Create custom drag preview element
         const rect = element.getBoundingClientRect();
