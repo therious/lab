@@ -3,11 +3,16 @@ import {dropTargetForElements} from '@atlaskit/pragmatic-drag-and-drop/element/a
 import {DraggableCandidate} from './DraggableCandidate';
 import styled from 'styled-components';
 
-const BandContainer = styled.div<{$isOver: boolean; $color: string; $padding: number; $gap: number; $horizontal: boolean}>`
+const BandContainer = styled.div<{$isOver: boolean; $color: string; $padding: number; $gap: number; $horizontal: boolean; $isReject: boolean}>`
   min-height: ${props => props.$horizontal ? 'auto' : '60px'};
   padding: ${props => props.$padding}px;
   margin: 0.5rem 0;
-  background-color: ${props => props.$isOver ? props.$color + 'dd' : props.$color + '33'};
+  background-color: ${props => {
+    if (props.$isReject) {
+      return props.$isOver ? props.$color + 'cc' : props.$color;
+    }
+    return props.$isOver ? props.$color + 'dd' : props.$color + '33';
+  }};
   border: 2px solid ${props => props.$color};
   border-radius: 8px;
   transition: background-color 0.2s;
@@ -308,7 +313,7 @@ export function ScoreBand({
   const isReject = score === '0';
   
   return (
-    <BandContainer ref={ref} $isOver={isOver} $color={color} $padding={padding} $gap={gap} $horizontal={horizontal}>
+    <BandContainer ref={ref} $isOver={isOver} $color={color} $padding={padding} $gap={gap} $horizontal={horizontal} $isReject={isReject}>
       <BandLabel title={tooltip} $isReject={isReject}>{label}</BandLabel>
       {insertionIndex !== null && !horizontal && (
         <InsertionLine $top={insertionTop} $visible={isOver} $color={color} />
