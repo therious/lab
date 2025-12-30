@@ -4,6 +4,7 @@ import {useSelector} from './actions-integration';
 import {actions} from './actions-integration';
 import {TotalState} from './actions/combined-slices';
 import {Election} from './actions/election-slice';
+import {VotingInterface} from './components/VotingInterface';
 import styled from 'styled-components';
 
 const Layout = styled.div`
@@ -88,7 +89,7 @@ function SummaryView() {
 function ElectionView() {
   const location = useLocation();
   const electionTitle = decodeURIComponent(location.pathname.split('/election/')[1] || '');
-  const {elections, votes} = useSelector<TotalState>(s => s.election);
+  const {elections} = useSelector<TotalState>(s => s.election);
   const election = elections.find(e => e.title === electionTitle);
 
   if (!election) {
@@ -96,9 +97,11 @@ function ElectionView() {
   }
 
   return (
-    <div>
-      <h1>{election.title}</h1>
-      <p>Voting interface will go here</p>
+    <div style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
+      <h1 style={{padding: '1rem', margin: 0, borderBottom: '1px solid #ccc'}}>{election.title}</h1>
+      <div style={{flex: 1, minHeight: 0}}>
+        <VotingInterface electionTitle={electionTitle}/>
+      </div>
     </div>
   );
 }
