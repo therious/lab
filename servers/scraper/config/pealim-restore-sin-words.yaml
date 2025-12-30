@@ -1,0 +1,26 @@
+scraper: PealimScraper
+baseUrl: https://www.pealim.com
+delayMs: 2000
+roots:
+  - חפש
+  - חשכ
+  - כבש
+  - נשא
+  - עשר
+  - פרש
+  - שאר
+  - שבע
+  - שדה
+  - שוח
+  - שחה
+  - שחק
+  - שכל
+  - שכר
+  - שנא
+  - שער
+  - שפה
+  - שרה
+  - שרר
+bootSequence:
+  - PealimScraper
+note: Re-query roots to restore שׂ words (PealimScraper converts שׂ to ש in URLs)
