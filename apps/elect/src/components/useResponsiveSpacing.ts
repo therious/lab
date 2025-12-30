@@ -160,11 +160,6 @@ export function useResponsiveSpacing(
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
-
-    const resizeObserver = new ResizeObserver(calculateSpacing);
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
     if (bandsContainerRef.current) {
       resizeObserver.observe(bandsContainerRef.current);
     }
