@@ -3,9 +3,9 @@ version: 0.1.0
 private: true
 
 dependencies:
-  '@therious/boot':                   'workspace:*'
-  '@therious/actions':                'workspace:*'
-  '@therious/utils':                  'workspace:*'
+  '@therious/utils':                  &ws      'workspace:*'
+  '@therious/boot':                   *ws
+  '@therious/actions':                *ws
   '@atlaskit/pragmatic-drag-and-drop': ~1.3.0
   react:                              ~18.2.0
   react-dom:                          ~18.2.0
