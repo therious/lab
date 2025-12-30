@@ -175,6 +175,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
   const election = elections.find((e: {title: string}) => e.title === electionTitle);
   const vote = votes[electionTitle];
   const leftPanelRef = useRef<HTMLDivElement>(null);
+  const bandsContainerRef = useRef<HTMLDivElement>(null);
 
   if (!election || !vote) {
     return <div>Election not found</div>;
@@ -186,7 +187,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
     .reduce((sum, key) => sum + (vote[key]?.length || 0), 0);
   const totalBands = 6; // 5 approve bands + 1 reject band
 
-  const spacing = useResponsiveSpacing(leftPanelRef, totalCandidates, totalBands);
+  const spacing = useResponsiveSpacing(leftPanelRef, bandsContainerRef, totalCandidates, totalBands);
 
   const handleReset = () => {
     actions.election.resetElection(electionTitle);
@@ -211,7 +212,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
             <GroupLabelContainer $span={5}>
               <GroupLabel title="Rank candidates based on their qualifications and ability to perform the job duties, independent of policy positions. This is about competence and fitness for office, not political alignment.">Approve</GroupLabel>
             </GroupLabelContainer>
-            <BandsContainer $gap={spacing.bandGap}>
+            <BandsContainer ref={bandsContainerRef} $gap={spacing.bandGap}>
               {BAND_CONFIG.slice(0, 5).map(({score, label, color, tooltip}) => (
                 <ScoreBand
                   key={score}

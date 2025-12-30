@@ -25,6 +25,7 @@ const REJECT_PADDING = 0; // Removed padding, gap will handle spacing
 
 export function useResponsiveSpacing(
   containerRef: React.RefObject<HTMLDivElement>,
+  bandsContainerRef: React.RefObject<HTMLDivElement>,
   totalCandidates: number,
   totalBands: number
 ): SpacingConfig {
@@ -39,11 +40,12 @@ export function useResponsiveSpacing(
 
   useEffect(() => {
     const calculateSpacing = () => {
-      if (!containerRef.current) return;
+      if (!containerRef.current || !bandsContainerRef.current) return;
 
       const container = containerRef.current;
+      const bandsContainer = bandsContainerRef.current;
       const availableHeight = container.clientHeight;
-      const availableWidth = container.clientWidth;
+      const availableWidth = bandsContainer.clientWidth; // Use actual bands container width
 
       // Calculate required height
       const labelHeight = GROUP_LABEL_HEIGHT + BAND_LABEL_HEIGHT * totalBands;
@@ -159,10 +161,18 @@ export function useResponsiveSpacing(
       resizeObserver.observe(containerRef.current);
     }
 
+    const resizeObserver = new ResizeObserver(calculateSpacing);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    if (bandsContainerRef.current) {
+      resizeObserver.observe(bandsContainerRef.current);
+    }
+
     return () => {
       resizeObserver.disconnect();
     };
-  }, [containerRef, totalCandidates, totalBands]);
+  }, [containerRef, bandsContainerRef, totalCandidates, totalBands]);
 
   return config;
 }

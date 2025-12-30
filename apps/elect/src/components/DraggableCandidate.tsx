@@ -8,7 +8,12 @@ const CandidateCard = styled.div<{$isDragging: boolean; $height: number; $paddin
   height: ${props => props.$height}px;
   min-height: ${props => props.$height}px;
   max-height: ${props => props.$height}px;
-  width: 100%;
+  ${props => props.$horizontal ? `
+    flex: 1;
+    min-width: 0;
+  ` : `
+    width: 100%;
+  `}
   display: flex;
   align-items: center;
   background-color: ${props => props.$isDragging ? '#e3f2fd' : '#fff'};
