@@ -64,21 +64,82 @@ const VoteStatus = styled.div`
   color: #666;
 `;
 
+const VoteDetails = styled.div`
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #555;
+`;
+
+const ScoreBreakdown = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+`;
+
+const ScoreBadge = styled.span<{$color: string}>`
+  padding: 0.25rem 0.5rem;
+  background-color: ${props => props.$color}33;
+  border: 1px solid ${props => props.$color};
+  border-radius: 4px;
+  font-size: 0.75rem;
+`;
+
 function SummaryView() {
   const {elections, votes} = useSelector<TotalState>(s => s.election);
+
+  const BAND_LABELS: Record<string, string> = {
+    '5': 'Excellent',
+    '4': 'Good',
+    '3': 'Mediocre',
+    '2': 'Bad',
+    '1': 'Very Bad',
+    '0': 'Unqualified',
+  };
+
+  const BAND_COLORS: Record<string, string> = {
+    '5': '#4caf50',
+    '4': '#8bc34a',
+    '3': '#ffeb3b',
+    '2': '#ff9800',
+    '1': '#ff6b6b',
+    '0': '#f44336',
+  };
 
   return (
     <SummaryContainer>
       <h1>Election Summary</h1>
       {elections.map(election => {
         const vote = votes[election.title];
-        const totalRanked = vote ? Object.values(vote).flat().length - (vote.unranked?.length || 0) : 0;
+        if (!vote) return null;
+        
+        const totalRanked = Object.keys(vote)
+          .filter(key => key !== 'unranked')
+          .reduce((sum, key) => sum + (vote[key]?.length || 0), 0);
+        const unrankedCount = vote.unranked?.length || 0;
+        
         return (
           <ElectionSummaryCard key={election.title} to={`/election/${encodeURIComponent(election.title)}`}>
             <ElectionTitle>{election.title}</ElectionTitle>
             <VoteStatus>
               {totalRanked > 0 ? `${totalRanked} candidates ranked` : 'No votes yet'}
+              {unrankedCount > 0 && ` • ${unrankedCount} unranked`}
             </VoteStatus>
+            {totalRanked > 0 && (
+              <VoteDetails>
+                <ScoreBreakdown>
+                  {['5', '4', '3', '2', '1', '0'].map(score => {
+                    const count = vote[score]?.length || 0;
+                    if (count === 0) return null;
+                    return (
+                      <ScoreBadge key={score} $color={BAND_COLORS[score]}>
+                        {score}: {BAND_LABELS[score]} ({count})
+                      </ScoreBadge>
+                    );
+                  })}
+                </ScoreBreakdown>
+              </VoteDetails>
+            )}
           </ElectionSummaryCard>
         );
       })}
