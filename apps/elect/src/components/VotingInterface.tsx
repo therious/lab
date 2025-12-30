@@ -51,7 +51,7 @@ const BottomPanels = styled.div`
 
 const LeftPanel = styled.div`
   flex: 1;
-  padding: 1rem;
+  padding: 1rem 0.5rem 1rem 1rem;
   border: 2px solid #ccc;
   border-radius: 8px;
   overflow: hidden;
