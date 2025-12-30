@@ -74,8 +74,8 @@ const ApproveGroup = styled.div<{$gap: number}>`
   align-items: stretch;
 `;
 
-const RejectGroup = styled.div`
-  margin-top: 1rem;
+const RejectGroup = styled.div<{$gap: number}>`
+  margin-top: ${props => props.$gap}px;
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
@@ -227,7 +227,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
               ))}
             </BandsContainer>
           </ApproveGroup>
-          <RejectGroup>
+          <RejectGroup $gap={spacing.bandGap}>
             <GroupLabelContainer>
               <GroupLabel title="Candidates who are unqualified or unacceptable for office, regardless of their policy positions. This assessment is based on competence, integrity, and fitness for the role, not political alignment.">Reject</GroupLabel>
             </GroupLabelContainer>
