@@ -79,16 +79,23 @@ export function DraggableCandidate({candidateName, electionTitle, currentScore, 
         electionTitle,
         currentScore,
       }),
-      onDragStart: ({location}) => {
+      onDragStart: ({nativeSetDragImage, location}) => {
         setIsDragging(true);
+        
+        // Hide native drag preview by using an empty transparent image
+        const emptyImg = new Image();
+        emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+        if (nativeSetDragImage) {
+          nativeSetDragImage(emptyImg, 0, 0);
+        }
         
         // Create custom drag preview element
         const rect = element.getBoundingClientRect();
         previewElement = document.createElement('div');
         previewElement.textContent = candidateName;
         previewElement.style.position = 'fixed';
-        previewElement.style.left = `${rect.left}px`;
-        previewElement.style.top = `${rect.top}px`;
+        previewElement.style.left = `${location.current.input.clientX - rect.width / 2}px`;
+        previewElement.style.top = `${location.current.input.clientY - rect.height / 2}px`;
         previewElement.style.width = `${rect.width}px`;
         previewElement.style.height = `${rect.height}px`;
         previewElement.style.padding = `${padding}px`;
