@@ -205,6 +205,12 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
       const sourceRect = sourceElement.getBoundingClientRect();
       const destRect = destinationElement.getBoundingClientRect();
       
+      // Hide the source element during animation
+      const originalOpacity = sourceElement.style.opacity;
+      const originalVisibility = sourceElement.style.visibility;
+      sourceElement.style.opacity = '0';
+      sourceElement.style.visibility = 'hidden';
+      
       // Create a temporary animated element
       const animatedElement = sourceElement.cloneNode(true) as HTMLElement;
       animatedElement.style.position = 'fixed';
@@ -215,6 +221,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
       animatedElement.style.zIndex = '1000';
       animatedElement.style.pointerEvents = 'none';
       animatedElement.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+      animatedElement.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
       document.body.appendChild(animatedElement);
       
       // Force reflow
@@ -230,6 +237,9 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
       setTimeout(() => {
         actions.election.moveCandidate(electionTitle, candidateName, fromScore, toScore, toIndex);
         document.body.removeChild(animatedElement);
+        // Restore source element visibility (it will be removed/repositioned by React)
+        sourceElement.style.opacity = originalOpacity;
+        sourceElement.style.visibility = originalVisibility;
       }, 500);
     } else {
       // No animation, update immediately

@@ -335,20 +335,17 @@ export function ScoreBand({
           
           // Get destination element (where it should land)
           let destinationElement: HTMLElement | undefined;
-          if (finalIndex < candidates.length) {
-            // Inserting before an existing candidate
-            const candidateElements = element.querySelectorAll('[data-candidate-index]');
-            if (candidateElements[finalIndex]) {
-              destinationElement = candidateElements[finalIndex] as HTMLElement;
-            }
-          } else if (candidates.length > 0) {
-            // Inserting at the end
-            const candidateElements = element.querySelectorAll('[data-candidate-index]');
-            if (candidateElements[candidates.length - 1]) {
-              destinationElement = candidateElements[candidates.length - 1] as HTMLElement;
-            }
+          const candidateElements = element.querySelectorAll('[data-candidate-index]');
+          
+          if (finalIndex < candidates.length && candidateElements[finalIndex]) {
+            // Inserting before an existing candidate - use that candidate as reference
+            destinationElement = candidateElements[finalIndex] as HTMLElement;
+          } else if (candidates.length > 0 && candidateElements[candidates.length - 1]) {
+            // Inserting at the end - use the last candidate as reference
+            destinationElement = candidateElements[candidates.length - 1] as HTMLElement;
           } else {
-            // Empty band, use the band container itself
+            // Empty band or no reference candidate - use the band container itself
+            // Position at the top of the band (after label)
             destinationElement = element;
           }
           
