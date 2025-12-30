@@ -72,7 +72,7 @@ const RightPanel = styled.div`
 const AllBandsContainer = styled.div<{$gap: number}>`
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 0.5rem;
+  gap: 0.25rem;
   flex: 1;
   min-height: 0;
 `;
@@ -82,7 +82,7 @@ const ArrowContainer = styled.div<{$span: number; $startRow?: number}>`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 0.5rem;
+  padding: 0.25rem;
   grid-column: 1;
   ${props => props.$startRow ? `grid-row: ${props.$startRow} / span ${props.$span};` : `grid-row: span ${props.$span};`}
   min-width: 3rem;
