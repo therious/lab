@@ -327,11 +327,6 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                 );
               })}
             </BandsContainer>
-            <ArrowContainer $span={1} $startRow={6}>
-              <ArrowLine $direction="down">
-                <ArrowLabel>Worse</ArrowLabel>
-              </ArrowLine>
-            </ArrowContainer>
             <RejectBandWrapper>
               {(() => {
                 const candidateCount = (vote['0'] || []).length;
