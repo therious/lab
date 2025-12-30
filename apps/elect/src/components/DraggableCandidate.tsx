@@ -16,9 +16,9 @@ const CandidateCard = styled.div<{$isDragging: boolean; $isJustMoved: boolean; $
   `}
   display: flex;
   align-items: center;
-  background-color: ${props => props.$isDragging || props.$isJustMoved ? '#e3f2fd' : '#fff'};
+  background-color: ${props => props.$isJustMoved ? '#e3f2fd' : '#fff'};
   border: ${props => {
-    if (props.$isDragging || props.$isJustMoved) {
+    if (props.$isJustMoved) {
       return '2px solid #2196f3';
     }
     return '1px solid #ccc';
@@ -28,12 +28,13 @@ const CandidateCard = styled.div<{$isDragging: boolean; $isJustMoved: boolean; $
   user-select: none;
   transition: ${props => {
     if (props.$isJustMoved) {
-      return 'background-color 0.5s ease-out, border 0.5s ease-out';
+      return 'background-color 0.5s ease-out, border 0.5s ease-out, box-shadow 0.5s ease-out';
     }
     return 'background-color 0.2s, border 0.2s';
   }};
   box-sizing: border-box;
-  box-shadow: ${props => props.$isDragging || props.$isJustMoved ? '0 2px 8px rgba(33, 150, 243, 0.3)' : 'none'};
+  box-shadow: ${props => props.$isJustMoved ? '0 2px 8px rgba(33, 150, 243, 0.3)' : 'none'};
+  opacity: ${props => props.$isDragging ? '0.5' : '1'};
   
   &:active {
     cursor: grabbing;
@@ -68,8 +69,13 @@ export function DraggableCandidate({candidateName, electionTitle, currentScore, 
       }),
       onDragStart: () => {
         setIsDragging(true);
-        // The library will use the element's current styles for the preview
-        // Our styled component will handle the border and background
+        // Create a custom preview with highlight styling
+        const preview = element.cloneNode(true) as HTMLElement;
+        preview.style.backgroundColor = '#e3f2fd';
+        preview.style.border = '2px solid #2196f3';
+        preview.style.boxShadow = '0 2px 8px rgba(33, 150, 243, 0.3)';
+        preview.style.opacity = '1';
+        return preview;
       },
       onDrop: () => setIsDragging(false),
     });
