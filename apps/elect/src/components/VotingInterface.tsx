@@ -51,7 +51,7 @@ const BottomPanels = styled.div`
 
 const LeftPanel = styled.div`
   flex: 1;
-  padding: 1rem 0.5rem 1rem 1rem;
+  padding: 1rem 0.25rem 1rem 0.25rem;
   border: 2px solid #ccc;
   border-radius: 8px;
   overflow: hidden;
@@ -82,7 +82,7 @@ const ArrowContainer = styled.div<{$span: number; $startRow?: number}>`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 0.25rem;
+  padding: 0;
   grid-column: 1;
   ${props => props.$startRow ? `grid-row: ${props.$startRow} / span ${props.$span};` : `grid-row: span ${props.$span};`}
   min-width: 3rem;
