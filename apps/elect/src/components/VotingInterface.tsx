@@ -77,14 +77,14 @@ const AllBandsContainer = styled.div<{$gap: number}>`
   min-height: 0;
 `;
 
-const GroupLabelContainer = styled.div<{$span: number}>`
+const GroupLabelContainer = styled.div<{$span: number; $startRow?: number}>`
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 0.5rem;
   border-right: 3px solid #333;
   grid-column: 1;
-  grid-row: ${props => `span ${props.$span}`};
+  ${props => props.$startRow ? `grid-row: ${props.$startRow} / span ${props.$span};` : `grid-row: span ${props.$span};`}
   min-width: 2rem;
 `;
 
@@ -113,7 +113,7 @@ const BandsContainer = styled.div<{$gap: number}>`
 
 const RejectBandWrapper = styled.div`
   grid-column: 2;
-  grid-row: 8; /* After the 5 approve bands (rows 2-6) and reject label (row 7) */
+  grid-row: 7; /* Same row as reject label, after the 5 approve bands (rows 2-6) */
   width: 100%;
   min-width: 0;
   position: relative;
@@ -283,7 +283,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                 />
               ))}
             </BandsContainer>
-            <GroupLabelContainer $span={1}>
+            <GroupLabelContainer $span={1} $startRow={7}>
               <GroupLabel title="Candidates who are unqualified or unacceptable for office, regardless of their policy positions. This assessment is based on competence, integrity, and fitness for the role, not political alignment.">Reject</GroupLabel>
             </GroupLabelContainer>
             <RejectBandWrapper>
