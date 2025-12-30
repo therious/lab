@@ -14,6 +14,7 @@ const BandContainer = styled.div<{$isOver: boolean; $color: string}>`
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  position: relative;
 `;
 
 const BandLabel = styled.div`
@@ -23,16 +24,25 @@ const BandLabel = styled.div`
   color: #333;
 `;
 
-const CandidateSlot = styled.div`
-  padding: 0.5rem;
-  background-color: rgba(255, 255, 255, 0.7);
-  border-radius: 4px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  cursor: grab;
-  
-  &:active {
-    cursor: grabbing;
-  }
+const InsertionLine = styled.div<{$top: number; $visible: boolean}>`
+  position: absolute;
+  left: 0.5rem;
+  right: 0.5rem;
+  top: ${props => props.$top}px;
+  height: 2px;
+  background-color: ${props => props.$color || '#007bff'};
+  border-radius: 1px;
+  opacity: ${props => props.$visible ? 1 : 0};
+  transition: opacity 0.1s;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 0 4px rgba(0, 123, 255, 0.5);
+`;
+
+const CandidateWrapper = styled.div<{$isDraggedOver: boolean}>`
+  position: relative;
+  opacity: ${props => props.$isDraggedOver ? 0.5 : 1};
+  transition: opacity 0.2s;
 `;
 
 interface ScoreBandProps {
@@ -48,24 +58,108 @@ interface ScoreBandProps {
 export function ScoreBand({score, label, color, candidates, electionTitle, onDrop, onReorder}: ScoreBandProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isOver, setIsOver] = useState(false);
+  const [insertionIndex, setInsertionIndex] = useState<number | null>(null);
+  const [insertionTop, setInsertionTop] = useState<number>(0);
 
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
 
+    const calculateInsertionIndex = (clientY: number): number => {
+      const rect = element.getBoundingClientRect();
+      const relativeY = clientY - rect.top;
+      
+      // Get all candidate elements
+      const candidateElements = element.querySelectorAll('[data-candidate-index]');
+      
+      if (candidateElements.length === 0) {
+        return 0;
+      }
+
+      // Check if we're above the first candidate
+      const firstElement = candidateElements[0] as HTMLElement;
+      const firstTop = firstElement.offsetTop;
+      if (relativeY < firstTop + firstElement.offsetHeight / 2) {
+        return 0;
+      }
+
+      // Check each candidate to find insertion point
+      for (let i = 0; i < candidateElements.length; i++) {
+        const candidateElement = candidateElements[i] as HTMLElement;
+        const candidateTop = candidateElement.offsetTop;
+        const candidateHeight = candidateElement.offsetHeight;
+        const candidateCenter = candidateTop + candidateHeight / 2;
+        
+        if (relativeY < candidateCenter) {
+          return i;
+        }
+      }
+
+      // If we're below all candidates, insert at the end
+      return candidateElements.length;
+    };
+
+    const calculateInsertionTop = (index: number): number => {
+      const candidateElements = element.querySelectorAll('[data-candidate-index]');
+      
+      if (index === 0) {
+        const firstElement = candidateElements[0] as HTMLElement;
+        if (firstElement) {
+          return firstElement.offsetTop;
+        }
+        return 30; // Default position after label
+      }
+
+      if (index >= candidateElements.length) {
+        const lastElement = candidateElements[candidateElements.length - 1] as HTMLElement;
+        if (lastElement) {
+          return lastElement.offsetTop + lastElement.offsetHeight;
+        }
+        return 30;
+      }
+
+      const targetElement = candidateElements[index] as HTMLElement;
+      if (targetElement) {
+        return targetElement.offsetTop;
+      }
+      return 30;
+    };
+
     return dropTargetForElements({
       element,
       getData: () => ({score, electionTitle}),
-      onDragEnter: () => setIsOver(true),
-      onDragLeave: () => setIsOver(false),
-      onDrop: ({source}) => {
+      onDragEnter: () => {
+        setIsOver(true);
+        setInsertionIndex(0);
+      },
+      onDrag: ({location}) => {
+        if (location.current.dropTargets.length > 0) {
+          const clientY = location.current.input.clientY;
+          const index = calculateInsertionIndex(clientY);
+          setInsertionIndex(index);
+          setInsertionTop(calculateInsertionTop(index));
+        }
+      },
+      onDragLeave: () => {
         setIsOver(false);
+        setInsertionIndex(null);
+      },
+      onDrop: ({source, location}) => {
+        setIsOver(false);
+        setInsertionIndex(null);
         const data = source.data;
         if (data && typeof data === 'object' && 'candidateName' in data && 'currentScore' in data) {
           const candidateName = data.candidateName as string;
           const fromScore = data.currentScore as string;
-          // For now, append to end - can be improved to calculate insertion index
-          onDrop(candidateName, fromScore, candidates.length);
+          
+          // Calculate final insertion index
+          let finalIndex = candidates.length;
+          if (location.current.dropTargets.length > 0) {
+            const clientY = location.current.input.clientY;
+            finalIndex = calculateInsertionIndex(clientY);
+          }
+          
+          onDrop(candidateName, fromScore, finalIndex);
         }
       },
     });
@@ -74,14 +168,21 @@ export function ScoreBand({score, label, color, candidates, electionTitle, onDro
   return (
     <BandContainer ref={ref} $isOver={isOver} $color={color}>
       <BandLabel>{label}</BandLabel>
+      {insertionIndex !== null && (
+        <InsertionLine $top={insertionTop} $visible={isOver} $color={color} />
+      )}
       {candidates.map((candidate, index) => (
-        <div key={`${score}-${candidate}-${index}`} data-candidate-index={index}>
+        <CandidateWrapper 
+          key={`${score}-${candidate}-${index}`} 
+          data-candidate-index={index}
+          $isDraggedOver={isOver && insertionIndex === index}
+        >
           <DraggableCandidate
             candidateName={candidate}
             electionTitle={electionTitle}
             currentScore={score}
           />
-        </div>
+        </CandidateWrapper>
       ))}
     </BandContainer>
   );
