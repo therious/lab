@@ -80,7 +80,7 @@ const AllBandsContainer = styled.div<{$gap: number}>`
 const ArrowContainer = styled.div<{$span: number; $startRow?: number}>`
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   padding: 0.5rem;
   grid-column: 1;
@@ -89,24 +89,17 @@ const ArrowContainer = styled.div<{$span: number; $startRow?: number}>`
   position: relative;
 `;
 
-const ArrowLabel = styled.div`
-  font-weight: bold;
-  font-size: 0.9rem;
-  color: #333;
-  white-space: nowrap;
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  transform: rotate(180deg);
-`;
-
 const ArrowLine = styled.div<{$direction: 'up' | 'down'}>`
   flex: 1;
   width: 2px;
   background-color: #333;
   position: relative;
-  margin: 0.25rem 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   
-  &::after {
+  &::before {
     content: '';
     position: absolute;
     ${props => props.$direction === 'up' ? 'top: 0;' : 'bottom: 0;'}
@@ -122,6 +115,20 @@ const ArrowLine = styled.div<{$direction: 'up' | 'down'}>`
   }
 `;
 
+const ArrowLabel = styled.div`
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #333;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  background-color: #fff;
+  padding: 0.25rem 0.1rem;
+  position: relative;
+  z-index: 1;
+`;
+
 const BandsContainer = styled.div<{$gap: number}>`
   display: flex;
   flex-direction: column;
@@ -133,6 +140,7 @@ const BandsContainer = styled.div<{$gap: number}>`
   width: 100%;
   position: relative;
   z-index: 2;
+  height: 100%;
 `;
 
 const RejectBandWrapper = styled.div`
@@ -142,6 +150,10 @@ const RejectBandWrapper = styled.div`
   min-width: 0;
   position: relative;
   z-index: 1;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 `;
 
 const UnrankedSection = styled.div<{$isOver: boolean}>`
@@ -282,8 +294,9 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
         <LeftPanel ref={leftPanelRef}>
           <AllBandsContainer $gap={spacing.bandGap}>
             <ArrowContainer $span={5}>
-              <ArrowLabel>Better</ArrowLabel>
-              <ArrowLine $direction="up" />
+              <ArrowLine $direction="up">
+                <ArrowLabel>Better</ArrowLabel>
+              </ArrowLine>
             </ArrowContainer>
             <BandsContainer ref={bandsContainerRef} $gap={spacing.bandGap}>
               {BAND_CONFIG.slice(0, 5).map(({score, label, color, tooltip}) => (
@@ -300,6 +313,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                   candidateHeight={spacing.candidateHeight}
                   candidatePadding={spacing.candidatePadding}
                   horizontal={spacing.horizontal}
+                  flex={true}
                   justMovedCandidate={justMovedCandidate || undefined}
                   onJustMovedEnd={handleJustMovedEnd}
                   onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, score, toIndex)}
@@ -308,8 +322,9 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
               ))}
             </BandsContainer>
             <ArrowContainer $span={1} $startRow={6}>
-              <ArrowLine $direction="down" />
-              <ArrowLabel>Worse</ArrowLabel>
+              <ArrowLine $direction="down">
+                <ArrowLabel>Worse</ArrowLabel>
+              </ArrowLine>
             </ArrowContainer>
             <RejectBandWrapper>
               <ScoreBand
@@ -324,6 +339,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                 candidateHeight={spacing.candidateHeight}
                 candidatePadding={spacing.candidatePadding}
                 horizontal={spacing.horizontal}
+                flex={true}
                 justMovedCandidate={justMovedCandidate || undefined}
                 onJustMovedEnd={handleJustMovedEnd}
                 onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, '0', toIndex)}
