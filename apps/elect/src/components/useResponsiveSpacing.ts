@@ -69,22 +69,33 @@ export function useResponsiveSpacing(
         const reducibleGaps = (totalBands - 1) * (DEFAULT_BAND_GAP - MIN_BAND_GAP);
         
         if (deficit <= reducibleGaps) {
-          bandGap = Math.max(MIN_BAND_GAP, DEFAULT_BAND_GAP - Math.ceil(deficit / (totalBands - 1)));
+          // Distribute deficit across all gaps
+          const gapReduction = Math.ceil(deficit / (totalBands - 1));
+          bandGap = Math.max(MIN_BAND_GAP, DEFAULT_BAND_GAP - gapReduction);
           requiredHeight = labelHeight + candidateAreaHeight + (totalBands - 1) * bandGap + 
                           candidateGapsHeight + bandPaddingHeight + candidatePaddingHeight + rejectBorderHeight;
         } else {
           bandGap = MIN_BAND_GAP;
           const remainingDeficit = deficit - reducibleGaps;
           
+          // Recalculate required height with minimum gaps
+          requiredHeight = labelHeight + candidateAreaHeight + (totalBands - 1) * bandGap + 
+                          candidateGapsHeight + bandPaddingHeight + candidatePaddingHeight + rejectBorderHeight;
+          
           // Reduce candidate gaps
           const reducibleCandidateGaps = totalCandidates * (DEFAULT_CANDIDATE_GAP - MIN_CANDIDATE_GAP);
           if (remainingDeficit <= reducibleCandidateGaps) {
-            candidateGap = Math.max(MIN_CANDIDATE_GAP, DEFAULT_CANDIDATE_GAP - Math.ceil(remainingDeficit / totalCandidates));
+            const candidateGapReduction = Math.ceil(remainingDeficit / totalCandidates);
+            candidateGap = Math.max(MIN_CANDIDATE_GAP, DEFAULT_CANDIDATE_GAP - candidateGapReduction);
             requiredHeight = labelHeight + candidateAreaHeight + (totalBands - 1) * bandGap + 
                             totalCandidates * candidateGap + bandPaddingHeight + candidatePaddingHeight + rejectBorderHeight;
           } else {
             candidateGap = MIN_CANDIDATE_GAP;
             const stillRemaining = remainingDeficit - reducibleCandidateGaps;
+            
+            // Recalculate required height with minimum candidate gaps
+            requiredHeight = labelHeight + candidateAreaHeight + (totalBands - 1) * bandGap + 
+                            totalCandidates * candidateGap + bandPaddingHeight + candidatePaddingHeight + rejectBorderHeight;
             
             // Reduce padding
             const reducibleBandPadding = totalBands * (DEFAULT_BAND_PADDING - MIN_BAND_PADDING) * 2;
@@ -92,11 +103,12 @@ export function useResponsiveSpacing(
             const totalReduciblePadding = reducibleBandPadding + reducibleCandidatePadding;
             
             if (stillRemaining <= totalReduciblePadding) {
-              const bandPaddingReduction = Math.min(
-                stillRemaining / 2,
-                reducibleBandPadding
-              );
-              const candidatePaddingReduction = stillRemaining - bandPaddingReduction;
+              // Distribute padding reduction proportionally
+              const bandPaddingRatio = reducibleBandPadding / totalReduciblePadding;
+              const candidatePaddingRatio = reducibleCandidatePadding / totalReduciblePadding;
+              
+              const bandPaddingReduction = stillRemaining * bandPaddingRatio;
+              const candidatePaddingReduction = stillRemaining * candidatePaddingRatio;
               
               bandPadding = Math.max(
                 MIN_BAND_PADDING,
@@ -113,9 +125,14 @@ export function useResponsiveSpacing(
               bandPadding = MIN_BAND_PADDING;
               candidatePadding = MIN_CANDIDATE_PADDING;
               
+              // Recalculate required height with minimum padding
+              requiredHeight = labelHeight + candidateAreaHeight + (totalBands - 1) * bandGap + 
+                              totalCandidates * candidateGap + totalBands * bandPadding * 2 + 
+                              totalCandidates * candidatePadding * 2 + rejectBorderHeight;
+              
               // Check if horizontal layout would help
               const estimatedHorizontalWidth = totalCandidates * 150; // rough estimate
-              if (availableWidth > estimatedHorizontalWidth) {
+              if (availableWidth > estimatedHorizontalWidth && requiredHeight > availableHeight) {
                 horizontal = true;
               }
             }
