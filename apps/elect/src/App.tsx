@@ -35,20 +35,26 @@ const CenterBody = styled.main`
 `;
 
 const SummaryContainer = styled.div`
-  padding: 2rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
+  height: 100%;
+  overflow-y: auto;
 `;
 
 const ElectionSummaryCard = styled(Link)`
   padding: 1rem;
-  border: 1px solid #ccc;
+  border: 2px solid #ccc;
   border-radius: 8px;
   text-decoration: none;
   color: inherit;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   transition: background-color 0.2s;
+  flex: 1;
+  min-height: 0;
   
   &:hover {
     background-color: #f5f5f5;
@@ -56,55 +62,65 @@ const ElectionSummaryCard = styled(Link)`
 `;
 
 const ElectionTitle = styled.h2`
-  margin: 0 0 0.5rem 0;
+  margin: 0;
+  font-size: 1.2rem;
 `;
 
-const VoteStatus = styled.div`
-  font-size: 0.9rem;
-  color: #666;
+const BandsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-height: 0;
 `;
 
-const VoteDetails = styled.div`
-  margin-top: 0.5rem;
+const BandRow = styled.div<{$color: string}>`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: ${props => props.$color}33;
+  border: 2px solid ${props => props.$color};
+  border-radius: 4px;
+  min-height: 2.5rem;
+`;
+
+const BandLabel = styled.div`
+  font-weight: bold;
   font-size: 0.85rem;
-  color: #555;
+  min-width: 5rem;
+  flex-shrink: 0;
+  color: #333;
 `;
 
-const ScoreBreakdown = styled.div`
+const CandidatesList = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  flex: 1;
+  align-items: center;
 `;
 
-const ScoreBadge = styled.span<{$color: string}>`
+const CandidateName = styled.span`
+  font-size: 0.85rem;
   padding: 0.25rem 0.5rem;
-  background-color: ${props => props.$color}33;
-  border: 1px solid ${props => props.$color};
-  border-radius: 4px;
-  font-size: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 3px;
+  white-space: nowrap;
 `;
 
 function SummaryView() {
   const {elections, votes} = useSelector((s: TotalState) => s.election);
 
-  const BAND_LABELS: Record<string, string> = {
-    '5': 'Excellent',
-    '4': 'Good',
-    '3': 'Mediocre',
-    '2': 'Bad',
-    '1': 'Very Bad',
-    '0': 'Unqualified',
-  };
-
-  const BAND_COLORS: Record<string, string> = {
-    '5': '#4caf50',
-    '4': '#8bc34a',
-    '3': '#ffeb3b',
-    '2': '#ff9800',
-    '1': '#ff6b6b',
-    '0': '#f44336',
-  };
+  const BAND_CONFIG = [
+    { score: '5', label: 'Excellent', color: '#2e7d32' },
+    { score: '4', label: 'Good', color: '#8bc34a' },
+    { score: '3', label: 'Mediocre', color: '#ffeb3b' },
+    { score: '2', label: 'Bad', color: '#ff9800' },
+    { score: '1', label: 'Very Bad', color: '#ff6b6b' },
+    { score: '0', label: 'Unqualified/Unacceptable', color: '#444444' },
+    { score: 'unranked', label: 'Unranked', color: '#90caf9' },
+  ];
 
   return (
     <SummaryContainer>
@@ -113,33 +129,28 @@ function SummaryView() {
         const vote = votes[election.title];
         if (!vote) return null;
         
-        const totalRanked = Object.keys(vote)
-          .filter(key => key !== 'unranked')
-          .reduce((sum, key) => sum + (vote[key]?.length || 0), 0);
-        const unrankedCount = vote.unranked?.length || 0;
-        
         return (
           <ElectionSummaryCard key={election.title} to={`/election/${encodeURIComponent(election.title)}`}>
             <ElectionTitle>{election.title}</ElectionTitle>
-            <VoteStatus>
-              {totalRanked > 0 ? `${totalRanked} candidates ranked` : 'No votes yet'}
-              {unrankedCount > 0 && ` • ${unrankedCount} unranked`}
-            </VoteStatus>
-            {totalRanked > 0 && (
-              <VoteDetails>
-                <ScoreBreakdown>
-                  {['5', '4', '3', '2', '1', '0'].map(score => {
-                    const count = vote[score]?.length || 0;
-                    if (count === 0) return null;
-                    return (
-                      <ScoreBadge key={score} $color={BAND_COLORS[score]}>
-                        {score}: {BAND_LABELS[score]} ({count})
-                      </ScoreBadge>
-                    );
-                  })}
-                </ScoreBreakdown>
-              </VoteDetails>
-            )}
+            <BandsContainer>
+              {BAND_CONFIG.map(({score, label, color}) => {
+                const candidates = vote[score] || [];
+                if (candidates.length === 0) return null;
+                
+                return (
+                  <BandRow key={score} $color={color}>
+                    <BandLabel>{label}</BandLabel>
+                    <CandidatesList>
+                      {candidates.map((candidateName: string, index: number) => (
+                        <CandidateName key={`${score}-${candidateName}-${index}`}>
+                          {candidateName}
+                        </CandidateName>
+                      ))}
+                    </CandidatesList>
+                  </BandRow>
+                );
+              })}
+            </BandsContainer>
           </ElectionSummaryCard>
         );
       })}
