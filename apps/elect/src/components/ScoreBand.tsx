@@ -55,14 +55,37 @@ const CandidateWrapper = styled.div<{$isDraggedOver: boolean; $horizontal: boole
   ${props => props.$horizontal ? 'flex-shrink: 0;' : ''}
 `;
 
-const Triangle = styled.div`
+const Triangle = styled.div<{$highlighted: boolean}>`
   width: 0;
   height: 0;
   border-top: 8px solid transparent;
   border-bottom: 8px solid transparent;
-  border-left: 12px solid #666;
+  border-left: 12px solid ${props => props.$highlighted ? '#007bff' : '#666'};
   margin: 0 4px;
   flex-shrink: 0;
+  transition: border-left-color 0.2s;
+  ${props => props.$highlighted ? `
+    filter: drop-shadow(0 0 4px rgba(0, 123, 255, 0.8));
+  ` : ''}
+`;
+
+const InsertionTriangle = styled.div<{$side: 'left' | 'right'; $visible: boolean}>`
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  ${props => props.$side === 'left' ? `
+    border-right: 16px solid #007bff;
+    margin-right: 4px;
+  ` : `
+    border-left: 16px solid #007bff;
+    margin-left: 4px;
+  `}
+  flex-shrink: 0;
+  opacity: ${props => props.$visible ? 1 : 0};
+  transition: opacity 0.1s;
+  filter: drop-shadow(0 0 6px rgba(0, 123, 255, 0.9));
+  z-index: 10;
 `;
 
 interface ScoreBandProps {
@@ -100,43 +123,77 @@ export function ScoreBand({
   const [isOver, setIsOver] = useState(false);
   const [insertionIndex, setInsertionIndex] = useState<number | null>(null);
   const [insertionTop, setInsertionTop] = useState<number>(0);
+  const [highlightedTriangles, setHighlightedTriangles] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
 
-    const calculateInsertionIndex = (clientY: number): number => {
+    const calculateInsertionIndex = (clientY: number, clientX?: number): number => {
       const rect = element.getBoundingClientRect();
-      const relativeY = clientY - rect.top;
       
-      // Get all candidate elements
-      const candidateElements = element.querySelectorAll('[data-candidate-index]');
-      
-      if (candidateElements.length === 0) {
-        return 0;
-      }
-
-      // Check if we're above the first candidate
-      const firstElement = candidateElements[0] as HTMLElement;
-      const firstTop = firstElement.offsetTop;
-      if (relativeY < firstTop + firstElement.offsetHeight / 2) {
-        return 0;
-      }
-
-      // Check each candidate to find insertion point
-      for (let i = 0; i < candidateElements.length; i++) {
-        const candidateElement = candidateElements[i] as HTMLElement;
-        const candidateTop = candidateElement.offsetTop;
-        const candidateHeight = candidateElement.offsetHeight;
-        const candidateCenter = candidateTop + candidateHeight / 2;
+      if (horizontal && clientX !== undefined) {
+        // Horizontal layout: use X position
+        const relativeX = clientX - rect.left;
+        const candidateElements = element.querySelectorAll('[data-candidate-index]');
         
-        if (relativeY < candidateCenter) {
-          return i;
+        if (candidateElements.length === 0) {
+          return 0;
         }
-      }
 
-      // If we're below all candidates, insert at the end
-      return candidateElements.length;
+        // Check if we're to the left of the first candidate
+        const firstElement = candidateElements[0] as HTMLElement;
+        const firstLeft = firstElement.offsetLeft;
+        if (relativeX < firstLeft + firstElement.offsetWidth / 2) {
+          return 0;
+        }
+
+        // Check each candidate to find insertion point
+        for (let i = 0; i < candidateElements.length; i++) {
+          const candidateElement = candidateElements[i] as HTMLElement;
+          const candidateLeft = candidateElement.offsetLeft;
+          const candidateWidth = candidateElement.offsetWidth;
+          const candidateCenter = candidateLeft + candidateWidth / 2;
+          
+          if (relativeX < candidateCenter) {
+            return i;
+          }
+        }
+
+        return candidateElements.length;
+      } else {
+        // Vertical layout: use Y position
+        const relativeY = clientY - rect.top;
+        
+        // Get all candidate elements
+        const candidateElements = element.querySelectorAll('[data-candidate-index]');
+        
+        if (candidateElements.length === 0) {
+          return 0;
+        }
+
+        // Check if we're above the first candidate
+        const firstElement = candidateElements[0] as HTMLElement;
+        const firstTop = firstElement.offsetTop;
+        if (relativeY < firstTop + firstElement.offsetHeight / 2) {
+          return 0;
+        }
+
+        // Check each candidate to find insertion point
+        for (let i = 0; i < candidateElements.length; i++) {
+          const candidateElement = candidateElements[i] as HTMLElement;
+          const candidateTop = candidateElement.offsetTop;
+          const candidateHeight = candidateElement.offsetHeight;
+          const candidateCenter = candidateTop + candidateHeight / 2;
+          
+          if (relativeY < candidateCenter) {
+            return i;
+          }
+        }
+
+        // If we're below all candidates, insert at the end
+        return candidateElements.length;
+      }
     };
 
     const calculateInsertionTop = (index: number): number => {
@@ -175,18 +232,34 @@ export function ScoreBand({
       onDrag: ({location}) => {
         if (location.current.dropTargets.length > 0) {
           const clientY = location.current.input.clientY;
-          const index = calculateInsertionIndex(clientY);
+          const clientX = location.current.input.clientX;
+          const index = calculateInsertionIndex(clientY, clientX);
           setInsertionIndex(index);
-          setInsertionTop(calculateInsertionTop(index));
+          
+          if (horizontal) {
+            // Highlight triangles around insertion point
+            const newHighlighted = new Set<number>();
+            if (index > 0) {
+              newHighlighted.add(index - 1); // Triangle before insertion
+            }
+            if (index < candidates.length) {
+              newHighlighted.add(index); // Triangle after insertion
+            }
+            setHighlightedTriangles(newHighlighted);
+          } else {
+            setInsertionTop(calculateInsertionTop(index));
+          }
         }
       },
       onDragLeave: () => {
         setIsOver(false);
         setInsertionIndex(null);
+        setHighlightedTriangles(new Set());
       },
       onDrop: ({source, location}) => {
         setIsOver(false);
         setInsertionIndex(null);
+        setHighlightedTriangles(new Set());
         const data = source.data;
         if (data && typeof data === 'object' && 'candidateName' in data && 'currentScore' in data) {
           const candidateName = data.candidateName as string;
@@ -196,7 +269,8 @@ export function ScoreBand({
           let finalIndex = candidates.length;
           if (location.current.dropTargets.length > 0) {
             const clientY = location.current.input.clientY;
-            finalIndex = calculateInsertionIndex(clientY);
+            const clientX = location.current.input.clientX;
+            finalIndex = calculateInsertionIndex(clientY, clientX);
           }
           
           onDrop(candidateName, fromScore, finalIndex);
@@ -211,9 +285,14 @@ export function ScoreBand({
       {insertionIndex !== null && !horizontal && (
         <InsertionLine $top={insertionTop} $visible={isOver} $color={color} />
       )}
+      {horizontal && insertionIndex === 0 && isOver && (
+        <InsertionTriangle $side="left" $visible={true} />
+      )}
       {candidates.map((candidate, index) => (
         <React.Fragment key={`${score}-${candidate}-${index}`}>
-          {horizontal && index > 0 && <Triangle />}
+          {horizontal && index > 0 && (
+            <Triangle $highlighted={highlightedTriangles.has(index - 1)} />
+          )}
           <CandidateWrapper 
             data-candidate-index={index}
             $isDraggedOver={isOver && insertionIndex === index}
@@ -225,8 +304,12 @@ export function ScoreBand({
               currentScore={score}
               height={candidateHeight}
               padding={candidatePadding}
+              horizontal={horizontal}
             />
           </CandidateWrapper>
+          {horizontal && index === candidates.length - 1 && insertionIndex === candidates.length && isOver && (
+            <InsertionTriangle $side="right" $visible={true} />
+          )}
         </React.Fragment>
       ))}
     </BandContainer>
