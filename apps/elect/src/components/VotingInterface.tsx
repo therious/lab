@@ -117,13 +117,16 @@ const RejectBandWrapper = styled.div`
   z-index: 1;
 `;
 
-const UnrankedSection = styled.div`
+const UnrankedSection = styled.div<{$isOver: boolean}>`
   margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 2px dashed #999;
+  padding: 1rem;
+  background-color: ${props => props.$isOver ? '#e3f2fd' : '#e8f4f8'};
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  transition: background-color 0.2s;
+  min-height: 100px;
 `;
 
 const UnrankedLabel = styled.div`
@@ -182,7 +185,9 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
   const vote = votes[electionTitle];
   const leftPanelRef = useRef<HTMLDivElement>(null);
   const bandsContainerRef = useRef<HTMLDivElement>(null);
+  const unrankedSectionRef = useRef<HTMLDivElement>(null);
   const [justMovedCandidate, setJustMovedCandidate] = useState<string | null>(null);
+  const [isUnrankedOver, setIsUnrankedOver] = useState(false);
 
   if (!election || !vote) {
     return <div>Election not found</div>;
@@ -210,6 +215,33 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
   const handleJustMovedEnd = () => {
     setJustMovedCandidate(null);
   };
+
+  // Set up drop target for unranked section
+  useEffect(() => {
+    const element = unrankedSectionRef.current;
+    if (!element) return;
+
+    return dropTargetForElements({
+      element,
+      getData: () => ({score: 'unranked', electionTitle}),
+      onDragEnter: () => {
+        setIsUnrankedOver(true);
+      },
+      onDragLeave: () => {
+        setIsUnrankedOver(false);
+      },
+      onDrop: ({source}) => {
+        setIsUnrankedOver(false);
+        const data = source.data;
+        if (data && typeof data === 'object' && 'candidateName' in data && 'currentScore' in data) {
+          const candidateName = data.candidateName as string;
+          const fromScore = data.currentScore as string;
+          // Move candidate back to unranked
+          actions.election.moveCandidate(electionTitle, candidateName, fromScore, 'unranked');
+        }
+      },
+    });
+  }, [electionTitle]);
 
   const handleReorder = (score: string, fromIndex: number, toIndex: number) => {
     actions.election.reorderCandidate(electionTitle, score, fromIndex, toIndex);
@@ -273,7 +305,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
           </AllBandsContainer>
         </LeftPanel>
         <RightPanel>
-          <UnrankedSection>
+          <UnrankedSection ref={unrankedSectionRef} $isOver={isUnrankedOver}>
             <UnrankedLabel title="Candidates you are unfamiliar with or have not yet ranked. Important: Unranked candidates receive no strategic advantage in the voting process over candidates you actively dislike. You should express an opinion about candidates you are unfamiliar with to ensure your vote accurately reflects your preferences.">Unranked Candidates</UnrankedLabel>
             {vote.unranked && vote.unranked.length > 0 ? (
               vote.unranked.map((candidateName: string) => (
