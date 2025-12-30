@@ -70,7 +70,7 @@ const ApproveGroup = styled.div<{$gap: number}>`
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: ${props => props.$gap}px;
   align-items: stretch;
 `;
 
