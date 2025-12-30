@@ -224,9 +224,9 @@ const BAND_CONFIG = [
 ];
 
 export function VotingInterface({electionTitle}: VotingInterfaceProps) {
-  const {elections, votes} = useSelector((s: TotalState) => s.election);
+  const elections = useSelector((s: TotalState) => s.election.elections);
+  const vote = useSelector((s: TotalState) => s.election.votes[electionTitle]);
   const election = elections.find((e: {title: string}) => e.title === electionTitle);
-  const vote = votes[electionTitle];
   const leftPanelRef = useRef<HTMLDivElement>(null);
   const bandsContainerRef = useRef<HTMLDivElement>(null);
   const unrankedSectionRef = useRef<HTMLDivElement>(null);
