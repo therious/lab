@@ -25,19 +25,19 @@ const BandLabel = styled.div`
   cursor: help;
 `;
 
-const InsertionLine = styled.div<{$top: number; $visible: boolean}>`
+const InsertionLine = styled.div<{$top: number; $visible: boolean; $color: string}>`
   position: absolute;
   left: 0.5rem;
   right: 0.5rem;
   top: ${props => props.$top}px;
-  height: 2px;
+  height: 3px;
   background-color: ${props => props.$color || '#007bff'};
-  border-radius: 1px;
+  border-radius: 2px;
   opacity: ${props => props.$visible ? 1 : 0};
   transition: opacity 0.1s;
   pointer-events: none;
   z-index: 10;
-  box-shadow: 0 0 4px rgba(0, 123, 255, 0.5);
+  box-shadow: 0 0 8px ${props => props.$color || 'rgba(0, 123, 255, 0.8)'}, 0 0 4px ${props => props.$color || 'rgba(0, 123, 255, 0.6)'};
 `;
 
 const CandidateWrapper = styled.div<{$isDraggedOver: boolean}>`

@@ -106,7 +106,7 @@ const BAND_CONFIG = [
   {
     score: '5',
     label: 'Excellent',
-    color: '#4caf50',
+    color: '#2e7d32', // Darker, more saturated green
     tooltip: 'Highly qualified candidates with exceptional competence and strong track record. Note: There is no strategic benefit to exaggerating how good a candidate is - rate them honestly based on their actual qualifications and performance.',
   },
   {
@@ -136,7 +136,7 @@ const BAND_CONFIG = [
   {
     score: '0',
     label: 'Unqualified/Unacceptable',
-    color: '#f44336',
+    color: '#c62828', // Darker, more saturated red
     tooltip: 'Candidates who are unqualified or unacceptable for office, regardless of their policy positions.',
   },
 ];
