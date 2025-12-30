@@ -66,29 +66,22 @@ const RightPanel = styled.div`
   overflow: hidden;
 `;
 
-const ApproveGroup = styled.div<{$gap: number}>`
-  display: flex;
-  flex-direction: row;
+const AllBandsContainer = styled.div<{$gap: number}>`
+  display: grid;
+  grid-template-columns: auto 1fr;
   gap: 0.5rem;
-  margin-bottom: ${props => props.$gap}px;
-  align-items: stretch;
+  flex: 1;
+  min-height: 0;
 `;
 
-const RejectGroup = styled.div<{$gap: number}>`
-  margin-top: ${props => props.$gap}px;
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-  align-items: stretch;
-`;
-
-const GroupLabelContainer = styled.div`
+const GroupLabelContainer = styled.div<{$span: number}>`
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 0.5rem;
   border-right: 3px solid #333;
-  margin-right: 0.5rem;
+  grid-column: 1;
+  grid-row: ${props => `span ${props.$span}`};
   min-width: 2rem;
 `;
 
@@ -106,13 +99,18 @@ const BandsContainer = styled.div<{$gap: number}>`
   display: flex;
   flex-direction: column;
   gap: ${props => props.$gap}px;
+  grid-column: 2;
   flex: 1;
+  min-height: 0;
 `;
 
 const UnrankedSection = styled.div`
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 2px dashed #999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 `;
 
 const UnrankedLabel = styled.div`
@@ -202,8 +200,8 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
       </TopPanel>
       <BottomPanels>
         <LeftPanel ref={leftPanelRef}>
-          <ApproveGroup $gap={spacing.bandGap}>
-            <GroupLabelContainer>
+          <AllBandsContainer $gap={spacing.bandGap}>
+            <GroupLabelContainer $span={5}>
               <GroupLabel title="Rank candidates based on their qualifications and ability to perform the job duties, independent of policy positions. This is about competence and fitness for office, not political alignment.">Approve</GroupLabel>
             </GroupLabelContainer>
             <BandsContainer $gap={spacing.bandGap}>
@@ -226,29 +224,25 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                 />
               ))}
             </BandsContainer>
-          </ApproveGroup>
-          <RejectGroup $gap={spacing.bandGap}>
-            <GroupLabelContainer>
+            <GroupLabelContainer $span={1}>
               <GroupLabel title="Candidates who are unqualified or unacceptable for office, regardless of their policy positions. This assessment is based on competence, integrity, and fitness for the role, not political alignment.">Reject</GroupLabel>
             </GroupLabelContainer>
-            <BandsContainer $gap={0}>
-              <ScoreBand
-                score="0"
-                label="Unqualified/Unacceptable"
-                color={BAND_CONFIG[5].color}
-                tooltip={BAND_CONFIG[5].tooltip}
-                candidates={vote['0'] || []}
-                electionTitle={electionTitle}
-                padding={spacing.bandPadding}
-                gap={spacing.candidateGap}
-                candidateHeight={spacing.candidateHeight}
-                candidatePadding={spacing.candidatePadding}
-                horizontal={spacing.horizontal}
-                onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, '0', toIndex)}
-                onReorder={(fromIndex, toIndex) => handleReorder('0', fromIndex, toIndex)}
-              />
-            </BandsContainer>
-          </RejectGroup>
+            <ScoreBand
+              score="0"
+              label="Unqualified/Unacceptable"
+              color={BAND_CONFIG[5].color}
+              tooltip={BAND_CONFIG[5].tooltip}
+              candidates={vote['0'] || []}
+              electionTitle={electionTitle}
+              padding={spacing.bandPadding}
+              gap={spacing.candidateGap}
+              candidateHeight={spacing.candidateHeight}
+              candidatePadding={spacing.candidatePadding}
+              horizontal={spacing.horizontal}
+              onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, '0', toIndex)}
+              onReorder={(fromIndex, toIndex) => handleReorder('0', fromIndex, toIndex)}
+            />
+          </AllBandsContainer>
         </LeftPanel>
         <RightPanel>
           <UnrankedSection>
@@ -260,6 +254,9 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                   candidateName={candidateName}
                   electionTitle={electionTitle}
                   currentScore="unranked"
+                  height={spacing.candidateHeight}
+                  padding={spacing.candidatePadding}
+                  horizontal={false}
                 />
               ))
             ) : (

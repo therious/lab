@@ -6,7 +6,7 @@ import styled from 'styled-components';
 const BandContainer = styled.div<{$isOver: boolean; $color: string; $padding: number; $gap: number; $horizontal: boolean; $isReject: boolean}>`
   min-height: ${props => props.$horizontal ? 'auto' : '60px'};
   padding: ${props => props.$padding}px;
-  margin: 0.5rem 0;
+  margin: 0;
   background-color: ${props => {
     if (props.$isReject) {
       return props.$isOver ? props.$color + 'cc' : props.$color;
