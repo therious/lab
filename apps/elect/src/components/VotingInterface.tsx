@@ -199,8 +199,42 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
     actions.election.resetElection(electionTitle);
   };
 
-  const handleDrop = (candidateName: string, fromScore: string, toScore: string, toIndex: number) => {
-    actions.election.moveCandidate(electionTitle, candidateName, fromScore, toScore, toIndex);
+  const handleDrop = (candidateName: string, fromScore: string, toScore: string, toIndex: number, sourceElement?: HTMLElement, destinationElement?: HTMLElement) => {
+    // If we have source and destination elements, animate the move
+    if (sourceElement && destinationElement) {
+      const sourceRect = sourceElement.getBoundingClientRect();
+      const destRect = destinationElement.getBoundingClientRect();
+      
+      // Create a temporary animated element
+      const animatedElement = sourceElement.cloneNode(true) as HTMLElement;
+      animatedElement.style.position = 'fixed';
+      animatedElement.style.left = `${sourceRect.left}px`;
+      animatedElement.style.top = `${sourceRect.top}px`;
+      animatedElement.style.width = `${sourceRect.width}px`;
+      animatedElement.style.height = `${sourceRect.height}px`;
+      animatedElement.style.zIndex = '1000';
+      animatedElement.style.pointerEvents = 'none';
+      animatedElement.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+      document.body.appendChild(animatedElement);
+      
+      // Force reflow
+      void animatedElement.offsetWidth;
+      
+      // Animate to destination
+      animatedElement.style.left = `${destRect.left}px`;
+      animatedElement.style.top = `${destRect.top}px`;
+      animatedElement.style.width = `${destRect.width}px`;
+      animatedElement.style.height = `${destRect.height}px`;
+      
+      // Update state after animation completes
+      setTimeout(() => {
+        actions.election.moveCandidate(electionTitle, candidateName, fromScore, toScore, toIndex);
+        document.body.removeChild(animatedElement);
+      }, 500);
+    } else {
+      // No animation, update immediately
+      actions.election.moveCandidate(electionTitle, candidateName, fromScore, toScore, toIndex);
+    }
   };
 
   const handleReorder = (score: string, fromIndex: number, toIndex: number) => {
@@ -233,7 +267,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                   candidateHeight={spacing.candidateHeight}
                   candidatePadding={spacing.candidatePadding}
                   horizontal={spacing.horizontal}
-                  onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, score, toIndex)}
+                  onDrop={(candidateName, fromScore, toIndex, sourceElement, destinationElement) => handleDrop(candidateName, fromScore, score, toIndex, sourceElement, destinationElement)}
                   onReorder={(fromIndex, toIndex) => handleReorder(score, fromIndex, toIndex)}
                 />
               ))}

@@ -157,7 +157,7 @@ interface ScoreBandProps {
   candidateHeight?: number;
   candidatePadding?: number;
   horizontal?: boolean;
-  onDrop: (candidateName: string, fromScore: string, toIndex: number) => void;
+  onDrop: (candidateName: string, fromScore: string, toIndex: number, sourceElement?: HTMLElement, destinationElement?: HTMLElement) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
 }
 
@@ -330,7 +330,29 @@ export function ScoreBand({
             finalIndex = calculateInsertionIndex(clientY, clientX);
           }
           
-          onDrop(candidateName, fromScore, finalIndex);
+          // Get source element (the dragged candidate)
+          const sourceElement = source.element as HTMLElement;
+          
+          // Get destination element (where it should land)
+          let destinationElement: HTMLElement | undefined;
+          if (finalIndex < candidates.length) {
+            // Inserting before an existing candidate
+            const candidateElements = element.querySelectorAll('[data-candidate-index]');
+            if (candidateElements[finalIndex]) {
+              destinationElement = candidateElements[finalIndex] as HTMLElement;
+            }
+          } else if (candidates.length > 0) {
+            // Inserting at the end
+            const candidateElements = element.querySelectorAll('[data-candidate-index]');
+            if (candidateElements[candidates.length - 1]) {
+              destinationElement = candidateElements[candidates.length - 1] as HTMLElement;
+            }
+          } else {
+            // Empty band, use the band container itself
+            destinationElement = element;
+          }
+          
+          onDrop(candidateName, fromScore, finalIndex, sourceElement, destinationElement);
         }
       },
     });
