@@ -19,7 +19,7 @@ dependencies:
   typescript:                         ~5.4.5
 
 scripts:
-  start:   VITE_CJS_IGNORE_WARNING=true vite
+  start:   pnpm --filter . indexOnce && VITE_CJS_IGNORE_WARNING=true vite
   build:   tsc && vite build
   preview: vite preview --port 5173
   lint:    eslint . --ext js,jsx,ts,tsx
