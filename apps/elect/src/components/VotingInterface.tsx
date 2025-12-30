@@ -102,6 +102,13 @@ const BandsContainer = styled.div<{$gap: number}>`
   grid-column: 2;
   flex: 1;
   min-height: 0;
+  width: 100%;
+`;
+
+const RejectBandWrapper = styled.div`
+  grid-column: 2;
+  width: 100%;
+  min-width: 0;
 `;
 
 const UnrankedSection = styled.div`
@@ -227,21 +234,23 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
             <GroupLabelContainer $span={1}>
               <GroupLabel title="Candidates who are unqualified or unacceptable for office, regardless of their policy positions. This assessment is based on competence, integrity, and fitness for the role, not political alignment.">Reject</GroupLabel>
             </GroupLabelContainer>
-            <ScoreBand
-              score="0"
-              label="Unqualified/Unacceptable"
-              color={BAND_CONFIG[5].color}
-              tooltip={BAND_CONFIG[5].tooltip}
-              candidates={vote['0'] || []}
-              electionTitle={electionTitle}
-              padding={spacing.bandPadding}
-              gap={spacing.candidateGap}
-              candidateHeight={spacing.candidateHeight}
-              candidatePadding={spacing.candidatePadding}
-              horizontal={spacing.horizontal}
-              onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, '0', toIndex)}
-              onReorder={(fromIndex, toIndex) => handleReorder('0', fromIndex, toIndex)}
-            />
+            <RejectBandWrapper>
+              <ScoreBand
+                score="0"
+                label="Unqualified/Unacceptable"
+                color={BAND_CONFIG[5].color}
+                tooltip={BAND_CONFIG[5].tooltip}
+                candidates={vote['0'] || []}
+                electionTitle={electionTitle}
+                padding={spacing.bandPadding}
+                gap={spacing.candidateGap}
+                candidateHeight={spacing.candidateHeight}
+                candidatePadding={spacing.candidatePadding}
+                horizontal={spacing.horizontal}
+                onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, '0', toIndex)}
+                onReorder={(fromIndex, toIndex) => handleReorder('0', fromIndex, toIndex)}
+              />
+            </RejectBandWrapper>
           </AllBandsContainer>
         </LeftPanel>
         <RightPanel>
