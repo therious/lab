@@ -1,0 +1,23 @@
+elections:
+  - title: "Presidential Election"
+    candidates:
+      - name: "Alice Johnson"
+      - name: "Bob Smith"
+      - name: "Catherine Lee"
+      - name: "David Brown"
+  - title: "NY Gubernatorial Election"
+    candidates:
+      - name: "Evelyn Garcia"
+      - name: "Frank Wilson"
+      - name: "Grace Martinez"
+      - name: "Henry Davis"
+      - name: "Isabella Rodriguez"
+  - title: "Local School Board Election"
+    candidates:
+      - name: "Jack Thompson"
+      - name: "Kathy White"
+      - name: "Liam Harris"
+      - name: "Mia Clark"
+      - name: "Noah Lewis"
+      - name: "Olivia Walker"
+
