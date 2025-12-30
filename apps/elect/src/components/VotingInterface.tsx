@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useRef, useState, useEffect} from 'react';
 import styled from 'styled-components';
 import {useSelector} from '../actions-integration';
 import {actions} from '../actions-integration';
@@ -6,6 +6,7 @@ import {TotalState} from '../actions/combined-slices';
 import {DraggableCandidate} from './DraggableCandidate';
 import {ScoreBand} from './ScoreBand';
 import {useResponsiveSpacing} from './useResponsiveSpacing';
+import {dropTargetForElements} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 
 const Container = styled.div`
   display: flex;
