@@ -52,7 +52,12 @@ const CandidateWrapper = styled.div<{$isDraggedOver: boolean; $horizontal: boole
   transition: opacity 0.2s;
   display: flex;
   align-items: center;
-  ${props => props.$horizontal ? 'flex-shrink: 0;' : ''}
+  ${props => props.$horizontal ? `
+    flex: 1;
+    min-width: 0;
+  ` : `
+    width: 100%;
+  `}
 `;
 
 const Triangle = styled.div<{$highlighted: boolean}>`
