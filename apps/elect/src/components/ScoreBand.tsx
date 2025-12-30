@@ -27,17 +27,21 @@ const BandLabel = styled.div`
 
 const InsertionLine = styled.div<{$top: number; $visible: boolean; $color: string}>`
   position: absolute;
-  left: 0.5rem;
-  right: 0.5rem;
+  left: 0.25rem;
+  right: 0.25rem;
   top: ${props => props.$top}px;
-  height: 3px;
-  background-color: ${props => props.$color || '#007bff'};
+  height: 4px;
+  background-color: #000;
+  border: 1px solid #fff;
   border-radius: 2px;
   opacity: ${props => props.$visible ? 1 : 0};
   transition: opacity 0.1s;
   pointer-events: none;
   z-index: 10;
-  box-shadow: 0 0 8px ${props => props.$color || 'rgba(0, 123, 255, 0.8)'}, 0 0 4px ${props => props.$color || 'rgba(0, 123, 255, 0.6)'};
+  box-shadow: 
+    0 0 0 2px ${props => props.$color || '#007bff'},
+    0 0 12px rgba(0, 0, 0, 0.6),
+    0 0 6px rgba(0, 0, 0, 0.4);
 `;
 
 const CandidateWrapper = styled.div<{$isDraggedOver: boolean}>`
