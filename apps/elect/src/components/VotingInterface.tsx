@@ -136,7 +136,6 @@ const UnrankedLabel = styled.div`
   font-weight: bold;
   margin-bottom: 0.5rem;
   color: #666;
-  cursor: help;
 `;
 
 interface VotingInterfaceProps {

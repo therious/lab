@@ -32,7 +32,6 @@ const BandLabel = styled.div<{$isReject: boolean}>`
   font-size: 0.9rem;
   margin-bottom: 0.25rem;
   color: ${props => props.$isReject ? '#fff' : '#333'};
-  cursor: help;
 `;
 
 const throbKeyframes = `
