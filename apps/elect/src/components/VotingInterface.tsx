@@ -95,6 +95,7 @@ const UnrankedLabel = styled.div`
   font-weight: bold;
   margin-bottom: 0.5rem;
   color: #666;
+  cursor: help;
 `;
 
 interface VotingInterfaceProps {
@@ -102,12 +103,42 @@ interface VotingInterfaceProps {
 }
 
 const BAND_CONFIG = [
-  {score: '5', label: 'Excellent', color: '#4caf50'},
-  {score: '4', label: 'Good', color: '#8bc34a'},
-  {score: '3', label: 'Mediocre', color: '#ffeb3b'},
-  {score: '2', label: 'Bad', color: '#ff9800'},
-  {score: '1', label: 'Very Bad', color: '#ff6b6b'},
-  {score: '0', label: 'Unqualified/Unacceptable', color: '#f44336'},
+  {
+    score: '5',
+    label: 'Excellent',
+    color: '#4caf50',
+    tooltip: 'Highly qualified candidates with exceptional competence and strong track record. Note: There is no strategic benefit to exaggerating how good a candidate is - rate them honestly based on their actual qualifications and performance.',
+  },
+  {
+    score: '4',
+    label: 'Good',
+    color: '#8bc34a',
+    tooltip: 'Well-qualified candidates who demonstrate solid competence and are capable of performing the job duties effectively.',
+  },
+  {
+    score: '3',
+    label: 'Mediocre',
+    color: '#ffeb3b',
+    tooltip: 'Candidates with adequate qualifications who are unlikely to cause significant harm in office, though they may lack exceptional competence or vision.',
+  },
+  {
+    score: '2',
+    label: 'Bad',
+    color: '#ff9800',
+    tooltip: 'Candidates with concerning qualifications or performance issues that raise doubts about their ability to perform the job duties adequately.',
+  },
+  {
+    score: '1',
+    label: 'Very Bad',
+    color: '#ff6b6b',
+    tooltip: 'Candidates with serious qualification deficiencies or problematic track records. Note: There is no strategic benefit to exaggerating how bad a candidate is - rate them honestly based on their actual qualifications and performance.',
+  },
+  {
+    score: '0',
+    label: 'Unqualified/Unacceptable',
+    color: '#f44336',
+    tooltip: 'Candidates who are unqualified or unacceptable for office, regardless of their policy positions.',
+  },
 ];
 
 export function VotingInterface({electionTitle}: VotingInterfaceProps) {
@@ -139,13 +170,14 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
       <BottomPanels>
         <LeftPanel>
           <ApproveGroup>
-            <GroupLabel>Approve</GroupLabel>
-            {BAND_CONFIG.slice(0, 5).reverse().map(({score, label, color}) => (
+            <GroupLabel title="Rank candidates based on their qualifications and ability to perform the job duties, independent of policy positions. This is about competence and fitness for office, not political alignment.">Approve</GroupLabel>
+            {BAND_CONFIG.slice(0, 5).reverse().map(({score, label, color, tooltip}) => (
               <ScoreBand
                 key={score}
                 score={score}
-                label={`${score}: ${label}`}
+                label={label}
                 color={color}
+                tooltip={tooltip}
                 candidates={vote[score] || []}
                 electionTitle={electionTitle}
                 onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, score, toIndex)}
@@ -154,10 +186,10 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
             ))}
           </ApproveGroup>
           <RejectGroup>
-            <GroupLabel>Reject</GroupLabel>
+            <GroupLabel title="Candidates who are unqualified or unacceptable for office, regardless of their policy positions. This assessment is based on competence, integrity, and fitness for the role, not political alignment.">Reject</GroupLabel>
             <ScoreBand
               score="0"
-              label="0: Unqualified/Unacceptable"
+              label="Unqualified/Unacceptable"
               color={BAND_CONFIG[5].color}
               candidates={vote['0'] || []}
               electionTitle={electionTitle}
@@ -168,7 +200,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
         </LeftPanel>
         <RightPanel>
           <UnrankedSection>
-            <UnrankedLabel>Unranked Candidates</UnrankedLabel>
+            <UnrankedLabel title="Candidates you are unfamiliar with or have not yet ranked. Important: Unranked candidates receive no strategic advantage in the voting process over candidates you actively dislike. You should express an opinion about candidates you are unfamiliar with to ensure your vote accurately reflects your preferences.">Unranked Candidates</UnrankedLabel>
             {vote.unranked && vote.unranked.length > 0 ? (
               vote.unranked.map((candidateName: string) => (
                 <DraggableCandidate

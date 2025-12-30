@@ -22,6 +22,7 @@ const BandLabel = styled.div`
   font-size: 0.9rem;
   margin-bottom: 0.25rem;
   color: #333;
+  cursor: help;
 `;
 
 const InsertionLine = styled.div<{$top: number; $visible: boolean}>`
@@ -49,13 +50,14 @@ interface ScoreBandProps {
   score: string;
   label: string;
   color: string;
+  tooltip?: string;
   candidates: string[];
   electionTitle: string;
   onDrop: (candidateName: string, fromScore: string, toIndex: number) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
 }
 
-export function ScoreBand({score, label, color, candidates, electionTitle, onDrop, onReorder}: ScoreBandProps) {
+export function ScoreBand({score, label, color, tooltip, candidates, electionTitle, onDrop, onReorder}: ScoreBandProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isOver, setIsOver] = useState(false);
   const [insertionIndex, setInsertionIndex] = useState<number | null>(null);
@@ -167,7 +169,7 @@ export function ScoreBand({score, label, color, candidates, electionTitle, onDro
 
   return (
     <BandContainer ref={ref} $isOver={isOver} $color={color}>
-      <BandLabel>{label}</BandLabel>
+      <BandLabel title={tooltip}>{label}</BandLabel>
       {insertionIndex !== null && (
         <InsertionLine $top={insertionTop} $visible={isOver} $color={color} />
       )}
