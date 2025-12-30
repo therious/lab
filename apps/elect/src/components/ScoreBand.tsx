@@ -71,7 +71,19 @@ const Triangle = styled.div<{$highlighted: boolean}>`
   transition: border-left-color 0.2s;
   ${props => props.$highlighted ? `
     filter: drop-shadow(0 0 4px rgba(0, 123, 255, 0.8));
+    animation: throb 1s ease-in-out infinite;
   ` : ''}
+  
+  @keyframes throb {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.2);
+    }
+  }
 `;
 
 const InsertionTriangle = styled.div<{$side: 'left' | 'right'; $visible: boolean}>`
@@ -79,18 +91,27 @@ const InsertionTriangle = styled.div<{$side: 'left' | 'right'; $visible: boolean
   height: 0;
   border-top: 10px solid transparent;
   border-bottom: 10px solid transparent;
-  ${props => props.$side === 'left' ? `
-    border-right: 16px solid #007bff;
-    margin-right: 4px;
-  ` : `
-    border-left: 16px solid #007bff;
-    margin-left: 4px;
-  `}
+  border-left: 16px solid #007bff;
+  margin: 0 4px;
   flex-shrink: 0;
   opacity: ${props => props.$visible ? 1 : 0};
   transition: opacity 0.1s;
   filter: drop-shadow(0 0 6px rgba(0, 123, 255, 0.9));
   z-index: 10;
+  ${props => props.$visible ? `
+    animation: throb 1s ease-in-out infinite;
+  ` : ''}
+  
+  @keyframes throb {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.2);
+    }
+  }
 `;
 
 interface ScoreBandProps {
