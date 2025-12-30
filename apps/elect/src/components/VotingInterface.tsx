@@ -299,27 +299,33 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
               </ArrowLine>
             </ArrowContainer>
             <BandsContainer ref={bandsContainerRef} $gap={spacing.bandGap}>
-              {BAND_CONFIG.slice(0, 5).map(({score, label, color, tooltip}) => (
-                <ScoreBand
-                  key={score}
-                  score={score}
-                  label={label}
-                  color={color}
-                  tooltip={tooltip}
-                  candidates={vote[score] || []}
-                  electionTitle={electionTitle}
-                  padding={spacing.bandPadding}
-                  gap={spacing.candidateGap}
-                  candidateHeight={spacing.candidateHeight}
-                  candidatePadding={spacing.candidatePadding}
-                  horizontal={spacing.horizontal}
-                  flex={true}
-                  justMovedCandidate={justMovedCandidate || undefined}
-                  onJustMovedEnd={handleJustMovedEnd}
-                  onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, score, toIndex)}
-                  onReorder={(fromIndex, toIndex) => handleReorder(score, fromIndex, toIndex)}
-                />
-              ))}
+              {BAND_CONFIG.slice(0, 5).map(({score, label, color, tooltip}) => {
+                const candidateCount = (vote[score] || []).length;
+                // When not in horizontal mode, allocate space proportional to candidate count
+                // Use candidateCount + 1 to ensure even empty bands get some space
+                const flexGrow = spacing.horizontal ? 1 : Math.max(1, candidateCount + 1);
+                return (
+                  <ScoreBand
+                    key={score}
+                    score={score}
+                    label={label}
+                    color={color}
+                    tooltip={tooltip}
+                    candidates={vote[score] || []}
+                    electionTitle={electionTitle}
+                    padding={spacing.bandPadding}
+                    gap={spacing.candidateGap}
+                    candidateHeight={spacing.candidateHeight}
+                    candidatePadding={spacing.candidatePadding}
+                    horizontal={spacing.horizontal}
+                    flexGrow={flexGrow}
+                    justMovedCandidate={justMovedCandidate || undefined}
+                    onJustMovedEnd={handleJustMovedEnd}
+                    onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, score, toIndex)}
+                    onReorder={(fromIndex, toIndex) => handleReorder(score, fromIndex, toIndex)}
+                  />
+                );
+              })}
             </BandsContainer>
             <ArrowContainer $span={1} $startRow={6}>
               <ArrowLine $direction="down">
@@ -327,24 +333,31 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
               </ArrowLine>
             </ArrowContainer>
             <RejectBandWrapper>
-              <ScoreBand
-                score="0"
-                label="Unqualified/Unacceptable"
-                color={BAND_CONFIG[5].color}
-                tooltip={BAND_CONFIG[5].tooltip}
-                candidates={vote['0'] || []}
-                electionTitle={electionTitle}
-                padding={spacing.bandPadding}
-                gap={spacing.candidateGap}
-                candidateHeight={spacing.candidateHeight}
-                candidatePadding={spacing.candidatePadding}
-                horizontal={spacing.horizontal}
-                flex={true}
-                justMovedCandidate={justMovedCandidate || undefined}
-                onJustMovedEnd={handleJustMovedEnd}
-                onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, '0', toIndex)}
-                onReorder={(fromIndex, toIndex) => handleReorder('0', fromIndex, toIndex)}
-              />
+              {(() => {
+                const candidateCount = (vote['0'] || []).length;
+                // When not in horizontal mode, allocate space proportional to candidate count
+                const flexGrow = spacing.horizontal ? 1 : Math.max(1, candidateCount + 1);
+                return (
+                  <ScoreBand
+                    score="0"
+                    label="Unqualified/Unacceptable"
+                    color={BAND_CONFIG[5].color}
+                    tooltip={BAND_CONFIG[5].tooltip}
+                    candidates={vote['0'] || []}
+                    electionTitle={electionTitle}
+                    padding={spacing.bandPadding}
+                    gap={spacing.candidateGap}
+                    candidateHeight={spacing.candidateHeight}
+                    candidatePadding={spacing.candidatePadding}
+                    horizontal={spacing.horizontal}
+                    flexGrow={flexGrow}
+                    justMovedCandidate={justMovedCandidate || undefined}
+                    onJustMovedEnd={handleJustMovedEnd}
+                    onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, '0', toIndex)}
+                    onReorder={(fromIndex, toIndex) => handleReorder('0', fromIndex, toIndex)}
+                  />
+                );
+              })()}
             </RejectBandWrapper>
           </AllBandsContainer>
         </LeftPanel>
