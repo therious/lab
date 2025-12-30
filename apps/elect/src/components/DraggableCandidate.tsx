@@ -185,8 +185,8 @@ export function DraggableCandidate({candidateName, electionTitle, currentScore, 
   return (
     <CandidateCard ref={ref} $isDragging={isDragging} $isJustMoved={isJustMoved} $isFadingOut={isFadingOut} $height={height} $padding={padding} $horizontal={horizontal}>
       {rank !== undefined && <RankBadge>{rank}</RankBadge>}
-      {affiliation && <AffiliationText>{affiliation}</AffiliationText>}
       <CandidateName>{candidateName}</CandidateName>
+      {affiliation && <AffiliationText>{affiliation}</AffiliationText>}
     </CandidateCard>
   );
 }
