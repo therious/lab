@@ -171,7 +171,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
         <LeftPanel>
           <ApproveGroup>
             <GroupLabel title="Rank candidates based on their qualifications and ability to perform the job duties, independent of policy positions. This is about competence and fitness for office, not political alignment.">Approve</GroupLabel>
-            {BAND_CONFIG.slice(0, 5).reverse().map(({score, label, color, tooltip}) => (
+            {BAND_CONFIG.slice(0, 5).map(({score, label, color, tooltip}) => (
               <ScoreBand
                 key={score}
                 score={score}
