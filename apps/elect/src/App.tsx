@@ -107,6 +107,17 @@ const CandidateName = styled.span`
   background-color: rgba(255, 255, 255, 0.7);
   border-radius: 3px;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+`;
+
+const RankBadge = styled.span`
+  font-weight: bold;
+  font-size: 0.75rem;
+  color: #666;
+  min-width: 1.25rem;
+  text-align: center;
 `;
 
 function SummaryView() {
@@ -129,6 +140,19 @@ function SummaryView() {
         const vote = votes[election.title];
         if (!vote) return null;
         
+        // Calculate ranks for all candidates across bands 0-5
+        const candidateRanks: Record<string, number> = {};
+        let currentRank = 1;
+        
+        // Iterate through bands from 5 (best) down to 0 (worst)
+        for (let score = 5; score >= 0; score--) {
+          const bandCandidates = vote[score.toString()] || [];
+          bandCandidates.forEach(candidateName => {
+            candidateRanks[candidateName] = currentRank;
+            currentRank++;
+          });
+        }
+        
         return (
           <ElectionSummaryCard key={election.title} to={`/election/${encodeURIComponent(election.title)}`}>
             <ElectionTitle>{election.title}</ElectionTitle>
@@ -143,6 +167,11 @@ function SummaryView() {
                     <CandidatesList>
                       {candidates.map((candidateName: string, index: number) => (
                         <CandidateName key={`${score}-${candidateName}-${index}`}>
+                          {score === 'unranked' ? (
+                            <RankBadge>NR</RankBadge>
+                          ) : (
+                            candidateRanks[candidateName] && <RankBadge>{candidateRanks[candidateName]}</RankBadge>
+                          )}
                           {candidateName}
                         </CandidateName>
                       ))}
