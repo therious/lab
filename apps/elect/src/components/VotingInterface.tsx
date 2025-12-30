@@ -68,22 +68,47 @@ const RightPanel = styled.div`
 
 const ApproveGroup = styled.div<{$gap: number}>`
   display: flex;
-  flex-direction: column;
-  gap: ${props => props.$gap}px;
+  flex-direction: row;
+  gap: 0.5rem;
   margin-bottom: 1rem;
+  align-items: stretch;
 `;
 
 const RejectGroup = styled.div`
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 3px solid #dc3545;
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: stretch;
+`;
+
+const GroupLabelContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.5rem;
+  border-right: 3px solid #333;
+  margin-right: 0.5rem;
+  min-width: 2rem;
 `;
 
 const GroupLabel = styled.div`
   font-weight: bold;
   font-size: 1.1rem;
-  margin-bottom: 0.5rem;
   color: #333;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  white-space: nowrap;
+`;
+
+const BandsContainer = styled.div<{$gap: number}>`
+  display: flex;
+  flex-direction: column;
+  gap: ${props => props.$gap}px;
+  flex: 1;
 `;
 
 const UnrankedSection = styled.div`
@@ -180,43 +205,51 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
       <BottomPanels>
         <LeftPanel ref={leftPanelRef}>
           <ApproveGroup $gap={spacing.bandGap}>
-            <GroupLabel title="Rank candidates based on their qualifications and ability to perform the job duties, independent of policy positions. This is about competence and fitness for office, not political alignment.">Approve</GroupLabel>
-            {BAND_CONFIG.slice(0, 5).map(({score, label, color, tooltip}) => (
+            <GroupLabelContainer>
+              <GroupLabel title="Rank candidates based on their qualifications and ability to perform the job duties, independent of policy positions. This is about competence and fitness for office, not political alignment.">Approve</GroupLabel>
+            </GroupLabelContainer>
+            <BandsContainer $gap={spacing.bandGap}>
+              {BAND_CONFIG.slice(0, 5).map(({score, label, color, tooltip}) => (
+                <ScoreBand
+                  key={score}
+                  score={score}
+                  label={label}
+                  color={color}
+                  tooltip={tooltip}
+                  candidates={vote[score] || []}
+                  electionTitle={electionTitle}
+                  padding={spacing.bandPadding}
+                  gap={spacing.candidateGap}
+                  candidateHeight={spacing.candidateHeight}
+                  candidatePadding={spacing.candidatePadding}
+                  horizontal={spacing.horizontal}
+                  onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, score, toIndex)}
+                  onReorder={(fromIndex, toIndex) => handleReorder(score, fromIndex, toIndex)}
+                />
+              ))}
+            </BandsContainer>
+          </ApproveGroup>
+          <RejectGroup>
+            <GroupLabelContainer>
+              <GroupLabel title="Candidates who are unqualified or unacceptable for office, regardless of their policy positions. This assessment is based on competence, integrity, and fitness for the role, not political alignment.">Reject</GroupLabel>
+            </GroupLabelContainer>
+            <BandsContainer $gap={0}>
               <ScoreBand
-                key={score}
-                score={score}
-                label={label}
-                color={color}
-                tooltip={tooltip}
-                candidates={vote[score] || []}
+                score="0"
+                label="Unqualified/Unacceptable"
+                color={BAND_CONFIG[5].color}
+                tooltip={BAND_CONFIG[5].tooltip}
+                candidates={vote['0'] || []}
                 electionTitle={electionTitle}
                 padding={spacing.bandPadding}
                 gap={spacing.candidateGap}
                 candidateHeight={spacing.candidateHeight}
                 candidatePadding={spacing.candidatePadding}
                 horizontal={spacing.horizontal}
-                onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, score, toIndex)}
-                onReorder={(fromIndex, toIndex) => handleReorder(score, fromIndex, toIndex)}
+                onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, '0', toIndex)}
+                onReorder={(fromIndex, toIndex) => handleReorder('0', fromIndex, toIndex)}
               />
-            ))}
-          </ApproveGroup>
-          <RejectGroup>
-            <GroupLabel title="Candidates who are unqualified or unacceptable for office, regardless of their policy positions. This assessment is based on competence, integrity, and fitness for the role, not political alignment.">Reject</GroupLabel>
-            <ScoreBand
-              score="0"
-              label="Unqualified/Unacceptable"
-              color={BAND_CONFIG[5].color}
-              tooltip={BAND_CONFIG[5].tooltip}
-              candidates={vote['0'] || []}
-              electionTitle={electionTitle}
-              padding={spacing.bandPadding}
-              gap={spacing.candidateGap}
-              candidateHeight={spacing.candidateHeight}
-              candidatePadding={spacing.candidatePadding}
-              horizontal={spacing.horizontal}
-              onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, '0', toIndex)}
-              onReorder={(fromIndex, toIndex) => handleReorder('0', fromIndex, toIndex)}
-            />
+            </BandsContainer>
           </RejectGroup>
         </LeftPanel>
         <RightPanel>
