@@ -13,7 +13,7 @@ const CANDIDATE_HEIGHT = 48;
 const MIN_BAND_GAP = 1;
 const MIN_CANDIDATE_GAP = 2;
 const MIN_BAND_PADDING = 2;
-const MIN_CANDIDATE_PADDING = 2;
+const MIN_CANDIDATE_PADDING = 0; // Allow candidate padding to go to 0 as last resort
 const DEFAULT_BAND_GAP = 8;
 const DEFAULT_CANDIDATE_GAP = 4;
 const DEFAULT_BAND_PADDING = 8;
@@ -101,38 +101,48 @@ export function useResponsiveSpacing(
             requiredHeight = labelHeight + candidateAreaHeight + totalBands * bandGap + 
                             totalCandidates * candidateGap + bandPaddingHeight + candidatePaddingHeight;
             
-            // Reduce padding
+            // Reduce band padding first (keep candidate padding for last resort)
             const reducibleBandPadding = totalBands * (DEFAULT_BAND_PADDING - MIN_BAND_PADDING) * 2;
-            const reducibleCandidatePadding = totalCandidates * (DEFAULT_CANDIDATE_PADDING - MIN_CANDIDATE_PADDING) * 2;
-            const totalReduciblePadding = reducibleBandPadding + reducibleCandidatePadding;
             
-            if (stillRemaining <= totalReduciblePadding) {
-              // Distribute padding reduction proportionally
-              const bandPaddingRatio = reducibleBandPadding / totalReduciblePadding;
-              const candidatePaddingRatio = reducibleCandidatePadding / totalReduciblePadding;
-              
-              const bandPaddingReduction = stillRemaining * bandPaddingRatio;
-              const candidatePaddingReduction = stillRemaining * candidatePaddingRatio;
-              
+            if (stillRemaining <= reducibleBandPadding) {
+              // Only reduce band padding
+              const bandPaddingReduction = Math.ceil(stillRemaining / (totalBands * 2));
               bandPadding = Math.max(
                 MIN_BAND_PADDING,
-                DEFAULT_BAND_PADDING - Math.ceil(bandPaddingReduction / (totalBands * 2))
-              );
-              candidatePadding = Math.max(
-                MIN_CANDIDATE_PADDING,
-                DEFAULT_CANDIDATE_PADDING - Math.ceil(candidatePaddingReduction / (totalCandidates * 2))
+                DEFAULT_BAND_PADDING - bandPaddingReduction
               );
               requiredHeight = labelHeight + candidateAreaHeight + totalBands * bandGap + 
                               totalCandidates * candidateGap + totalBands * bandPadding * 2 + 
                               totalCandidates * candidatePadding * 2;
             } else {
+              // Reduce band padding to minimum, then reduce candidate padding as last resort
               bandPadding = MIN_BAND_PADDING;
-              candidatePadding = MIN_CANDIDATE_PADDING;
+              const stillRemainingAfterBandPadding = stillRemaining - reducibleBandPadding;
               
-              // Recalculate required height with minimum padding
+              // Recalculate required height with minimum band padding
               requiredHeight = labelHeight + candidateAreaHeight + totalBands * bandGap + 
                               totalCandidates * candidateGap + totalBands * bandPadding * 2 + 
                               totalCandidates * candidatePadding * 2;
+              
+              // Now reduce candidate padding as last resort
+              const reducibleCandidatePadding = totalCandidates * (DEFAULT_CANDIDATE_PADDING - MIN_CANDIDATE_PADDING) * 2;
+              
+              if (stillRemainingAfterBandPadding <= reducibleCandidatePadding) {
+                const candidatePaddingReduction = Math.ceil(stillRemainingAfterBandPadding / (totalCandidates * 2));
+                candidatePadding = Math.max(
+                  MIN_CANDIDATE_PADDING,
+                  DEFAULT_CANDIDATE_PADDING - candidatePaddingReduction
+                );
+                requiredHeight = labelHeight + candidateAreaHeight + totalBands * bandGap + 
+                                totalCandidates * candidateGap + totalBands * bandPadding * 2 + 
+                                totalCandidates * candidatePadding * 2;
+              } else {
+                // Reduce candidate padding to absolute minimum
+                candidatePadding = MIN_CANDIDATE_PADDING;
+                requiredHeight = labelHeight + candidateAreaHeight + totalBands * bandGap + 
+                                totalCandidates * candidateGap + totalBands * bandPadding * 2 + 
+                                totalCandidates * candidatePadding * 2;
+              }
               
               // Check if horizontal layout would help
               const estimatedHorizontalWidth = totalCandidates * 150; // rough estimate
