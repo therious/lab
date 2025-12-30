@@ -1,10 +1,11 @@
-import React from 'react';
+import React, {useRef} from 'react';
 import styled from 'styled-components';
 import {useSelector} from '../actions-integration';
 import {actions} from '../actions-integration';
 import {TotalState} from '../actions/combined-slices';
 import {DraggableCandidate} from './DraggableCandidate';
 import {ScoreBand} from './ScoreBand';
+import {useResponsiveSpacing} from './useResponsiveSpacing';
 
 const Container = styled.div`
   display: flex;
@@ -52,7 +53,7 @@ const LeftPanel = styled.div`
   padding: 1rem;
   border: 2px solid #ccc;
   border-radius: 8px;
-  overflow-y: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 `;
@@ -62,13 +63,13 @@ const RightPanel = styled.div`
   padding: 1rem;
   border: 2px solid #ccc;
   border-radius: 8px;
-  overflow-y: auto;
+  overflow: hidden;
 `;
 
-const ApproveGroup = styled.div`
+const ApproveGroup = styled.div<{$gap: number}>`
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: ${props => props.$gap}px;
   margin-bottom: 1rem;
 `;
 
@@ -145,10 +146,19 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
   const {elections, votes} = useSelector((s: TotalState) => s.election);
   const election = elections.find((e: {title: string}) => e.title === electionTitle);
   const vote = votes[electionTitle];
+  const leftPanelRef = useRef<HTMLDivElement>(null);
 
   if (!election || !vote) {
     return <div>Election not found</div>;
   }
+
+  // Calculate total candidates and bands for spacing
+  const totalCandidates = Object.keys(vote)
+    .filter(key => key !== 'unranked')
+    .reduce((sum, key) => sum + (vote[key]?.length || 0), 0);
+  const totalBands = 6; // 5 approve bands + 1 reject band
+
+  const spacing = useResponsiveSpacing(leftPanelRef, totalCandidates, totalBands);
 
   const handleReset = () => {
     actions.election.resetElection(electionTitle);
@@ -168,8 +178,8 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
         <ResetButton onClick={handleReset}>Reset</ResetButton>
       </TopPanel>
       <BottomPanels>
-        <LeftPanel>
-          <ApproveGroup>
+        <LeftPanel ref={leftPanelRef}>
+          <ApproveGroup $gap={spacing.bandGap}>
             <GroupLabel title="Rank candidates based on their qualifications and ability to perform the job duties, independent of policy positions. This is about competence and fitness for office, not political alignment.">Approve</GroupLabel>
             {BAND_CONFIG.slice(0, 5).map(({score, label, color, tooltip}) => (
               <ScoreBand
@@ -180,6 +190,11 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                 tooltip={tooltip}
                 candidates={vote[score] || []}
                 electionTitle={electionTitle}
+                padding={spacing.bandPadding}
+                gap={spacing.candidateGap}
+                candidateHeight={spacing.candidateHeight}
+                candidatePadding={spacing.candidatePadding}
+                horizontal={spacing.horizontal}
                 onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, score, toIndex)}
                 onReorder={(fromIndex, toIndex) => handleReorder(score, fromIndex, toIndex)}
               />
@@ -194,6 +209,11 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
               tooltip={BAND_CONFIG[5].tooltip}
               candidates={vote['0'] || []}
               electionTitle={electionTitle}
+              padding={spacing.bandPadding}
+              gap={spacing.candidateGap}
+              candidateHeight={spacing.candidateHeight}
+              candidatePadding={spacing.candidatePadding}
+              horizontal={spacing.horizontal}
               onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, '0', toIndex)}
               onReorder={(fromIndex, toIndex) => handleReorder('0', fromIndex, toIndex)}
             />

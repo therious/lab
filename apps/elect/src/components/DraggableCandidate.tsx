@@ -2,15 +2,21 @@ import React, {useRef, useEffect, useState} from 'react';
 import {draggable} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import styled from 'styled-components';
 
-const CandidateCard = styled.div<{$isDragging: boolean}>`
-  padding: 0.75rem;
-  margin: 0.5rem 0;
+const CandidateCard = styled.div<{$isDragging: boolean; $height: number; $padding: number}>`
+  padding: ${props => props.$padding}px;
+  margin: 0;
+  height: ${props => props.$height}px;
+  min-height: ${props => props.$height}px;
+  max-height: ${props => props.$height}px;
+  display: flex;
+  align-items: center;
   background-color: ${props => props.$isDragging ? '#e3f2fd' : '#fff'};
   border: 1px solid #ccc;
   border-radius: 4px;
   cursor: grab;
   user-select: none;
   transition: background-color 0.2s;
+  box-sizing: border-box;
   
   &:active {
     cursor: grabbing;
@@ -21,9 +27,11 @@ interface DraggableCandidateProps {
   candidateName: string;
   electionTitle: string;
   currentScore: string;
+  height?: number;
+  padding?: number;
 }
 
-export function DraggableCandidate({candidateName, electionTitle, currentScore}: DraggableCandidateProps) {
+export function DraggableCandidate({candidateName, electionTitle, currentScore, height = 48, padding = 12}: DraggableCandidateProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -44,7 +52,7 @@ export function DraggableCandidate({candidateName, electionTitle, currentScore}:
   }, [candidateName, electionTitle, currentScore]);
 
   return (
-    <CandidateCard ref={ref} $isDragging={isDragging}>
+    <CandidateCard ref={ref} $isDragging={isDragging} $height={height} $padding={padding}>
       {candidateName}
     </CandidateCard>
   );

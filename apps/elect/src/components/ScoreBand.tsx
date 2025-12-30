@@ -3,18 +3,20 @@ import {dropTargetForElements} from '@atlaskit/pragmatic-drag-and-drop/element/a
 import {DraggableCandidate} from './DraggableCandidate';
 import styled from 'styled-components';
 
-const BandContainer = styled.div<{$isOver: boolean; $color: string}>`
-  min-height: 60px;
-  padding: 0.5rem;
+const BandContainer = styled.div<{$isOver: boolean; $color: string; $padding: number; $gap: number; $horizontal: boolean}>`
+  min-height: ${props => props.$horizontal ? 'auto' : '60px'};
+  padding: ${props => props.$padding}px;
   margin: 0.5rem 0;
   background-color: ${props => props.$isOver ? props.$color + 'dd' : props.$color + '33'};
   border: 2px solid ${props => props.$color};
   border-radius: 8px;
   transition: background-color 0.2s;
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  flex-direction: ${props => props.$horizontal ? 'row' : 'column'};
+  flex-wrap: ${props => props.$horizontal ? 'wrap' : 'nowrap'};
+  gap: ${props => props.$gap}px;
   position: relative;
+  align-items: ${props => props.$horizontal ? 'center' : 'stretch'};
 `;
 
 const BandLabel = styled.div`
@@ -44,10 +46,23 @@ const InsertionLine = styled.div<{$top: number; $visible: boolean; $color: strin
     0 0 6px rgba(0, 0, 0, 0.4);
 `;
 
-const CandidateWrapper = styled.div<{$isDraggedOver: boolean}>`
+const CandidateWrapper = styled.div<{$isDraggedOver: boolean; $horizontal: boolean}>`
   position: relative;
   opacity: ${props => props.$isDraggedOver ? 0.5 : 1};
   transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  ${props => props.$horizontal ? 'flex-shrink: 0;' : ''}
+`;
+
+const Triangle = styled.div`
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 12px solid #666;
+  margin: 0 4px;
+  flex-shrink: 0;
 `;
 
 interface ScoreBandProps {
@@ -57,11 +72,30 @@ interface ScoreBandProps {
   tooltip?: string;
   candidates: string[];
   electionTitle: string;
+  padding?: number;
+  gap?: number;
+  candidateHeight?: number;
+  candidatePadding?: number;
+  horizontal?: boolean;
   onDrop: (candidateName: string, fromScore: string, toIndex: number) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
 }
 
-export function ScoreBand({score, label, color, tooltip, candidates, electionTitle, onDrop, onReorder}: ScoreBandProps) {
+export function ScoreBand({
+  score,
+  label,
+  color,
+  tooltip,
+  candidates,
+  electionTitle,
+  padding = 8,
+  gap = 4,
+  candidateHeight = 48,
+  candidatePadding = 12,
+  horizontal = false,
+  onDrop,
+  onReorder,
+}: ScoreBandProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isOver, setIsOver] = useState(false);
   const [insertionIndex, setInsertionIndex] = useState<number | null>(null);
@@ -172,23 +206,28 @@ export function ScoreBand({score, label, color, tooltip, candidates, electionTit
   }, [score, electionTitle, candidates.length, onDrop]);
 
   return (
-    <BandContainer ref={ref} $isOver={isOver} $color={color}>
+    <BandContainer ref={ref} $isOver={isOver} $color={color} $padding={padding} $gap={gap} $horizontal={horizontal}>
       <BandLabel title={tooltip}>{label}</BandLabel>
-      {insertionIndex !== null && (
+      {insertionIndex !== null && !horizontal && (
         <InsertionLine $top={insertionTop} $visible={isOver} $color={color} />
       )}
       {candidates.map((candidate, index) => (
-        <CandidateWrapper 
-          key={`${score}-${candidate}-${index}`} 
-          data-candidate-index={index}
-          $isDraggedOver={isOver && insertionIndex === index}
-        >
-          <DraggableCandidate
-            candidateName={candidate}
-            electionTitle={electionTitle}
-            currentScore={score}
-          />
-        </CandidateWrapper>
+        <React.Fragment key={`${score}-${candidate}-${index}`}>
+          {horizontal && index > 0 && <Triangle />}
+          <CandidateWrapper 
+            data-candidate-index={index}
+            $isDraggedOver={isOver && insertionIndex === index}
+            $horizontal={horizontal}
+          >
+            <DraggableCandidate
+              candidateName={candidate}
+              electionTitle={electionTitle}
+              currentScore={score}
+              height={candidateHeight}
+              padding={candidatePadding}
+            />
+          </CandidateWrapper>
+        </React.Fragment>
       ))}
     </BandContainer>
   );
