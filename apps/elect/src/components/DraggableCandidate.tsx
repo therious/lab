@@ -61,12 +61,16 @@ interface DraggableCandidateProps {
 
 export function DraggableCandidate({candidateName, electionTitle, currentScore, height = 48, padding = 12, horizontal = false, isJustMoved = false, onJustMovedEnd}: DraggableCandidateProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
+
+    let previewElement: HTMLDivElement | null = null;
+    let mouseMoveHandler: ((e: MouseEvent) => void) | null = null;
 
     return draggable({
       element,
@@ -75,40 +79,64 @@ export function DraggableCandidate({candidateName, electionTitle, currentScore, 
         electionTitle,
         currentScore,
       }),
-      onDragStart: () => {
+      onDragStart: ({location}) => {
         setIsDragging(true);
         
-        // Add data attribute for CSS targeting
-        element.setAttribute('data-dragging', 'true');
+        // Create custom drag preview element
+        const rect = element.getBoundingClientRect();
+        previewElement = document.createElement('div');
+        previewElement.textContent = candidateName;
+        previewElement.style.position = 'fixed';
+        previewElement.style.left = `${rect.left}px`;
+        previewElement.style.top = `${rect.top}px`;
+        previewElement.style.width = `${rect.width}px`;
+        previewElement.style.height = `${rect.height}px`;
+        previewElement.style.padding = `${padding}px`;
+        previewElement.style.backgroundColor = '#e3f2fd';
+        previewElement.style.border = '2px solid #2196f3';
+        previewElement.style.borderRadius = '4px';
+        previewElement.style.boxShadow = '0 2px 8px rgba(33, 150, 243, 0.3)';
+        previewElement.style.display = 'flex';
+        previewElement.style.alignItems = 'center';
+        previewElement.style.pointerEvents = 'none';
+        previewElement.style.zIndex = '9999';
+        previewElement.style.opacity = '1';
+        previewElement.style.boxSizing = 'border-box';
+        document.body.appendChild(previewElement);
+        previewRef.current = previewElement;
         
-        // Temporarily apply highlight styles to element for drag preview
-        // The library will capture these styles for the preview
-        const originalStyles = {
-          backgroundColor: element.style.backgroundColor,
-          border: element.style.border,
-          boxShadow: element.style.boxShadow,
+        // Update preview position as mouse moves
+        mouseMoveHandler = (e: MouseEvent) => {
+          if (previewElement) {
+            previewElement.style.left = `${e.clientX - rect.width / 2}px`;
+            previewElement.style.top = `${e.clientY - rect.height / 2}px`;
+          }
         };
-        
-        element.style.backgroundColor = '#e3f2fd';
-        element.style.border = '2px solid #2196f3';
-        element.style.boxShadow = '0 2px 8px rgba(33, 150, 243, 0.3)';
-        
-        // Log to inspect what the library creates
-        setTimeout(() => {
-          console.log('Drag preview elements:', document.querySelectorAll('[data-pdnd], [data-dragging], .pdnd-preview'));
-        }, 100);
-        
-        // Restore original styles after browser captures preview
-        requestAnimationFrame(() => {
-          element.style.backgroundColor = originalStyles.backgroundColor || '';
-          element.style.border = originalStyles.border || '';
-          element.style.boxShadow = originalStyles.boxShadow || '';
-          element.removeAttribute('data-dragging');
-        });
+        document.addEventListener('mousemove', mouseMoveHandler);
       },
-      onDrop: () => setIsDragging(false),
+      onDrag: ({location}) => {
+        // Update preview position during drag
+        if (previewElement && location.current.input) {
+          const rect = element.getBoundingClientRect();
+          previewElement.style.left = `${location.current.input.clientX - rect.width / 2}px`;
+          previewElement.style.top = `${location.current.input.clientY - rect.height / 2}px`;
+        }
+      },
+      onDrop: () => {
+        setIsDragging(false);
+        // Clean up preview element
+        if (previewElement && document.body.contains(previewElement)) {
+          document.body.removeChild(previewElement);
+        }
+        previewElement = null;
+        previewRef.current = null;
+        if (mouseMoveHandler) {
+          document.removeEventListener('mousemove', mouseMoveHandler);
+          mouseMoveHandler = null;
+        }
+      },
     });
-  }, [candidateName, electionTitle, currentScore]);
+  }, [candidateName, electionTitle, currentScore, padding]);
 
   // Handle fade-out animation for just-moved items
   useEffect(() => {
