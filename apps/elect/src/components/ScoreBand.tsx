@@ -157,7 +157,7 @@ interface ScoreBandProps {
   candidateHeight?: number;
   candidatePadding?: number;
   horizontal?: boolean;
-  onDrop: (candidateName: string, fromScore: string, toIndex: number, sourceElement?: HTMLElement, destinationElement?: HTMLElement) => void;
+  onDrop: (candidateName: string, fromScore: string, toIndex: number) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
 }
 
@@ -284,10 +284,25 @@ export function ScoreBand({
       getData: () => ({score, electionTitle}),
       onDragEnter: () => {
         setIsOver(true);
-        setInsertionIndex(0);
+        // Calculate initial insertion index based on current mouse position
+        const rect = element.getBoundingClientRect();
+        const clientY = window.event instanceof MouseEvent ? window.event.clientY : rect.top + rect.height / 2;
+        const clientX = window.event instanceof MouseEvent ? window.event.clientX : rect.left + rect.width / 2;
+        const index = calculateInsertionIndex(clientY, clientX);
+        setInsertionIndex(index);
+        if (!horizontal) {
+          setInsertionTop(calculateInsertionTop(index));
+        }
       },
-      onDrag: ({location}) => {
-        if (location.current.dropTargets.length > 0) {
+      onDrag: ({location, source}) => {
+        // Always show indicators when dragging, even if not yet registered as drop target
+        // This is especially important when dragging within the same band
+        const isFromSameBand = source.data && typeof source.data === 'object' && 
+                               'currentScore' in source.data && source.data.currentScore === score;
+        
+        // Show indicators if we're over this target OR if dragging from same band
+        if (location.current.dropTargets.length > 0 || isFromSameBand) {
+          setIsOver(true);
           const clientY = location.current.input.clientY;
           const clientX = location.current.input.clientX;
           const index = calculateInsertionIndex(clientY, clientX);
@@ -330,26 +345,7 @@ export function ScoreBand({
             finalIndex = calculateInsertionIndex(clientY, clientX);
           }
           
-          // Get source element (the dragged candidate)
-          const sourceElement = source.element as HTMLElement;
-          
-          // Get destination element (where it should land)
-          let destinationElement: HTMLElement | undefined;
-          const candidateElements = element.querySelectorAll('[data-candidate-index]');
-          
-          if (finalIndex < candidates.length && candidateElements[finalIndex]) {
-            // Inserting before an existing candidate - use that candidate as reference
-            destinationElement = candidateElements[finalIndex] as HTMLElement;
-          } else if (candidates.length > 0 && candidateElements[candidates.length - 1]) {
-            // Inserting at the end - use the last candidate as reference
-            destinationElement = candidateElements[candidates.length - 1] as HTMLElement;
-          } else {
-            // Empty band or no reference candidate - use the band container itself
-            // Position at the top of the band (after label)
-            destinationElement = element;
-          }
-          
-          onDrop(candidateName, fromScore, finalIndex, sourceElement, destinationElement);
+          onDrop(candidateName, fromScore, finalIndex);
         }
       },
     });
