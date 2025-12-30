@@ -384,8 +384,8 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
           </AllBandsContainer>
         </LeftPanel>
         <RightPanel>
-          <UnrankedSection ref={unrankedSectionRef} $isOver={isUnrankedOver}>
-                    <UnrankedLabel title={TOOLTIPS.unranked}>Unranked Candidates</UnrankedLabel>
+          <UnrankedSection ref={unrankedSectionRef} $isOver={isUnrankedOver} $padding={spacing.bandPadding} $gap={spacing.candidateGap}>
+            <UnrankedLabel title={TOOLTIPS.unranked}>Unranked Candidates</UnrankedLabel>
             {vote.unranked && vote.unranked.length > 0 ? (
               vote.unranked.map((candidateName: string) => (
                 <DraggableCandidate
