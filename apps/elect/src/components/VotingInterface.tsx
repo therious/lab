@@ -23,9 +23,17 @@ const TopPanel = styled.div`
   border: 2px solid #ccc;
   border-radius: 8px;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   background-color: #f9f9f9;
+  gap: 1rem;
+`;
+
+const DescriptionText = styled.div`
+  flex: 1;
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.4;
 `;
 
 const ResetButton = styled.button`
@@ -37,6 +45,7 @@ const ResetButton = styled.button`
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s;
+  flex-shrink: 0;
   
   &:hover {
     background-color: #c82333;

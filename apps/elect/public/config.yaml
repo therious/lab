@@ -5,12 +5,14 @@ sequence:
 
 elections:
   - title: "Presidential Election"
+    description: "4-year term beginning January 20, 2025. The President serves as head of state and head of government, with executive authority over federal agencies and the power to sign or veto legislation."
     candidates:
       - name: "Alice Johnson"
       - name: "Bob Smith"
       - name: "Catherine Lee"
       - name: "David Brown"
   - title: "NY Gubernatorial Election"
+    description: "4-year term beginning January 1, 2026. The Governor is the chief executive of New York State, responsible for implementing state laws and overseeing the state budget and agencies."
     candidates:
       - name: "Evelyn Garcia"
       - name: "Frank Wilson"
@@ -18,6 +20,7 @@ elections:
       - name: "Henry Davis"
       - name: "Isabella Rodriguez"
   - title: "Local School Board Election"
+    description: "3-year term beginning July 1, 2025. School Board members oversee district policies, budget, and curriculum, working with the superintendent to manage public education in the district."
     candidates:
       - name: "Jack Thompson"
       - name: "Kathy White"

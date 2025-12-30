@@ -6,6 +6,7 @@ export interface Candidate {
 
 export interface Election {
   title: string;
+  description?: string;
   candidates: Candidate[];
 }
 
