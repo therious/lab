@@ -365,6 +365,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                     horizontal={spacing.horizontal}
                     flexGrow={flexGrow}
                     candidateRanks={candidateRanks}
+                    candidateLookup={candidateLookup}
                     justMovedCandidate={justMovedCandidate || undefined}
                     onJustMovedEnd={handleJustMovedEnd}
                     onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, score, toIndex)}
@@ -393,6 +394,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                     horizontal={spacing.horizontal}
                     flexGrow={flexGrow}
                     candidateRanks={candidateRanks}
+                    candidateLookup={candidateLookup}
                     justMovedCandidate={justMovedCandidate || undefined}
                     onJustMovedEnd={handleJustMovedEnd}
                     onDrop={(candidateName, fromScore, toIndex) => handleDrop(candidateName, fromScore, '0', toIndex)}
@@ -416,6 +418,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                   height={spacing.candidateHeight}
                   padding={spacing.candidatePadding}
                   horizontal={false}
+                  affiliation={candidateLookup[candidateName]?.affiliation}
                 />
               ))
             ) : (
