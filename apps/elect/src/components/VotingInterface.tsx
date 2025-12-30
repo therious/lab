@@ -169,25 +169,19 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
         <RightPanel>
           <UnrankedSection>
             <UnrankedLabel>Unranked Candidates</UnrankedLabel>
-            {vote.unranked?.map(candidateName => (
-              <DraggableCandidate
-                key={candidateName}
-                candidateName={candidateName}
-                electionTitle={electionTitle}
-                currentScore="unranked"
-              />
-            ))}
+            {vote.unranked && vote.unranked.length > 0 ? (
+              vote.unranked.map(candidateName => (
+                <DraggableCandidate
+                  key={candidateName}
+                  candidateName={candidateName}
+                  electionTitle={electionTitle}
+                  currentScore="unranked"
+                />
+              ))
+            ) : (
+              <div style={{color: '#999', fontStyle: 'italic'}}>All candidates have been ranked</div>
+            )}
           </UnrankedSection>
-          {BAND_CONFIG.map(({score}) => (
-            vote[score]?.map(candidateName => (
-              <DraggableCandidate
-                key={`${score}-${candidateName}`}
-                candidateName={candidateName}
-                electionTitle={electionTitle}
-                currentScore={score}
-              />
-            ))
-          ))}
         </RightPanel>
       </BottomPanels>
     </Container>
