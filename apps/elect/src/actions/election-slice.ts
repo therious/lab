@@ -2,6 +2,7 @@ import {produce} from 'immer';
 
 export interface Candidate {
   name: string;
+  affiliation?: string;
 }
 
 export interface Election {

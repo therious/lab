@@ -236,6 +236,16 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
   const elections = useSelector((s: TotalState) => s.election.elections);
   const vote = useSelector((s: TotalState) => s.election.votes[electionTitle]);
   const election = elections.find((e: {title: string}) => e.title === electionTitle);
+  
+  // Create lookup map from candidate name to candidate object (for affiliation)
+  const candidateLookup = React.useMemo(() => {
+    if (!election) return {};
+    const lookup: Record<string, {name: string; affiliation?: string}> = {};
+    election.candidates.forEach(candidate => {
+      lookup[candidate.name] = candidate;
+    });
+    return lookup;
+  }, [election]);
   const leftPanelRef = useRef<HTMLDivElement>(null);
   const bandsContainerRef = useRef<HTMLDivElement>(null);
   const unrankedSectionRef = useRef<HTMLDivElement>(null);

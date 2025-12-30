@@ -11,6 +11,26 @@ const RankBadge = styled.div`
   flex-shrink: 0;
 `;
 
+const AffiliationText = styled.div`
+  font-size: 0.8rem;
+  color: #888;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 100%;
+`;
+
+const CandidateName = styled.div`
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
 const CandidateCard = styled.div<{$isDragging: boolean; $isJustMoved: boolean; $isFadingOut: boolean; $height: number; $padding: number; $horizontal: boolean}>`
   padding: ${props => props.$padding}px;
   margin: 0;
@@ -66,11 +86,12 @@ interface DraggableCandidateProps {
   padding?: number;
   horizontal?: boolean;
   rank?: number;
+  affiliation?: string;
   isJustMoved?: boolean;
   onJustMovedEnd?: () => void;
 }
 
-export function DraggableCandidate({candidateName, electionTitle, currentScore, height = 48, padding = 12, horizontal = false, rank, isJustMoved = false, onJustMovedEnd}: DraggableCandidateProps) {
+export function DraggableCandidate({candidateName, electionTitle, currentScore, height = 48, padding = 12, horizontal = false, rank, affiliation, isJustMoved = false, onJustMovedEnd}: DraggableCandidateProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
@@ -164,7 +185,8 @@ export function DraggableCandidate({candidateName, electionTitle, currentScore, 
   return (
     <CandidateCard ref={ref} $isDragging={isDragging} $isJustMoved={isJustMoved} $isFadingOut={isFadingOut} $height={height} $padding={padding} $horizontal={horizontal}>
       {rank !== undefined && <RankBadge>{rank}</RankBadge>}
-      {candidateName}
+      {affiliation && <AffiliationText>{affiliation}</AffiliationText>}
+      <CandidateName>{candidateName}</CandidateName>
     </CandidateCard>
   );
 }
