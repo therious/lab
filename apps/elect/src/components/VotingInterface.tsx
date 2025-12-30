@@ -157,21 +157,26 @@ const RejectBandWrapper = styled.div`
   flex-direction: column;
 `;
 
-const UnrankedSection = styled.div<{$isOver: boolean}>`
+const UnrankedSection = styled.div<{$isOver: boolean; $padding: number; $gap: number}>`
   flex: 1;
-  padding: 1rem;
+  padding: ${props => props.$padding}px;
+  margin: 1rem;
   background-color: ${props => props.$isOver ? '#e3f2fd' : '#e8f4f8'};
+  border: 2px solid #90caf9;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  transition: background-color 0.2s;
+  gap: ${props => props.$gap}px;
+  transition: background-color 0.2s, border-color 0.2s;
   min-height: 0;
   overflow-y: auto;
+  box-sizing: border-box;
 `;
 
 const UnrankedLabel = styled.div`
   font-weight: bold;
-  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
   color: #666;
 `;
 
