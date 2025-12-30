@@ -170,7 +170,7 @@ const UnrankedSection = styled.div<{$isOver: boolean; $padding: number; $gap: nu
   flex: 1;
   padding: ${props => props.$padding}px;
   margin: 1rem;
-  background-color: ${props => props.$isOver ? '#e3f2fd' : '#e8f4f8'};
+  background-color: ${props => props.$isOver ? 'rgba(227, 242, 253, 0.95)' : 'rgba(232, 244, 248, 0.95)'};
   border: 2px solid #90caf9;
   border-radius: 8px;
   display: flex;
