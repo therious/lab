@@ -61,10 +61,12 @@ const LeftPanel = styled.div`
 
 const RightPanel = styled.div`
   flex: 1;
-  padding: 1rem;
+  padding: 0;
   border: 2px solid #ccc;
   border-radius: 8px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 `;
 
 const AllBandsContainer = styled.div<{$gap: number}>`
@@ -119,15 +121,15 @@ const RejectBandWrapper = styled.div`
 `;
 
 const UnrankedSection = styled.div<{$isOver: boolean}>`
-  margin-top: 1rem;
+  flex: 1;
   padding: 1rem;
   background-color: ${props => props.$isOver ? '#e3f2fd' : '#e8f4f8'};
-  border-radius: 8px;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   transition: background-color 0.2s;
-  min-height: 100px;
+  min-height: 0;
+  overflow-y: auto;
 `;
 
 const UnrankedLabel = styled.div`
