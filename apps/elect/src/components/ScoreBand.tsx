@@ -19,11 +19,11 @@ const BandContainer = styled.div<{$isOver: boolean; $color: string; $padding: nu
   align-items: ${props => props.$horizontal ? 'center' : 'stretch'};
 `;
 
-const BandLabel = styled.div`
+const BandLabel = styled.div<{$isReject: boolean}>`
   font-weight: bold;
   font-size: 0.9rem;
   margin-bottom: 0.25rem;
-  color: #333;
+  color: ${props => props.$isReject ? '#fff' : '#333'};
   cursor: help;
 `;
 
@@ -284,9 +284,11 @@ export function ScoreBand({
     });
   }, [score, electionTitle, candidates.length, onDrop]);
 
+  const isReject = score === '0';
+  
   return (
     <BandContainer ref={ref} $isOver={isOver} $color={color} $padding={padding} $gap={gap} $horizontal={horizontal}>
-      <BandLabel title={tooltip}>{label}</BandLabel>
+      <BandLabel title={tooltip} $isReject={isReject}>{label}</BandLabel>
       {insertionIndex !== null && !horizontal && (
         <InsertionLine $top={insertionTop} $visible={isOver} $color={color} />
       )}

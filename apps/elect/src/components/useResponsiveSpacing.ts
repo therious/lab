@@ -20,8 +20,8 @@ const DEFAULT_BAND_PADDING = 8;
 const DEFAULT_CANDIDATE_PADDING = 12;
 const BAND_LABEL_HEIGHT = 24;
 const GROUP_LABEL_HEIGHT = 24;
-const REJECT_BORDER_HEIGHT = 3;
-const REJECT_PADDING = 16;
+const REJECT_BORDER_HEIGHT = 0; // Removed border
+const REJECT_PADDING = 0; // Removed padding, gap will handle spacing
 
 export function useResponsiveSpacing(
   containerRef: React.RefObject<HTMLDivElement>,

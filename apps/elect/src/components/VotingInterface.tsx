@@ -76,8 +76,6 @@ const ApproveGroup = styled.div<{$gap: number}>`
 
 const RejectGroup = styled.div`
   margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 3px solid #dc3545;
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
@@ -162,7 +160,7 @@ const BAND_CONFIG = [
   {
     score: '0',
     label: 'Unqualified/Unacceptable',
-    color: '#c62828', // Darker, more saturated red
+    color: '#1a1a1a', // Very dark grey
     tooltip: 'Candidates who are unqualified or unacceptable for office, regardless of their policy positions.',
   },
 ];
