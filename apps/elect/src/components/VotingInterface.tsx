@@ -77,25 +77,49 @@ const AllBandsContainer = styled.div<{$gap: number}>`
   min-height: 0;
 `;
 
-const GroupLabelContainer = styled.div<{$span: number; $startRow?: number}>`
+const ArrowContainer = styled.div<{$span: number; $startRow?: number}>`
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
   padding: 0.5rem;
-  border-right: 3px solid #333;
   grid-column: 1;
   ${props => props.$startRow ? `grid-row: ${props.$startRow} / span ${props.$span};` : `grid-row: span ${props.$span};`}
-  min-width: 2rem;
+  min-width: 3rem;
+  position: relative;
 `;
 
-const GroupLabel = styled.div`
+const ArrowLabel = styled.div`
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   color: #333;
+  white-space: nowrap;
   writing-mode: vertical-rl;
   text-orientation: mixed;
   transform: rotate(180deg);
-  white-space: nowrap;
+`;
+
+const ArrowLine = styled.div<{$direction: 'up' | 'down'}>`
+  flex: 1;
+  width: 2px;
+  background-color: #333;
+  position: relative;
+  margin: 0.25rem 0;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    ${props => props.$direction === 'up' ? 'top: 0;' : 'bottom: 0;'}
+    left: 50%;
+    transform: translateX(-50%) ${props => props.$direction === 'up' ? 'translateY(-50%)' : 'translateY(50%)'};
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    ${props => props.$direction === 'up' 
+      ? 'border-bottom: 10px solid #333;' 
+      : 'border-top: 10px solid #333;'}
+  }
 `;
 
 const BandsContainer = styled.div<{$gap: number}>`
@@ -103,7 +127,7 @@ const BandsContainer = styled.div<{$gap: number}>`
   flex-direction: column;
   gap: ${props => props.$gap}px;
   grid-column: 2;
-  grid-row: 2 / 7; /* Span rows 2-6 for the 5 approve bands */
+  grid-row: 1 / 6; /* Span rows 1-5 for the 5 approve bands */
   flex: 1;
   min-height: 0;
   width: 100%;
@@ -113,7 +137,7 @@ const BandsContainer = styled.div<{$gap: number}>`
 
 const RejectBandWrapper = styled.div`
   grid-column: 2;
-  grid-row: 7; /* Same row as reject label, after the 5 approve bands (rows 2-6) */
+  grid-row: 6; /* After the 5 approve bands (rows 1-5) */
   width: 100%;
   min-width: 0;
   position: relative;
@@ -257,9 +281,10 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
       <BottomPanels>
         <LeftPanel ref={leftPanelRef}>
           <AllBandsContainer $gap={spacing.bandGap}>
-            <GroupLabelContainer $span={5}>
-              <GroupLabel title="Rank candidates based on their qualifications and ability to perform the job duties, independent of policy positions. This is about competence and fitness for office, not political alignment.">Approve</GroupLabel>
-            </GroupLabelContainer>
+            <ArrowContainer $span={5}>
+              <ArrowLabel>Better</ArrowLabel>
+              <ArrowLine $direction="up" />
+            </ArrowContainer>
             <BandsContainer ref={bandsContainerRef} $gap={spacing.bandGap}>
               {BAND_CONFIG.slice(0, 5).map(({score, label, color, tooltip}) => (
                 <ScoreBand
@@ -282,9 +307,10 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                 />
               ))}
             </BandsContainer>
-            <GroupLabelContainer $span={1} $startRow={7}>
-              <GroupLabel title="Candidates who are unqualified or unacceptable for office, regardless of their policy positions. This assessment is based on competence, integrity, and fitness for the role, not political alignment.">Reject</GroupLabel>
-            </GroupLabelContainer>
+            <ArrowContainer $span={1} $startRow={6}>
+              <ArrowLine $direction="down" />
+              <ArrowLabel>Worse</ArrowLabel>
+            </ArrowContainer>
             <RejectBandWrapper>
               <ScoreBand
                 score="0"
