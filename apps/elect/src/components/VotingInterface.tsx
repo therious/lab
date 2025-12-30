@@ -322,6 +322,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
   return (
     <Container>
       <TopPanel>
+        {election.description && <DescriptionText>{election.description}</DescriptionText>}
         <ResetButton onClick={handleReset}>Reset</ResetButton>
       </TopPanel>
       <BottomPanels>
