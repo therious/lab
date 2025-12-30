@@ -120,7 +120,7 @@ export function useResponsiveSpacing(
               );
               requiredHeight = labelHeight + candidateAreaHeight + (totalBands - 1) * bandGap + 
                               totalCandidates * candidateGap + totalBands * bandPadding * 2 + 
-                              totalCandidates * candidatePadding * 2 + rejectBorderHeight;
+                              totalCandidates * candidatePadding * 2 + bandGap;
             } else {
               bandPadding = MIN_BAND_PADDING;
               candidatePadding = MIN_CANDIDATE_PADDING;
