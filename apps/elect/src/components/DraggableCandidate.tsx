@@ -1,6 +1,5 @@
 import React, {useRef, useEffect, useState} from 'react';
 import {draggable} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import {disableNativeDragPreview} from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
 import styled from 'styled-components';
 
 const CandidateCard = styled.div<{$isDragging: boolean; $isJustMoved: boolean; $isFadingOut: boolean; $height: number; $padding: number; $horizontal: boolean}>`
@@ -62,16 +61,12 @@ interface DraggableCandidateProps {
 
 export function DraggableCandidate({candidateName, electionTitle, currentScore, height = 48, padding = 12, horizontal = false, isJustMoved = false, onJustMovedEnd}: DraggableCandidateProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const previewRef = useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
-
-    let previewElement: HTMLDivElement | null = null;
-    let mouseMoveHandler: ((e: MouseEvent) => void) | null = null;
 
     return draggable({
       element,
@@ -80,64 +75,41 @@ export function DraggableCandidate({candidateName, electionTitle, currentScore, 
         electionTitle,
         currentScore,
       }),
-      onDragStart: ({source, location}) => {
-        setIsDragging(true);
-        
-        // Disable native drag preview using library utility
-        disableNativeDragPreview({source});
-        
-        // Create custom drag preview element
+      onGenerateDragPreview: ({nativeSetDragImage}) => {
+        // Create a styled clone for the drag preview
         const rect = element.getBoundingClientRect();
-        previewElement = document.createElement('div');
-        previewElement.textContent = candidateName;
-        previewElement.style.position = 'fixed';
-        previewElement.style.left = `${location.current.input.clientX - rect.width / 2}px`;
-        previewElement.style.top = `${location.current.input.clientY - rect.height / 2}px`;
-        previewElement.style.width = `${rect.width}px`;
-        previewElement.style.height = `${rect.height}px`;
-        previewElement.style.padding = `${padding}px`;
-        previewElement.style.backgroundColor = '#e3f2fd';
-        previewElement.style.border = '2px solid #2196f3';
-        previewElement.style.borderRadius = '4px';
-        previewElement.style.boxShadow = '0 2px 8px rgba(33, 150, 243, 0.3)';
-        previewElement.style.display = 'flex';
-        previewElement.style.alignItems = 'center';
-        previewElement.style.pointerEvents = 'none';
-        previewElement.style.zIndex = '9999';
-        previewElement.style.opacity = '1';
-        previewElement.style.boxSizing = 'border-box';
-        document.body.appendChild(previewElement);
-        previewRef.current = previewElement;
+        const clone = element.cloneNode(true) as HTMLElement;
         
-        // Update preview position as mouse moves
-        mouseMoveHandler = (e: MouseEvent) => {
-          if (previewElement) {
-            previewElement.style.left = `${e.clientX - rect.width / 2}px`;
-            previewElement.style.top = `${e.clientY - rect.height / 2}px`;
-          }
-        };
-        document.addEventListener('mousemove', mouseMoveHandler);
-      },
-      onDrag: ({location}) => {
-        // Update preview position during drag
-        if (previewElement && location.current.input) {
-          const rect = element.getBoundingClientRect();
-          previewElement.style.left = `${location.current.input.clientX - rect.width / 2}px`;
-          previewElement.style.top = `${location.current.input.clientY - rect.height / 2}px`;
+        // Apply highlight styles to clone
+        clone.style.backgroundColor = '#e3f2fd';
+        clone.style.border = '2px solid #2196f3';
+        clone.style.boxShadow = '0 2px 8px rgba(33, 150, 243, 0.3)';
+        clone.style.position = 'fixed';
+        clone.style.top = '-9999px';
+        clone.style.left = '-9999px';
+        clone.style.opacity = '1';
+        document.body.appendChild(clone);
+        
+        // Use the clone as drag image
+        if (nativeSetDragImage) {
+          // Calculate offset to center the preview on cursor
+          const offsetX = rect.width / 2;
+          const offsetY = rect.height / 2;
+          nativeSetDragImage(clone, offsetX, offsetY);
         }
+        
+        // Clean up clone after a brief delay
+        setTimeout(() => {
+          if (document.body.contains(clone)) {
+            document.body.removeChild(clone);
+          }
+        }, 0);
+      },
+      onDragStart: () => {
+        setIsDragging(true);
       },
       onDrop: () => {
         setIsDragging(false);
-        // Clean up preview element
-        if (previewElement && document.body.contains(previewElement)) {
-          document.body.removeChild(previewElement);
-        }
-        previewElement = null;
-        previewRef.current = null;
-        if (mouseMoveHandler) {
-          document.removeEventListener('mousemove', mouseMoveHandler);
-          mouseMoveHandler = null;
-        }
       },
     });
   }, [candidateName, electionTitle, currentScore, padding]);
