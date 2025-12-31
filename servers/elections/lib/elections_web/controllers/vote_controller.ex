@@ -25,6 +25,11 @@ defmodule ElectionsWeb.VoteController do
         |> put_status(:conflict)
         |> json(%{error: "Token has already been used"})
 
+      {:error, :voting_not_open} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "Voting is not yet open for this election. This is a preview token for testing the interface."})
+
       {:error, :voting_window_closed} ->
         conn
         |> put_status(:forbidden)
