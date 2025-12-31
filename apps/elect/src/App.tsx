@@ -523,9 +523,9 @@ function ResultsView() {
               <p><strong>Voting Ends:</strong> {new Date(metadata.voting_end).toLocaleString()}</p>
             )}
           </div>
-          {metadata.vote_timestamps && metadata.vote_timestamps.length > 0 && metadata.voting_start && metadata.voting_end && (
+          {metadata.voting_start && metadata.voting_end && (
             <VoteTimeline
-              voteTimestamps={metadata.vote_timestamps}
+              voteTimestamps={metadata.vote_timestamps || []}
               votingStart={metadata.voting_start}
               votingEnd={metadata.voting_end}
               totalVotes={metadata.total_votes || 0}
