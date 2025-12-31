@@ -337,7 +337,14 @@ function SummaryView() {
         }
         
         return (
-          <div key={ballot.title} style={{border: '2px solid #ccc', borderRadius: '8px', padding: '1rem', marginBottom: '1rem'}}>
+          <div 
+            key={ballot.title} 
+            style={{border: '2px solid #ccc', borderRadius: '8px', padding: '1rem', marginBottom: '1rem', cursor: 'pointer'}}
+            onClick={() => {
+              const encodedTitle = encodeURIComponent(ballot.title);
+              window.location.href = `/ballot/${encodedTitle}`;
+            }}
+          >
             <ElectionTitle>{ballot.title}</ElectionTitle>
             {ballot.description && <p style={{color: '#666', fontSize: '0.9rem', margin: '0.5rem 0'}}>{ballot.description}</p>}
             <BandsContainer>
@@ -606,7 +613,7 @@ function ResultsView() {
 }
 
 export default function App() {
-  const {ballots, currentElection, token} = useSelector((s: TotalState) => s.election);
+  const {ballots, currentElection, token, votes, confirmations} = useSelector((s: TotalState) => s.election);
   const location = useLocation();
   const sessionToken = sessionStorage.getItem('vote_token');
 
@@ -655,15 +662,71 @@ export default function App() {
         <NavLink to="/summary" $active={location.pathname === '/summary' || location.pathname === '/'}>
           Summary
         </NavLink>
-        {ballots.map((ballot: Ballot) => (
-          <NavLink
-            key={ballot.title}
-            to={`/ballot/${encodeURIComponent(ballot.title)}`}
-            $active={location.pathname.includes(`/ballot/${encodeURIComponent(ballot.title)}`)}
-          >
-            {ballot.title}
-          </NavLink>
-        ))}
+        {ballots.map((ballot: Ballot) => {
+          const vote = votes[ballot.title];
+          const isConfirmed = confirmations[ballot.title] || false;
+          
+          // Calculate completion: count candidates in score bands (0-5)
+          const totalCandidates = ballot.candidates.length;
+          let rankedCount = 0;
+          if (vote) {
+            for (let score = 0; score <= 5; score++) {
+              rankedCount += (vote[score.toString()] || []).length;
+            }
+          }
+          const allRanked = rankedCount === totalCandidates;
+          const partiallyFilled = rankedCount > 0 && rankedCount < totalCandidates;
+          const nothingRanked = rankedCount === 0;
+          
+          return (
+            <NavLink
+              key={ballot.title}
+              to={`/ballot/${encodeURIComponent(ballot.title)}`}
+              $active={location.pathname.includes(`/ballot/${encodeURIComponent(ballot.title)}`)}
+              style={{position: 'relative'}}
+            >
+              {ballot.title}
+              {isConfirmed && (
+                <span style={{
+                  marginLeft: '0.5rem',
+                  color: nothingRanked ? '#2196f3' : '#4caf50',
+                  fontSize: '0.9rem'
+                }}>
+                  ✓
+                </span>
+              )}
+              {!isConfirmed && allRanked && (
+                <span style={{
+                  marginLeft: '0.5rem',
+                  color: '#999',
+                  fontSize: '0.9rem',
+                  border: '1px solid #999',
+                  borderRadius: '50%',
+                  width: '0.9rem',
+                  height: '0.9rem',
+                  display: 'inline-block',
+                  lineHeight: '0.9rem',
+                  textAlign: 'center'
+                }}>
+                  ✓
+                </span>
+              )}
+              {!isConfirmed && partiallyFilled && (
+                <span style={{
+                  marginLeft: '0.5rem',
+                  fontSize: '0.75rem',
+                  background: '#ff9800',
+                  color: 'white',
+                  padding: '0.1rem 0.3rem',
+                  borderRadius: '10px',
+                  fontWeight: 'bold'
+                }}>
+                  {Math.round((rankedCount / totalCandidates) * 100)}%
+                </span>
+              )}
+            </NavLink>
+          );
+        })}
       </Navbar>
       <CenterBody>
         <Routes>
