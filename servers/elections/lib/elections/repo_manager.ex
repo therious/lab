@@ -33,13 +33,19 @@ defmodule Elections.RepoManager do
     new_config = Keyword.put(original_config, :database, db_path)
     Application.put_env(:elections, Elections.Repo, new_config)
     
-    # Ensure database exists and is migrated
+    # Ensure database exists - migrations will run on first use
     if not File.exists?(db_path) do
-      ensure_migrations()
-      run_migrations(election_identifier, db_path)
+      # Just create empty file - migrations will run when repo is used
+      File.touch!(db_path)
     end
     
     try do
+      # Run migrations if needed (Ecto will check schema_migrations table)
+      if File.exists?(@migrations_path) do
+        # Use the repo to run migrations - it will use the current database config
+        Ecto.Migrator.run(Elections.Repo, @migrations_path, :up, all: true)
+      end
+      
       fun.(Elections.Repo)
     after
       # Restore original config
@@ -69,31 +75,11 @@ defmodule Elections.RepoManager do
   def create_election_db(election_identifier) when is_binary(election_identifier) do
     File.mkdir_p!(@db_dir)
     db_path = db_path(election_identifier)
-    ensure_migrations()
-    run_migrations(election_identifier, db_path)
+    # Just create the database file - migrations will run when repo is first used
+    if not File.exists?(db_path) do
+      File.touch!(db_path)
+    end
     :ok
-  end
-
-  defp run_migrations(_election_identifier, db_path) do
-    # Temporarily configure repo for migrations
-    original_config = Application.get_env(:elections, Elections.Repo, [])
-    new_config = Keyword.put(original_config, :database, db_path)
-    Application.put_env(:elections, Elections.Repo, new_config)
-    
-    try do
-      if File.exists?(@migrations_path) do
-        Ecto.Migrator.run(Elections.Repo, @migrations_path, :up, all: true)
-      end
-    after
-      Application.put_env(:elections, Elections.Repo, original_config)
-    end
-  end
-
-  defp ensure_migrations do
-    # Migrations should already exist in priv/repo/migrations
-    if not File.exists?(@migrations_path) do
-      IO.puts("Warning: Migrations directory not found at #{@migrations_path}")
-    end
   end
 
   defp sanitize_identifier(identifier) do
