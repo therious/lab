@@ -160,6 +160,8 @@ const SubmitButton = styled.button<{$enabled: boolean}>`
 
 function SummaryView() {
   const {ballots, votes, confirmations, currentElection, token} = useSelector((s: TotalState) => s.election);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
 
   const BAND_CONFIG = [
     { score: '5', label: 'Excellent', color: '#2e7d32' },
@@ -201,20 +203,51 @@ function SummaryView() {
       const data = await response.json();
 
       if (response.ok) {
-        alert('Vote submitted successfully!');
-        // Could navigate to a confirmation page
+        setShowSuccessModal(true);
+        setSubmissionError(null);
       } else {
-        alert(`Error: ${data.error || 'Failed to submit vote'}`);
+        setSubmissionError(data.error || 'Failed to submit vote');
       }
     } catch (err) {
       console.error('Error submitting vote:', err);
-      alert('An error occurred while submitting your vote.');
+      setSubmissionError('An error occurred while submitting your vote.');
     }
   };
 
   return (
-    <SummaryContainer>
-      <h1>{currentElection?.title || 'Election Summary'}</h1>
+    <>
+      {showSuccessModal && (
+        <ModalOverlay onClick={() => setShowSuccessModal(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalTitle>Vote Submitted Successfully!</ModalTitle>
+            <ModalMessage>
+              Your vote has been recorded. You can view your submitted vote using your view token if needed.
+            </ModalMessage>
+            <ModalButtons>
+              <ModalButton $primary onClick={() => setShowSuccessModal(false)}>
+                Close
+              </ModalButton>
+            </ModalButtons>
+          </ModalContent>
+        </ModalOverlay>
+      )}
+      
+      {submissionError && (
+        <ModalOverlay onClick={() => setSubmissionError(null)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalTitle style={{color: '#d32f2f'}}>Submission Error</ModalTitle>
+            <ModalMessage>{submissionError}</ModalMessage>
+            <ModalButtons>
+              <ModalButton $primary onClick={() => setSubmissionError(null)}>
+                Close
+              </ModalButton>
+            </ModalButtons>
+          </ModalContent>
+        </ModalOverlay>
+      )}
+      
+      <SummaryContainer>
+        <h1>{currentElection?.title || 'Election Summary'}</h1>
       {ballots.map((ballot: Ballot) => {
         const vote = votes[ballot.title];
         if (!vote) return null;
