@@ -17,7 +17,8 @@ defmodule ElectionsWeb.Router do
   scope "/", ElectionsWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    # Serve the React app for all non-API routes
+    get "/*path", PageController, :home
   end
 
   # Other scopes may use custom stacks.
@@ -26,6 +27,7 @@ defmodule ElectionsWeb.Router do
 
     # Token generation (dev/testing only)
     post "/tokens", TokenController, :create
+    get "/debug/token", TokenController, :debug_get_token
 
     # Vote submission and viewing
     post "/votes", VoteController, :submit

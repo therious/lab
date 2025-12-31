@@ -1,0 +1,51 @@
+I would like to create a new react vite based application that uses redux and styled components in ways simlar to projects like ticket, zclient, roots and circle.. This application should be called "elect".  You should use the Atlassian pragmatic drag and drop library for the drag and drop functionality.
+
+This project should be implemented incrementally, and you should incrementally test that it works and debug as you go.  Each step of the process you should commit the code so far to the current branch, labeling each message elect: <rest of commit message here>
+
+You can use longer format messages after the summary line that explains what the commit attempts to accomplish.
+
+It should start with a configuration file using my boot library. It should load a config.yaml that looks like the following example:
+
+elections:
+  - title: "Presidential Election"
+    candidates:
+      - name: "Alice Johnson"
+      - name: "Bob Smith"
+      - name: "Catherine Lee"
+      - name: "David Brown"
+  - title: "NY Gubernatorial Election"
+    candidates:
+      - name: "Evelyn Garcia"
+      - name: "Frank Wilson"
+      - name: "Grace Martinez"
+      - name: "Henry Davis"
+      - name: "Isabella Rodriguez"
+  - title: "Local School Board Election"
+    candidates:
+      - name: "Jack Thompson"
+      - name: "Kathy White"
+      - name: "Liam Harris"
+      - name: "Mia Clark"
+      - name: "Noah Lewis"
+      - name: "Olivia Walker"
+
+
+Each election should be available in a separate tab generating a route for each named election.
+
+Clicking on the name of the route gives you a screen to express your vote for that election.
+
+The screen will be divided into three bordered panels with rounded counters and gaps between them. The top panel will span the width of the screen, be of narrow height sufficient for some buttons and labels.  centered buttons. Start with just one button labeled Reset.  The next two panels will appear below this, be side by side. The right panel will have draggable widgets with names of candidates for that election. The left panel will be divided into six horizontal bands named and color coded from bottom to top as follows:
+0: Unqualified/Unacceptable (red)
+1: Very Bad (pastel red)
+2: Bad (pastel orange)
+3: Mediocre (pastel yellow)
+4: Good (pastel green)
+5: Excellent (slightly more saturated green)
+
+There should be a clear border between the bottom choice and the others, showing the top choices as part of a group labeled Approve, and the bottom choice at the bottom as Reject.
+
+The user should be able to drag any candidate into any band, and reorder candidates within a band. Within a band, the reordering of candidates should be vertical, with no two candidates occupying the same vertical space, so the order of preference is clear.
+
+There should be an additional Route tab at the top to vie a visual summary of all the choices so far. Sufficiently shrunken to show many elections at once, each one acting as a clickable link to retrun to that election's voting screen.
+
+The users choices for each election should be collected in a legible format in redux state, where the candidates a listed in an object with scores from 0 to 5, and within each score band the candidates are listed in order of preference. All bands must be represented, even if empty, and an additional band labeled, unranked, should contain remaining candidates not yet placed in any band.

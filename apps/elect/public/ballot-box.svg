@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+    xmlns:cc="http://creativecommons.org/ns#"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:svg="http://www.w3.org/2000/svg"
+    xmlns:ns1="http://sozi.baierouge.fr"
+    id="svg3966"
+    sodipodi:docname="mathafix-urne-vote.svg"
+    viewBox="0 0 246.7 283.28"
+    version="1.1"
+    inkscape:version="0.48.1 r9760"
+  >
+  <defs
+      id="defs3968"
+    >
+    <radialGradient
+        id="radialGradient3935-3"
+        gradientUnits="userSpaceOnUse"
+        cy="461.43"
+        cx="456.11"
+        gradientTransform="matrix(.88475 -1.4121 1.359 .85145 -656.54 958.15)"
+        r="123.35"
+        inkscape:collect="always"
+      >
+      <stop
+          id="stop3926-2"
+          style="stop-color:#475222;stop-opacity:.76027"
+          offset="0"
+      />
+      <stop
+          id="stop3928-91"
+          style="stop-color:#ffffff;stop-opacity:0"
+          offset="1"
+      />
+    </radialGradient
+    >
+  </defs
+  >
+  <sodipodi:namedview
+      id="base"
+      bordercolor="#666666"
+      inkscape:pageshadow="2"
+      inkscape:window-y="84"
+      fit-margin-left="0"
+      pagecolor="#ffffff"
+      fit-margin-top="0"
+      inkscape:window-maximized="0"
+      inkscape:zoom="0.98994949"
+      inkscape:window-x="250"
+      inkscape:window-height="963"
+      showgrid="false"
+      borderopacity="1.0"
+      inkscape:current-layer="layer1"
+      inkscape:cx="99.469989"
+      inkscape:cy="92.51736"
+      fit-margin-right="0"
+      fit-margin-bottom="0"
+      inkscape:window-width="1546"
+      inkscape:pageopacity="0.0"
+      inkscape:document-units="px"
+  />
+  <g
+      id="layer1"
+      inkscape:label="Calque 1"
+      inkscape:groupmode="layer"
+      transform="translate(-250.84 -418.62)"
+    >
+    <path
+        id="dessous"
+        style="fill:#445016"
+        inkscape:connector-curvature="0"
+        d="m252.34 574.65 123.82-66.29 119.88 64.21-122.85 127.67z"
+    />
+    <path
+        id="cache-gauche"
+        style="fill:#89a02c"
+        inkscape:connector-curvature="0"
+        d="m252.34 457.27 123.82-37.146-0.15534 88.319-123.66 66.214z"
+    />
+    <path
+        id="cache-droite"
+        style="fill:#677821"
+        inkscape:connector-curvature="0"
+        d="m376.16 420.12 119.88 36.58v115.87l-120.04-64.132z"
+    />
+    <path
+        id="droite"
+        style="opacity:.75;fill:#bcd35f"
+        inkscape:connector-curvature="0"
+        inkscape:label="#path3807"
+        d="m373.19 700.24 122.85-127.67v-115.87l-123.01 71.911z"
+    />
+    <path
+        id="gauche"
+        style="opacity:.75;fill:#bcd35f"
+        inkscape:connector-curvature="0"
+        d="m252.34 457.27 120.69 71.345 0.15537 171.63-120.85-125.58z"
+    />
+    <path
+        id="trait3805"
+        style="stroke:#cdde87;stroke-width:2;fill:#dde9af"
+        inkscape:connector-curvature="0"
+        d="m376.16 508.36v-88.236"
+    />
+    <path
+        id="bulletin-inf"
+        style="stroke:#000000;stroke-width:2;fill:#f4eed7"
+        inkscape:connector-curvature="0"
+        d="m389.27 477.05-9.1082 31.471-32.584-25.863 6.1223-21.154"
+    />
+    <path
+        id="trait3803"
+        style="stroke:#bcd35f;stroke-width:2;fill:none"
+        inkscape:connector-curvature="0"
+        d="m252.34 574.65 123.82-66.29 119.88 64.21"
+    />
+    <path
+        id="dessus"
+        style="opacity:.75;fill:#dde9af"
+        inkscape:connector-curvature="0"
+        d="m376.16 420.12-123.81 37.156 120.69 71.344 123-71.938-119.88-36.562zm-24.312 30.5 55.719 22.875-12.594 6.0625-55.75-24.406 12.625-4.5312z"
+    />
+    <path
+        id="trait3797"
+        style="stroke:#ffffff;stroke-width:2;fill:none"
+        inkscape:connector-curvature="0"
+        d="m373.04 528.61v171.79"
+    />
+    <path
+        id="trait3795"
+        style="stroke:#ffffff;stroke-width:2;fill:none"
+        inkscape:connector-curvature="0"
+        d="m252.34 457.27 120.69 71.345 123.01-71.911"
+    />
+    <path
+        id="fente"
+        style="fill:none"
+        inkscape:connector-curvature="0"
+        d="m339.23 455.15 12.599-4.5128 55.726 22.853-12.573 6.0707z"
+    />
+    <path
+        id="contour"
+        style="stroke-linejoin:round;stroke:#000000;stroke-width:3;fill:url(#radialGradient3935-3)"
+        inkscape:connector-curvature="0"
+        d="m252.34 457.27v117.39l120.69 125.74 123.01-127.83v-115.87l-119.88-36.58z"
+    />
+    <path
+        id="bulletin-centre"
+        style="fill:#f4eed7"
+        inkscape:connector-curvature="0"
+        d="m356.31 452.47-2.625 9.0312 35.594 15.562 2.8438-9.9062-35.812-14.688z"
+    />
+    <path
+        id="bulletin-bord-gauche"
+        style="stroke:#000000;stroke-width:2;fill:#000000"
+        inkscape:connector-curvature="0"
+        d="m353.7 461.51 2.6143-9.0331"
+    />
+    <path
+        id="bulletin-bord-droit"
+        style="stroke:#000000;stroke-width:2;fill:#786721"
+        inkscape:connector-curvature="0"
+        d="m392.14 467.15-2.865 9.8993"
+    />
+    <path
+        id="fenteapparente"
+        sodipodi:nodetypes="cccccccccc"
+        style="stroke:#ffffff;stroke-width:1px;fill:none"
+        inkscape:connector-curvature="0"
+        d="m389.28 477.06 5.6875 2.5l12.59-6.06-15.44-6.34m-2.84 9.9-35.59-15.56m2.625-9.0312-4.4688-1.8438-12.625 4.5312 14.469 6.3438"
+    />
+    <path
+        id="bulletin-sup"
+        style="stroke-linejoin:round;stroke:#000000;stroke-linecap:round;stroke-width:2;fill:#f4eed7"
+        inkscape:connector-curvature="0"
+        d="m356.31 452.47 9.1328-31.556 34.105 20.607-7.4174 25.629"
+    />
+  </g
+  >
+  <metadata
+    >
+    <rdf:RDF
+      >
+      <cc:Work
+        >
+        <dc:format
+          >image/svg+xml</dc:format
+        >
+        <dc:type
+            rdf:resource="http://purl.org/dc/dcmitype/StillImage"
+        />
+        <cc:license
+            rdf:resource="http://creativecommons.org/licenses/publicdomain/"
+        />
+        <dc:publisher
+          >
+          <cc:Agent
+              rdf:about="http://openclipart.org/"
+            >
+            <dc:title
+              >Openclipart</dc:title
+            >
+          </cc:Agent
+          >
+        </dc:publisher
+        >
+        <dc:title
+          >Vote</dc:title
+        >
+        <dc:date
+          >2012-04-22T11:47:26</dc:date
+        >
+        <dc:description
+          >Urne de vote.&#13;\nBallot box.</dc:description
+        >
+        <dc:source
+          >https://openclipart.org/detail/169646/vote-by-mathafix</dc:source
+        >
+        <dc:creator
+          >
+          <cc:Agent
+            >
+            <dc:title
+              >mathafix</dc:title
+            >
+          </cc:Agent
+          >
+        </dc:creator
+        >
+        <dc:subject
+          >
+          <rdf:Bag
+            >
+            <rdf:li
+              >ballot</rdf:li
+            >
+            <rdf:li
+              >election</rdf:li
+            >
+            <rdf:li
+              >polling</rdf:li
+            >
+            <rdf:li
+              >urne</rdf:li
+            >
+            <rdf:li
+              >vote</rdf:li
+            >
+            <rdf:li
+              >Ã©lection</rdf:li
+            >
+          </rdf:Bag
+          >
+        </dc:subject
+        >
+      </cc:Work
+      >
+      <cc:License
+          rdf:about="http://creativecommons.org/licenses/publicdomain/"
+        >
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#Reproduction"
+        />
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#Distribution"
+        />
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#DerivativeWorks"
+        />
+      </cc:License
+      >
+    </rdf:RDF
+    >
+  </metadata
+  >
+</svg
+>

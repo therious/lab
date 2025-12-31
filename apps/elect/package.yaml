@@ -21,6 +21,7 @@ scripts:
   build:    tsc && vite build
   preview:  vite preview --port 5173
   lint:     eslint . --ext js,jsx,ts,tsx
+  serve:    bash scripts/build-and-serve.sh
 browserslist:
   production:  &prod ["Chrome >= 112", "Edge >= 112", "Firefox >= 112", "Safari >= 16.4"]
   development: *prod
