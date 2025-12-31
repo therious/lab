@@ -1,6 +1,8 @@
 defmodule ElectionsWeb.TokenController do
   use ElectionsWeb, :controller
 
+  import Ecto.Query
+
   alias Elections.TokenGenerator
   alias Elections.Repo
   alias Elections.Election
