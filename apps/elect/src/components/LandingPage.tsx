@@ -93,6 +93,10 @@ const Button = styled.button<{$disabled?: boolean}>`
   &:hover:not(:disabled) {
     background: #5568d3;
   }
+  
+  &:disabled:hover {
+    background: #ccc;
+  }
 `;
 
 const ErrorMessage = styled.div`

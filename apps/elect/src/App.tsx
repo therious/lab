@@ -165,6 +165,10 @@ const SubmitButton = styled.button<{$enabled: boolean}>`
   &:disabled:hover {
     background: #ccc;
   }
+  
+  &:disabled:hover {
+    background: #ccc;
+  }
 `;
 
 const ModalOverlay = styled.div`
