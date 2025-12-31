@@ -40,6 +40,17 @@ defmodule Elections.ConfigLoader do
   end
 
   defp create_or_update_election(election_config) do
+    # Handle both old format (with "elections" array) and new format (direct election config)
+    if Map.has_key?(election_config, "elections") do
+      # Old format - skip it (we'll delete these files)
+      IO.puts("Warning: Skipping old format config file. Please use new format (one election per file).")
+      :ok
+    else
+      do_create_or_update_election(election_config)
+    end
+  end
+
+  defp do_create_or_update_election(election_config) do
     identifier = Map.get(election_config, "identifier") || generate_identifier(election_config)
 
     # Parse dates (assuming ISO 8601 format)
@@ -48,14 +59,19 @@ defmodule Elections.ConfigLoader do
     service_start = parse_date(Map.get(election_config, "service_start")) || voting_end
     service_end = parse_date(Map.get(election_config, "service_end"))
 
-    # Create election-specific database
-    RepoManager.create_election_db(identifier)
+    # Validate required fields
+    if is_nil(voting_start) || is_nil(voting_end) || is_nil(service_start) do
+      IO.puts("Error: Election #{identifier} is missing required date fields (voting_start, voting_end, service_start)")
+      :error
+    else
+      # Create election-specific database
+      RepoManager.create_election_db(identifier)
 
-    # Store election metadata and ballots in the election's database
-    RepoManager.with_repo(identifier, fn repo ->
-      attrs = %{
-        identifier: identifier,
-        config: election_config,  # Store full config including ballots
+      # Store election metadata and ballots in the election's database
+      RepoManager.with_repo(identifier, fn repo ->
+        attrs = %{
+          identifier: identifier,
+          config: election_config,  # Store full config including ballots
         voting_start: voting_start,
         voting_end: voting_end,
         service_start: service_start,
@@ -70,6 +86,8 @@ defmodule Elections.ConfigLoader do
           Election.changeset(existing, attrs) |> repo.update!()
       end
     end)
+    :ok
+    end
   end
 
   defp generate_identifier(election_config) do

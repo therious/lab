@@ -5,7 +5,7 @@ defmodule Elections.TokenGenerator do
 
   alias Elections.RepoManager
   alias Elections.Elections, as: ElectionsContext
-  alias Elections.{VoteToken, Election}
+  alias Elections.VoteToken
 
   @doc """
   Generate a token for an election given an email address.
