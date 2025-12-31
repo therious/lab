@@ -356,20 +356,118 @@ function BallotView() {
 
 function ResultsView() {
   const {currentElection} = useSelector((s: TotalState) => s.election);
+  const [results, setResults] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (currentElection) {
+      setLoading(true);
+      fetch(`/api/dashboard/${currentElection.identifier}`)
+        .then(async res => {
+          if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || 'Failed to load results');
+          }
+          return res.json();
+        })
+        .then(data => {
+          setResults(data.results);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Error loading results:', err);
+          setError(err.message);
+          setLoading(false);
+        });
+    }
+  }, [currentElection]);
 
   if (!currentElection) {
-    return <div>No election selected</div>;
+    return <div style={{padding: '2rem'}}>No election selected</div>;
+  }
+
+  if (loading) {
+    return <div style={{padding: '2rem'}}>Loading results...</div>;
+  }
+
+  if (error) {
+    return (
+      <div style={{padding: '2rem'}}>
+        <h1>Election Results: {currentElection.title}</h1>
+        <p style={{color: '#c33'}}>Error: {error}</p>
+      </div>
+    );
+  }
+
+  if (!results || (Array.isArray(results) && results.length === 0)) {
+    return (
+      <div style={{padding: '2rem'}}>
+        <h1>Election Results: {currentElection.title}</h1>
+        <p style={{color: '#666'}}>No votes have been submitted yet.</p>
+      </div>
+    );
   }
 
   return (
     <div style={{padding: '2rem'}}>
       <h1>Election Results: {currentElection.title}</h1>
-      <p style={{color: '#666', fontSize: '1.1rem'}}>
-        Results are being calculated. This election is currently in progress.
-      </p>
-      <p style={{color: '#999', fontSize: '0.9rem', marginTop: '1rem'}}>
-        Detailed results and visualizations will be available after the voting period ends.
-      </p>
+      {Array.isArray(results) && results.map((ballotResult: any, idx: number) => {
+        const voteCount = ballotResult.vote_count || 0;
+        const hasVotes = voteCount > 0;
+        
+        return (
+          <div key={idx} style={{marginBottom: '2rem', border: '1px solid #ccc', padding: '1rem', borderRadius: '8px'}}>
+            <h2>{ballotResult.ballot_title}</h2>
+            <p><strong>Vote Count:</strong> {voteCount} {voteCount === 1 ? 'vote' : 'votes'}</p>
+            <p><strong>Number of Winners:</strong> {ballotResult.number_of_winners}</p>
+            
+            {hasVotes ? (
+              <div style={{marginTop: '1rem'}}>
+                <h3>Tally Summary:</h3>
+                {ballotResult.results?.score && (
+                  <div style={{marginTop: '0.5rem', padding: '0.5rem', background: '#e8f4f8', borderRadius: '4px'}}>
+                    <strong>Score Voting (Average Scores):</strong>
+                    {ballotResult.results.score.scores && Object.entries(ballotResult.results.score.scores)
+                      .sort(([, a]: [string, any], [, b]: [string, any]) => (b || 0) - (a || 0))
+                      .slice(0, 5)
+                      .map(([candidate, score]: [string, any]) => (
+                        <div key={candidate} style={{marginLeft: '1rem', marginTop: '0.25rem'}}>
+                          {candidate}: {typeof score === 'number' ? score.toFixed(2) : score}
+                        </div>
+                      ))}
+                  </div>
+                )}
+                
+                <h3 style={{marginTop: '1rem'}}>Results by Method:</h3>
+                {Object.entries(ballotResult.results || {}).map(([method, methodResult]: [string, any]) => (
+                  <div key={method} style={{marginTop: '0.5rem', padding: '0.5rem', background: '#f5f5f5', borderRadius: '4px'}}>
+                    <strong>{method.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}:</strong>
+                    {methodResult.winners && methodResult.winners.length > 0 ? (
+                      <span style={{marginLeft: '0.5rem'}}>
+                        {methodResult.winners.join(', ')}
+                      </span>
+                    ) : (
+                      <span style={{marginLeft: '0.5rem', color: '#666', fontStyle: 'italic'}}>
+                        {voteCount > 0 ? 'Calculating...' : 'No votes yet'}
+                      </span>
+                    )}
+                    {methodResult.status && (
+                      <span style={{marginLeft: '0.5rem', fontSize: '0.9rem', color: '#666'}}>
+                        ({methodResult.status})
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{marginTop: '1rem', color: '#666', fontStyle: 'italic'}}>
+                No votes have been submitted for this ballot yet.
+              </p>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
