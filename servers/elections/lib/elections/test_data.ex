@@ -30,7 +30,7 @@ defmodule Elections.TestData do
                 "1" => ["Emma Thompson"],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Treasurer" => %{
                 "5" => ["Grace Lee"],
                 "4" => ["Felix Martinez"],
@@ -39,7 +39,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Secretary" => %{
                 "5" => ["Katherine Brown"],
                 "4" => ["Maya Patel"],
@@ -48,7 +48,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "School Council" => %{
                 "5" => ["Noah Singh", "Olivia Zhang", "Parker Johnson"],
                 "4" => ["Quinn Murphy", "Rachel Cohen"],
@@ -58,7 +58,7 @@ defmodule Elections.TestData do
                 "0" => [],
                 "unranked" => ["Xavier Rodriguez", "Yara Ali", "Zachary Brown", "Ava Davis", "Blake Taylor", "Cora White", "Dylan Harris", "Ella Clark", "Finn Lewis", "Gina Walker", "Hugo Green", "Iris Adams", "Jack Hill"]
               }
-            }},
+            },
             # Vote 2: Different preferences
             %{
               "Student Body President" => %{
@@ -69,7 +69,7 @@ defmodule Elections.TestData do
                 "1" => ["Emma Thompson"],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Treasurer" => %{
                 "5" => ["Felix Martinez"],
                 "4" => ["Henry Wilson"],
@@ -78,7 +78,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Secretary" => %{
                 "5" => ["Maya Patel"],
                 "4" => ["Liam O'Connor"],
@@ -87,7 +87,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "School Council" => %{
                 "5" => ["Rachel Cohen", "Samuel Kim"],
                 "4" => ["Tara Williams", "Uma Patel", "Victor Martinez"],
@@ -97,7 +97,7 @@ defmodule Elections.TestData do
                 "0" => [],
                 "unranked" => ["Noah Singh", "Olivia Zhang", "Parker Johnson", "Quinn Murphy", "Ava Davis", "Blake Taylor", "Cora White", "Dylan Harris", "Ella Clark", "Finn Lewis", "Gina Walker", "Hugo Green", "Iris Adams", "Jack Hill"]
               }
-            }},
+            },
             # Vote 3: Another distribution
             %{
               "Student Body President" => %{
@@ -108,7 +108,7 @@ defmodule Elections.TestData do
                 "1" => ["Daniel Park"],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Treasurer" => %{
                 "5" => ["Isabella Garcia"],
                 "4" => ["Grace Lee"],
@@ -117,7 +117,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Secretary" => %{
                 "5" => ["Jacob Anderson"],
                 "4" => ["Katherine Brown"],
@@ -126,7 +126,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "School Council" => %{
                 "5" => ["Parker Johnson", "Quinn Murphy"],
                 "4" => ["Noah Singh", "Olivia Zhang", "Rachel Cohen"],
@@ -136,7 +136,7 @@ defmodule Elections.TestData do
                 "0" => [],
                 "unranked" => ["Victor Martinez", "Wendy Chen", "Xavier Rodriguez", "Yara Ali", "Zachary Brown", "Ava Davis", "Blake Taylor", "Cora White", "Dylan Harris", "Ella Clark", "Finn Lewis", "Gina Walker", "Hugo Green", "Iris Adams", "Jack Hill"]
               }
-            }},
+            },
             # Vote 4-10: More varied distributions
             %{
               "Student Body President" => %{
@@ -147,7 +147,7 @@ defmodule Elections.TestData do
                 "1" => ["Emma Thompson"],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Treasurer" => %{
                 "5" => ["Henry Wilson"],
                 "4" => ["Felix Martinez"],
@@ -156,7 +156,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Secretary" => %{
                 "5" => ["Liam O'Connor"],
                 "4" => ["Maya Patel"],
@@ -165,7 +165,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "School Council" => %{
                 "5" => ["Tara Williams", "Uma Patel"],
                 "4" => ["Victor Martinez", "Wendy Chen", "Xavier Rodriguez"],
@@ -175,7 +175,7 @@ defmodule Elections.TestData do
                 "0" => [],
                 "unranked" => ["Noah Singh", "Olivia Zhang", "Parker Johnson", "Quinn Murphy", "Rachel Cohen", "Samuel Kim", "Cora White", "Dylan Harris", "Ella Clark", "Finn Lewis", "Gina Walker", "Hugo Green", "Iris Adams", "Jack Hill"]
               }
-            }},
+            },
             %{
               "Student Body President" => %{
                 "5" => ["Emma Thompson"],
@@ -185,7 +185,7 @@ defmodule Elections.TestData do
                 "1" => ["Benjamin Rodriguez"],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Treasurer" => %{
                 "5" => ["Grace Lee"],
                 "4" => ["Isabella Garcia"],
@@ -194,7 +194,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Secretary" => %{
                 "5" => ["Katherine Brown"],
                 "4" => ["Jacob Anderson"],
@@ -203,7 +203,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "School Council" => %{
                 "5" => ["Victor Martinez", "Wendy Chen"],
                 "4" => ["Xavier Rodriguez", "Yara Ali", "Zachary Brown"],
@@ -213,7 +213,7 @@ defmodule Elections.TestData do
                 "0" => [],
                 "unranked" => ["Noah Singh", "Olivia Zhang", "Parker Johnson", "Quinn Murphy", "Rachel Cohen", "Samuel Kim", "Tara Williams", "Uma Patel", "Ella Clark", "Finn Lewis", "Gina Walker", "Hugo Green", "Iris Adams", "Jack Hill"]
               }
-            }},
+            },
             %{
               "Student Body President" => %{
                 "5" => ["Alexandra Chen"],
@@ -223,7 +223,7 @@ defmodule Elections.TestData do
                 "1" => ["Daniel Park"],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Treasurer" => %{
                 "5" => ["Felix Martinez"],
                 "4" => ["Grace Lee"],
@@ -232,7 +232,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Secretary" => %{
                 "5" => ["Maya Patel"],
                 "4" => ["Katherine Brown"],
@@ -241,7 +241,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "School Council" => %{
                 "5" => ["Noah Singh", "Olivia Zhang"],
                 "4" => ["Parker Johnson", "Quinn Murphy", "Rachel Cohen"],
@@ -251,7 +251,7 @@ defmodule Elections.TestData do
                 "0" => [],
                 "unranked" => ["Wendy Chen", "Xavier Rodriguez", "Yara Ali", "Zachary Brown", "Ava Davis", "Blake Taylor", "Cora White", "Dylan Harris", "Ella Clark", "Finn Lewis", "Gina Walker", "Hugo Green", "Iris Adams", "Jack Hill"]
               }
-            }},
+            },
             %{
               "Student Body President" => %{
                 "5" => ["Benjamin Rodriguez"],
@@ -261,7 +261,7 @@ defmodule Elections.TestData do
                 "1" => ["Emma Thompson"],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Treasurer" => %{
                 "5" => ["Henry Wilson"],
                 "4" => ["Felix Martinez"],
@@ -270,7 +270,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Secretary" => %{
                 "5" => ["Jacob Anderson"],
                 "4" => ["Maya Patel"],
@@ -279,7 +279,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "School Council" => %{
                 "5" => ["Rachel Cohen", "Samuel Kim", "Tara Williams"],
                 "4" => ["Uma Patel", "Victor Martinez"],
@@ -289,7 +289,7 @@ defmodule Elections.TestData do
                 "0" => [],
                 "unranked" => ["Noah Singh", "Olivia Zhang", "Parker Johnson", "Quinn Murphy", "Zachary Brown", "Ava Davis", "Blake Taylor", "Cora White", "Dylan Harris", "Ella Clark", "Finn Lewis", "Gina Walker", "Hugo Green", "Iris Adams", "Jack Hill"]
               }
-            }},
+            },
             %{
               "Student Body President" => %{
                 "5" => ["Chloe Kim"],
@@ -299,7 +299,7 @@ defmodule Elections.TestData do
                 "1" => ["Daniel Park"],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Treasurer" => %{
                 "5" => ["Isabella Garcia"],
                 "4" => ["Grace Lee"],
@@ -308,7 +308,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Secretary" => %{
                 "5" => ["Liam O'Connor"],
                 "4" => ["Jacob Anderson"],
@@ -317,7 +317,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "School Council" => %{
                 "5" => ["Parker Johnson", "Quinn Murphy", "Rachel Cohen"],
                 "4" => ["Samuel Kim", "Tara Williams"],
@@ -327,7 +327,7 @@ defmodule Elections.TestData do
                 "0" => [],
                 "unranked" => ["Noah Singh", "Olivia Zhang", "Xavier Rodriguez", "Yara Ali", "Zachary Brown", "Ava Davis", "Blake Taylor", "Cora White", "Dylan Harris", "Ella Clark", "Finn Lewis", "Gina Walker", "Hugo Green", "Iris Adams", "Jack Hill"]
               }
-            }},
+            },
             %{
               "Student Body President" => %{
                 "5" => ["Daniel Park"],
@@ -337,7 +337,7 @@ defmodule Elections.TestData do
                 "1" => ["Benjamin Rodriguez"],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Treasurer" => %{
                 "5" => ["Felix Martinez"],
                 "4" => ["Isabella Garcia"],
@@ -346,7 +346,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Secretary" => %{
                 "5" => ["Maya Patel"],
                 "4" => ["Liam O'Connor"],
@@ -355,7 +355,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "School Council" => %{
                 "5" => ["Noah Singh", "Olivia Zhang", "Parker Johnson"],
                 "4" => ["Quinn Murphy", "Rachel Cohen"],
@@ -365,7 +365,7 @@ defmodule Elections.TestData do
                 "0" => [],
                 "unranked" => ["Victor Martinez", "Wendy Chen", "Xavier Rodriguez", "Yara Ali", "Zachary Brown", "Ava Davis", "Blake Taylor", "Cora White", "Dylan Harris", "Ella Clark", "Finn Lewis", "Gina Walker", "Hugo Green", "Iris Adams", "Jack Hill"]
               }
-            }},
+            },
             %{
               "Student Body President" => %{
                 "5" => ["Alexandra Chen"],
@@ -375,7 +375,7 @@ defmodule Elections.TestData do
                 "1" => ["Emma Thompson"],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Treasurer" => %{
                 "5" => ["Grace Lee"],
                 "4" => ["Felix Martinez"],
@@ -384,7 +384,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "Student Body Secretary" => %{
                 "5" => ["Katherine Brown"],
                 "4" => ["Maya Patel"],
@@ -393,7 +393,7 @@ defmodule Elections.TestData do
                 "1" => [],
                 "0" => [],
                 "unranked" => []
-              }},
+              },
               "School Council" => %{
                 "5" => ["Tara Williams", "Uma Patel", "Victor Martinez"],
                 "4" => ["Wendy Chen", "Xavier Rodriguez"],
