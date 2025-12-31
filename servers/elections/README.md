@@ -25,6 +25,10 @@ Phoenix-based server for managing elections and vote counting. Serves the [Elect
 
 2. **Stop the server:**
    ```bash
+   # From anywhere in workspace (recommended)
+   ./scripts/stop-elections.sh
+   
+   # Or from server directory
    cd servers/elections
    ./scripts/stop-server.sh
    ```
@@ -159,9 +163,61 @@ All algorithms are implemented in `lib/elections/algorithms/`. Each algorithm:
 
 ## Server Management
 
-- **Start server:** `mix phx.server` or `pnpm serve` from `apps/elect`
-- **Stop server:** `./scripts/stop-server.sh` from `servers/elections`
-- **Kill by port:** The stop script will also kill any process on port 4000
+### Starting the Server
+
+**Option 1: Build UI and start (recommended)**
+```bash
+# From workspace root
+./scripts/start-elections.sh
+
+# Or from apps/elect
+cd apps/elect
+pnpm serve
+```
+
+**Option 2: Server only**
+```bash
+cd servers/elections
+mix phx.server
+```
+
+### Stopping the Server
+
+**From anywhere in workspace:**
+```bash
+./scripts/stop-elections.sh
+```
+
+**From server directory:**
+```bash
+cd servers/elections
+./scripts/stop-server.sh
+```
+
+**Manual stop:**
+```bash
+# Kill by PID file
+kill $(cat /tmp/elections-server.pid)
+
+# Kill by port
+kill $(lsof -ti:4000)
+
+# Force kill
+kill -9 $(lsof -ti:4000)
+```
+
+### Checking Server Status
+
+```bash
+# Check if running
+lsof -i :4000
+
+# View logs
+tail -f /tmp/elections-server.log
+
+# Check PID file
+cat /tmp/elections-server.pid
+```
 
 ## URLs
 

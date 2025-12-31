@@ -34,6 +34,10 @@ Elect is a React + Vite application that connects to the [Elections Server](../s
 
 2. **Stop the server:**
    ```bash
+   # From anywhere in workspace
+   ./scripts/stop-elections.sh
+   
+   # Or from server directory
    cd ../servers/elections
    ./scripts/stop-server.sh
    ```
@@ -143,7 +147,9 @@ To inspect the SQLite database used by the elections server, see [SQLITE_CONNECT
 
 ### Server not responding
 - Check if server is running: `lsof -i :4000`
-- Stop and restart: `cd servers/elections && ./scripts/stop-server.sh && cd ../../apps/elect && pnpm serve`
+- Stop server: `./scripts/stop-elections.sh` (from workspace root)
+- View server logs: `tail -f /tmp/elections-server.log`
+- Restart: `./scripts/start-elections.sh` (from workspace root)
 
 ### Tokens not working
 - Ensure dev mode is enabled in `servers/elections/config/dev.exs`
