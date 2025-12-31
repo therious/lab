@@ -2,7 +2,6 @@ defmodule ElectionsWeb.VoteController do
   use ElectionsWeb, :controller
 
   alias Elections.Voting
-  alias Elections.Repo
 
   def submit(conn, %{"election_id" => election_id, "token" => token, "ballot" => ballot}) do
     case Voting.submit_vote(election_id, token, ballot) do
