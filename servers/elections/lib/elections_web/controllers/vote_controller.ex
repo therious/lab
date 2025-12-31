@@ -4,7 +4,12 @@ defmodule ElectionsWeb.VoteController do
   alias Elections.Voting
 
   def submit(conn, %{"election_id" => election_id, "token" => token, "ballot" => ballot}) do
-    case Voting.submit_vote(election_id, token, ballot) do
+    # Convert election_id to binary if it's a string
+    election_id_binary = case Ecto.UUID.cast(election_id) do
+      {:ok, uuid} -> uuid
+      :error -> election_id
+    end
+    case Voting.submit_vote(election_id_binary, token, ballot) do
       {:ok, view_token} ->
         conn
         |> put_status(:created)

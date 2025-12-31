@@ -102,6 +102,15 @@ defmodule Elections.Voting do
     end
   end
 
+  defp get_and_validate_token(token, election_id) when is_binary(election_id) do
+    # Convert string to binary UUID if needed
+    election_id_binary = case Ecto.UUID.cast(election_id) do
+      {:ok, uuid} -> uuid
+      :error -> election_id
+    end
+    get_and_validate_token(token, election_id_binary)
+  end
+
   defp get_and_validate_token(token, election_id) do
     case Repo.get_by(VoteToken, token: token, election_id: election_id) do
       nil ->
