@@ -1,0 +1,47 @@
+identifier: "congregation-anshei-kartoffel-2026"
+title: "Congregation Anshei Kartoffel 2026 Elections"
+description: "Annual elections for spiritual leadership and synagogue governance"
+voting_start: "2026-06-01T00:00:00Z"
+voting_end: "2026-06-30T23:59:59Z"
+service_start: "2026-07-01T00:00:00Z"
+service_end: "2026-12-31T23:59:59Z"
+
+ballots:
+  - title: "Rabbi"
+    description: "Spiritual leader of the congregation, responsible for religious services, education, and pastoral care"
+    number_of_winners: 1
+    candidates:
+      - name: "Rabbi David Goldstein"
+      - name: "Rabbi Michael Rosenbaum"
+      - name: "Rabbi Samuel Cohen"
+      - name: "Rabbi Benjamin Silverstein"
+      - name: "Rabbi Aaron Feldman"
+
+  - title: "Synagogue President"
+    description: "Presides over board meetings, represents the congregation, and coordinates synagogue activities"
+    number_of_winners: 1
+    candidates:
+      - name: "Jonathan Katz"
+      - name: "Daniel Weinberg"
+      - name: "Robert Levine"
+      - name: "Steven Bernstein"
+      - name: "Mark Rosenberg"
+
+  - title: "Board of Directors"
+    description: "Governing body of the synagogue. Top 5 candidates will be elected to serve on the board."
+    number_of_winners: 5
+    candidates:
+      - name: "Abraham Schwartz"
+      - name: "Benjamin Adler"
+      - name: "Charles Friedman"
+      - name: "David Horowitz"
+      - name: "Ephraim Klein"
+      - name: "Franklin Mandel"
+      - name: "Gideon Rosen"
+      - name: "Harold Stern"
+      - name: "Isaac Teitelbaum"
+      - name: "Jacob Weiss"
+      - name: "Kenneth Zuckerman"
+      - name: "Leonard Grossman"
+      - name: "Nathaniel Epstein"
+
