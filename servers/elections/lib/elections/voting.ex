@@ -62,10 +62,10 @@ defmodule Elections.Voting do
     RepoManager.with_repo(election_identifier, fn repo ->
       case ElectionsContext.get_election(election_identifier) do
         {:ok, election} ->
-          with :ok <- check_service_window(election) do
-            results = calculate_all_results(repo, election)
-            {:ok, results}
-          end
+          # Always allow results calculation, even if service window not open
+          # The frontend can decide whether to show them
+          results = calculate_all_results(repo, election)
+          {:ok, results}
 
         error ->
           error
