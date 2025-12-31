@@ -65,9 +65,10 @@ defmodule Elections.Elections do
     
     # Determine election status
     status = cond do
-      voting_start > now -> "upcoming"
-      voting_start <= now and voting_end >= now -> "open"
-      voting_end < now -> "closed"
+      # Compare using DateTime.compare for proper date comparison
+      DateTime.compare(voting_start, now) == :gt -> "upcoming"
+      DateTime.compare(voting_start, now) != :gt and DateTime.compare(voting_end, now) != :lt -> "open"
+      DateTime.compare(voting_end, now) == :lt -> "closed"
       true -> "unknown"
     end
     
