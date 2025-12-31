@@ -104,6 +104,11 @@ const ErrorMessage = styled.div`
   font-size: 0.9rem;
 `;
 
+interface BallotSummary {
+  title: string;
+  candidate_count: number;
+}
+
 interface Election {
   identifier: string;
   title: string;
@@ -112,6 +117,7 @@ interface Election {
   voting_end?: string;
   ballot_count?: number;
   status?: 'upcoming' | 'open' | 'closed' | 'unknown';
+  ballot_summary?: BallotSummary[];
 }
 
 export function LandingPage() {
@@ -238,32 +244,35 @@ export function LandingPage() {
                 $selected={selectedElection === election.identifier}
                 onClick={() => setSelectedElection(election.identifier)}
               >
-                <ElectionTitle>
-                  {election.title}
-                  {isUpcoming && (
-                    <span style={{marginLeft: '0.5rem', fontSize: '0.85rem', color: '#ff9800', fontWeight: 'normal'}}>
-                      (Upcoming)
-                    </span>
+              <ElectionTitle>
+                {election.title}
+                {isUpcoming && (
+                  <span style={{marginLeft: '0.5rem', fontSize: '0.85rem', color: '#ff9800', fontWeight: 'normal'}}>
+                    (Upcoming)
+                  </span>
+                )}
+                {isOpen && (
+                  <span style={{marginLeft: '0.5rem', fontSize: '0.85rem', color: '#4caf50', fontWeight: 'normal'}}>
+                    (Open)
+                  </span>
+                )}
+              </ElectionTitle>
+              {election.description && (
+                <ElectionDescription>{election.description}</ElectionDescription>
+              )}
+              {election.ballot_summary && election.ballot_summary.length > 0 && (
+                <ElectionDescription style={{fontSize: '0.85rem', marginTop: '0.25rem'}}>
+                  <strong>Key ballots:</strong> {election.ballot_summary.map(b => b.title).join(', ')}
+                  {election.ballot_count && election.ballot_count > election.ballot_summary.length && (
+                    <span> and {election.ballot_count - election.ballot_summary.length} more</span>
                   )}
-                  {isOpen && (
-                    <span style={{marginLeft: '0.5rem', fontSize: '0.85rem', color: '#4caf50', fontWeight: 'normal'}}>
-                      (Open)
-                    </span>
-                  )}
-                </ElectionTitle>
-                {election.description && (
-                  <ElectionDescription>{election.description}</ElectionDescription>
-                )}
-                {election.ballot_count !== undefined && (
-                  <ElectionDescription>
-                    {election.ballot_count} ballot{election.ballot_count !== 1 ? 's' : ''}
-                  </ElectionDescription>
-                )}
-                {isUpcoming && election.voting_start && (
-                  <ElectionDescription style={{fontStyle: 'italic', color: '#666'}}>
-                    Voting opens: {new Date(election.voting_start).toLocaleString()}
-                  </ElectionDescription>
-                )}
+                </ElectionDescription>
+              )}
+              {isUpcoming && election.voting_start && (
+                <ElectionDescription style={{fontStyle: 'italic', color: '#666', fontSize: '0.85rem'}}>
+                  Voting opens: {new Date(election.voting_start).toLocaleString()}
+                </ElectionDescription>
+              )}
               </ElectionCard>
             );
           })}
