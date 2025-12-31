@@ -26,11 +26,9 @@ defmodule Elections.Algorithms.Shulze do
     end)
   end
 
-  defp build_ranking_from_ballot(ballot, config) do
-    candidates = get_in(config, ["candidates"]) || []
-
+  defp build_ranking_from_ballot(ballot, _config) do
     ranking =
-      Enum.flat_map(5..0, fn score ->
+      Enum.flat_map(5..0//-1, fn score ->
         band_candidates = Map.get(ballot, Integer.to_string(score), [])
         Enum.map(band_candidates, fn candidate -> {candidate, score} end)
       end)

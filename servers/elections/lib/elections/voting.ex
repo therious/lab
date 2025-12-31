@@ -155,6 +155,23 @@ defmodule Elections.Voting do
           |> Repo.update()
         end
 
+        # Broadcast vote submission for real-time updates
+        Phoenix.PubSub.broadcast(
+          Elections.PubSub,
+          "dashboard:#{election.id}",
+          {:vote_submitted, election.id, %{vote_id: vote.id}}
+        )
+
+        # Calculate and broadcast updated results
+        Task.start(fn ->
+          results = calculate_all_results(election)
+          Phoenix.PubSub.broadcast(
+            Elections.PubSub,
+            "dashboard:#{election.id}",
+            {:results_updated, election.id, results}
+          )
+        end)
+
         {:ok, vote}
 
       error ->
@@ -186,7 +203,7 @@ defmodule Elections.Voting do
     }
   end
 
-  defp generate_visualization(election, votes, method) do
+  defp generate_visualization(election, _votes, method) do
     # Placeholder - will be implemented with actual visualization data
     %{
       method: method,

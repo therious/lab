@@ -75,3 +75,6 @@ config :phoenix_live_view,
   debug_attributes: true,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true
+
+# Enable dev mode for elections (allows multiple votes with same token)
+config :elections, dev_mode: true

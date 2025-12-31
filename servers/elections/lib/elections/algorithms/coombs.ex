@@ -21,11 +21,9 @@ defmodule Elections.Algorithms.Coombs do
     end)
   end
 
-  defp build_ranking_from_ballot(ballot, config) do
-    candidates = get_in(config, ["candidates"]) || []
-
+  defp build_ranking_from_ballot(ballot, _config) do
     ranking =
-      Enum.flat_map(5..0, fn score ->
+      Enum.flat_map(5..0//-1, fn score ->
         band_candidates = Map.get(ballot, Integer.to_string(score), [])
         band_candidates
       end)
@@ -42,7 +40,7 @@ defmodule Elections.Algorithms.Coombs do
     run_coombs_rounds(rankings, candidate_names, [], number_of_winners, quota)
   end
 
-  defp run_coombs_rounds(rankings, remaining, winners, number_of_winners, quota) when length(winners) >= number_of_winners do
+  defp run_coombs_rounds(_rankings, _remaining, winners, number_of_winners, _quota) when length(winners) >= number_of_winners do
     winners
   end
 
@@ -100,7 +98,7 @@ defmodule Elections.Algorithms.Coombs do
     |> Enum.to_list()
   end
 
-  defp transfer_surplus_votes(rankings, winners, quota) do
+  defp transfer_surplus_votes(rankings, winners, _quota) do
     Enum.map(rankings, fn ranking ->
       first = List.first(ranking)
 

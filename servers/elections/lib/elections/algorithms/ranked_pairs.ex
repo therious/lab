@@ -35,13 +35,11 @@ defmodule Elections.Algorithms.RankedPairs do
     end)
   end
 
-  defp build_ranking_from_ballot(ballot, config) do
-    candidates = get_in(config, ["candidates"]) || []
-
+  defp build_ranking_from_ballot(ballot, _config) do
     # Build ranking: candidates in bands 5 (best) down to 0 (worst)
     # Within each band, order matters (first = more preferred)
     ranking =
-      Enum.flat_map(5..0, fn score ->
+      Enum.flat_map(5..0//-1, fn score ->
         band_candidates = Map.get(ballot, Integer.to_string(score), [])
         Enum.map(band_candidates, fn candidate -> {candidate, score} end)
       end)

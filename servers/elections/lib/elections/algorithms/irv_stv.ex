@@ -21,11 +21,9 @@ defmodule Elections.Algorithms.IRVSTV do
     end)
   end
 
-  defp build_ranking_from_ballot(ballot, config) do
-    candidates = get_in(config, ["candidates"]) || []
-
+  defp build_ranking_from_ballot(ballot, _config) do
     ranking =
-      Enum.flat_map(5..0, fn score ->
+      Enum.flat_map(5..0//-1, fn score ->
         band_candidates = Map.get(ballot, Integer.to_string(score), [])
         band_candidates
       end)
@@ -43,7 +41,7 @@ defmodule Elections.Algorithms.IRVSTV do
     run_rounds(rankings, candidate_names, [], number_of_winners, quota)
   end
 
-  defp run_rounds(rankings, remaining, winners, number_of_winners, quota) when length(winners) >= number_of_winners do
+  defp run_rounds(_rankings, _remaining, winners, number_of_winners, _quota) when length(winners) >= number_of_winners do
     winners
   end
 
@@ -83,7 +81,7 @@ defmodule Elections.Algorithms.IRVSTV do
     |> Enum.to_list()
   end
 
-  defp transfer_surplus_votes(rankings, winners, quota) do
+  defp transfer_surplus_votes(rankings, winners, _quota) do
     # Simplified: transfer all votes from winners to next preference
     Enum.map(rankings, fn ranking ->
       first = List.first(ranking)
