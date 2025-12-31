@@ -450,7 +450,14 @@ function ResultsView() {
           return data;
         })
         .then(data => {
-          setResults(data.results);
+          // Handle both old format (array) and new format (object with results and metadata)
+          if (data.results && Array.isArray(data.results)) {
+            setResults(data.results);
+          } else if (data.results && data.results.results) {
+            setResults(data.results.results);
+          } else {
+            setResults(data.results || []);
+          }
           setLoading(false);
         })
         .catch(err => {
