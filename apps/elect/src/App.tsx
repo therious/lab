@@ -328,6 +328,7 @@ function SummaryView() {
         </SubmitButton>
       )}
     </SummaryContainer>
+    </>
   );
 }
 
