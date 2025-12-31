@@ -1,9 +1,9 @@
 identifier: "riverside-coop-2026"
 title: "Riverside Coop 2026 Elections"
 description: "Annual cooperative elections for board positions and policy decisions"
-voting_start: "2026-03-01T00:00:00Z"
-voting_end: "2026-03-31T23:59:59Z"
-service_start: "2026-04-01T00:00:00Z"
+voting_start: "2025-12-01T00:00:00Z"
+voting_end: "2026-12-31T23:59:59Z"
+service_start: "2025-12-01T00:00:00Z"
 service_end: "2026-12-31T23:59:59Z"
 
 ballots:
