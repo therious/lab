@@ -7,8 +7,7 @@ defmodule Elections.Election do
 
   schema "elections" do
     field :identifier, :string
-    field :config, :map  # Ecto will handle JSON encoding/decoding
-    field :number_of_winners, :integer, default: 1
+    field :config, :map  # Stores full election config including ballots
     field :voting_start, :utc_datetime
     field :voting_end, :utc_datetime
     field :service_start, :utc_datetime
@@ -22,8 +21,8 @@ defmodule Elections.Election do
 
   def changeset(election, attrs) do
     election
-    |> cast(attrs, [:identifier, :config, :number_of_winners, :voting_start, :voting_end, :service_start, :service_end])
-    |> validate_required([:identifier, :config, :number_of_winners, :voting_start, :voting_end, :service_start])
+    |> cast(attrs, [:identifier, :config, :voting_start, :voting_end, :service_start, :service_end])
+    |> validate_required([:identifier, :config, :voting_start, :voting_end, :service_start])
     |> unique_constraint(:identifier)
   end
 end

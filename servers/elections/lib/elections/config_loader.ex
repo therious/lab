@@ -1,9 +1,10 @@
 defmodule Elections.ConfigLoader do
   @moduledoc """
   Loads election configurations from YAML files.
+  Each YAML file represents one election with multiple ballots.
   """
 
-  alias Elections.Repo
+  alias Elections.RepoManager
   alias Elections.Election
 
   def load_elections_from_yaml do
@@ -23,18 +24,15 @@ defmodule Elections.ConfigLoader do
         :ok
 
       error ->
+        IO.puts("Error listing elections directory: #{inspect(error)}")
         error
     end
   end
 
   defp load_election_file(path) do
     case YamlElixir.read_from_file(path) do
-      {:ok, config} ->
-        elections = Map.get(config, "elections", [])
-
-        Enum.each(elections, fn election_config ->
-          create_or_update_election(election_config)
-        end)
+      {:ok, election_config} ->
+        create_or_update_election(election_config)
 
       error ->
         IO.puts("Error loading #{path}: #{inspect(error)}")
@@ -44,31 +42,34 @@ defmodule Elections.ConfigLoader do
   defp create_or_update_election(election_config) do
     identifier = Map.get(election_config, "identifier") || generate_identifier(election_config)
 
-    # Parse dates (assuming ISO 8601 format or relative dates)
+    # Parse dates (assuming ISO 8601 format)
     voting_start = parse_date(Map.get(election_config, "voting_start"))
     voting_end = parse_date(Map.get(election_config, "voting_end"))
     service_start = parse_date(Map.get(election_config, "service_start")) || voting_end
     service_end = parse_date(Map.get(election_config, "service_end"))
 
-    number_of_winners = Map.get(election_config, "number_of_winners", 1)
+    # Create election-specific database
+    RepoManager.create_election_db(identifier)
 
-    attrs = %{
-      identifier: identifier,
-      config: election_config,
-      number_of_winners: number_of_winners,
-      voting_start: voting_start,
-      voting_end: voting_end,
-      service_start: service_start,
-      service_end: service_end
-    }
+    # Store election metadata and ballots in the election's database
+    RepoManager.with_repo(identifier, fn repo ->
+      attrs = %{
+        identifier: identifier,
+        config: election_config,  # Store full config including ballots
+        voting_start: voting_start,
+        voting_end: voting_end,
+        service_start: service_start,
+        service_end: service_end
+      }
 
-    case Repo.get_by(Election, identifier: identifier) do
-      nil ->
-        Election.changeset(%Election{}, attrs) |> Repo.insert!()
+      case repo.get_by(Election, identifier: identifier) do
+        nil ->
+          Election.changeset(%Election{}, attrs) |> repo.insert!()
 
-      existing ->
-        Election.changeset(existing, attrs) |> Repo.update!()
-    end
+        existing ->
+          Election.changeset(existing, attrs) |> repo.update!()
+      end
+    end)
   end
 
   defp generate_identifier(election_config) do
@@ -76,16 +77,18 @@ defmodule Elections.ConfigLoader do
     title |> String.downcase() |> String.replace(" ", "-") |> String.replace(~r/[^a-z0-9-]/, "")
   end
 
-  defp parse_date(nil), do: DateTime.utc_now()
+  defp parse_date(nil), do: nil
 
   defp parse_date(date_string) when is_binary(date_string) do
     case DateTime.from_iso8601(date_string) do
       {:ok, datetime, _} -> datetime
-      _ -> DateTime.utc_now()
+      _ -> 
+        IO.puts("Warning: Invalid date format: #{date_string}")
+        nil
     end
   end
 
   defp parse_date(%DateTime{} = datetime), do: datetime
-  defp parse_date(_), do: DateTime.utc_now()
+  defp parse_date(_), do: nil
 end
 
