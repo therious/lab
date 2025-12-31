@@ -10,17 +10,9 @@ import '@therious/utils';
 
 (async () => {
   try {
-    const config = await Config.fetch('/config.yaml');
-    console.warn(`config loaded`, config);
-    const inflate = new Inflate(config);
-    const extendedConfig = inflate.intializeSequence('bootSequence');
-    console.warn(`extendedConfig `, extendedConfig);
-
-    // Initialize elections from config
-    if (config.elections) {
-      actions.election.initializeElections(config.elections);
-    }
-
+    // Elections are now loaded from API via the LandingPage component
+    // No need to load from config.yaml anymore
+    
     const RootComponent = connectRootComponent(App) as unknown as React.FunctionComponent;
     const root = createRoot(document.getElementById('root')!);
     root.render(<RootComponent/>);

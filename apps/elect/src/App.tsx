@@ -1,10 +1,11 @@
-import {useEffect} from 'react';
+import React, {useEffect} from 'react';
 import {Routes, Route, Link, useLocation} from 'react-router-dom';
 import {useSelector} from './actions-integration';
 import {actions} from './actions-integration';
 import {TotalState} from './actions/combined-slices';
-import {Election} from './actions/election-slice';
+import {Ballot} from './actions/election-slice';
 import {VotingInterface} from './components/VotingInterface';
+import {LandingPage} from './components/LandingPage';
 import styled from 'styled-components';
 
 const Layout = styled.div`
@@ -120,8 +121,45 @@ const RankBadge = styled.span`
   text-align: center;
 `;
 
+const ConfirmButton = styled.button<{$confirmed: boolean}>`
+  padding: 0.5rem 1rem;
+  background: ${props => props.$confirmed ? '#4caf50' : '#2196f3'};
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 0.5rem;
+
+  &:hover:not(:disabled) {
+    background: ${props => props.$confirmed ? '#45a049' : '#1976d2'};
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+const SubmitButton = styled.button<{$enabled: boolean}>`
+  padding: 1rem 2rem;
+  background: ${props => props.$enabled ? '#4caf50' : '#ccc'};
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: ${props => props.$enabled ? 'pointer' : 'not-allowed'};
+  margin: 2rem auto;
+  display: block;
+
+  &:hover:not(:disabled) {
+    background: ${props => props.$enabled ? '#45a049' : '#ccc'};
+  }
+`;
+
 function SummaryView() {
-  const {elections, votes} = useSelector((s: TotalState) => s.election);
+  const {ballots, votes, confirmations, currentElection, token} = useSelector((s: TotalState) => s.election);
 
   const BAND_CONFIG = [
     { score: '5', label: 'Excellent', color: '#2e7d32' },
@@ -133,12 +171,49 @@ function SummaryView() {
     { score: 'unranked', label: 'Unranked', color: '#90caf9' },
   ];
 
+  const allConfirmed = ballots.length > 0 && ballots.every(ballot => confirmations[ballot.title]);
+
+  const handleSubmit = async () => {
+    if (!currentElection || !token) {
+      alert('Missing election or token information');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/votes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          election_identifier: currentElection.identifier,
+          token: token,
+          ballot_data: votes,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert('Vote submitted successfully!');
+        // Could navigate to a confirmation page
+      } else {
+        alert(`Error: ${data.error || 'Failed to submit vote'}`);
+      }
+    } catch (err) {
+      console.error('Error submitting vote:', err);
+      alert('An error occurred while submitting your vote.');
+    }
+  };
+
   return (
     <SummaryContainer>
-      <h1>Election Summary</h1>
-      {elections.map((election: Election) => {
-        const vote = votes[election.title];
+      <h1>{currentElection?.title || 'Election Summary'}</h1>
+      {ballots.map((ballot: Ballot) => {
+        const vote = votes[ballot.title];
         if (!vote) return null;
+        
+        const isConfirmed = confirmations[ballot.title] || false;
         
         // Calculate ranks for all candidates across bands 0-5
         const candidateRanks: Record<string, number> = {};
@@ -154,8 +229,9 @@ function SummaryView() {
         }
         
         return (
-          <ElectionSummaryCard key={election.title} to={`/election/${encodeURIComponent(election.title)}`}>
-            <ElectionTitle>{election.title}</ElectionTitle>
+          <div key={ballot.title} style={{border: '2px solid #ccc', borderRadius: '8px', padding: '1rem', marginBottom: '1rem'}}>
+            <ElectionTitle>{ballot.title}</ElectionTitle>
+            {ballot.description && <p style={{color: '#666', fontSize: '0.9rem', margin: '0.5rem 0'}}>{ballot.description}</p>}
             <BandsContainer>
               {BAND_CONFIG.map(({score, label, color}) => {
                 const candidates = vote[score] || [];
@@ -180,66 +256,134 @@ function SummaryView() {
                 );
               })}
             </BandsContainer>
-          </ElectionSummaryCard>
+            <ConfirmButton
+              $confirmed={isConfirmed}
+              onClick={() => actions.election.confirmBallot(ballot.title)}
+              disabled={isConfirmed}
+            >
+              {isConfirmed ? '✓ Confirmed' : 'Confirm This Ballot'}
+            </ConfirmButton>
+          </div>
         );
       })}
+      {ballots.length > 0 && (
+        <SubmitButton $enabled={allConfirmed} onClick={handleSubmit} disabled={!allConfirmed}>
+          {allConfirmed ? 'Submit All Votes' : `Confirm ${ballots.length - Object.values(confirmations).filter(Boolean).length} more ballot(s) to submit`}
+        </SubmitButton>
+      )}
     </SummaryContainer>
   );
 }
 
-function ElectionView() {
+function BallotView() {
   const location = useLocation();
-  const electionTitle = decodeURIComponent(location.pathname.split('/election/')[1] || '');
-  const {elections} = useSelector((s: TotalState) => s.election);
-  const election = elections.find((e: Election) => e.title === electionTitle);
+  const ballotTitle = decodeURIComponent(location.pathname.split('/ballot/')[1] || '');
+  const {ballots, currentElection} = useSelector((s: TotalState) => s.election);
+  const ballot = ballots.find((b: Ballot) => b.title === ballotTitle);
 
-  if (!election) {
-    return <div>Election not found</div>;
+  if (!ballot) {
+    return <div>Ballot not found</div>;
   }
 
   return (
     <div style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
-      <h1 style={{padding: '1rem', margin: 0, borderBottom: '1px solid #ccc'}}>{election.title}</h1>
+      <h1 style={{padding: '1rem', margin: 0, borderBottom: '1px solid #ccc'}}>{ballot.title}</h1>
+      {ballot.description && (
+        <p style={{padding: '0 1rem', margin: '0.5rem 0', color: '#666'}}>{ballot.description}</p>
+      )}
       <div style={{flex: 1, minHeight: 0}}>
-        <VotingInterface electionTitle={electionTitle}/>
+        <VotingInterface ballotTitle={ballotTitle}/>
       </div>
     </div>
   );
 }
 
-export default function App() {
-  const {elections} = useSelector((s: TotalState) => s.election);
-  const location = useLocation();
+function ResultsView() {
+  const {currentElection} = useSelector((s: TotalState) => s.election);
 
-  useEffect(() => {
-    // Initialize elections from config if not already loaded
-    if (elections.length === 0) {
-      // This will be loaded from config in the main entry point
-      // For now, we'll need to pass it through config or load it separately
+  if (!currentElection) {
+    return <div>No election selected</div>;
+  }
+
+  return (
+    <div style={{padding: '2rem'}}>
+      <h1>Election Results: {currentElection.title}</h1>
+      <p style={{color: '#666', fontSize: '1.1rem'}}>
+        Results are being calculated. This election is currently in progress.
+      </p>
+      <p style={{color: '#999', fontSize: '0.9rem', marginTop: '1rem'}}>
+        Detailed results and visualizations will be available after the voting period ends.
+      </p>
+    </div>
+  );
+}
+
+export default function App() {
+  const {ballots, currentElection, token} = useSelector((s: TotalState) => s.election);
+  const location = useLocation();
+  const sessionToken = sessionStorage.getItem('vote_token');
+
+  // Sync sessionStorage token to Redux if present
+  React.useEffect(() => {
+    if (sessionToken && !token) {
+      const viewToken = sessionStorage.getItem('view_token');
+      const electionIdentifier = sessionStorage.getItem('election_identifier');
+      
+      if (electionIdentifier && viewToken) {
+        // Load election details
+        fetch(`/api/elections/${electionIdentifier}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.ballots) {
+              actions.election.initializeElection(
+                {
+                  identifier: data.identifier,
+                  title: data.title,
+                  description: data.description,
+                  ballots: data.ballots,
+                  voting_start: data.voting_start,
+                  voting_end: data.voting_end,
+                },
+                sessionToken,
+                viewToken
+              );
+            }
+          })
+          .catch(err => console.error('Failed to load election:', err));
+      }
     }
-  }, [elections.length]);
+  }, [sessionToken, token]);
+
+  // If no token, show landing page
+  if (!sessionToken || !currentElection) {
+    return <LandingPage/>;
+  }
 
   return (
     <Layout>
       <Navbar>
+        <NavLink to="/results" $active={location.pathname === '/results'}>
+          Results
+        </NavLink>
         <NavLink to="/summary" $active={location.pathname === '/summary' || location.pathname === '/'}>
           Summary
         </NavLink>
-        {elections.map((election: Election) => (
+        {ballots.map((ballot: Ballot) => (
           <NavLink
-            key={election.title}
-            to={`/election/${encodeURIComponent(election.title)}`}
-            $active={location.pathname.includes(`/election/${encodeURIComponent(election.title)}`)}
+            key={ballot.title}
+            to={`/ballot/${encodeURIComponent(ballot.title)}`}
+            $active={location.pathname.includes(`/ballot/${encodeURIComponent(ballot.title)}`)}
           >
-            {election.title}
+            {ballot.title}
           </NavLink>
         ))}
       </Navbar>
       <CenterBody>
         <Routes>
           <Route path="/" element={<SummaryView/>}/>
+          <Route path="/results" element={<ResultsView/>}/>
           <Route path="/summary" element={<SummaryView/>}/>
-          <Route path="/election/:title" element={<ElectionView/>}/>
+          <Route path="/ballot/:title" element={<BallotView/>}/>
         </Routes>
       </CenterBody>
     </Layout>

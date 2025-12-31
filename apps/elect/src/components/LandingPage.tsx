@@ -1,0 +1,255 @@
+import React, {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import styled from 'styled-components';
+import {actions} from '../actions-integration';
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+`;
+
+const Card = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 600px;
+  width: 100%;
+`;
+
+const Title = styled.h1`
+  margin: 0 0 1.5rem 0;
+  color: #333;
+  text-align: center;
+`;
+
+const ElectionList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+`;
+
+const ElectionCard = styled.button<{$selected: boolean}>`
+  padding: 1rem;
+  border: 2px solid ${props => props.$selected ? '#667eea' : '#ddd'};
+  border-radius: 8px;
+  background: ${props => props.$selected ? '#f0f4ff' : 'white'};
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #667eea;
+    background: #f0f4ff;
+  }
+`;
+
+const ElectionTitle = styled.h3`
+  margin: 0 0 0.5rem 0;
+  color: #333;
+`;
+
+const ElectionDescription = styled.p`
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+`;
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const Input = styled.input`
+  padding: 0.75rem;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+
+  &:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+`;
+
+const Button = styled.button<{$disabled?: boolean}>`
+  padding: 0.75rem 1.5rem;
+  background: ${props => props.$disabled ? '#ccc' : '#667eea'};
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: ${props => props.$disabled ? 'not-allowed' : 'pointer'};
+  transition: background 0.2s;
+
+  &:hover:not(:disabled) {
+    background: #5568d3;
+  }
+`;
+
+const ErrorMessage = styled.div`
+  padding: 0.75rem;
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 6px;
+  color: #c33;
+  font-size: 0.9rem;
+`;
+
+interface Election {
+  identifier: string;
+  title: string;
+  description?: string;
+  voting_start?: string;
+  voting_end?: string;
+  ballot_count?: number;
+}
+
+export function LandingPage() {
+  const [elections, setElections] = useState<Election[]>([]);
+  const [selectedElection, setSelectedElection] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  // Load elections on mount
+  React.useEffect(() => {
+    fetch('/api/elections')
+      .then(res => res.json())
+      .then(data => {
+        if (data.elections) {
+          setElections(data.elections);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load elections:', err);
+        setError('Failed to load elections. Please try again later.');
+      });
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedElection || !email) {
+      setError('Please select an election and enter your email address.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/tokens', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          election_identifier: selectedElection,
+          email: email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to request token. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      // Store tokens in both sessionStorage and Redux
+      const {token, view_token} = data;
+      sessionStorage.setItem('vote_token', token);
+      sessionStorage.setItem('view_token', view_token);
+      sessionStorage.setItem('election_identifier', selectedElection);
+
+      // Load election details with ballots
+      const electionResponse = await fetch(`/api/elections/${selectedElection}`);
+      const electionData = await electionResponse.json();
+
+      if (electionResponse.ok && electionData.ballots) {
+        // Initialize election in Redux (this stores token in Redux state)
+        actions.election.initializeElection(
+          {
+            identifier: electionData.identifier,
+            title: electionData.title,
+            description: electionData.description,
+            ballots: electionData.ballots,
+            voting_start: electionData.voting_start,
+            voting_end: electionData.voting_end,
+          },
+          token,
+          view_token
+        );
+
+        // Navigate to summary
+        navigate('/summary');
+      } else {
+        setError('Failed to load election details.');
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Error requesting token:', err);
+      setError('An error occurred. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Container>
+      <Card>
+        <Title>Select an Election</Title>
+        
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+
+        <ElectionList>
+          {elections.map(election => (
+            <ElectionCard
+              key={election.identifier}
+              $selected={selectedElection === election.identifier}
+              onClick={() => setSelectedElection(election.identifier)}
+            >
+              <ElectionTitle>{election.title}</ElectionTitle>
+              {election.description && (
+                <ElectionDescription>{election.description}</ElectionDescription>
+              )}
+              {election.ballot_count !== undefined && (
+                <ElectionDescription>
+                  {election.ballot_count} ballot{election.ballot_count !== 1 ? 's' : ''}
+                </ElectionDescription>
+              )}
+            </ElectionCard>
+          ))}
+        </ElectionList>
+
+        <Form onSubmit={handleSubmit}>
+          <Input
+            type="email"
+            placeholder="Enter your email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={loading || !selectedElection}
+          />
+          <Button
+            type="submit"
+            $disabled={loading || !selectedElection || !email}
+          >
+            {loading ? 'Requesting Token...' : 'Request Voting Token'}
+          </Button>
+        </Form>
+      </Card>
+    </Container>
+  );
+}
+
