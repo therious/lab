@@ -72,7 +72,17 @@ defmodule Elections.Voting do
               # Log the error for debugging
               require Logger
               Logger.error("Error calculating results: #{inspect(e)}")
-              {:error, Exception.message(e)}
+              error_message = Exception.message(e)
+              # Provide a user-friendly error message if the exception message is empty or unhelpful
+              user_message = cond do
+                error_message == "" or error_message == nil ->
+                  "An error occurred while calculating the election results. Please try again later or contact support if the problem persists."
+                String.contains?(error_message, "empty") or String.contains?(error_message, "nil") ->
+                  "The election results could not be calculated because some required data is missing. Please contact support if this problem persists."
+                true ->
+                  "An error occurred while calculating the election results: #{error_message}. Please try again later or contact support if the problem persists."
+              end
+              {:error, user_message}
           end
 
         error ->

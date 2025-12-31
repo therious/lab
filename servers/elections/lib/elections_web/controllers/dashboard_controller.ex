@@ -24,10 +24,15 @@ defmodule ElectionsWeb.DashboardController do
           |> put_status(:forbidden)
           |> json(%{error: "Results are not yet available", error_code: "service_window_not_open"})
 
+        {:error, reason} when is_binary(reason) ->
+          conn
+          |> put_status(:internal_server_error)
+          |> json(%{error: reason, error_code: "calculation_error"})
+        
         {:error, reason} ->
           conn
           |> put_status(:internal_server_error)
-          |> json(%{error: "Failed to calculate results: #{inspect(reason)}", error_code: "calculation_error"})
+          |> json(%{error: "An error occurred while calculating the election results. Please try again later or contact support if the problem persists.", error_code: "calculation_error", debug_info: inspect(reason)})
       end
     rescue
       e ->
