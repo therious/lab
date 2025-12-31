@@ -12,14 +12,14 @@ defmodule Elections.TokenGenerator do
   Validates email format and handles magic strings for testing.
   """
   def generate_token(election_identifier, email) when is_binary(election_identifier) and is_binary(email) do
-    # Validate email format
+    # Validate email format first
     case validate_email(email) do
       {:error, reason} ->
         {:error, reason}
 
       :ok ->
-        # Check magic strings for testing
-        case check_magic_strings(email) do
+        # Check magic email domains for testing (after format validation passes)
+        case check_magic_domains(email) do
           {:error, reason} ->
             {:error, reason}
 
@@ -91,14 +91,16 @@ defmodule Elections.TokenGenerator do
     end
   end
 
-  defp check_magic_strings(email) do
+  defp check_magic_domains(email) do
     email_lower = String.downcase(email)
     
     cond do
-      email_lower == "not registered" ->
+      # Any email @unregistered.com triggers not_registered error
+      String.ends_with?(email_lower, "@unregistered.com") ->
         {:error, :not_registered}
       
-      email_lower == "voted already" ->
+      # Any email @voted-already.com triggers already_voted error
+      String.ends_with?(email_lower, "@voted-already.com") ->
         {:error, :already_voted}
       
       true ->
