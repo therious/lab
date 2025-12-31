@@ -3,14 +3,14 @@ defmodule Elections.Algorithms.IRVSTV do
   Instant Runoff Voting (IRV) / Single Transferable Vote (STV) implementation.
   """
 
-  def calculate(election, votes) do
-    rankings = extract_rankings(votes, election.config)
-    winners = run_irv_stv(rankings, election.config, election.number_of_winners)
+  def calculate(ballot, votes) do
+    rankings = extract_rankings(votes, ballot)
+    winners = run_irv_stv(rankings, ballot, Map.get(ballot, "number_of_winners", 1))
 
     %{
-      method: if(election.number_of_winners == 1, do: "irv", else: "stv"),
+      method: if(Map.get(ballot, "number_of_winners", 1) == 1, do: "irv", else: "stv"),
       winners: winners,
-      status: if(length(winners) >= election.number_of_winners, do: "conclusive", else: "inconclusive")
+      status: if(length(winners) >= Map.get(ballot, "number_of_winners", 1), do: "conclusive", else: "inconclusive")
     }
   end
 

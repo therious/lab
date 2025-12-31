@@ -3,28 +3,30 @@ defmodule Elections.Algorithms.RankedPairs do
   Ranked Pairs (Tideman) algorithm implementation.
   """
 
-  def calculate(election, votes) do
+  def calculate(ballot, votes) do
     # Extract rankings from ballot_data
-    rankings = extract_rankings(votes, election.config)
+    rankings = extract_rankings(votes, ballot)
 
     # Build pairwise comparison matrix
-    pairwise = build_pairwise_matrix(rankings, election.config)
+    pairwise = build_pairwise_matrix(rankings, ballot)
 
     # Sort pairs by strength
     sorted_pairs = sort_pairs_by_strength(pairwise)
 
     # Lock pairs in order (avoiding cycles)
-    locked_pairs = lock_pairs(sorted_pairs, election.config)
+    locked_pairs = lock_pairs(sorted_pairs, ballot)
 
+    number_of_winners = Map.get(ballot, "number_of_winners", 1)
+    
     # Determine winners from locked graph
-    winners = determine_winners(locked_pairs, election.config, election.number_of_winners)
+    winners = determine_winners(locked_pairs, ballot, number_of_winners)
 
     %{
       method: "ranked_pairs",
       winners: winners,
       pairwise: pairwise,
       locked_pairs: locked_pairs,
-      status: if(length(winners) >= election.number_of_winners, do: "conclusive", else: "inconclusive")
+      status: if(length(winners) >= number_of_winners, do: "conclusive", else: "inconclusive")
     }
   end
 

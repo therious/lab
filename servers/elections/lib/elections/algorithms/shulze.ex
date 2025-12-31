@@ -3,19 +3,19 @@ defmodule Elections.Algorithms.Shulze do
   Shulze method (Schulze method) implementation.
   """
 
-  def calculate(election, votes) do
+  def calculate(ballot, votes) do
     # Similar to Ranked Pairs but uses strongest path algorithm
-    rankings = extract_rankings(votes, election.config)
-    pairwise = build_pairwise_matrix(rankings, election.config)
-    strongest_paths = compute_strongest_paths(pairwise, election.config)
-    winners = determine_winners(strongest_paths, election.config, election.number_of_winners)
+    rankings = extract_rankings(votes, ballot)
+    pairwise = build_pairwise_matrix(rankings, ballot)
+    strongest_paths = compute_strongest_paths(pairwise, ballot)
+    winners = determine_winners(strongest_paths, ballot, Map.get(ballot, "number_of_winners", 1))
 
     %{
       method: "shulze",
       winners: winners,
       pairwise: pairwise,
       strongest_paths: strongest_paths,
-      status: if(length(winners) >= election.number_of_winners, do: "conclusive", else: "inconclusive")
+      status: if(length(winners) >= Map.get(ballot, "number_of_winners", 1), do: "conclusive", else: "inconclusive")
     }
   end
 

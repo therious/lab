@@ -3,9 +3,9 @@ defmodule Elections.Algorithms.Score do
   Score voting algorithm (0-5 scale).
   """
 
-  def calculate(election, votes) do
+  def calculate(ballot, votes) do
     # Extract scores from ballot_data
-    scores = extract_scores(votes, election.config)
+    scores = extract_scores(votes, ballot)
 
     # Calculate average score for each candidate
     candidate_scores =
@@ -16,15 +16,21 @@ defmodule Elections.Algorithms.Score do
         {candidate, avg_score}
       end)
       |> Enum.sort_by(fn {_candidate, score} -> -score end)
+      |> Enum.into(%{})
 
+    number_of_winners = Map.get(ballot, "number_of_winners", 1)
+    
     # Select top N winners
-    winners = candidate_scores |> Enum.take(election.number_of_winners) |> Enum.map(&elem(&1, 0))
+    winners = candidate_scores 
+      |> Enum.sort_by(fn {_candidate, score} -> -score end)
+      |> Enum.take(number_of_winners) 
+      |> Enum.map(&elem(&1, 0))
 
     %{
       method: "score",
       winners: winners,
       scores: candidate_scores,
-      status: if(length(winners) >= election.number_of_winners, do: "conclusive", else: "inconclusive")
+      status: if(length(winners) >= number_of_winners, do: "conclusive", else: "inconclusive")
     }
   end
 

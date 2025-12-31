@@ -3,14 +3,14 @@ defmodule Elections.Algorithms.Coombs do
   Coombs method (variant of IRV that eliminates most-disliked candidates).
   """
 
-  def calculate(election, votes) do
-    rankings = extract_rankings(votes, election.config)
-    winners = run_coombs(rankings, election.config, election.number_of_winners)
+  def calculate(ballot, votes) do
+    rankings = extract_rankings(votes, ballot)
+    winners = run_coombs(rankings, ballot, Map.get(ballot, "number_of_winners", 1))
 
     %{
       method: "coombs",
       winners: winners,
-      status: if(length(winners) >= election.number_of_winners, do: "conclusive", else: "inconclusive")
+      status: if(length(winners) >= Map.get(ballot, "number_of_winners", 1), do: "conclusive", else: "inconclusive")
     }
   end
 
