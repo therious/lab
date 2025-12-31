@@ -5,6 +5,8 @@ defmodule Elections.Application do
 
   use Application
 
+  @create_test_data Application.compile_env(:elections, :create_test_data, false)
+
   @impl true
   def start(_type, _args) do
     children = [
@@ -27,7 +29,7 @@ defmodule Elections.Application do
     Elections.ConfigLoader.load_elections_from_yaml()
 
     # Create test data for closed elections (in dev/test mode)
-    if Application.compile_env(:elections, :create_test_data, false) do
+    if @create_test_data do
       Elections.TestData.create_walnut_hills_votes()
     end
 
