@@ -69,6 +69,9 @@ defmodule Elections.Voting do
             {:ok, results}
           rescue
             e ->
+              # Log the error for debugging
+              require Logger
+              Logger.error("Error calculating results: #{inspect(e)}")
               {:error, Exception.message(e)}
           end
 
