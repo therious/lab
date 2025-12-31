@@ -711,7 +711,7 @@ export default function App() {
                     color: 'white',
                     fontSize: '1rem',
                     fontWeight: 'bold',
-                    background: nothingRanked ? '#2196f3' : '#4caf50',
+                    background: '#4caf50',
                     borderRadius: '50%',
                     width: '1.2rem',
                     height: '1.2rem',
@@ -725,9 +725,9 @@ export default function App() {
                 )}
                 {!isConfirmed && allRanked && (
                   <span style={{
-                    color: '#4caf50',
+                    color: '#666',
                     fontSize: '1rem',
-                    border: '2px solid #4caf50',
+                    border: '2px solid #666',
                     borderRadius: '50%',
                     width: '1.2rem',
                     height: '1.2rem',
@@ -735,7 +735,7 @@ export default function App() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 'bold',
-                    background: 'rgba(76, 175, 80, 0.1)'
+                    background: '#4caf50'
                   }}>
                     ✓
                   </span>
