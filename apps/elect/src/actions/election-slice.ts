@@ -169,6 +169,13 @@ const confirmBallot = (state: ElectionState, {payload}: {payload: {ballotTitle: 
   });
 };
 
+// Unconfirm a ballot (undo confirmation)
+const unconfirmBallot = (state: ElectionState, {payload}: {payload: {ballotTitle: string}}): ElectionState => {
+  return produce(state, draft => {
+    draft.confirmations[payload.ballotTitle] = false;
+  });
+};
+
 // Clear all confirmations (for testing/reset)
 const clearConfirmations = (state: ElectionState): ElectionState => {
   return produce(state, draft => {
@@ -187,6 +194,7 @@ export const sliceConfig: SliceConfig = {
     reorderCandidate,
     resetBallot,
     confirmBallot,
+    unconfirmBallot,
     clearConfirmations,
   },
   creators: {
@@ -201,6 +209,7 @@ export const sliceConfig: SliceConfig = {
     }),
     resetBallot: (ballotTitle: string) => ({payload: {ballotTitle}}),
     confirmBallot: (ballotTitle: string) => ({payload: {ballotTitle}}),
+    unconfirmBallot: (ballotTitle: string) => ({payload: {ballotTitle}}),
     clearConfirmations: () => ({payload: {}}),
   },
 };
