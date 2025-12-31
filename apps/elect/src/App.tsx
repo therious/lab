@@ -452,11 +452,11 @@ function ResultsView() {
         .then(data => {
           // Handle both old format (array) and new format (object with results and metadata)
           if (data.results && Array.isArray(data.results)) {
-            setResults(data.results);
+            setResults({ballots: data.results, metadata: data.metadata || null});
           } else if (data.results && data.results.results) {
-            setResults(data.results.results);
+            setResults({ballots: data.results.results, metadata: data.results.metadata || null});
           } else {
-            setResults(data.results || []);
+            setResults({ballots: data.results || [], metadata: data.metadata || null});
           }
           setLoading(false);
         })
@@ -485,11 +485,22 @@ function ResultsView() {
     );
   }
 
-  if (!results || (Array.isArray(results) && results.length === 0)) {
+  const ballots = results?.ballots || (Array.isArray(results) ? results : []);
+  const metadata = results?.metadata || null;
+
+  if (!ballots || ballots.length === 0) {
     return (
       <div style={{padding: '2rem'}}>
         <h1>Election Results: {currentElection.title}</h1>
         <p style={{color: '#666'}}>No votes have been submitted yet.</p>
+        {metadata && (
+          <div style={{marginTop: '1rem', padding: '1rem', background: '#f5f5f5', borderRadius: '4px'}}>
+            <p><strong>Total Votes:</strong> {metadata.total_votes || 0}</p>
+            {metadata.voting_end && (
+              <p><strong>Voting Ends:</strong> {new Date(metadata.voting_end).toLocaleString()}</p>
+            )}
+          </div>
+        )}
       </div>
     );
   }
@@ -497,7 +508,15 @@ function ResultsView() {
   return (
     <div style={{padding: '2rem'}}>
       <h1>Election Results: {currentElection.title}</h1>
-      {Array.isArray(results) && results.map((ballotResult: any, idx: number) => {
+      {metadata && (
+        <div style={{marginBottom: '2rem', padding: '1rem', background: '#e8f4f8', borderRadius: '8px'}}>
+          <p><strong>Total Votes Submitted:</strong> {metadata.total_votes || 0}</p>
+          {metadata.voting_end && (
+            <p><strong>Voting Ends:</strong> {new Date(metadata.voting_end).toLocaleString()}</p>
+          )}
+        </div>
+      )}
+      {ballots.map((ballotResult: any, idx: number) => {
         const voteCount = ballotResult.vote_count || 0;
         const hasVotes = voteCount > 0;
         

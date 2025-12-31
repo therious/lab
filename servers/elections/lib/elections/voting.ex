@@ -64,8 +64,13 @@ defmodule Elections.Voting do
         {:ok, election} ->
           # Always allow results calculation, even if service window not open
           # The frontend can decide whether to show them
-          results = calculate_all_results(repo, election)
-          {:ok, results}
+          try do
+            results = calculate_all_results(repo, election)
+            {:ok, results}
+          rescue
+            e ->
+              {:error, Exception.message(e)}
+          end
 
         error ->
           error
@@ -200,13 +205,16 @@ defmodule Elections.Voting do
   end
 
   defp calculate_all_results(repo, election) do
-    votes = repo.all(from(v in Vote, where: v.election_id == ^election.id))
+    votes = repo.all(from(v in Vote, where: v.election_id == ^election.id, order_by: [asc: v.inserted_at]))
+
+    # Get vote timestamps for time series data
+    vote_timestamps = Enum.map(votes, fn vote -> vote.inserted_at end)
 
     # Extract ballots from config
     ballots = Map.get(election.config || %{}, "ballots", [])
 
     # Calculate results for each ballot
-    Enum.map(ballots, fn ballot ->
+    results = Enum.map(ballots, fn ballot ->
       ballot_title = Map.get(ballot, "title", "Untitled Ballot")
       candidates = Map.get(ballot, "candidates", [])
       number_of_winners = Map.get(ballot, "number_of_winners", 1)
@@ -220,20 +228,45 @@ defmodule Elections.Voting do
         "number_of_winners" => number_of_winners
       }
       
-      %{
-        ballot_title: ballot_title,
-        candidates: candidates,
-        number_of_winners: number_of_winners,
-        vote_count: length(ballot_votes),
-        results: %{
+      # Calculate results only if there are votes
+      algorithm_results = if length(ballot_votes) > 0 do
+        %{
           ranked_pairs: Elections.Algorithms.RankedPairs.calculate(ballot_for_algorithms, ballot_votes),
           shulze: Elections.Algorithms.Shulze.calculate(ballot_for_algorithms, ballot_votes),
           score: Elections.Algorithms.Score.calculate(ballot_for_algorithms, ballot_votes),
           irv_stv: Elections.Algorithms.IRVSTV.calculate(ballot_for_algorithms, ballot_votes),
           coombs: Elections.Algorithms.Coombs.calculate(ballot_for_algorithms, ballot_votes)
         }
+      else
+        %{
+          ranked_pairs: %{method: "ranked_pairs", winners: [], status: "no_votes"},
+          shulze: %{method: "shulze", winners: [], status: "no_votes"},
+          score: %{method: "score", winners: [], scores: %{}, status: "no_votes"},
+          irv_stv: %{method: "irv_stv", winners: [], status: "no_votes"},
+          coombs: %{method: "coombs", winners: [], status: "no_votes"}
+        }
+      end
+      
+      %{
+        ballot_title: ballot_title,
+        candidates: candidates,
+        number_of_winners: number_of_winners,
+        vote_count: length(ballot_votes),
+        results: algorithm_results
       }
     end)
+
+    # Return results with metadata
+    %{
+      results: results,
+      metadata: %{
+        total_votes: length(votes),
+        vote_timestamps: Enum.map(vote_timestamps, fn ts -> DateTime.to_iso8601(ts) end),
+        voting_start: DateTime.to_iso8601(election.voting_start),
+        voting_end: DateTime.to_iso8601(election.voting_end),
+        election_identifier: election.identifier
+      }
+    }
   end
 
   defp extract_ballot_votes(votes, ballot_title) do
