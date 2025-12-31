@@ -295,13 +295,13 @@ export function LandingPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            disabled={loading || !selectedElection || elections.length === 0}
+            disabled={loading || elections.length === 0}
           />
           <Button
             type="submit"
             $disabled={loading || !selectedElection || !email || elections.length === 0}
           >
-            {loading ? 'Requesting Token...' : 'Request Voting Token'}
+            {loading ? 'Requesting...' : 'Request Ballot Access'}
           </Button>
         </Form>
       </Card>
