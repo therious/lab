@@ -286,11 +286,10 @@ export function LandingPage() {
 
         <Form onSubmit={handleSubmit}>
           <Input
-            type="email"
-            placeholder="Enter your email address"
+            type="text"
+            placeholder="Enter your email address (or test strings: 'not registered', 'voted already')"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
             disabled={loading || !selectedElection || elections.length === 0}
           />
           <Button
