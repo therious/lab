@@ -372,20 +372,16 @@ function SummaryView() {
                 );
               })}
             </BandsContainer>
-            {isConfirmed ? (
+            {!submitted && (isConfirmed ? (
               <ConfirmButton
                 $confirmed={true}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  if (!submitted) {
-                    actions.election.unconfirmBallot(ballot.title);
-                  }
+                  actions.election.unconfirmBallot(ballot.title);
                 }}
-                disabled={submitted}
-                style={{background: submitted ? '#4caf50' : '#f44336', opacity: submitted ? 0.7 : 1}}
               >
-                {submitted ? '✓ Submitted' : '✓ Confirmed (Click to Undo)'}
+                ✓ Confirmed (Click to Undo)
               </ConfirmButton>
             ) : (
               <ConfirmButton
@@ -393,15 +389,12 @@ function SummaryView() {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  if (!submitted) {
-                    actions.election.confirmBallot(ballot.title);
-                  }
+                  actions.election.confirmBallot(ballot.title);
                 }}
-                disabled={submitted}
               >
                 Confirm This Ballot
               </ConfirmButton>
-            )}
+            ))}
           </div>
         );
       })}
