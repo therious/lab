@@ -158,6 +158,60 @@ const SubmitButton = styled.button<{$enabled: boolean}>`
   }
 `;
 
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+`;
+
+const ModalContent = styled.div`
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+`;
+
+const ModalTitle = styled.h2`
+  margin: 0 0 1rem 0;
+  color: #333;
+`;
+
+const ModalMessage = styled.p`
+  margin: 0 0 1.5rem 0;
+  color: #666;
+  line-height: 1.5;
+`;
+
+const ModalButtons = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+`;
+
+const ModalButton = styled.button<{$primary?: boolean}>`
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background: ${props => props.$primary ? '#4caf50' : '#f5f5f5'};
+  color: ${props => props.$primary ? 'white' : '#333'};
+  transition: background 0.2s;
+
+  &:hover {
+    background: ${props => props.$primary ? '#45a049' : '#e0e0e0'};
+  }
+`;
+
 function SummaryView() {
   const {ballots, votes, confirmations, currentElection, token} = useSelector((s: TotalState) => s.election);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -218,7 +272,7 @@ function SummaryView() {
     <>
       {showSuccessModal && (
         <ModalOverlay onClick={() => setShowSuccessModal(false)}>
-          <ModalContent onClick={(e) => e.stopPropagation()}>
+          <ModalContent onClick={(e: React.MouseEvent) => e.stopPropagation()}>
             <ModalTitle>Vote Submitted Successfully!</ModalTitle>
             <ModalMessage>
               Your vote has been recorded. You can view your submitted vote using your view token if needed.
@@ -234,7 +288,7 @@ function SummaryView() {
       
       {submissionError && (
         <ModalOverlay onClick={() => setSubmissionError(null)}>
-          <ModalContent onClick={(e) => e.stopPropagation()}>
+          <ModalContent onClick={(e: React.MouseEvent) => e.stopPropagation()}>
             <ModalTitle style={{color: '#d32f2f'}}>Submission Error</ModalTitle>
             <ModalMessage>{submissionError}</ModalMessage>
             <ModalButtons>
