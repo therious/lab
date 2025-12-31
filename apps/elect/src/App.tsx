@@ -6,6 +6,7 @@ import {TotalState} from './actions/combined-slices';
 import {Ballot} from './actions/election-slice';
 import {VotingInterface} from './components/VotingInterface';
 import {LandingPage} from './components/LandingPage';
+import {VoteTimeline} from './components/VoteTimeline';
 import styled from 'styled-components';
 
 const Layout = styled.div`
@@ -509,12 +510,22 @@ function ResultsView() {
     <div style={{padding: '2rem'}}>
       <h1>Election Results: {currentElection.title}</h1>
       {metadata && (
-        <div style={{marginBottom: '2rem', padding: '1rem', background: '#e8f4f8', borderRadius: '8px'}}>
-          <p><strong>Total Votes Submitted:</strong> {metadata.total_votes || 0}</p>
-          {metadata.voting_end && (
-            <p><strong>Voting Ends:</strong> {new Date(metadata.voting_end).toLocaleString()}</p>
+        <>
+          <div style={{marginBottom: '2rem', padding: '1rem', background: '#e8f4f8', borderRadius: '8px'}}>
+            <p><strong>Total Votes Submitted:</strong> {metadata.total_votes || 0}</p>
+            {metadata.voting_end && (
+              <p><strong>Voting Ends:</strong> {new Date(metadata.voting_end).toLocaleString()}</p>
+            )}
+          </div>
+          {metadata.vote_timestamps && metadata.vote_timestamps.length > 0 && metadata.voting_start && metadata.voting_end && (
+            <VoteTimeline
+              voteTimestamps={metadata.vote_timestamps}
+              votingStart={metadata.voting_start}
+              votingEnd={metadata.voting_end}
+              totalVotes={metadata.total_votes || 0}
+            />
           )}
-        </div>
+        </>
       )}
       {ballots.map((ballotResult: any, idx: number) => {
         const voteCount = ballotResult.vote_count || 0;
