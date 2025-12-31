@@ -111,6 +111,7 @@ interface Election {
   voting_start?: string;
   voting_end?: string;
   ballot_count?: number;
+  status?: 'upcoming' | 'open' | 'closed' | 'unknown';
 }
 
 export function LandingPage() {
@@ -227,23 +228,45 @@ export function LandingPage() {
         {error && <ErrorMessage>{error}</ErrorMessage>}
 
         <ElectionList>
-          {elections.map(election => (
-            <ElectionCard
-              key={election.identifier}
-              $selected={selectedElection === election.identifier}
-              onClick={() => setSelectedElection(election.identifier)}
-            >
-              <ElectionTitle>{election.title}</ElectionTitle>
-              {election.description && (
-                <ElectionDescription>{election.description}</ElectionDescription>
-              )}
-              {election.ballot_count !== undefined && (
-                <ElectionDescription>
-                  {election.ballot_count} ballot{election.ballot_count !== 1 ? 's' : ''}
-                </ElectionDescription>
-              )}
-            </ElectionCard>
-          ))}
+          {elections.map(election => {
+            const isUpcoming = election.status === 'upcoming';
+            const isOpen = election.status === 'open';
+            
+            return (
+              <ElectionCard
+                key={election.identifier}
+                $selected={selectedElection === election.identifier}
+                onClick={() => setSelectedElection(election.identifier)}
+              >
+                <ElectionTitle>
+                  {election.title}
+                  {isUpcoming && (
+                    <span style={{marginLeft: '0.5rem', fontSize: '0.85rem', color: '#ff9800', fontWeight: 'normal'}}>
+                      (Upcoming)
+                    </span>
+                  )}
+                  {isOpen && (
+                    <span style={{marginLeft: '0.5rem', fontSize: '0.85rem', color: '#4caf50', fontWeight: 'normal'}}>
+                      (Open)
+                    </span>
+                  )}
+                </ElectionTitle>
+                {election.description && (
+                  <ElectionDescription>{election.description}</ElectionDescription>
+                )}
+                {election.ballot_count !== undefined && (
+                  <ElectionDescription>
+                    {election.ballot_count} ballot{election.ballot_count !== 1 ? 's' : ''}
+                  </ElectionDescription>
+                )}
+                {isUpcoming && election.voting_start && (
+                  <ElectionDescription style={{fontStyle: 'italic', color: '#666'}}>
+                    Voting opens: {new Date(election.voting_start).toLocaleString()}
+                  </ElectionDescription>
+                )}
+              </ElectionCard>
+            );
+          })}
         </ElectionList>
 
         {elections.length === 0 && !error && (

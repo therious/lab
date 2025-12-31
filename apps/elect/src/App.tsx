@@ -179,6 +179,12 @@ function SummaryView() {
       return;
     }
 
+    // Check if token is a preview token
+    if (token.startsWith('preview-')) {
+      alert('This is a preview token for an election that has not yet opened. You can practice with the interface, but votes cannot be submitted until the voting window opens.');
+      return;
+    }
+
     try {
       const response = await fetch('/api/votes', {
         method: 'POST',
@@ -267,8 +273,16 @@ function SummaryView() {
         );
       })}
       {ballots.length > 0 && (
-        <SubmitButton $enabled={allConfirmed} onClick={handleSubmit} disabled={!allConfirmed}>
-          {allConfirmed ? 'Submit All Votes' : `Confirm ${ballots.length - Object.values(confirmations).filter(Boolean).length} more ballot(s) to submit`}
+        <SubmitButton 
+          $enabled={allConfirmed && !token?.startsWith('preview-')} 
+          onClick={handleSubmit} 
+          disabled={!allConfirmed || token?.startsWith('preview-')}
+        >
+          {token?.startsWith('preview-') 
+            ? 'Preview Mode - Voting Not Yet Open' 
+            : allConfirmed 
+              ? 'Submit All Votes' 
+              : `Confirm ${ballots.length - Object.values(confirmations).filter(Boolean).length} more ballot(s) to submit`}
         </SubmitButton>
       )}
     </SummaryContainer>

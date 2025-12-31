@@ -44,21 +44,35 @@ defmodule Elections.TokenGenerator do
   end
 
   defp generate_token_for_election(election, election_identifier, _email) do
+    now = DateTime.utc_now()
+    # Check if voting window is open
+    is_preview = election.voting_start > now
+    
     RepoManager.with_repo(election_identifier, fn repo ->
       token = generate_uuid()
       view_token = generate_uuid()
 
+      # For preview tokens (elections not yet open), use a special prefix
+      preview_token = if is_preview, do: "preview-#{token}", else: token
+      preview_view_token = if is_preview, do: "preview-#{view_token}", else: view_token
+
       changeset =
         VoteToken.changeset(%VoteToken{}, %{
-          token: token,
+          token: preview_token,
           election_id: election.id,
-          view_token: view_token,
-          used: false
+          view_token: preview_view_token,
+          used: false,
+          preview: is_preview
         })
 
       case repo.insert(changeset) do
         {:ok, vote_token} ->
-          {:ok, %{token: token, view_token: view_token, vote_token_id: vote_token.id}}
+          {:ok, %{
+            token: preview_token,
+            view_token: preview_view_token,
+            vote_token_id: vote_token.id,
+            preview: is_preview
+          }}
 
         error ->
           error

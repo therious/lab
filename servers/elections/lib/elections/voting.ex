@@ -123,10 +123,15 @@ defmodule Elections.Voting do
         {:error, :token_not_found}
 
       vote_token ->
-        if vote_token.used && !@dev_mode do
-          {:error, :token_already_used}
+        # Check if token is a preview token (for elections not yet open)
+        if Map.get(vote_token, :preview, false) do
+          {:error, :voting_not_open}
         else
-          {:ok, vote_token}
+          if vote_token.used && !@dev_mode do
+            {:error, :token_already_used}
+          else
+            {:ok, vote_token}
+          end
         end
     end
   end

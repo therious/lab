@@ -10,6 +10,7 @@ defmodule Elections.VoteToken do
     field :used, :boolean, default: false
     field :used_at, :utc_datetime
     field :view_token, :string
+    field :preview, :boolean, default: false
 
     belongs_to :election, Elections.Election
     has_one :vote, Elections.Vote
@@ -19,7 +20,7 @@ defmodule Elections.VoteToken do
 
   def changeset(vote_token, attrs) do
     vote_token
-    |> cast(attrs, [:token, :election_id, :used, :used_at, :view_token])
+    |> cast(attrs, [:token, :election_id, :used, :used_at, :view_token, :preview])
     |> validate_required([:token, :election_id, :view_token])
     |> unique_constraint(:token)
     |> unique_constraint(:view_token)
