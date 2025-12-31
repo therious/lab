@@ -13,32 +13,42 @@ defmodule ElectionsWeb.VoteController do
       {:error, :election_not_found} ->
         conn
         |> put_status(:not_found)
-        |> json(%{error: "Election not found"})
+        |> json(%{error: "The election you're trying to vote in could not be found. Please check your election selection and try again."})
 
       {:error, :token_not_found} ->
         conn
         |> put_status(:not_found)
-        |> json(%{error: "Invalid token"})
+        |> json(%{error: "Your voting token is invalid or has expired. Please request a new ballot access token from the election page."})
 
       {:error, :token_already_used} ->
         conn
         |> put_status(:conflict)
-        |> json(%{error: "Token has already been used"})
+        |> json(%{error: "This ballot access token has already been used to submit a vote. Each token can only be used once. If you need to change your vote, please contact the election administrator."})
 
       {:error, :voting_not_open} ->
         conn
         |> put_status(:forbidden)
-        |> json(%{error: "Voting is not yet open for this election. This is a preview token for testing the interface."})
+        |> json(%{error: "Voting is not yet open for this election. This is a preview token for testing the interface. You can practice with the ballot, but votes cannot be submitted until the voting window opens."})
 
       {:error, :voting_window_closed} ->
         conn
         |> put_status(:forbidden)
-        |> json(%{error: "Voting window is closed"})
+        |> json(%{error: "The voting window for this election has closed. Votes can no longer be submitted."})
 
-      {:error, changeset} ->
+      {:error, changeset} when is_struct(changeset) ->
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{error: "Invalid ballot data", details: format_errors(changeset)})
+        |> json(%{error: "There was a problem with your ballot data. Please try again or contact support if the problem persists.", details: format_errors(changeset)})
+
+      {:error, reason} when is_binary(reason) ->
+        conn
+        |> put_status(:internal_server_error)
+        |> json(%{error: "An error occurred while submitting your vote: #{reason}. Please try again or contact support if the problem persists."})
+
+      {:error, reason} ->
+        conn
+        |> put_status(:internal_server_error)
+        |> json(%{error: "An unexpected error occurred while submitting your vote. Please try again or contact support if the problem persists.", error_code: inspect(reason)})
     end
   end
 
