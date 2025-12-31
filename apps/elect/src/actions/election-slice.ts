@@ -65,6 +65,7 @@ const initializeElection = (state: ElectionState, {payload}: {payload: {election
     draft.ballots = payload.election.ballots || [];
     draft.votes = {};
     draft.confirmations = {};
+    draft.submitted = false;
     
     // Initialize votes for each ballot with empty bands
     draft.ballots.forEach(ballot => {
