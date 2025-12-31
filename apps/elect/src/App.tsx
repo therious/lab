@@ -295,13 +295,22 @@ function SummaryView() {
                 );
               })}
             </BandsContainer>
-            <ConfirmButton
-              $confirmed={isConfirmed}
-              onClick={() => actions.election.confirmBallot(ballot.title)}
-              disabled={isConfirmed}
-            >
-              {isConfirmed ? '✓ Confirmed' : 'Confirm This Ballot'}
-            </ConfirmButton>
+            {isConfirmed ? (
+              <ConfirmButton
+                $confirmed={true}
+                onClick={() => actions.election.unconfirmBallot(ballot.title)}
+                style={{background: '#f44336'}}
+              >
+                ✓ Confirmed (Click to Undo)
+              </ConfirmButton>
+            ) : (
+              <ConfirmButton
+                $confirmed={false}
+                onClick={() => actions.election.confirmBallot(ballot.title)}
+              >
+                Confirm This Ballot
+              </ConfirmButton>
+            )}
           </div>
         );
       })}
