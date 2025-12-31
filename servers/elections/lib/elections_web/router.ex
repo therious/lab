@@ -25,18 +25,22 @@ defmodule ElectionsWeb.Router do
   scope "/api", ElectionsWeb do
     pipe_through :api
 
-    # Token generation (dev/testing only)
+    # Election management
+    get "/elections", ElectionController, :index
+    get "/elections/:identifier", ElectionController, :show
+
+    # Token generation
     post "/tokens", TokenController, :create
     get "/debug/token", TokenController, :debug_get_token
 
     # Vote submission and viewing
     post "/votes", VoteController, :submit
-    get "/votes/:election_id", VoteController, :view
+    get "/votes/:election_identifier", VoteController, :view
 
     # Dashboard
     get "/dashboard", DashboardController, :index
-    get "/dashboard/:id", DashboardController, :show
-    get "/dashboard/:id/tally", DashboardController, :tally
-    get "/dashboard/:id/visualize/:method", DashboardController, :visualize
+    get "/dashboard/:identifier", DashboardController, :show
+    get "/dashboard/:identifier/tally", DashboardController, :tally
+    get "/dashboard/:identifier/visualize/:method", DashboardController, :visualize
   end
 end
