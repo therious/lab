@@ -2,13 +2,22 @@
 
 ## Setup
 
-1. Start the server:
+1. **Start the server:**
    ```bash
+   # Option 1: Build UI and start server (recommended)
+   cd ../../apps/elect
+   pnpm serve
+   
+   # Option 2: Start server only
    cd servers/elections
    mix phx.server
    ```
 
 2. The server will load elections from `priv/elections/*.yaml` on startup.
+
+3. **Access the UI:** Open http://localhost:4000 in your browser
+
+For more details, see the [main README](./README.md) and [Elect webapp README](../../apps/elect/README.md).
 
 ## Generate Test Tokens
 
@@ -90,4 +99,28 @@ curl "http://localhost:4000/api/votes/<election_id>?token=<token>&view_token=<vi
 ## WebSocket Connection
 
 Connect to `ws://localhost:4000/socket` and join channel `dashboard:<election_id>` to receive real-time updates when votes are submitted.
+
+## Debug Token Endpoint (for UI Testing)
+
+The debug endpoint allows the UI to request tokens repeatedly for testing:
+
+```bash
+# By election identifier
+curl "http://localhost:4000/api/debug/token?election_identifier=presidential-2025"
+
+# By election title
+curl "http://localhost:4000/api/debug/token?election_title=Presidential Election"
+```
+
+Response includes `election_id`, `election_identifier`, and `tokens` (token + view_token).
+
+## Database Inspection
+
+To inspect submitted votes and tokens, see [SQLITE_CONNECTION.md](./SQLITE_CONNECTION.md).
+
+## Related Documentation
+
+- [Main README](./README.md) - Server overview and setup
+- [Elect Webapp README](../../apps/elect/README.md) - UI testing and usage
+- [SQLITE_CONNECTION.md](./SQLITE_CONNECTION.md) - Database queries
 

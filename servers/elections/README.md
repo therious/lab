@@ -1,6 +1,6 @@
 # Elections Server
 
-Phoenix-based server for managing elections and vote counting.
+Phoenix-based server for managing elections and vote counting. Serves the [Elect webapp](../../apps/elect/README.md) and provides REST API and WebSocket endpoints for voting operations.
 
 ## Quick Start
 
@@ -8,7 +8,7 @@ Phoenix-based server for managing elections and vote counting.
 
 1. **Build UI and start server:**
    ```bash
-   cd apps/elect
+   cd ../../apps/elect
    pnpm serve
    ```
    This will:
@@ -16,6 +16,12 @@ Phoenix-based server for managing elections and vote counting.
    - Copy assets to the server
    - Start the Phoenix server
    - Display the server URL
+
+   **Alternative:** Start server only (without UI build):
+   ```bash
+   cd servers/elections
+   mix phx.server
+   ```
 
 2. **Stop the server:**
    ```bash
@@ -75,9 +81,14 @@ GET /api/dashboard/:id/visualize/:method  # Get visualization data
 
 ## SQLite Database
 
-See [SQLITE_CONNECTION.md](./SQLITE_CONNECTION.md) for DataGrip connection details.
+See [SQLITE_CONNECTION.md](./SQLITE_CONNECTION.md) for DataGrip connection details and useful queries.
 
 **Database Location:** `priv/repo/elections.db`
+
+**Inspect Database:**
+- **DataGrip**: See [SQLITE_CONNECTION.md](./SQLITE_CONNECTION.md)
+- **Command Line**: `sqlite3 priv/repo/elections.db`
+- **Useful Queries**: See [SQLITE_CONNECTION.md](./SQLITE_CONNECTION.md#useful-queries)
 
 ## Features
 
@@ -154,6 +165,39 @@ All algorithms are implemented in `lib/elections/algorithms/`. Each algorithm:
 
 ## URLs
 
-- **UI:** http://localhost:4000
+- **UI:** http://localhost:4000 (serves [Elect webapp](../../apps/elect/README.md))
 - **API:** http://localhost:4000/api
 - **Dashboard:** http://localhost:4000/api/dashboard
+
+## Testing
+
+For detailed API testing examples, see [TESTING.md](./TESTING.md).
+
+### Quick Test
+
+1. **Get a debug token:**
+   ```bash
+   curl "http://localhost:4000/api/debug/token?election_identifier=presidential-2025"
+   ```
+
+2. **Submit a vote:**
+   ```bash
+   curl -X POST http://localhost:4000/api/votes \
+     -H "Content-Type: application/json" \
+     -d '{
+       "election_id": "<id>",
+       "token": "<token>",
+       "ballot": {"5": ["Alice Johnson"], "0": ["Bob Smith"], "unranked": []}
+     }'
+   ```
+
+3. **View dashboard:**
+   ```bash
+   curl http://localhost:4000/api/dashboard
+   ```
+
+## Related Documentation
+
+- [Elect Webapp README](../../apps/elect/README.md) - React voting interface
+- [TESTING.md](./TESTING.md) - Detailed API testing guide
+- [SQLITE_CONNECTION.md](./SQLITE_CONNECTION.md) - Database inspection and queries
