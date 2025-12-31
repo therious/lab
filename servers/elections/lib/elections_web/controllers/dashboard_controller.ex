@@ -8,12 +8,12 @@ defmodule ElectionsWeb.DashboardController do
     conn |> json(%{elections: elections})
   end
 
-  def show(conn, %{"id" => election_id}) do
-    case Voting.get_election_results(election_id) do
+  def show(conn, %{"identifier" => election_identifier}) do
+    case Voting.get_election_results(election_identifier) do
       {:ok, results} ->
-        conn |> json(%{election_id: election_id, results: results})
+        conn |> json(%{election_identifier: election_identifier, results: results})
 
-      {:error, :not_found} ->
+      {:error, :election_not_found} ->
         conn
         |> put_status(:not_found)
         |> json(%{error: "Election not found"})
@@ -25,24 +25,24 @@ defmodule ElectionsWeb.DashboardController do
     end
   end
 
-  def tally(conn, %{"id" => election_id}) do
-    case Voting.get_election_tally(election_id) do
+  def tally(conn, %{"identifier" => election_identifier}) do
+    case Voting.get_election_tally(election_identifier) do
       {:ok, tally} ->
-        conn |> json(%{election_id: election_id, tally: tally})
+        conn |> json(%{election_identifier: election_identifier, tally: tally})
 
-      {:error, :not_found} ->
+      {:error, :election_not_found} ->
         conn
         |> put_status(:not_found)
         |> json(%{error: "Election not found"})
     end
   end
 
-  def visualize(conn, %{"id" => election_id, "method" => method}) do
-    case Voting.visualize_results(election_id, method) do
+  def visualize(conn, %{"identifier" => election_identifier, "method" => method}) do
+    case Voting.visualize_results(election_identifier, method) do
       {:ok, visualization} ->
-        conn |> json(%{election_id: election_id, method: method, visualization: visualization})
+        conn |> json(%{election_identifier: election_identifier, method: method, visualization: visualization})
 
-      {:error, :not_found} ->
+      {:error, :election_not_found} ->
         conn
         |> put_status(:not_found)
         |> json(%{error: "Election or method not found"})
