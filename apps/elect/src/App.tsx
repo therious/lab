@@ -453,10 +453,16 @@ function ResultsView() {
         .then(data => {
           // Handle both old format (array) and new format (object with results and metadata)
           if (data.results && Array.isArray(data.results)) {
+            // Old format: results is array, metadata might be separate
             setResults({ballots: data.results, metadata: data.metadata || null});
-          } else if (data.results && data.results.results) {
+          } else if (data.results && data.results.results && Array.isArray(data.results.results)) {
+            // New format: results.results is array, results.metadata exists
             setResults({ballots: data.results.results, metadata: data.results.metadata || null});
+          } else if (data.results && typeof data.results === 'object' && data.results.results) {
+            // New format with metadata
+            setResults({ballots: data.results.results || [], metadata: data.results.metadata || null});
           } else {
+            // Fallback
             setResults({ballots: data.results || [], metadata: data.metadata || null});
           }
           setLoading(false);
