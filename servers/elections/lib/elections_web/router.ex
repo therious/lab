@@ -14,14 +14,7 @@ defmodule ElectionsWeb.Router do
     plug :accepts, ["json", "html"]
   end
 
-  scope "/", ElectionsWeb do
-    pipe_through :browser
-
-    # Serve the React app for all non-API routes
-    get "/*path", PageController, :home
-  end
-
-  # Other scopes may use custom stacks.
+  # API routes must come before catch-all to avoid being matched by it
   scope "/api", ElectionsWeb do
     pipe_through :api
 
@@ -42,5 +35,12 @@ defmodule ElectionsWeb.Router do
     get "/dashboard/:identifier", DashboardController, :show
     get "/dashboard/:identifier/tally", DashboardController, :tally
     get "/dashboard/:identifier/visualize/:method", DashboardController, :visualize
+  end
+
+  scope "/", ElectionsWeb do
+    pipe_through :browser
+
+    # Serve the React app for all non-API routes
+    get "/*path", PageController, :home
   end
 end

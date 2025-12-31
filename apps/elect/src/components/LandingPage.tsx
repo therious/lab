@@ -123,16 +123,30 @@ export function LandingPage() {
 
   // Load elections on mount
   React.useEffect(() => {
-    fetch('/api/elections')
-      .then(res => res.json())
+    fetch('/api/elections', {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+      .then(async res => {
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await res.text();
+          throw new Error(`Expected JSON but got ${contentType}. Response: ${text.substring(0, 100)}`);
+        }
+        return res.json();
+      })
       .then(data => {
         if (data.elections) {
           setElections(data.elections);
+        } else {
+          setElections([]);
         }
       })
       .catch(err => {
         console.error('Failed to load elections:', err);
-        setError('Failed to load elections. Please try again later.');
+        setError(`Failed to load elections: ${err.message}. Please check that the server is running.`);
       });
   }, []);
 
@@ -232,6 +246,12 @@ export function LandingPage() {
           ))}
         </ElectionList>
 
+        {elections.length === 0 && !error && (
+          <p style={{textAlign: 'center', color: '#666', margin: '1rem 0'}}>
+            No elections are currently available.
+          </p>
+        )}
+
         <Form onSubmit={handleSubmit}>
           <Input
             type="email"
@@ -239,11 +259,11 @@ export function LandingPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            disabled={loading || !selectedElection}
+            disabled={loading || !selectedElection || elections.length === 0}
           />
           <Button
             type="submit"
-            $disabled={loading || !selectedElection || !email}
+            $disabled={loading || !selectedElection || !email || elections.length === 0}
           >
             {loading ? 'Requesting Token...' : 'Request Voting Token'}
           </Button>
