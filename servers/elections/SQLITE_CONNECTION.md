@@ -1,5 +1,12 @@
 # SQLite Database Connection for DataGrip
 
+This guide explains how to connect to the Elections Server SQLite database for inspection and debugging.
+
+**Related Documentation:**
+- [Elections Server README](./README.md) - Server overview and setup
+- [Elect Webapp README](../../apps/elect/README.md) - UI application
+- [TESTING.md](./TESTING.md) - API testing guide
+
 ## Database Location
 ```
 servers/elections/priv/repo/elections.db
