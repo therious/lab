@@ -156,7 +156,7 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
     ? cumulativeData.map((point, idx) => {
         const x = padding + (point.time / electionDuration) * plotWidth;
         const y = padding + plotHeight - (point.cumulative / maxCumulative) * plotHeight;
-        return `${idx === 0 ? 'M' : 'L'} ${x} ${y}`;
+        return `${idx === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
       }).join(' ')
     : '';
   
@@ -165,8 +165,8 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   for (let i = 0; i <= totalPeriods; i++) {
     const count = voteGroups.get(i) || 0;
     if (count > 0 || i === 0 || i === totalPeriods) {
-      const x = padding + (i / totalPeriods) * plotWidth;
-      const width = Math.max(plotWidth / totalPeriods, 0.5);
+      const x = padding + (i / Math.max(totalPeriods, 1)) * plotWidth;
+      const width = Math.max(plotWidth / Math.max(totalPeriods, 1), 0.5);
       const height = (count / maxVolume) * plotHeight * 0.8; // Use 80% of height for bars
       bars.push({x, width, height, count});
     }
@@ -179,6 +179,29 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   for (let i = 0; i <= 5; i++) {
     leftAxisLabels.push(Math.round((i / 5) * maxVolume));
     rightAxisLabels.push(Math.round((i / 5) * maxCumulative));
+  }
+  
+  // Handle edge case: if no votes, show empty chart
+  if (parsedTimestamps.length === 0) {
+    return (
+      <TimelineContainer>
+        <TimelineHeader>
+          <TimelineTitle>Vote Timeline</TimelineTitle>
+          <TimeRemaining>
+            {timeRemaining > 0 ? (
+              <>Time Remaining: {hoursRemaining}h {minutesRemaining}m</>
+            ) : (
+              <>Voting Closed</>
+            )}
+          </TimeRemaining>
+        </TimelineHeader>
+        <ChartContainer>
+          <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#999'}}>
+            No votes submitted yet
+          </div>
+        </ChartContainer>
+      </TimelineContainer>
+    );
   }
   
   return (
