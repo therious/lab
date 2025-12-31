@@ -26,6 +26,11 @@ defmodule Elections.Application do
     # Load election configs after repo is started
     Elections.ConfigLoader.load_elections_from_yaml()
 
+    # Create test data for closed elections (in dev/test mode)
+    if Application.compile_env(:elections, :create_test_data, false) do
+      Elections.TestData.create_walnut_hills_votes()
+    end
+
     result
   end
 
