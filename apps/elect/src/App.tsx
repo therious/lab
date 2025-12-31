@@ -139,6 +139,10 @@ const ConfirmButton = styled.button<{$confirmed: boolean}>`
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    
+    &:hover {
+      background: ${props => props.$confirmed ? '#4caf50' : '#2196f3'};
+    }
   }
 `;
 
@@ -156,6 +160,10 @@ const SubmitButton = styled.button<{$enabled: boolean}>`
 
   &:hover:not(:disabled) {
     background: ${props => props.$enabled ? '#45a049' : '#ccc'};
+  }
+  
+  &:disabled:hover {
+    background: #ccc;
   }
 `;
 
