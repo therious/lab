@@ -162,7 +162,7 @@ defmodule Elections.Algorithms.RankedPairs do
     end
   end
 
-  defp build_beats_graph(locked_pairs, candidate_names) do
+  defp build_beats_graph(locked_pairs, _candidate_names) do
     Enum.reduce(locked_pairs, %{}, fn {winner, loser, _count}, acc ->
       Map.put(acc, {winner, loser}, true)
     end)
