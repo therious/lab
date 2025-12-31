@@ -276,11 +276,12 @@ function SummaryView() {
         // Mark vote as submitted in Redux
         actions.election.markSubmitted();
       } else {
-        setSubmissionError(data.error || 'Failed to submit vote');
+        // Display the user-friendly error message from the server
+        setSubmissionError(data.error || 'An unexpected error occurred while submitting your vote. Please try again.');
       }
     } catch (err) {
       console.error('Error submitting vote:', err);
-      setSubmissionError('An error occurred while submitting your vote.');
+      setSubmissionError('An error occurred while submitting your vote. Please check your connection and try again.');
     }
   };
 
