@@ -5,24 +5,42 @@ export interface Candidate {
   affiliation?: string;
 }
 
-export interface Election {
+export interface Ballot {
   title: string;
   description?: string;
   candidates: Candidate[];
+  number_of_winners?: number;
 }
 
-export interface ElectionVote {
+export interface Election {
+  identifier: string;
+  title: string;
+  description?: string;
+  ballots: Ballot[];
+  voting_start?: string;
+  voting_end?: string;
+}
+
+export interface BallotVote {
   [score: string]: string[]; // score "0" through "5", and "unranked"
 }
 
 export interface ElectionState {
-  elections: Election[];
-  votes: Record<string, ElectionVote>; // keyed by election title
+  currentElection: Election | null;
+  token: string | null;
+  viewToken: string | null;
+  ballots: Ballot[]; // Ballots for current election
+  votes: Record<string, BallotVote>; // keyed by ballot title
+  confirmations: Record<string, boolean>; // keyed by ballot title
 }
 
 const initialState: ElectionState = {
-  elections: [],
+  currentElection: null,
+  token: null,
+  viewToken: null,
+  ballots: [],
   votes: {},
+  confirmations: {},
 };
 
 type ElectionCreator = (...rest: any) => unknown;
@@ -37,31 +55,36 @@ interface SliceConfig {
   initialState: ElectionState;
 }
 
-// Initialize elections from config
-const initializeElections = (state: ElectionState, {payload}: {payload: Election[]}): ElectionState => {
+// Initialize election with ballots
+const initializeElection = (state: ElectionState, {payload}: {payload: {election: Election; token: string; viewToken: string}}): ElectionState => {
   return produce(state, draft => {
-    draft.elections = payload;
-    // Initialize votes for each election with empty bands
-    payload.forEach(election => {
-      if (!draft.votes[election.title]) {
-        draft.votes[election.title] = {
-          '0': [],
-          '1': [],
-          '2': [],
-          '3': [],
-          '4': [],
-          '5': [],
-          'unranked': [...election.candidates.map(c => c.name)],
-        };
-      }
+    draft.currentElection = payload.election;
+    draft.token = payload.token;
+    draft.viewToken = payload.viewToken;
+    draft.ballots = payload.election.ballots || [];
+    draft.votes = {};
+    draft.confirmations = {};
+    
+    // Initialize votes for each ballot with empty bands
+    draft.ballots.forEach(ballot => {
+      draft.votes[ballot.title] = {
+        '0': [],
+        '1': [],
+        '2': [],
+        '3': [],
+        '4': [],
+        '5': [],
+        'unranked': [...ballot.candidates.map(c => c.name)],
+      };
+      draft.confirmations[ballot.title] = false;
     });
   });
 };
 
 // Move candidate to a score band
-const moveCandidate = (state: ElectionState, {payload}: {payload: {electionTitle: string; candidateName: string; fromScore: string; toScore: string; toIndex?: number}}): ElectionState => {
+const moveCandidate = (state: ElectionState, {payload}: {payload: {ballotTitle: string; candidateName: string; fromScore: string; toScore: string; toIndex?: number}}): ElectionState => {
   return produce(state, draft => {
-    const vote = draft.votes[payload.electionTitle];
+    const vote = draft.votes[payload.ballotTitle];
     if (!vote) return;
 
     // If moving within the same band, handle reordering
@@ -105,9 +128,9 @@ const moveCandidate = (state: ElectionState, {payload}: {payload: {electionTitle
 };
 
 // Reorder candidate within a band
-const reorderCandidate = (state: ElectionState, {payload}: {payload: {electionTitle: string; score: string; fromIndex: number; toIndex: number}}): ElectionState => {
+const reorderCandidate = (state: ElectionState, {payload}: {payload: {ballotTitle: string; score: string; fromIndex: number; toIndex: number}}): ElectionState => {
   return produce(state, draft => {
-    const vote = draft.votes[payload.electionTitle];
+    const vote = draft.votes[payload.ballotTitle];
     if (!vote) return;
 
     const band = vote[payload.score];
@@ -120,21 +143,38 @@ const reorderCandidate = (state: ElectionState, {payload}: {payload: {electionTi
   });
 };
 
-// Reset election votes
-const resetElection = (state: ElectionState, {payload}: {payload: {electionTitle: string}}): ElectionState => {
+// Reset ballot votes
+const resetBallot = (state: ElectionState, {payload}: {payload: {ballotTitle: string}}): ElectionState => {
   return produce(state, draft => {
-    const election = draft.elections.find(e => e.title === payload.electionTitle);
-    if (!election) return;
+    const ballot = draft.ballots.find(b => b.title === payload.ballotTitle);
+    if (!ballot) return;
 
-    draft.votes[payload.electionTitle] = {
+    draft.votes[payload.ballotTitle] = {
       '0': [],
       '1': [],
       '2': [],
       '3': [],
       '4': [],
       '5': [],
-      'unranked': [...election.candidates.map(c => c.name)],
+      'unranked': [...ballot.candidates.map(c => c.name)],
     };
+    draft.confirmations[payload.ballotTitle] = false;
+  });
+};
+
+// Confirm a ballot
+const confirmBallot = (state: ElectionState, {payload}: {payload: {ballotTitle: string}}): ElectionState => {
+  return produce(state, draft => {
+    draft.confirmations[payload.ballotTitle] = true;
+  });
+};
+
+// Clear all confirmations (for testing/reset)
+const clearConfirmations = (state: ElectionState): ElectionState => {
+  return produce(state, draft => {
+    Object.keys(draft.confirmations).forEach(key => {
+      draft.confirmations[key] = false;
+    });
   });
 };
 
@@ -142,20 +182,26 @@ export const sliceConfig: SliceConfig = {
   name: 'election',
   initialState,
   reducers: {
-    initializeElections,
+    initializeElection,
     moveCandidate,
     reorderCandidate,
-    resetElection,
+    resetBallot,
+    confirmBallot,
+    clearConfirmations,
   },
   creators: {
-    initializeElections: (elections: Election[]) => ({payload: elections}),
-    moveCandidate: (electionTitle: string, candidateName: string, fromScore: string, toScore: string, toIndex?: number) => ({
-      payload: {electionTitle, candidateName, fromScore, toScore, toIndex},
+    initializeElection: (election: Election, token: string, viewToken: string) => ({
+      payload: {election, token, viewToken},
     }),
-    reorderCandidate: (electionTitle: string, score: string, fromIndex: number, toIndex: number) => ({
-      payload: {electionTitle, score, fromIndex, toIndex},
+    moveCandidate: (ballotTitle: string, candidateName: string, fromScore: string, toScore: string, toIndex?: number) => ({
+      payload: {ballotTitle, candidateName, fromScore, toScore, toIndex},
     }),
-    resetElection: (electionTitle: string) => ({payload: {electionTitle}}),
+    reorderCandidate: (ballotTitle: string, score: string, fromIndex: number, toIndex: number) => ({
+      payload: {ballotTitle, score, fromIndex, toIndex},
+    }),
+    resetBallot: (ballotTitle: string) => ({payload: {ballotTitle}}),
+    confirmBallot: (ballotTitle: string) => ({payload: {ballotTitle}}),
+    clearConfirmations: () => ({payload: {}}),
   },
 };
 
