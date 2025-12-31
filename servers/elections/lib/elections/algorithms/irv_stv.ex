@@ -81,16 +81,25 @@ defmodule Elections.Algorithms.IRVSTV do
     |> Enum.to_list()
   end
 
-  defp transfer_surplus_votes(rankings, winners, _quota) do
-    # Simplified: transfer all votes from winners to next preference
-    Enum.map(rankings, fn ranking ->
-      first = List.first(ranking)
+  defp transfer_surplus_votes(rankings, winners, quota) do
+    # For each winner, transfer surplus votes proportionally
+    Enum.reduce(winners, rankings, fn winner, acc_rankings ->
+      winner_votes = Enum.count(acc_rankings, fn r -> List.first(r) == winner end)
+      surplus = winner_votes - quota
 
-      if first in winners do
-        # Remove winner and keep rest
-        List.delete(ranking, first)
+      if surplus > 0 do
+        {winner_rankings, other_rankings} =
+          Enum.split_with(acc_rankings, fn r -> List.first(r) == winner end)
+
+        transfer_count = min(surplus, length(winner_rankings))
+        {to_transfer, to_keep} = Enum.split(winner_rankings, transfer_count)
+
+        transferred = Enum.map(to_transfer, fn r -> List.delete(r, winner) end)
+        kept = Enum.map(to_keep, fn r -> List.delete(r, winner) end)
+
+        other_rankings ++ transferred ++ kept
       else
-        ranking
+        acc_rankings
       end
     end)
   end

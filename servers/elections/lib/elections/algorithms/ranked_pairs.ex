@@ -83,27 +83,89 @@ defmodule Elections.Algorithms.RankedPairs do
     |> Enum.sort_by(fn {_c1, _c2, count} -> -count end)
   end
 
-  defp lock_pairs(sorted_pairs, _config) do
-    # Simplified: lock all pairs (full implementation would check for cycles)
-    sorted_pairs
+  defp lock_pairs(sorted_pairs, config) do
+    # Lock pairs in order, avoiding cycles
+    candidates = get_in(config, ["candidates"]) || []
+    candidate_names = Enum.map(candidates, & &1["name"])
+    
+    locked = []
+    locked_pairs(sorted_pairs, locked, candidate_names)
+  end
+
+  defp locked_pairs([], locked, _candidates), do: locked
+
+  defp locked_pairs([{c1, c2, strength} | rest], locked, candidates) do
+    # Check if adding this pair would create a cycle
+    if creates_cycle?(locked, c1, c2, candidates) do
+      # Skip this pair if it creates a cycle
+      locked_pairs(rest, locked, candidates)
+    else
+      # Lock this pair
+      locked_pairs(rest, [{c1, c2, strength} | locked], candidates)
+    end
+  end
+
+  defp creates_cycle?(locked_pairs, from, to, candidates) do
+    # Check if there's already a path from 'to' to 'from' in locked pairs
+    # This would create a cycle if we add 'from' -> 'to'
+    has_path?(locked_pairs, to, from, candidates, MapSet.new())
+  end
+
+  defp has_path?(_locked_pairs, from, to, _candidates, _visited) when from == to, do: true
+
+  defp has_path?(locked_pairs, from, to, candidates, visited) do
+    if MapSet.member?(visited, from) do
+      false
+    else
+      visited = MapSet.put(visited, from)
+      
+      # Find all candidates that 'from' beats in locked pairs
+      next_candidates =
+        Enum.filter(locked_pairs, fn {c1, _c2, _s} -> c1 == from end)
+        |> Enum.map(fn {_c1, c2, _s} -> c2 end)
+
+      Enum.any?(next_candidates, fn next ->
+        next == to || has_path?(locked_pairs, next, to, candidates, visited)
+      end)
+    end
   end
 
   defp determine_winners(locked_pairs, config, number_of_winners) do
-    # Simplified: return top candidates by number of wins
-    # Full implementation would use graph traversal
     candidates = get_in(config, ["candidates"]) || []
     candidate_names = Enum.map(candidates, & &1["name"])
 
-    win_counts =
-      Enum.reduce(locked_pairs, %{}, fn {winner, _loser, _count}, acc ->
-        Map.update(acc, winner, 1, &(&1 + 1))
+    # Build a graph of who beats whom
+    beats = build_beats_graph(locked_pairs, candidate_names)
+
+    # Find candidates that beat all others (Condorcet winners)
+    condorcet_winners =
+      Enum.filter(candidate_names, fn candidate ->
+        Enum.all?(candidate_names, fn other ->
+          candidate == other || Map.get(beats, {candidate, other}, false)
+        end)
       end)
 
-    candidate_names
-    |> Enum.map(fn name -> {name, Map.get(win_counts, name, 0)} end)
-    |> Enum.sort_by(fn {_name, wins} -> -wins end)
-    |> Enum.take(number_of_winners)
-    |> Enum.map(&elem(&1, 0))
+    if length(condorcet_winners) >= number_of_winners do
+      Enum.take(condorcet_winners, number_of_winners)
+    else
+      # If no Condorcet winner, use win counts as tiebreaker
+      win_counts =
+        Enum.reduce(locked_pairs, %{}, fn {winner, _loser, _count}, acc ->
+          Map.update(acc, winner, 1, &(&1 + 1))
+        end)
+
+      candidate_names
+      |> Enum.map(fn name -> {name, Map.get(win_counts, name, 0)} end)
+      |> Enum.sort_by(fn {_name, wins} -> -wins end)
+      |> Enum.take(number_of_winners)
+      |> Enum.map(&elem(&1, 0))
+    end
+  end
+
+  defp build_beats_graph(locked_pairs, candidate_names) do
+    Enum.reduce(locked_pairs, %{}, fn {winner, loser, _count}, acc ->
+      Map.put(acc, {winner, loser}, true)
+    end)
   end
 end
 

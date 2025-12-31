@@ -64,19 +64,25 @@ defmodule Elections.Algorithms.Shulze do
     candidates = get_in(config, ["candidates"]) || []
     candidate_names = Enum.map(candidates, & &1["name"])
 
-    # Initialize path strengths
+    # Initialize path strengths with direct pairwise comparisons
     paths =
       for c1 <- candidate_names, c2 <- candidate_names, c1 != c2, into: %{} do
-        {{c1, c2}, Map.get(pairwise, {c1, c2}, 0)}
+        strength = Map.get(pairwise, {c1, c2}, 0)
+        {{c1, c2}, strength}
       end
 
     # Floyd-Warshall algorithm to find strongest paths
+    # For each intermediate candidate k, check if path i->k->j is stronger than i->j
     Enum.reduce(candidate_names, paths, fn k, acc ->
       Enum.reduce(candidate_names, acc, fn i, acc2 ->
         Enum.reduce(candidate_names, acc2, fn j, acc3 ->
           if i != j && i != k && j != k do
             current = Map.get(acc3, {i, j}, 0)
-            via_k = min(Map.get(acc3, {i, k}, 0), Map.get(acc3, {k, j}, 0))
+            path_i_k = Map.get(acc3, {i, k}, 0)
+            path_k_j = Map.get(acc3, {k, j}, 0)
+            # Strength of path i->k->j is the minimum of the two segments
+            via_k = min(path_i_k, path_k_j)
+            # Keep the stronger path
             Map.put(acc3, {i, j}, max(current, via_k))
           else
             acc3

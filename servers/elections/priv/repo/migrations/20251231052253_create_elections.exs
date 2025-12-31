@@ -5,7 +5,7 @@ defmodule Elections.Repo.Migrations.CreateElections do
     create table(:elections, primary_key: false) do
       add :id, :binary_id, primary_key: true
       add :identifier, :string, null: false
-      add :config, :jsonb, null: false
+      add :config, :text, null: false  # SQLite uses text for JSON
       add :number_of_winners, :integer, null: false, default: 1
       add :voting_start, :utc_datetime, null: false
       add :voting_end, :utc_datetime, null: false

@@ -7,7 +7,7 @@ defmodule Elections.Election do
 
   schema "elections" do
     field :identifier, :string
-    field :config, :map
+    field :config, :map  # Ecto will handle JSON encoding/decoding
     field :number_of_winners, :integer, default: 1
     field :voting_start, :utc_datetime
     field :voting_end, :utc_datetime

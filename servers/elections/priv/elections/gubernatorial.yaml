@@ -1,0 +1,15 @@
+elections:
+  - identifier: "ny-gubernatorial-2026"
+    title: "NY Gubernatorial Election"
+    description: "4-year term beginning January 1, 2026. The Governor is the chief executive of New York State, responsible for implementing state laws and overseeing the state budget and agencies."
+    number_of_winners: 1
+    voting_start: "2025-12-01T00:00:00Z"
+    voting_end: "2025-12-31T23:59:59Z"
+    service_start: "2026-01-01T00:00:00Z"
+    candidates:
+      - name: "Evelyn Garcia"
+      - name: "Frank Wilson"
+      - name: "Grace Martinez"
+      - name: "Henry Davis"
+      - name: "Isabella Rodriguez"
+

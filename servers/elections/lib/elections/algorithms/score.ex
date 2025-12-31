@@ -36,6 +36,8 @@ defmodule Elections.Algorithms.Score do
   end
 
   defp extract_candidate_scores(ballot) do
+    # Extract scores from bands 0-5
+    # Unranked candidates are not included in score calculation
     Enum.flat_map(0..5, fn score ->
       candidates = Map.get(ballot, Integer.to_string(score), [])
       Enum.map(candidates, fn candidate -> {candidate, score} end)

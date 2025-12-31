@@ -60,7 +60,7 @@ defmodule Elections.MixProject do
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
       {:ecto_sql, "~> 3.10"},
-      {:postgrex, ">= 0.0.0"},
+      {:ecto_sqlite3, "~> 0.11"},
       {:yaml_elixir, "~> 2.9"}
     ]
   end

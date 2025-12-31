@@ -8,10 +8,7 @@
 import Config
 
 config :elections, Elections.Repo,
-  database: "elections_repo",
-  username: "user",
-  password: "pass",
-  hostname: "localhost"
+  database: "priv/repo/elections.db"
 
 config :elections,
   ecto_repos: [Elections.Repo],

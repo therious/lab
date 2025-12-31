@@ -203,13 +203,188 @@ defmodule Elections.Voting do
     }
   end
 
-  defp generate_visualization(election, _votes, method) do
-    # Placeholder - will be implemented with actual visualization data
+  defp generate_visualization(election, votes, method) do
+    case method do
+      "score" ->
+        generate_score_visualization(election, votes)
+
+      "ranked_pairs" ->
+        generate_ranked_pairs_visualization(election, votes)
+
+      "shulze" ->
+        generate_shulze_visualization(election, votes)
+
+      "irv" ->
+        generate_irv_visualization(election, votes)
+
+      "stv" ->
+        generate_stv_visualization(election, votes)
+
+      "coombs" ->
+        generate_coombs_visualization(election, votes)
+
+      _ ->
+        %{
+          method: method,
+          election_id: election.id,
+          visualization_type: "unknown",
+          data: []
+        }
+    end
+  end
+
+  defp generate_score_visualization(election, votes) do
+    results = Elections.Algorithms.Score.calculate(election, votes)
+
+    # Create Sankey-style data showing vote distribution
+    nodes =
+      Enum.map(election.config["candidates"] || [], fn c ->
+        %{id: c["name"], label: c["name"]}
+      end) ++
+        Enum.map(0..5, fn score ->
+          %{id: "score_#{score}", label: "Score #{score}"}
+        end)
+
+    links =
+      Enum.flat_map(votes, fn vote ->
+        ballot = vote.ballot_data || %{}
+
+        Enum.flat_map(0..5, fn score ->
+          candidates = Map.get(ballot, Integer.to_string(score), [])
+
+          Enum.map(candidates, fn candidate ->
+            %{
+              source: candidate,
+              target: "score_#{score}",
+              value: 1
+            }
+          end)
+        end)
+      end)
+      |> Enum.group_by(fn link -> {link.source, link.target} end)
+      |> Enum.map(fn {{source, target}, links_list} ->
+        %{
+          source: source,
+          target: target,
+          value: length(links_list)
+        }
+      end)
+
     %{
-      method: method,
+      method: "score",
       election_id: election.id,
       visualization_type: "sankey",
-      data: []
+      nodes: nodes,
+      links: links,
+      results: results
+    }
+  end
+
+  defp generate_ranked_pairs_visualization(election, votes) do
+    results = Elections.Algorithms.RankedPairs.calculate(election, votes)
+
+    # Create network diagram showing pairwise comparisons
+    pairwise = Map.get(results, :pairwise, %{})
+    locked = Map.get(results, :locked_pairs, [])
+
+    nodes =
+      Enum.map(election.config["candidates"] || [], fn c ->
+        %{id: c["name"], label: c["name"]}
+      end)
+
+    links =
+      Enum.map(locked, fn {c1, c2, strength} ->
+        %{
+          source: c1,
+          target: c2,
+          value: strength,
+          locked: true
+        }
+      end) ++
+        Enum.flat_map(pairwise, fn {{c1, c2}, strength} ->
+          if strength > 0 do
+            [%{source: c1, target: c2, value: strength, locked: false}]
+          else
+            []
+          end
+        end)
+
+    %{
+      method: "ranked_pairs",
+      election_id: election.id,
+      visualization_type: "network",
+      nodes: nodes,
+      links: links,
+      results: results
+    }
+  end
+
+  defp generate_shulze_visualization(election, votes) do
+    results = Elections.Algorithms.Shulze.calculate(election, votes)
+
+    # Similar to ranked pairs but show strongest paths
+    nodes =
+      Enum.map(election.config["candidates"] || [], fn c ->
+        %{id: c["name"], label: c["name"]}
+      end)
+
+    strongest_paths = Map.get(results, :strongest_paths, %{})
+
+    links =
+      Enum.flat_map(strongest_paths, fn {{c1, c2}, strength} ->
+        if strength > 0 do
+          [%{source: c1, target: c2, value: strength, path_type: "strongest"}]
+        else
+          []
+        end
+      end)
+
+    %{
+      method: "shulze",
+      election_id: election.id,
+      visualization_type: "network",
+      nodes: nodes,
+      links: links,
+      results: results
+    }
+  end
+
+  defp generate_irv_visualization(election, votes) do
+    results = Elections.Algorithms.IRVSTV.calculate(election, votes)
+
+    # Create flow diagram showing elimination rounds
+    %{
+      method: "irv",
+      election_id: election.id,
+      visualization_type: "flow",
+      rounds: [], # TODO: Track rounds during calculation
+      results: results
+    }
+  end
+
+  defp generate_stv_visualization(election, votes) do
+    results = Elections.Algorithms.IRVSTV.calculate(election, votes)
+
+    # Similar to IRV but with multiple winners
+    %{
+      method: "stv",
+      election_id: election.id,
+      visualization_type: "flow",
+      rounds: [], # TODO: Track rounds during calculation
+      results: results
+    }
+  end
+
+  defp generate_coombs_visualization(election, votes) do
+    results = Elections.Algorithms.Coombs.calculate(election, votes)
+
+    # Similar to IRV but shows last-place eliminations
+    %{
+      method: "coombs",
+      election_id: election.id,
+      visualization_type: "flow",
+      rounds: [], # TODO: Track rounds during calculation
+      results: results
     }
   end
 end
