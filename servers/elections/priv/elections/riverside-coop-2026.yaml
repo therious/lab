@@ -1,0 +1,52 @@
+identifier: "riverside-coop-2026"
+title: "Riverside Coop 2026 Elections"
+description: "Annual cooperative elections for board positions and policy decisions"
+voting_start: "2026-03-01T00:00:00Z"
+voting_end: "2026-03-31T23:59:59Z"
+service_start: "2026-04-01T00:00:00Z"
+service_end: "2026-12-31T23:59:59Z"
+
+ballots:
+  - title: "Wallpaper/Carpet Combination"
+    description: "Select the preferred combination of wallpaper and carpet for common areas renovation"
+    number_of_winners: 1
+    candidates:
+      - name: "Classic Beige / Neutral Gray"
+      - name: "Modern Blue / Light Blue"
+      - name: "Warm Earth Tones / Brown"
+      - name: "Contemporary White / Charcoal"
+
+  - title: "Coop Treasurer"
+    description: "2-year term. Responsible for financial oversight, budgeting, and financial reporting."
+    number_of_winners: 1
+    candidates:
+      - name: "Robert Chen"
+        affiliation: "Incumbent"
+      - name: "Sarah Martinez"
+      - name: "Michael Park"
+
+  - title: "Coop Secretary"
+    description: "2-year term. Responsible for meeting minutes, official correspondence, and record keeping."
+    number_of_winners: 1
+    candidates:
+      - name: "Jennifer Lee"
+      - name: "David Kim"
+        affiliation: "Incumbent"
+      - name: "Amanda Rodriguez"
+
+  - title: "Coop President"
+    description: "2-year term. Leads board meetings, represents the coop, and coordinates board activities."
+    number_of_winners: 1
+    candidates:
+      - name: "Patricia Williams"
+        affiliation: "Incumbent"
+      - name: "James Anderson"
+      - name: "Lisa Thompson"
+
+  - title: "Renovation Assessment"
+    description: "Vote on whether to assess owners a one-time $2 per square foot fee for renovations"
+    number_of_winners: 1
+    candidates:
+      - name: "Yes - Approve Assessment"
+      - name: "No - Reject Assessment"
+
