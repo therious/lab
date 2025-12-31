@@ -32,6 +32,7 @@ export interface ElectionState {
   ballots: Ballot[]; // Ballots for current election
   votes: Record<string, BallotVote>; // keyed by ballot title
   confirmations: Record<string, boolean>; // keyed by ballot title
+  submitted: boolean; // Whether the vote has been successfully submitted
 }
 
 const initialState: ElectionState = {
