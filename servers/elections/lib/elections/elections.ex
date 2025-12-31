@@ -20,9 +20,15 @@ defmodule Elections.Elections do
         # Get all elections - no filtering by date
         import Ecto.Query
         repo.all(from(e in Election))
-        |> Enum.map(&format_election_summary(&1, election_identifier, now))
+        |> Enum.map(fn election ->
+          # Use the identifier from the database record, not the filename
+          # This ensures consistency
+          actual_identifier = election.identifier || election_identifier
+          format_election_summary(election, actual_identifier, now)
+        end)
       end)
     end)
+    |> Enum.uniq_by(& &1.identifier)  # Remove duplicates by identifier
   end
 
   @doc """
