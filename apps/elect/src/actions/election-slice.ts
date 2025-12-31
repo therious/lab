@@ -60,26 +60,41 @@ interface SliceConfig {
 // Initialize election with ballots
 const initializeElection = (state: ElectionState, {payload}: {payload: {election: Election; token: string; viewToken: string}}): ElectionState => {
   return produce(state, draft => {
+    // Preserve existing votes and confirmations if re-initializing the same election
+    const isSameElection = draft.currentElection?.identifier === payload.election.identifier;
+    const preservedVotes = isSameElection ? draft.votes : {};
+    const preservedConfirmations = isSameElection ? draft.confirmations : {};
+    
     draft.currentElection = payload.election;
     draft.token = payload.token;
     draft.viewToken = payload.viewToken;
     draft.ballots = payload.election.ballots || [];
-    draft.votes = {};
-    draft.confirmations = {};
-    draft.submitted = false;
     
-    // Initialize votes for each ballot with empty bands
+    // Only reset submitted flag if it's a different election
+    if (!isSameElection) {
+      draft.submitted = false;
+    }
+    
+    // Initialize votes for each ballot, preserving existing votes if available
     draft.ballots.forEach(ballot => {
-      draft.votes[ballot.title] = {
-        '0': [],
-        '1': [],
-        '2': [],
-        '3': [],
-        '4': [],
-        '5': [],
-        'unranked': [...ballot.candidates.map(c => c.name)],
-      };
-      draft.confirmations[ballot.title] = false;
+      if (preservedVotes[ballot.title]) {
+        // Preserve existing vote structure
+        draft.votes[ballot.title] = preservedVotes[ballot.title];
+      } else {
+        // Initialize new vote structure
+        draft.votes[ballot.title] = {
+          '0': [],
+          '1': [],
+          '2': [],
+          '3': [],
+          '4': [],
+          '5': [],
+          'unranked': [...ballot.candidates.map(c => c.name)],
+        };
+      }
+      
+      // Preserve confirmation status if available, otherwise default to false
+      draft.confirmations[ballot.title] = preservedConfirmations[ballot.title] || false;
     });
   });
 };

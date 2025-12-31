@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Routes, Route, Link, useLocation} from 'react-router-dom';
+import {Routes, Route, Link, useLocation, useNavigate} from 'react-router-dom';
 import {useSelector} from './actions-integration';
 import {actions} from './actions-integration';
 import {TotalState} from './actions/combined-slices';
@@ -122,7 +122,7 @@ const RankBadge = styled.span`
   text-align: center;
 `;
 
-const ConfirmButton = styled.button<{$confirmed: boolean}>`
+const ConfirmButton = styled.button.attrs<{$confirmed: boolean}>(() => ({type: 'button'}))<{$confirmed: boolean}>`
   padding: 0.5rem 1rem;
   background: ${props => props.$confirmed ? '#4caf50' : '#2196f3'};
   color: white;
@@ -229,6 +229,7 @@ function SummaryView() {
   const {ballots, votes, confirmations, currentElection, token, submitted} = useSelector((s: TotalState) => s.election);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const BAND_CONFIG = [
     { score: '5', label: 'Excellent', color: '#2e7d32' },
@@ -342,7 +343,7 @@ function SummaryView() {
             style={{border: '2px solid #ccc', borderRadius: '8px', padding: '1rem', marginBottom: '1rem', cursor: 'pointer'}}
             onClick={() => {
               const encodedTitle = encodeURIComponent(ballot.title);
-              window.location.href = `/ballot/${encodedTitle}`;
+              navigate(`/ballot/${encodedTitle}`);
             }}
           >
             <ElectionTitle>{ballot.title}</ElectionTitle>
@@ -374,7 +375,13 @@ function SummaryView() {
             {isConfirmed ? (
               <ConfirmButton
                 $confirmed={true}
-                onClick={() => !submitted && actions.election.unconfirmBallot(ballot.title)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!submitted) {
+                    actions.election.unconfirmBallot(ballot.title);
+                  }
+                }}
                 disabled={submitted}
                 style={{background: submitted ? '#4caf50' : '#f44336', opacity: submitted ? 0.7 : 1}}
               >
@@ -383,7 +390,13 @@ function SummaryView() {
             ) : (
               <ConfirmButton
                 $confirmed={false}
-                onClick={() => !submitted && actions.election.confirmBallot(ballot.title)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!submitted) {
+                    actions.election.confirmBallot(ballot.title);
+                  }
+                }}
                 disabled={submitted}
               >
                 Confirm This Ballot
@@ -686,44 +699,61 @@ export default function App() {
               style={{position: 'relative'}}
             >
               {ballot.title}
-              {isConfirmed && (
-                <span style={{
-                  marginLeft: '0.5rem',
-                  color: nothingRanked ? '#2196f3' : '#4caf50',
-                  fontSize: '0.9rem'
-                }}>
-                  ✓
-                </span>
-              )}
-              {!isConfirmed && allRanked && (
-                <span style={{
-                  marginLeft: '0.5rem',
-                  color: '#999',
-                  fontSize: '0.9rem',
-                  border: '1px solid #999',
-                  borderRadius: '50%',
-                  width: '0.9rem',
-                  height: '0.9rem',
-                  display: 'inline-block',
-                  lineHeight: '0.9rem',
-                  textAlign: 'center'
-                }}>
-                  ✓
-                </span>
-              )}
-              {!isConfirmed && partiallyFilled && (
-                <span style={{
-                  marginLeft: '0.5rem',
-                  fontSize: '0.75rem',
-                  background: '#ff9800',
-                  color: 'white',
-                  padding: '0.1rem 0.3rem',
-                  borderRadius: '10px',
-                  fontWeight: 'bold'
-                }}>
-                  {Math.round((rankedCount / totalCandidates) * 100)}%
-                </span>
-              )}
+              <span style={{
+                marginLeft: '0.5rem',
+                display: 'inline-block',
+                width: '1.5rem',
+                textAlign: 'center',
+                flexShrink: 0
+              }}>
+                {isConfirmed && (
+                  <span style={{
+                    color: 'white',
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    background: nothingRanked ? '#2196f3' : '#4caf50',
+                    borderRadius: '50%',
+                    width: '1.2rem',
+                    height: '1.2rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }}>
+                    ✓
+                  </span>
+                )}
+                {!isConfirmed && allRanked && (
+                  <span style={{
+                    color: '#4caf50',
+                    fontSize: '1rem',
+                    border: '2px solid #4caf50',
+                    borderRadius: '50%',
+                    width: '1.2rem',
+                    height: '1.2rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 'bold',
+                    background: 'rgba(76, 175, 80, 0.1)'
+                  }}>
+                    ✓
+                  </span>
+                )}
+                {!isConfirmed && partiallyFilled && (
+                  <span style={{
+                    fontSize: '0.75rem',
+                    background: '#ff9800',
+                    color: 'white',
+                    padding: '0.1rem 0.3rem',
+                    borderRadius: '10px',
+                    fontWeight: 'bold',
+                    display: 'inline-block'
+                  }}>
+                    {Math.round((rankedCount / totalCandidates) * 100)}%
+                  </span>
+                )}
+              </span>
             </NavLink>
           );
         })}

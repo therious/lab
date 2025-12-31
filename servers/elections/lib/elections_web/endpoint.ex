@@ -28,7 +28,7 @@ defmodule ElectionsWeb.Endpoint do
     at: "/",
     from: :elections,
     gzip: not code_reloading?,
-    only: ElectionsWeb.static_paths(),
+    only_matching: ElectionsWeb.static_path_patterns(),
     raise_on_missing_only: code_reloading?
 
   # Code reloading can be explicitly enabled under the

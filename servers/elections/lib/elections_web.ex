@@ -19,6 +19,31 @@ defmodule ElectionsWeb do
 
   def static_paths, do: ~w(assets fonts images favicon.ico robots.txt index.html)
 
+  # Patterns for :only_matching in Plug.Static
+  # Matches directory prefixes and common file name prefixes
+  def static_path_patterns do
+    [
+      "assets",           # assets/ directory and all subdirectories
+      "fonts",            # fonts/ directory
+      "images",           # images/ directory
+      "favicon",          # favicon.* files (svg, ico, png variants)
+      "config",           # config.yaml, config.yml
+      "robots",           # robots.txt
+      "index",            # index.html
+      "apple-touch-icon"  # apple-touch-icon.png
+    ]
+  end
+  
+  # Paths that should NOT be served as static files (React Router handles these)
+  def exclude_static_paths do
+    [
+      "ballot",           # /ballot/* routes
+      "api",              # /api/* routes
+      "summary",          # /summary route
+      "results"           # /results route
+    ]
+  end
+
   def router do
     quote do
       use Phoenix.Router, helpers: false
