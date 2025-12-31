@@ -120,7 +120,7 @@ const CandidateName = styled.div`
 
 interface DraggableCandidateProps {
   candidateName: string;
-  electionTitle: string;
+  ballotTitle: string;
   currentScore: string;
   height?: number;
   padding?: number;
@@ -131,7 +131,7 @@ interface DraggableCandidateProps {
   onJustMovedEnd?: () => void;
 }
 
-export function DraggableCandidate({candidateName, electionTitle, currentScore, height = 48, padding = 12, horizontal = false, rank, affiliation, isJustMoved = false, onJustMovedEnd}: DraggableCandidateProps) {
+export function DraggableCandidate({candidateName, ballotTitle, currentScore, height = 48, padding = 12, horizontal = false, rank, affiliation, isJustMoved = false, onJustMovedEnd}: DraggableCandidateProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
@@ -144,7 +144,7 @@ export function DraggableCandidate({candidateName, electionTitle, currentScore, 
       element,
       getInitialData: () => ({
         candidateName,
-        electionTitle,
+        ballotTitle,
         currentScore,
       }),
       onGenerateDragPreview: ({nativeSetDragImage}) => {
@@ -195,7 +195,7 @@ export function DraggableCandidate({candidateName, electionTitle, currentScore, 
         setIsDragging(false);
       },
     });
-  }, [candidateName, electionTitle, currentScore, padding]);
+  }, [candidateName, ballotTitle, currentScore, padding]);
 
   // Handle fade-out animation for just-moved items
   useEffect(() => {

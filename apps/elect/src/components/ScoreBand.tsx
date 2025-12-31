@@ -151,7 +151,7 @@ interface ScoreBandProps {
   color: string;
   tooltip?: string;
   candidates: string[];
-  electionTitle: string;
+  ballotTitle: string;
   padding?: number;
   gap?: number;
   candidateHeight?: number;
@@ -172,7 +172,7 @@ export function ScoreBand({
   color,
   tooltip,
   candidates,
-  electionTitle,
+  ballotTitle,
   padding = 8,
   gap = 4,
   candidateHeight = 48,
@@ -291,7 +291,7 @@ export function ScoreBand({
 
     return dropTargetForElements({
       element,
-      getData: () => ({score, electionTitle}),
+      getData: () => ({score, ballotTitle}),
       onDragEnter: ({location}) => {
         setIsOver(true);
         // Calculate initial insertion index based on current mouse position
@@ -366,7 +366,7 @@ export function ScoreBand({
         }
       },
     });
-  }, [score, electionTitle, candidates.length, onDrop]);
+  }, [score, ballotTitle, candidates.length, onDrop]);
 
   const isReject = score === '0';
   
@@ -391,7 +391,7 @@ export function ScoreBand({
           >
             <DraggableCandidate
               candidateName={candidate}
-              electionTitle={electionTitle}
+              ballotTitle={ballotTitle}
               currentScore={score}
               height={candidateHeight}
               padding={candidatePadding}

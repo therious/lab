@@ -190,7 +190,7 @@ const UnrankedLabel = styled.div`
 `;
 
 interface VotingInterfaceProps {
-  electionTitle: string;
+  ballotTitle: string;
 }
 
 const BAND_CONFIG = [
@@ -232,28 +232,28 @@ const BAND_CONFIG = [
   },
 ];
 
-export function VotingInterface({electionTitle}: VotingInterfaceProps) {
-  const elections = useSelector((s: TotalState) => s.election.elections);
-  const vote = useSelector((s: TotalState) => s.election.votes[electionTitle]);
-  const election = elections.find((e: {title: string}) => e.title === electionTitle);
+export function VotingInterface({ballotTitle}: VotingInterfaceProps) {
+  const ballots = useSelector((s: TotalState) => s.election.ballots);
+  const vote = useSelector((s: TotalState) => s.election.votes[ballotTitle]);
+  const ballot = ballots.find((b: {title: string}) => b.title === ballotTitle);
   
   // Create lookup map from candidate name to candidate object (for affiliation)
   const candidateLookup = React.useMemo(() => {
-    if (!election) return {};
+    if (!ballot) return {};
     const lookup: Record<string, {name: string; affiliation?: string}> = {};
-    election.candidates.forEach(candidate => {
+    ballot.candidates.forEach((candidate: {name: string; affiliation?: string}) => {
       lookup[candidate.name] = candidate;
     });
     return lookup;
-  }, [election]);
+  }, [ballot]);
   const leftPanelRef = useRef<HTMLDivElement>(null);
   const bandsContainerRef = useRef<HTMLDivElement>(null);
   const unrankedSectionRef = useRef<HTMLDivElement>(null);
   const [justMovedCandidate, setJustMovedCandidate] = useState<string | null>(null);
   const [isUnrankedOver, setIsUnrankedOver] = useState(false);
 
-  if (!election || !vote) {
-    return <div>Election not found</div>;
+  if (!ballot || !vote) {
+    return <div>Ballot not found</div>;
   }
 
   // Calculate total candidates and bands for spacing
@@ -265,12 +265,12 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
   const spacing = useResponsiveSpacing(leftPanelRef, bandsContainerRef, totalCandidates, totalBands);
 
   const handleReset = () => {
-    actions.election.resetElection(electionTitle);
+    actions.election.resetBallot(ballotTitle);
     setJustMovedCandidate(null);
   };
 
   const handleDrop = (candidateName: string, fromScore: string, toScore: string, toIndex: number) => {
-    actions.election.moveCandidate(electionTitle, candidateName, fromScore, toScore, toIndex);
+    actions.election.moveCandidate(ballotTitle, candidateName, fromScore, toScore, toIndex);
     // Mark this candidate as just moved
     setJustMovedCandidate(candidateName);
   };
@@ -286,7 +286,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
 
     return dropTargetForElements({
       element,
-      getData: () => ({score: 'unranked', electionTitle}),
+      getData: () => ({score: 'unranked', ballotTitle}),
       onDragEnter: () => {
         setIsUnrankedOver(true);
       },
@@ -300,14 +300,14 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
           const candidateName = data.candidateName as string;
           const fromScore = data.currentScore as string;
           // Move candidate back to unranked
-          actions.election.moveCandidate(electionTitle, candidateName, fromScore, 'unranked');
+          actions.election.moveCandidate(ballotTitle, candidateName, fromScore, 'unranked');
         }
       },
     });
-  }, [electionTitle]);
+  }, [ballotTitle]);
 
   const handleReorder = (score: string, fromIndex: number, toIndex: number) => {
-    actions.election.reorderCandidate(electionTitle, score, fromIndex, toIndex);
+    actions.election.reorderCandidate(ballotTitle, score, fromIndex, toIndex);
   };
 
   // Calculate ranks for all candidates across bands 0-5
@@ -332,7 +332,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
   return (
     <Container>
       <TopPanel>
-        {election.description && <DescriptionText>{election.description}</DescriptionText>}
+        {ballot.description && <DescriptionText>{ballot.description}</DescriptionText>}
         <ResetButton onClick={handleReset}>Reset</ResetButton>
       </TopPanel>
       <BottomPanels>
@@ -357,7 +357,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                     color={color}
                     tooltip={tooltip}
                     candidates={vote[score] || []}
-                    electionTitle={electionTitle}
+                    ballotTitle={ballotTitle}
                     padding={spacing.bandPadding}
                     gap={spacing.candidateGap}
                     candidateHeight={spacing.candidateHeight}
@@ -386,7 +386,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                     color={BAND_CONFIG[5].color}
                     tooltip={BAND_CONFIG[5].tooltip}
                     candidates={vote['0'] || []}
-                    electionTitle={electionTitle}
+                    ballotTitle={ballotTitle}
                     padding={spacing.bandPadding}
                     gap={spacing.candidateGap}
                     candidateHeight={spacing.candidateHeight}
@@ -413,7 +413,7 @@ export function VotingInterface({electionTitle}: VotingInterfaceProps) {
                 <DraggableCandidate
                   key={candidateName}
                   candidateName={candidateName}
-                  electionTitle={electionTitle}
+                  ballotTitle={ballotTitle}
                   currentScore="unranked"
                   height={spacing.candidateHeight}
                   padding={spacing.candidatePadding}
