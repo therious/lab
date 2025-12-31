@@ -7,6 +7,9 @@
 # General application configuration
 import Config
 
+# Enable test data creation in development
+config :elections, :create_test_data, true
+
 config :elections, Elections.Repo,
   database: "priv/repo/elections.db"
 
