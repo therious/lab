@@ -11,7 +11,7 @@ defmodule ElectionsWeb.Router do
   end
 
   pipeline :api do
-    plug :accepts, ["json"]
+    plug :accepts, ["json", "html"]
   end
 
   scope "/", ElectionsWeb do
