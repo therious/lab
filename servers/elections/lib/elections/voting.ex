@@ -239,9 +239,11 @@ defmodule Elections.Voting do
   defp extract_ballot_votes(votes, ballot_title) do
     Enum.map(votes, fn vote ->
       ballot_data = vote.ballot_data || %{}
-      Map.get(ballot_data, ballot_title, %{})
+      vote_data = Map.get(ballot_data, ballot_title, %{})
+      # Wrap the vote data in a structure that algorithms expect
+      %{ballot_data: vote_data}
     end)
-    |> Enum.filter(&(map_size(&1) > 0))
+    |> Enum.filter(fn wrapped_vote -> map_size(wrapped_vote.ballot_data || %{}) > 0 end)
   end
 
   defp generate_visualization(election, votes, method) do

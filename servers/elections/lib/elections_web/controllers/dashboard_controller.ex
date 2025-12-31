@@ -9,19 +9,35 @@ defmodule ElectionsWeb.DashboardController do
   end
 
   def show(conn, %{"identifier" => election_identifier}) do
-    case Voting.get_election_results(election_identifier) do
-      {:ok, results} ->
-        conn |> json(%{election_identifier: election_identifier, results: results})
+    try do
+      case Voting.get_election_results(election_identifier) do
+        {:ok, results} ->
+          conn |> json(%{election_identifier: election_identifier, results: results})
 
-      {:error, :election_not_found} ->
-        conn
-        |> put_status(:not_found)
-        |> json(%{error: "Election not found"})
+        {:error, :election_not_found} ->
+          conn
+          |> put_status(:not_found)
+          |> json(%{error: "Election not found", error_code: "election_not_found"})
 
-      {:error, :service_window_not_open} ->
+        {:error, :service_window_not_open} ->
+          conn
+          |> put_status(:forbidden)
+          |> json(%{error: "Results are not yet available", error_code: "service_window_not_open"})
+
+        {:error, reason} ->
+          conn
+          |> put_status(:internal_server_error)
+          |> json(%{error: "Failed to calculate results: #{inspect(reason)}", error_code: "calculation_error"})
+      end
+    rescue
+      e ->
         conn
-        |> put_status(:forbidden)
-        |> json(%{error: "Results are not yet available"})
+        |> put_status(:internal_server_error)
+        |> json(%{
+          error: "An error occurred while calculating results",
+          error_code: "server_error",
+          error_message: Exception.message(e)
+        })
     end
   end
 

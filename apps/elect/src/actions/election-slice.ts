@@ -41,6 +41,7 @@ const initialState: ElectionState = {
   ballots: [],
   votes: {},
   confirmations: {},
+  submitted: false,
 };
 
 type ElectionCreator = (...rest: any) => unknown;
@@ -185,6 +186,17 @@ const clearConfirmations = (state: ElectionState): ElectionState => {
   });
 };
 
+// Mark vote as submitted
+const markSubmitted = (state: ElectionState): ElectionState => {
+  return produce(state, draft => {
+    draft.submitted = true;
+    // Lock all confirmations
+    Object.keys(draft.confirmations).forEach(key => {
+      draft.confirmations[key] = true;
+    });
+  });
+};
+
 export const sliceConfig: SliceConfig = {
   name: 'election',
   initialState,
@@ -196,6 +208,7 @@ export const sliceConfig: SliceConfig = {
     confirmBallot,
     unconfirmBallot,
     clearConfirmations,
+    markSubmitted,
   },
   creators: {
     initializeElection: (election: Election, token: string, viewToken: string) => ({
@@ -211,6 +224,7 @@ export const sliceConfig: SliceConfig = {
     confirmBallot: (ballotTitle: string) => ({payload: {ballotTitle}}),
     unconfirmBallot: (ballotTitle: string) => ({payload: {ballotTitle}}),
     clearConfirmations: () => ({payload: {}}),
+    markSubmitted: () => ({payload: {}}),
   },
 };
 

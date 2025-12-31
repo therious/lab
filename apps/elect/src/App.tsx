@@ -213,7 +213,7 @@ const ModalButton = styled.button<{$primary?: boolean}>`
 `;
 
 function SummaryView() {
-  const {ballots, votes, confirmations, currentElection, token} = useSelector((s: TotalState) => s.election);
+  const {ballots, votes, confirmations, currentElection, token, submitted} = useSelector((s: TotalState) => s.election);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
 
@@ -259,6 +259,8 @@ function SummaryView() {
       if (response.ok) {
         setShowSuccessModal(true);
         setSubmissionError(null);
+        // Mark vote as submitted in Redux
+        actions.election.markSubmitted();
       } else {
         setSubmissionError(data.error || 'Failed to submit vote');
       }
@@ -352,15 +354,17 @@ function SummaryView() {
             {isConfirmed ? (
               <ConfirmButton
                 $confirmed={true}
-                onClick={() => actions.election.unconfirmBallot(ballot.title)}
-                style={{background: '#f44336'}}
+                onClick={() => !submitted && actions.election.unconfirmBallot(ballot.title)}
+                disabled={submitted}
+                style={{background: submitted ? '#4caf50' : '#f44336', opacity: submitted ? 0.7 : 1}}
               >
-                ✓ Confirmed (Click to Undo)
+                {submitted ? '✓ Submitted' : '✓ Confirmed (Click to Undo)'}
               </ConfirmButton>
             ) : (
               <ConfirmButton
                 $confirmed={false}
-                onClick={() => actions.election.confirmBallot(ballot.title)}
+                onClick={() => !submitted && actions.election.confirmBallot(ballot.title)}
+                disabled={submitted}
               >
                 Confirm This Ballot
               </ConfirmButton>
@@ -368,7 +372,7 @@ function SummaryView() {
           </div>
         );
       })}
-      {ballots.length > 0 && (
+      {ballots.length > 0 && !submitted && (
         <SubmitButton 
           $enabled={allConfirmed && !token?.startsWith('preview-')} 
           onClick={handleSubmit} 
@@ -380,6 +384,11 @@ function SummaryView() {
               ? 'Submit All Votes' 
               : `Confirm ${ballots.length - Object.values(confirmations).filter(Boolean).length} more ballot(s) to submit`}
         </SubmitButton>
+      )}
+      {submitted && (
+        <div style={{textAlign: 'center', padding: '2rem', color: '#4caf50', fontSize: '1.2rem', fontWeight: 'bold'}}>
+          ✓ Your vote has been successfully submitted
+        </div>
       )}
     </SummaryContainer>
     </>
@@ -418,13 +427,27 @@ function ResultsView() {
   React.useEffect(() => {
     if (currentElection) {
       setLoading(true);
-      fetch(`/api/dashboard/${currentElection.identifier}`)
+      setError(null);
+      fetch(`/api/dashboard/${currentElection.identifier}`, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      })
         .then(async res => {
-          if (!res.ok) {
-            const data = await res.json();
-            throw new Error(data.error || 'Failed to load results');
+          const contentType = res.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            // Server returned HTML error page instead of JSON
+            const text = await res.text();
+            const titleMatch = text.match(/<title>(.*?)<\/title>/i);
+            const errorTitle = titleMatch ? titleMatch[1] : 'Server Error';
+            throw new Error(`Server returned HTML instead of JSON: ${errorTitle}`);
           }
-          return res.json();
+          
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.error || data.error_message || 'Failed to load results');
+          }
+          return data;
         })
         .then(data => {
           setResults(data.results);
@@ -432,7 +455,7 @@ function ResultsView() {
         })
         .catch(err => {
           console.error('Error loading results:', err);
-          setError(err.message);
+          setError(err.message || 'Failed to load results');
           setLoading(false);
         });
     }
