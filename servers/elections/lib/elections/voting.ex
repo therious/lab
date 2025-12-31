@@ -226,7 +226,7 @@ defmodule Elections.Voting do
     # Extract ballots from config
     ballots = Map.get(election.config || %{}, "ballots", [])
 
-    # Calculate results for each ballot
+    # Calculate results for each ballot - always return complete structure
     results = Enum.map(ballots, fn ballot ->
       ballot_title = Map.get(ballot, "title", "Untitled Ballot")
       candidates = Map.get(ballot, "candidates", [])
@@ -241,23 +241,27 @@ defmodule Elections.Voting do
         "number_of_winners" => number_of_winners
       }
       
-      # Calculate results only if there are votes
-      algorithm_results = if length(ballot_votes) > 0 do
-        %{
-          ranked_pairs: Elections.Algorithms.RankedPairs.calculate(ballot_for_algorithms, ballot_votes),
-          shulze: Elections.Algorithms.Shulze.calculate(ballot_for_algorithms, ballot_votes),
-          score: Elections.Algorithms.Score.calculate(ballot_for_algorithms, ballot_votes),
-          irv_stv: Elections.Algorithms.IRVSTV.calculate(ballot_for_algorithms, ballot_votes),
-          coombs: Elections.Algorithms.Coombs.calculate(ballot_for_algorithms, ballot_votes)
-        }
-      else
-        %{
-          ranked_pairs: %{method: "ranked_pairs", winners: [], status: "no_votes"},
-          shulze: %{method: "shulze", winners: [], status: "no_votes"},
-          score: %{method: "score", winners: [], scores: %{}, status: "no_votes"},
-          irv_stv: %{method: "irv_stv", winners: [], status: "no_votes"},
-          coombs: %{method: "coombs", winners: [], status: "no_votes"}
-        }
+      # Always calculate results - algorithms should handle empty votes gracefully
+      # Wrap in try/rescue to handle any algorithm errors
+      algorithm_results = try do
+        if length(ballot_votes) > 0 do
+          %{
+            ranked_pairs: safe_calculate_algorithm(fn -> Elections.Algorithms.RankedPairs.calculate(ballot_for_algorithms, ballot_votes) end, "ranked_pairs"),
+            shulze: safe_calculate_algorithm(fn -> Elections.Algorithms.Shulze.calculate(ballot_for_algorithms, ballot_votes) end, "shulze"),
+            score: safe_calculate_algorithm(fn -> Elections.Algorithms.Score.calculate(ballot_for_algorithms, ballot_votes) end, "score"),
+            irv_stv: safe_calculate_algorithm(fn -> Elections.Algorithms.IRVSTV.calculate(ballot_for_algorithms, ballot_votes) end, "irv_stv"),
+            coombs: safe_calculate_algorithm(fn -> Elections.Algorithms.Coombs.calculate(ballot_for_algorithms, ballot_votes) end, "coombs")
+          }
+        else
+          # No votes for this ballot - return empty results structure
+          build_empty_results(candidates, number_of_winners)
+        end
+      rescue
+        e ->
+          require Logger
+          Logger.error("Error calculating algorithm results for ballot #{ballot_title}: #{inspect(e)}")
+          # Return empty results structure on error
+          build_empty_results(candidates, number_of_winners)
       end
       
       %{
@@ -269,7 +273,7 @@ defmodule Elections.Voting do
       }
     end)
 
-    # Return results with metadata
+    # Return results with metadata - always complete
     %{
       results: results,
       metadata: %{
@@ -279,6 +283,33 @@ defmodule Elections.Voting do
         voting_end: DateTime.to_iso8601(election.voting_end),
         election_identifier: election.identifier
       }
+    }
+  end
+
+  # Helper to safely calculate algorithm results, returning empty structure on error
+  defp safe_calculate_algorithm(algorithm_fun, method_name) do
+    try do
+      algorithm_fun.()
+    rescue
+      e ->
+        require Logger
+        Logger.warn("Algorithm #{method_name} failed: #{inspect(e)}")
+        %{method: method_name, winners: [], status: "error", error: "Calculation failed"}
+    end
+  end
+
+  # Build empty results structure for ballots with no votes
+  defp build_empty_results(candidates, number_of_winners) do
+    # Initialize scores map with all candidates at 0.0
+    candidate_names = Enum.map(candidates, fn c -> Map.get(c, "name", "") end)
+    empty_scores = Enum.into(candidate_names, %{}, fn name -> {name, 0.0} end)
+    
+    %{
+      ranked_pairs: %{method: "ranked_pairs", winners: [], pairwise: %{}, locked_pairs: [], status: "no_votes"},
+      shulze: %{method: "shulze", winners: [], pairwise: %{}, strongest_paths: %{}, status: "no_votes"},
+      score: %{method: "score", winners: [], scores: empty_scores, status: "no_votes"},
+      irv_stv: %{method: "irv_stv", winners: [], status: "no_votes"},
+      coombs: %{method: "coombs", winners: [], status: "no_votes"}
     }
   end
 
