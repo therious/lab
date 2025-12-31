@@ -214,17 +214,23 @@ defmodule Elections.Voting do
       # Extract votes for this ballot from ballot_data
       ballot_votes = extract_ballot_votes(votes, ballot_title)
 
+      # Create ballot map with candidates and number_of_winners for algorithms
+      ballot_for_algorithms = %{
+        "candidates" => candidates,
+        "number_of_winners" => number_of_winners
+      }
+      
       %{
         ballot_title: ballot_title,
         candidates: candidates,
         number_of_winners: number_of_winners,
         vote_count: length(ballot_votes),
         results: %{
-          ranked_pairs: Elections.Algorithms.RankedPairs.calculate(ballot, ballot_votes),
-          shulze: Elections.Algorithms.Shulze.calculate(ballot, ballot_votes),
-          score: Elections.Algorithms.Score.calculate(ballot, ballot_votes),
-          irv_stv: Elections.Algorithms.IRVSTV.calculate(ballot, ballot_votes),
-          coombs: Elections.Algorithms.Coombs.calculate(ballot, ballot_votes)
+          ranked_pairs: Elections.Algorithms.RankedPairs.calculate(ballot_for_algorithms, ballot_votes),
+          shulze: Elections.Algorithms.Shulze.calculate(ballot_for_algorithms, ballot_votes),
+          score: Elections.Algorithms.Score.calculate(ballot_for_algorithms, ballot_votes),
+          irv_stv: Elections.Algorithms.IRVSTV.calculate(ballot_for_algorithms, ballot_votes),
+          coombs: Elections.Algorithms.Coombs.calculate(ballot_for_algorithms, ballot_votes)
         }
       }
     end)
