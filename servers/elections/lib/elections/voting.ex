@@ -274,12 +274,22 @@ defmodule Elections.Voting do
 
   defp extract_ballot_votes(votes, ballot_title) do
     Enum.map(votes, fn vote ->
-      ballot_data = vote.ballot_data || %{}
+      # Handle case where ballot_data might be nil or not a map
+      ballot_data = case vote.ballot_data do
+        nil -> %{}
+        data when is_map(data) -> data
+        _ -> %{}  # Fallback for any other type
+      end
       vote_data = Map.get(ballot_data, ballot_title, %{})
+      # Ensure vote_data is a map
+      vote_data = if is_map(vote_data), do: vote_data, else: %{}
       # Wrap the vote data in a structure that algorithms expect
       %{ballot_data: vote_data}
     end)
-    |> Enum.filter(fn wrapped_vote -> map_size(wrapped_vote.ballot_data || %{}) > 0 end)
+    |> Enum.filter(fn wrapped_vote -> 
+      ballot_data = wrapped_vote.ballot_data || %{}
+      is_map(ballot_data) && map_size(ballot_data) > 0
+    end)
   end
 
   defp generate_visualization(election, votes, method) do
