@@ -1,0 +1,176 @@
+{
+  "info": {
+    "name": "Elections API",
+    "description": "API collection for testing election voting system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Elections",
+      "item": [
+        {
+          "name": "List Elections",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/elections",
+              "host": ["{{base_url}}"],
+              "path": ["api", "elections"]
+            }
+          }
+        },
+        {
+          "name": "Get Election Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/elections/:identifier",
+              "host": ["{{base_url}}"],
+              "path": ["api", "elections", ":identifier"],
+              "variable": [
+                {
+                  "key": "identifier",
+                  "value": "walnut-hills-high-school-2025",
+                  "description": "Election identifier"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tokens",
+      "item": [
+        {
+          "name": "Request Voting Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"election_identifier\": \"walnut-hills-high-school-2025\",\n  \"email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tokens",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tokens"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Votes",
+      "item": [
+        {
+          "name": "Submit Vote",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"YOUR_TOKEN_HERE\",\n  \"ballot_data\": {\n    \"Student Body President\": {\n      \"5\": [\"Emma Thompson\"],\n      \"4\": [\"Daniel Park\"],\n      \"3\": [\"Benjamin Rodriguez\"],\n      \"2\": [\"Chloe Kim\"],\n      \"1\": [\"Alexandra Chen\"],\n      \"0\": [],\n      \"unranked\": []\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/votes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "votes"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Election Results",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/:identifier",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", ":identifier"],
+              "variable": [
+                {
+                  "key": "identifier",
+                  "value": "walnut-hills-high-school-2025",
+                  "description": "Election identifier"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has results\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('results');",
+                  "    pm.expect(jsonData.results).to.be.an('object');",
+                  "});",
+                  "",
+                  "pm.test(\"Results has ballots array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var ballots = jsonData.results.results || jsonData.results.results || [];",
+                  "    pm.expect(ballots).to.be.an('array');",
+                  "    console.log('Ballots count:', ballots.length);",
+                  "});",
+                  "",
+                  "pm.test(\"Results has metadata\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var metadata = jsonData.results.metadata || jsonData.metadata || {};",
+                  "    pm.expect(metadata).to.be.an('object');",
+                  "    console.log('Total votes:', metadata.total_votes || 0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:4000"
+    }
+  ]
+}
+

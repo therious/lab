@@ -629,16 +629,33 @@ function ResultsView() {
     
     // Helper to process and set results
     const processResults = (data: any) => {
-      // Handle both old format (array) and new format (object with results and metadata)
-      if (data.results && Array.isArray(data.results)) {
-        setResults({ballots: data.results, metadata: data.metadata || null});
-      } else if (data.results && data.results.results && Array.isArray(data.results.results)) {
-        setResults({ballots: data.results.results, metadata: data.results.metadata || null});
-      } else if (data.results && typeof data.results === 'object' && data.results.results) {
-        setResults({ballots: data.results.results || [], metadata: data.results.metadata || null});
-      } else {
-        setResults({ballots: data.results || [], metadata: data.metadata || null});
+      console.log('[DEBUG] Raw API response:', data);
+      
+      // API returns: {election_identifier: "...", results: {results: [...], metadata: {...}}}
+      // Extract the nested results structure
+      let ballots: any[] = [];
+      let metadata: any = null;
+      
+      if (data.results) {
+        // Check if results is the nested object with results and metadata
+        if (data.results.results && Array.isArray(data.results.results)) {
+          ballots = data.results.results;
+          metadata = data.results.metadata || null;
+        } 
+        // Check if results is directly an array (old format)
+        else if (Array.isArray(data.results)) {
+          ballots = data.results;
+          metadata = data.metadata || null;
+        }
+        // Check if results is an object with a results property
+        else if (typeof data.results === 'object' && data.results.results) {
+          ballots = Array.isArray(data.results.results) ? data.results.results : [];
+          metadata = data.results.metadata || null;
+        }
       }
+      
+      console.log('[DEBUG] Processed results - ballots:', ballots.length, 'metadata:', metadata);
+      setResults({ballots, metadata});
       setLoading(false);
     };
     
