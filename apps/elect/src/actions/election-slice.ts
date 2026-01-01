@@ -299,6 +299,23 @@ const markSubmitted = (state: ElectionState): ElectionState => {
   });
 };
 
+// Logout - restore initial state (middleware will clear sessionStorage)
+const logout = (state: ElectionState): ElectionState => {
+  return produce(state, draft => {
+    // Restore to initial state
+    draft.currentElection = null;
+    draft.token = null;
+    draft.viewToken = null;
+    draft.electionIdentifier = null;
+    draft.userEmail = null;
+    draft.ballots = [];
+    draft.votes = {};
+    draft.confirmations = {};
+    draft.submitted = false;
+    // Middleware will clear sessionStorage
+  });
+};
+
 export const sliceConfig: SliceConfig = {
   name: 'election',
   initialState,
@@ -315,6 +332,7 @@ export const sliceConfig: SliceConfig = {
     unconfirmBallot,
     clearConfirmations,
     markSubmitted,
+    logout,
   },
   creators: {
     initializeElection: (election: Election, token: string, viewToken: string) => ({
@@ -343,6 +361,7 @@ export const sliceConfig: SliceConfig = {
     unconfirmBallot: (ballotTitle: string) => ({payload: {ballotTitle}}),
     clearConfirmations: () => ({payload: {}}),
     markSubmitted: () => ({payload: {}}),
+    logout: () => ({payload: {}}),
   },
 };
 

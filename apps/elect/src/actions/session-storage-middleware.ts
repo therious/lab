@@ -19,6 +19,17 @@ import {TotalState} from './combined-slices';
 const SESSION_STORAGE_KEY = 'election_session';
 
 export const sessionStorageMiddleware = (store: {getState: () => TotalState}) => (next: NextF) => (action: Action) => {
+  // Check if this is a logout action - clear sessionStorage BEFORE running the action
+  if (action.type === 'election/logout') {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      try {
+        sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      } catch (e) {
+        console.warn('Failed to clear sessionStorage on logout:', e);
+      }
+    }
+  }
+  
   const result = next(action);
   
   // Only run in browser environment
