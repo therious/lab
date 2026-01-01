@@ -103,8 +103,8 @@ const CandidatesList = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  flex: 1;
   align-items: center;
+  flex-shrink: 0;
 `;
 
 const BallotCard = styled.div`
