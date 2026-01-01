@@ -334,7 +334,14 @@ function SummaryView() {
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // Check if election is upcoming
+  const now = new Date();
+  const votingStart = currentElection?.voting_start ? new Date(currentElection.voting_start) : null;
+  const isUpcoming = votingStart && now < votingStart;
+  const isPreviewToken = token?.startsWith('preview-') || false;
+
   const allConfirmed = ballots.length > 0 && ballots.every(ballot => confirmations[ballot.title]);
+  const canSubmit = !isUpcoming && !isPreviewToken && !submitted && allConfirmed;
 
   const handleSubmit = async () => {
     if (!currentElection || !token) {
@@ -342,8 +349,14 @@ function SummaryView() {
       return;
     }
 
+    // Prevent submission for upcoming elections
+    if (isUpcoming) {
+      alert('This election has not yet opened. Voting will begin when the voting window opens.');
+      return;
+    }
+
     // Check if token is a preview token
-    if (token.startsWith('preview-')) {
+    if (isPreviewToken) {
       alert('This is a preview token for an election that has not yet opened. You can practice with the interface, but votes cannot be submitted until the voting window opens.');
       return;
     }
@@ -429,13 +442,13 @@ function SummaryView() {
           <h1 style={{margin: 0}}>{currentElection?.title || 'Election Summary'}</h1>
           {ballots.length > 0 && !submitted && (
             <SubmitButton 
-              $enabled={allConfirmed && !token?.startsWith('preview-')} 
+              $enabled={canSubmit} 
               onClick={handleSubmit} 
-              disabled={!allConfirmed || token?.startsWith('preview-')}
+              disabled={!canSubmit}
               style={{margin: 0}}
             >
-              {token?.startsWith('preview-') 
-                ? 'Preview Mode - Voting Not Yet Open' 
+              {isUpcoming || isPreviewToken
+                ? 'Voting Not Yet Open' 
                 : (() => {
                     const unconfirmedCount = ballots.length - Object.values(confirmations).filter(Boolean).length;
                     if (allConfirmed) {
@@ -990,8 +1003,8 @@ export default function App() {
   // Results tab is always available
   availableTabs.push({path: '/results', label: 'Results', element: <ResultsView/>});
   
-  // Summary and ballot tabs only available if election is open or upcoming
-  if ((isOpen || isUpcoming) && currentElection) {
+  // Summary and ballot tabs only available if election is open (NOT upcoming)
+  if (isOpen && currentElection) {
     availableTabs.push({path: '/summary', label: 'Summary', element: <SummaryView/>});
     ballots.forEach((ballot: Ballot) => {
       availableTabs.push({
