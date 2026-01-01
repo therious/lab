@@ -701,10 +701,9 @@ function ResultsView() {
           const errorCode = data.error_code || 'unknown_error';
           console.error('[DEBUG] API error:', {errorMsg, errorCode, status: res.status});
           // Only include error code if it provides useful information
-          const finalMsg = if errorCode === 'server_error' || errorCode === 'unknown_error' then
-            errorMsg
-          else
-            `${errorMsg} (${errorCode})`;
+          const finalMsg = (errorCode === 'server_error' || errorCode === 'unknown_error') 
+            ? errorMsg 
+            : `${errorMsg} (${errorCode})`;
           throw new Error(finalMsg);
         }
         return data;
