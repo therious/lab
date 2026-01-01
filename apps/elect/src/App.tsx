@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {Routes, Route, Link, useLocation, useNavigate} from 'react-router-dom';
 import {useSelector} from './actions-integration';
 import {actions} from './actions-integration';
@@ -8,6 +8,9 @@ import {VotingInterface} from './components/VotingInterface';
 import {LandingPage} from './components/LandingPage';
 import {VoteTimeline} from './components/VoteTimeline';
 import styled from 'styled-components';
+
+// Experimental feature flag: Set to true to enable equal-width bands
+const EXPERIMENTAL_EQUAL_WIDTH_BANDS = false;
 
 const Layout = styled.div`
   display: flex;
@@ -411,6 +414,26 @@ function SummaryView() {
         // If exactly 4 total, show all 4 by name (3 + 1)
         const shouldShowAll = unrankedCandidates.length === 4;
         
+        // Render ballot card - use experimental equal-width bands if enabled
+        if (EXPERIMENTAL_EQUAL_WIDTH_BANDS) {
+          return (
+            <BallotCardWithEqualWidthBands
+              key={ballot.title}
+              ballot={ballot}
+              vote={vote}
+              isConfirmed={isConfirmed}
+              submitted={submitted}
+              candidateRanks={candidateRanks}
+              unrankedCandidates={unrankedCandidates}
+              unrankedToShow={unrankedToShow}
+              unrankedRemaining={unrankedRemaining}
+              shouldShowAll={shouldShowAll}
+              navigate={navigate}
+            />
+          );
+        }
+        
+        // Original implementation (current default)
         return (
           <BallotCard
             key={ballot.title} 
