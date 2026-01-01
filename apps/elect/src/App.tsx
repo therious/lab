@@ -1114,8 +1114,8 @@ export default function App() {
             </NavLink>
           );
         })}
-        {/* Individual ballot tabs (only if election is open/upcoming) */}
-        {(isOpen || isUpcoming) && ballots.map((ballot: Ballot) => {
+        {/* Individual ballot tabs (only if election is open, NOT upcoming) */}
+        {isOpen && ballots.map((ballot: Ballot) => {
           const vote = votes[ballot.title];
           const isConfirmed = confirmations[ballot.title] || false;
           
