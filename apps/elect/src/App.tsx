@@ -496,14 +496,15 @@ function SummaryView() {
               navigate(`/ballot/${encodedTitle}`);
             }}
           >
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem'}}>
-              <ElectionTitle style={{margin: 0}}>{ballot.title}</ElectionTitle>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', gap: '1rem', minWidth: '100%'}}>
+              <ElectionTitle style={{margin: 0, flex: '1 1 auto', minWidth: 0}}>{ballot.title}</ElectionTitle>
               {!submitted && (
                 <ToggleSwitch
                   $checked={isConfirmed}
                   onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
                   }}
+                  style={{flexShrink: 0}}
                 >
                   <ToggleInput
                     checked={isConfirmed}
