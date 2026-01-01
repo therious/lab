@@ -12,7 +12,7 @@ import {Layout, Navbar, NavLink, CenterBody} from './components/Layout';
 import {UserProfile} from './components/UserProfile';
 
 export default function App() {
-  const {ballots, currentElection, token, votes, confirmations, submitted} = useSelector((s: TotalState) => s.election);
+  const {ballots, currentElection, token, votes, confirmations, submitted, userEmail, electionIdentifier} = useSelector((s: TotalState) => s.election);
   const location = useLocation();
   const navigate = useNavigate();
   const sessionToken = sessionStorage.getItem('vote_token');
@@ -44,30 +44,73 @@ export default function App() {
   }
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
-  // Sync sessionStorage token to Redux if present
+  // Sync ALL sessionStorage state to Redux (one-way: sessionStorage -> Redux)
   React.useEffect(() => {
+    // Sync token
     if (sessionToken && !token) {
-      // Token exists in sessionStorage but not in Redux - restore it
       actions.election.setToken(sessionToken);
-      
-      // Restore voted status from sessionStorage
-      const hasVoted = sessionStorage.getItem('has_voted') === 'true';
-      if (hasVoted && !submitted) {
-        actions.election.markSubmitted();
-      }
     }
-  }, [sessionToken, token, submitted]);
+    
+    // Sync view token (stored in initializeElection, but ensure it's set)
+    const sessionViewToken = sessionStorage.getItem('view_token');
+    if (sessionViewToken && !useSelector((s: TotalState) => s.election.viewToken)) {
+      // View token is set in initializeElection, so we'll handle it there
+    }
+    
+    // Sync election identifier
+    const sessionElectionIdentifier = sessionStorage.getItem('election_identifier');
+    if (sessionElectionIdentifier && !electionIdentifier) {
+      actions.election.setElectionIdentifier(sessionElectionIdentifier);
+    }
+    
+    // Sync user email
+    const sessionUserEmail = sessionStorage.getItem('user_email');
+    if (sessionUserEmail && !userEmail) {
+      actions.election.setUserEmail(sessionUserEmail);
+    }
+    
+    // Sync voted status from sessionStorage
+    const hasVoted = sessionStorage.getItem('has_voted') === 'true';
+    if (hasVoted && !submitted) {
+      actions.election.markSubmitted();
+    }
+  }, [sessionToken, token, electionIdentifier, userEmail, submitted]);
 
   // Initialize election if we have a token but no current election
+  // Also validate token status with server
   React.useEffect(() => {
     if (sessionToken && !currentElection) {
       setIsRestoring(true);
       const viewToken = sessionStorage.getItem('view_token');
-      const electionIdentifier = sessionStorage.getItem('election_identifier');
+      const sessionElectionIdentifier = sessionStorage.getItem('election_identifier');
       
-      if (electionIdentifier) {
+      if (sessionElectionIdentifier) {
+        // First, validate token status with server
+        const validateToken = fetch('/api/tokens/check', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            election_identifier: sessionElectionIdentifier,
+            token: sessionToken
+          })
+        })
+          .then(async res => {
+            if (!res.ok) {
+              // Token validation failed, but continue with restoration
+              console.warn('Token validation failed, but continuing with restoration');
+              return null;
+            }
+            return res.json();
+          })
+          .catch(err => {
+            console.warn('Token validation error:', err);
+            return null;
+          });
+        
         // Load election details using the stored identifier
-        fetch(`/api/elections/${electionIdentifier}`, {
+        const loadElection = fetch(`/api/elections/${sessionElectionIdentifier}`, {
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
@@ -80,30 +123,41 @@ export default function App() {
               throw new Error(`Server returned HTML instead of JSON: ${text.substring(0, 100)}`);
             }
             return res.json();
-          })
-          .then(data => {
-            if (data.election && data.election.ballots) {
-              actions.election.initializeElection(data.election, sessionToken, viewToken || '');
-            } else if (data.ballots) {
-              // Handle case where election data is nested differently
+          });
+        
+        // Wait for both to complete
+        Promise.all([validateToken, loadElection])
+          .then(([tokenStatus, electionData]) => {
+            // Initialize election
+            if (electionData.election && electionData.election.ballots) {
+              actions.election.initializeElection(electionData.election, sessionToken, viewToken || '');
+            } else if (electionData.ballots) {
               actions.election.initializeElection(
                 {
-                  identifier: electionIdentifier,
-                  title: data.title || electionIdentifier,
-                  description: data.description,
-                  ballots: data.ballots,
-                  voting_start: data.voting_start,
-                  voting_end: data.voting_end,
+                  identifier: sessionElectionIdentifier,
+                  title: electionData.title || sessionElectionIdentifier,
+                  description: electionData.description,
+                  ballots: electionData.ballots,
+                  voting_start: electionData.voting_start,
+                  voting_end: electionData.voting_end,
                 },
                 sessionToken,
                 viewToken || ''
               );
             }
-            // Restore voted status from sessionStorage after election is initialized
-            const hasVoted = sessionStorage.getItem('has_voted') === 'true';
-            if (hasVoted) {
+            
+            // Set submitted status based on server token validation (authoritative)
+            if (tokenStatus && tokenStatus.used) {
               actions.election.markSubmitted();
+              sessionStorage.setItem('has_voted', 'true');
+            } else {
+              // Fall back to sessionStorage if server check failed
+              const hasVoted = sessionStorage.getItem('has_voted') === 'true';
+              if (hasVoted) {
+                actions.election.markSubmitted();
+              }
             }
+            
             setIsRestoring(false);
           })
           .catch(err => {
@@ -192,9 +246,6 @@ export default function App() {
     );
   }
 
-  // Get user email from sessionStorage (read directly, no hook needed)
-  const userEmail = sessionStorage.getItem('user_email');
-  
   return (
     <Layout>
       <Navbar>

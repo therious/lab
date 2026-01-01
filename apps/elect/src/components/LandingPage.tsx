@@ -217,6 +217,10 @@ export function LandingPage() {
           token,
           view_token
         );
+        
+        // Sync all sessionStorage to Redux
+        actions.election.setElectionIdentifier(selectedElection);
+        actions.election.setUserEmail(email);
 
         // Navigate to summary
         navigate('/summary');

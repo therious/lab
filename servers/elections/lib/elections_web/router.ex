@@ -22,8 +22,9 @@ defmodule ElectionsWeb.Router do
     get "/elections", ElectionController, :index
     get "/elections/:identifier", ElectionController, :show
 
-    # Token generation
+    # Token generation and validation
     post "/tokens", TokenController, :create
+    post "/tokens/check", TokenController, :check_status
     get "/debug/token", TokenController, :debug_get_token
 
     # Vote submission and viewing

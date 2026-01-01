@@ -134,6 +134,31 @@ defmodule Elections.Voting do
   end
 
   @doc """
+  Check if a token has been used (validates token and returns status).
+  """
+  def check_token_status(election_identifier, token) when is_binary(election_identifier) and is_binary(token) do
+    RepoManager.with_repo(election_identifier, fn repo ->
+      case ElectionsContext.get_election(election_identifier) do
+        {:ok, election} ->
+          case repo.get_by(Elections.VoteToken, token: token, election_id: election.id) do
+            nil ->
+              {:error, :token_not_found}
+            
+            vote_token ->
+              {:ok, %{
+                used: vote_token.used,
+                used_at: vote_token.used_at,
+                preview: Map.get(vote_token, :preview, false)
+              }}
+          end
+        
+        error ->
+          error
+      end
+    end)
+  end
+
+  @doc """
   Get visualization data for a specific method using election identifier.
   """
   def visualize_results(election_identifier, method) when is_binary(election_identifier) do

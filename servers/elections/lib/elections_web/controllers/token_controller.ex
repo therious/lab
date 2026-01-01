@@ -57,6 +57,35 @@ defmodule ElectionsWeb.TokenController do
     end
   end
 
+  @doc """
+  Check token status (whether it has been used).
+  """
+  def check_status(conn, %{"election_identifier" => election_identifier, "token" => token}) do
+    alias Elections.Voting
+    
+    case Voting.check_token_status(election_identifier, token) do
+      {:ok, status} ->
+        conn
+        |> put_status(:ok)
+        |> json(%{status: "success", used: status.used, used_at: status.used_at, preview: status.preview})
+      
+      {:error, :token_not_found} ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Token not found"})
+      
+      {:error, :election_not_found} ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Election not found"})
+      
+      error ->
+        conn
+        |> put_status(:internal_server_error)
+        |> json(%{error: "Failed to check token status", details: inspect(error)})
+    end
+  end
+
   # Debug endpoint: get token for any election (for testing)
   def debug_get_token(conn, params) do
     election_identifier = Map.get(params, "election_identifier")

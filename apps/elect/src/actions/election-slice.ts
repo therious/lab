@@ -29,16 +29,20 @@ export interface ElectionState {
   currentElection: Election | null;
   token: string | null;
   viewToken: string | null;
+  electionIdentifier: string | null; // Synced from sessionStorage
+  userEmail: string | null; // Synced from sessionStorage
   ballots: Ballot[]; // Ballots for current election
   votes: Record<string, BallotVote>; // keyed by ballot title
   confirmations: Record<string, boolean>; // keyed by ballot title
-  submitted: boolean; // Whether the vote has been successfully submitted
+  submitted: boolean; // Whether the vote has been successfully submitted (synced from sessionStorage)
 }
 
 const initialState: ElectionState = {
   currentElection: null,
   token: null,
   viewToken: null,
+  electionIdentifier: null,
+  userEmail: null,
   ballots: [],
   votes: {},
   confirmations: {},
@@ -224,6 +228,20 @@ const setToken = (state: ElectionState, {payload}: {payload: {token: string}}): 
   });
 };
 
+// Set user email (synced from sessionStorage)
+const setUserEmail = (state: ElectionState, {payload}: {payload: {email: string | null}}): ElectionState => {
+  return produce(state, draft => {
+    draft.userEmail = payload.email;
+  });
+};
+
+// Set election identifier (synced from sessionStorage)
+const setElectionIdentifier = (state: ElectionState, {payload}: {payload: {identifier: string | null}}): ElectionState => {
+  return produce(state, draft => {
+    draft.electionIdentifier = payload.identifier;
+  });
+};
+
 // Mark vote as submitted
 const markSubmitted = (state: ElectionState): ElectionState => {
   return produce(state, draft => {
@@ -241,6 +259,8 @@ export const sliceConfig: SliceConfig = {
   reducers: {
     initializeElection,
     setToken,
+    setUserEmail,
+    setElectionIdentifier,
     moveCandidate,
     reorderCandidate,
     resetBallot,
@@ -255,6 +275,12 @@ export const sliceConfig: SliceConfig = {
     }),
     setToken: (token: string) => ({
       payload: {token},
+    }),
+    setUserEmail: (email: string | null) => ({
+      payload: {email},
+    }),
+    setElectionIdentifier: (identifier: string | null) => ({
+      payload: {identifier},
     }),
     moveCandidate: (ballotTitle: string, candidateName: string, fromScore: string, toScore: string, toIndex?: number) => ({
       payload: {ballotTitle, candidateName, fromScore, toScore, toIndex},
