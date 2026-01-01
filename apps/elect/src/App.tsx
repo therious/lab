@@ -99,6 +99,11 @@ export default function App() {
                 viewToken || ''
               );
             }
+            // Restore voted status from sessionStorage after election is initialized
+            const hasVoted = sessionStorage.getItem('has_voted') === 'true';
+            if (hasVoted) {
+              actions.election.markSubmitted();
+            }
             setIsRestoring(false);
           })
           .catch(err => {
