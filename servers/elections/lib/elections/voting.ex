@@ -87,8 +87,12 @@ defmodule Elections.Voting do
   """
   def get_election_results(election_identifier) when is_binary(election_identifier) do
     RepoManager.with_repo(election_identifier, fn repo ->
-      case ElectionsContext.get_election(election_identifier) do
-        {:ok, election} ->
+      # Get election directly from repo to avoid double with_repo call
+      case repo.get_by(Election, identifier: election_identifier) do
+        nil ->
+          {:error, :election_not_found}
+        
+        election ->
           # Always allow results calculation, even if service window not open
           # The frontend can decide whether to show them
           # Try to calculate results, but always return something even on error
@@ -105,9 +109,6 @@ defmodule Elections.Voting do
               partial_results = build_partial_results_on_error(repo, election, e)
               {:ok, partial_results}
           end
-
-        error ->
-          error
       end
     end)
   end
