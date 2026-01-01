@@ -999,9 +999,9 @@ function ResultsView() {
                             statusColor = '#999';
                             statusLabel = 'No Votes';
                           } else if (isConclusive) {
-                            // "Final" only if election is closed, otherwise "Conclusive"
+                            // "Final" only if election is closed, otherwise "Leading"
                             statusColor = '#2e7d32';
-                            statusLabel = isClosed ? 'Final' : 'Conclusive';
+                            statusLabel = isClosed ? 'Final' : 'Leading';
                           } else if (isInconclusive) {
                             statusColor = '#ff9800';
                             statusLabel = 'Indeterminate';
