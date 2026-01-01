@@ -36,10 +36,15 @@ defmodule ElectionsWeb.DashboardController do
       end
     rescue
       e ->
+        require Logger
+        Logger.error("Unexpected error in DashboardController: #{inspect(e)}")
+        Logger.error("Stacktrace: #{Exception.format_stacktrace(__STACKTRACE__)}")
+        # Try to return minimal results even on controller-level error
+        # This should never happen since get_election_results never fails, but be safe
         conn
         |> put_status(:internal_server_error)
         |> json(%{
-          error: "An error occurred while calculating results",
+          error: "Unable to calculate results. Please try again later.",
           error_code: "server_error",
           error_message: Exception.message(e)
         })

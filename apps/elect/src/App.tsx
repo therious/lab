@@ -697,10 +697,15 @@ function ResultsView() {
             return data;
           }
           // Extract detailed error information
-          const errorMsg = data.error || data.error_message || data.debug_info || 'Failed to load results';
+          const errorMsg = data.error || data.error_message || data.debug_info || 'Unable to load results';
           const errorCode = data.error_code || 'unknown_error';
           console.error('[DEBUG] API error:', {errorMsg, errorCode, status: res.status});
-          throw new Error(`${errorMsg} (${errorCode})`);
+          // Only include error code if it provides useful information
+          const finalMsg = if errorCode === 'server_error' || errorCode === 'unknown_error' then
+            errorMsg
+          else
+            `${errorMsg} (${errorCode})`;
+          throw new Error(finalMsg);
         }
         return data;
       })
@@ -712,9 +717,13 @@ function ResultsView() {
           stack: err.stack,
           name: err.name
         });
-        // Show more detailed error message
-        const errorMsg = err.message || 'Failed to load results';
-        setError(`Error occurred while calculating results: ${errorMsg}`);
+        // Extract clean error message without redundancy
+        let errorMsg = err.message || 'Unable to load results';
+        // Remove redundant prefixes if present
+        errorMsg = errorMsg.replace(/^(Error|Error occurred|An error occurred)[: ]*/i, '');
+        // Remove error code suffix if it's redundant
+        errorMsg = errorMsg.replace(/\s*\(server_error\)$/i, '');
+        setError(errorMsg);
         setLoading(false);
       });
     
@@ -772,7 +781,7 @@ function ResultsView() {
     return (
       <div style={{padding: '2rem'}}>
         <h1>Election Results: {currentElection.title}</h1>
-        <p style={{color: '#c33'}}>Error: {error}</p>
+        <p style={{color: '#c33'}}>{error}</p>
       </div>
     );
   }
