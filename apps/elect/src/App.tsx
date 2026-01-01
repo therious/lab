@@ -56,23 +56,52 @@ export default function App() {
     if (sessionToken && !currentElection) {
       setIsRestoring(true);
       const viewToken = sessionStorage.getItem('view_token');
-      // Try to load election from token
-      fetch('/api/tokens/validate', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({token: sessionToken})
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.election) {
-            actions.election.initializeElection(data.election, sessionToken, viewToken || '');
-          }
-          setIsRestoring(false);
+      const electionIdentifier = sessionStorage.getItem('election_identifier');
+      
+      if (electionIdentifier) {
+        // Load election details using the stored identifier
+        fetch(`/api/elections/${electionIdentifier}`, {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
         })
-        .catch(err => {
-          console.error('Failed to load election:', err);
-          setIsRestoring(false);
-        });
+          .then(async res => {
+            const contentType = res.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+              const text = await res.text();
+              throw new Error(`Server returned HTML instead of JSON: ${text.substring(0, 100)}`);
+            }
+            return res.json();
+          })
+          .then(data => {
+            if (data.election && data.election.ballots) {
+              actions.election.initializeElection(data.election, sessionToken, viewToken || '');
+            } else if (data.ballots) {
+              // Handle case where election data is nested differently
+              actions.election.initializeElection(
+                {
+                  identifier: electionIdentifier,
+                  title: data.title || electionIdentifier,
+                  description: data.description,
+                  ballots: data.ballots,
+                  voting_start: data.voting_start,
+                  voting_end: data.voting_end,
+                },
+                sessionToken,
+                viewToken || ''
+              );
+            }
+            setIsRestoring(false);
+          })
+          .catch(err => {
+            console.error('Failed to load election:', err);
+            setIsRestoring(false);
+          });
+      } else {
+        // No election identifier stored - can't restore
+        setIsRestoring(false);
+      }
     } else if (!sessionToken) {
       setIsRestoring(false);
     } else {
