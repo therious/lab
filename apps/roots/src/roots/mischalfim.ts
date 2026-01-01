@@ -57,7 +57,7 @@ export type MischalefOtiot = Ot[];
 
 // export type MischalefGroup = {kind: string, group:MischalefOtiot[]};
 
-export type Mischalef = {kind:string, data:string[]} // typescript complains about using MischalefOtiot
+export type Mischalef = {kind:string, data:string[], title?: string} // typescript complains about using MischalefOtiot
 
 export type MischalefChoices = Record<string, boolean>;
 
@@ -65,6 +65,11 @@ export type MischalefChoices = Record<string, boolean>;
 export function allChoices(arr:Mischalef[]):MischalefChoices
 {
   return oReduce(arr, (o:Mischalef)=>[o.kind, true], {});  // get the unique kind strings from array of Mischalef all enabled
+}
+
+export function choiceTitles(arr:Mischalef[]):Record<string, string>
+{
+  return oReduce(arr, (o:Mischalef)=>[o.kind, o.title || ''], {});  // get titles for each kind, empty string if no title
 }
 
 

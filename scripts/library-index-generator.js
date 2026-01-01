@@ -40,7 +40,27 @@ function startLibWatch()
   console.log(`watching....`);
 
   // consolidate ignore lists for watching also with internal index-generator list
-  const watcher = chokidar.watch(libSrcFolders, {persistent:true, ignored: ['**/node_modules/**', '**/*.html', '**/*.css','**/*.yaml']});
+  // Exclude test files from watching to avoid unnecessary index regenerations
+  const watcher = chokidar.watch(libSrcFolders, {
+    persistent: true, 
+    ignored: [
+      '**/node_modules/**', 
+      '**/*.html', 
+      '**/*.css',
+      '**/*.yaml',
+      '**/__tests__/**',
+      '**/__mocks__/**',
+      '**/*.spec.js',
+      '**/*.spec.ts',
+      '**/*.spec.jsx',
+      '**/*.spec.tsx',
+      '**/*.test.js',
+      '**/*.test.ts',
+      '**/*.test.jsx',
+      '**/*.test.tsx',
+      '**/coverage/**'
+    ]
+  });
 
   let scanComplete;
   watcher

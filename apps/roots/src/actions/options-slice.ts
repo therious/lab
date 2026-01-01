@@ -5,6 +5,18 @@ export interface OptionsState {
   allmischalfim:Mischalef[];
   choices:MischalefChoices;
   otherChoices:Record<string, boolean>;
+  includeLinked: boolean;
+  maxNodes: number;
+  maxEdges: number;
+  relatedMeaningsThreshold: number; // 6 = don't include, 5-1 = include grade >= threshold
+  linkByMeaningThreshold: number; // 6 = only filtered, 5-0 = include roots with grade >= threshold
+  pruneByGradeThreshold: number; // 6-0, default 0, removes nodes not connected by at least this grade
+  // Visualization UI state
+  maxGeneration: number;
+  localExtraDegrees: number;
+  searchTerm: string;
+  isPhysicsEnabled: boolean;
+  viewMode: 'everything' | 'matchingOnly' | 'matchingAndConnected';
 }
 
 type OptionsCreator = (...rest: any)=>unknown;
@@ -23,7 +35,19 @@ const initialState:OptionsState = {
   mischalfim: arrMischalfim,
   allmischalfim: arrMischalfim,
   choices: allChoices(arrMischalfim),
-  otherChoices: {vavToDoubled: true, removeFree:false}
+  otherChoices: {vavToDoubled: true, jumbled: false, atbash: false, removeFree:false},
+  includeLinked: false,
+  maxNodes: 2001,
+  maxEdges: 200_000,
+  relatedMeaningsThreshold: 6,
+  linkByMeaningThreshold: 6, // Default: only filtered roots
+  pruneByGradeThreshold: 0, // Default: no pruning
+  // Visualization UI state
+  maxGeneration: 1,
+  localExtraDegrees: 0,
+  searchTerm: '',
+  isPhysicsEnabled: true,
+  viewMode: 'everything',
 };
 
 
@@ -34,6 +58,18 @@ const creators = {
   chooseOtherOne: (choice:string, value:boolean) => ({choice, value}),
   clearChoices: () => ({}),
   allChoices:()=> ({}),
+  setIncludeLinked: (includeLinked: boolean) => ({ includeLinked }),
+  setMaxNodes: (maxNodes: number) => ({ maxNodes }),
+  setMaxEdges: (maxEdges: number) => ({ maxEdges }),
+  setRelatedMeaningsThreshold: (relatedMeaningsThreshold: number) => ({ relatedMeaningsThreshold }),
+  setLinkByMeaningThreshold: (linkByMeaningThreshold: number) => ({ linkByMeaningThreshold }),
+  setPruneByGradeThreshold: (pruneByGradeThreshold: number) => ({ pruneByGradeThreshold }),
+  // Visualization UI state creators
+  setMaxGeneration: (maxGeneration: number) => ({ maxGeneration }),
+  setLocalExtraDegrees: (localExtraDegrees: number) => ({ localExtraDegrees }),
+  setSearchTerm: (searchTerm: string) => ({ searchTerm }),
+  setPhysicsEnabled: (isPhysicsEnabled: boolean) => ({ isPhysicsEnabled }),
+  setViewMode: (viewMode: 'everything' | 'matchingOnly' | 'matchingAndConnected') => ({ viewMode }),
 };
 
 const reducers:OptionsReducers = {
@@ -46,7 +82,9 @@ const reducers:OptionsReducers = {
   clearChoices: (s) => {
     const choices = {...s.choices};
     Object.keys(choices).forEach(k=>choices[k]=false);
-    return {...s, choices, mischalfim:filterChosen(s.allmischalfim, choices)};
+    // Also clear vavToDoubled, jumbled, and atbash when clearing all checkboxes
+    const otherChoices = {...s.otherChoices, vavToDoubled: false, jumbled: false, atbash: false};
+    return {...s, choices, mischalfim:filterChosen(s.allmischalfim, choices), otherChoices};
   },
   choose: (s, {choices})=>({...s, choices, mischalfim:filterChosen(s.allmischalfim, choices)}),
   chooseOne: (s, {choice, value} )=>
@@ -58,7 +96,52 @@ const reducers:OptionsReducers = {
   {
     const otherChoices= {...s.otherChoices, [choice]:value };
     return {...s, otherChoices};
-  }
+  },
+  setIncludeLinked: (s, { includeLinked }) => ({
+    ...s,
+    includeLinked,
+  }),
+  setMaxNodes: (s, { maxNodes }) => ({
+    ...s,
+    maxNodes,
+  }),
+  setMaxEdges: (s, { maxEdges }) => ({
+    ...s,
+    maxEdges,
+  }),
+  setRelatedMeaningsThreshold: (s, { relatedMeaningsThreshold }) => ({
+    ...s,
+    relatedMeaningsThreshold,
+  }),
+  setLinkByMeaningThreshold: (s, { linkByMeaningThreshold }) => ({
+    ...s,
+    linkByMeaningThreshold,
+  }),
+  setPruneByGradeThreshold: (s, { pruneByGradeThreshold }) => ({
+    ...s,
+    pruneByGradeThreshold,
+  }),
+  // Visualization UI state reducers
+  setMaxGeneration: (s, { maxGeneration }) => ({
+    ...s,
+    maxGeneration,
+  }),
+  setLocalExtraDegrees: (s, { localExtraDegrees }) => ({
+    ...s,
+    localExtraDegrees,
+  }),
+  setSearchTerm: (s, { searchTerm }) => ({
+    ...s,
+    searchTerm,
+  }),
+  setPhysicsEnabled: (s, { isPhysicsEnabled }) => ({
+    ...s,
+    isPhysicsEnabled,
+  }),
+  setViewMode: (s, { viewMode }) => ({
+    ...s,
+    viewMode,
+  }),
 
 };
 

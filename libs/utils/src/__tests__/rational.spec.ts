@@ -25,7 +25,6 @@ describe('Rational', () => {
       const n =`${num}`.padStart(6, ' ');
       const d =`${den}`.padEnd  (6, ' ');
       const rps = `${n}/${d}`;
-      console.log(`testing ${rps} = actual ${r} vs expected ${expected}`);
 
       expect(r.toString()).toBe(expected);
     })
@@ -38,7 +37,6 @@ function assertRational(
   expectedNumerator: number,
   expectedDenominator: number
 ): void {
-  console.log(`actual ${actual.toString()} vs expected ${expectedNumerator}/${expectedDenominator}`)
   expect(actual.numerator).toEqual(expectedNumerator);
   expect(actual.denominator).toEqual(expectedDenominator);
 }

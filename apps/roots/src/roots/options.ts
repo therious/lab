@@ -10,9 +10,40 @@ type  NodeOptions = {shape:Shape, color:Color};
 type ArrowEndOptions = {enabled:boolean};
 export type EdgeOptions = {color:string, width:number, arrows: {to: ArrowEndOptions, from: ArrowEndOptions}};
 
-type InteractionOptions = {keyboard: {speed: {x:number, y:number, zoom: number}}};
+type InteractionOptions = {
+  keyboard: {speed: {x:number, y:number, zoom: number}};
+  dragNodes?: boolean;
+  dragView?: boolean;
+  zoomView?: boolean;
+};
+type PhysicsOptions = {
+  enabled: boolean;
+  stabilization?: {
+    enabled?: boolean;
+    iterations?: number;
+    updateInterval?: number;
+  };
+  barnesHut?: {
+    gravitationalConstant?: number;
+    centralGravity?: number;
+    springLength?: number;
+    springConstant?: number;
+    damping?: number;
+  };
+};
+type LayoutOptions = {improvedLayout: boolean};
+type ConfigureOptions = {enabled: boolean};
 
-export type VisNetworkOptions = {width:Size, height:Size, nodes:NodeOptions, edges:EdgeOptions, interaction: InteractionOptions}
+export type VisNetworkOptions = {
+  width:Size, 
+  height:Size, 
+  nodes:NodeOptions, 
+  edges:EdgeOptions, 
+  interaction: InteractionOptions,
+  physics?: PhysicsOptions,
+  layout?: LayoutOptions,
+  configure?: ConfigureOptions
+}
 
 
 export const defaultOptions:VisNetworkOptions = {
@@ -30,7 +61,11 @@ export const defaultOptions:VisNetworkOptions = {
     },
     shape: 'circle'
   },
-  edges: { color:'yellow', width: 0, arrows: {to:{enabled:false}, from:{enabled:false}}},
+  edges: { 
+    color:'yellow', 
+    width: 1, // Default width for letter-based edges (non-meaning connections)
+    arrows: {to:{enabled:false}, from:{enabled:false}}
+  },
   interaction: {
     keyboard: {
       speed: {
@@ -38,6 +73,16 @@ export const defaultOptions:VisNetworkOptions = {
         y: 10,
         zoom: 0.02
       }
-    }
+    },
+    dragNodes: true, // Allow dragging nodes
+    dragView: true, // Allow panning the view
+    zoomView: true, // Allow zooming
+  },
+  layout: {
+    improvedLayout: true, // Use improved layout algorithm
+  },
+  // Reduce rendering overhead
+  configure: {
+    enabled: false, // Disable configuration UI
   }
 };

@@ -15,3 +15,34 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
   monospace;
 }
+
+/* Hide filter menu buttons in floating filters to make more room for inputs */
+.ag-floating-filter-button {
+  display: none !important;
+}
+
+/* Ensure all floating filter cells have consistent height and alignment */
+.ag-floating-filter {
+  display: flex;
+  align-items: center;
+  min-height: 18px;
+  height: 18px;
+}
+
+.ag-floating-filter-body {
+  display: flex;
+  align-items: center;
+  min-height: 18px;
+  height: 18px;
+}
+
+/* Add faint borders between columns */
+.ag-header-cell-with-border {
+  border-right: 1px solid rgba(128, 128, 128, 0.2) !important;
+}
+
+/* Also add border to cells (handled in cellStyle, but ensure it works in RTL) */
+.ag-theme-balham .ag-cell,
+.ag-theme-balham-dark .ag-cell {
+  border-right: 1px solid rgba(128, 128, 128, 0.2);
+}
