@@ -439,16 +439,6 @@ function SummaryView() {
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const BAND_CONFIG = [
-    { score: '5', label: 'Excellent', color: '#2e7d32' },
-    { score: '4', label: 'Good', color: '#8bc34a' },
-    { score: '3', label: 'Mediocre', color: '#ffeb3b' },
-    { score: '2', label: 'Bad', color: '#ff9800' },
-    { score: '1', label: 'Very Bad', color: '#ff6b6b' },
-    { score: '0', label: 'Unqualified/Unacceptable', color: '#444444' },
-    { score: 'unranked', label: 'Unranked', color: '#90caf9' },
-  ];
-
   const allConfirmed = ballots.length > 0 && ballots.every(ballot => confirmations[ballot.title]);
 
   const handleSubmit = async () => {
