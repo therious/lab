@@ -229,13 +229,24 @@ defmodule Elections.Voting do
   end
 
   defp calculate_all_results(repo, election) do
-    votes = repo.all(from(v in Vote, where: v.election_id == ^election.id, order_by: [asc: v.inserted_at]))
+    # Safely get votes - handle case where election might not exist or have no votes
+    votes = try do
+      repo.all(from(v in Vote, where: v.election_id == ^election.id, order_by: [asc: v.inserted_at]))
+    rescue
+      e ->
+        require Logger
+        Logger.error("Error fetching votes: #{inspect(e)}")
+        []
+    end
 
     # Get vote timestamps for time series data
     vote_timestamps = Enum.map(votes, fn vote -> vote.inserted_at end)
 
-    # Extract ballots from config
-    ballots = Map.get(election.config || %{}, "ballots", [])
+    # Extract ballots from config - ensure we have a valid ballots list
+    ballots = case Map.get(election.config || %{}, "ballots", []) do
+      ballots when is_list(ballots) -> ballots
+      _ -> []
+    end
 
     # Calculate results for each ballot - always return complete structure
     results = Enum.map(ballots, fn ballot ->
