@@ -54,6 +54,7 @@ export default function App() {
   // Initialize election if we have a token but no current election
   React.useEffect(() => {
     if (sessionToken && !currentElection) {
+      const viewToken = sessionStorage.getItem('view_token');
       // Try to load election from token
       fetch('/api/tokens/validate', {
         method: 'POST',
@@ -63,7 +64,7 @@ export default function App() {
         .then(res => res.json())
         .then(data => {
           if (data.election) {
-            actions.election.initializeElection(data.election);
+            actions.election.initializeElection(data.election, sessionToken, viewToken || '');
           }
         })
         .catch(err => console.error('Failed to load election:', err));
