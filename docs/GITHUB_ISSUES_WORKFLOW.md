@@ -173,22 +173,27 @@ We can create a GitHub Action workflow to:
 
 ### Personal Access Token (PAT)
 
-**Yes, you can provide a GitHub Personal Access Token for issue read/write access.**
+**Yes, you can provide a GitHub Personal Access Token for issue and discussion management.**
 
 **Token Requirements**:
 - **Scopes Needed**: 
-  - `repo` scope (includes issues read/write) OR
-  - Fine-grained token with `Issues: Read and write` permission for `therious/lab` repository
+  - `repo` scope (includes issues and discussions read/write) OR
+  - Fine-grained token with `Issues: Read and write` and `Discussions: Read and write` permissions for `therious/lab` repository
 - **Security**: Store token securely, set expiration date
-- **Limitation**: I don't currently have a direct GitHub API tool, but I can use the token via command-line `gh` CLI or HTTP requests if you provide it
+- **Usage**: I will use the token via GitHub CLI (`gh`) or HTTP requests to create/update issues and discussions
 
 **To Generate Token**:
 1. GitHub Settings → Developer settings → Personal access tokens
 2. Generate new token (classic) or fine-grained token
-3. Select `repo` scope (for classic) or `Issues: Read and write` (for fine-grained)
+3. Select `repo` scope (for classic) or `Issues: Read and write` + `Discussions: Read and write` (for fine-grained)
 4. Copy token securely (only shown once)
 
-**Note**: If you provide a token, I can create and update issues programmatically. Otherwise, I'll draft issue content for you to create manually.
+**When Token is Provided**:
+- **Issues**: I will create and update issues directly when you ask me to
+- **Discussions**: If you say something is "for discussion", I will create a GitHub Discussion in `therious/lab` project rather than committing to project documentation prematurely
+- **Actions**: I will use the token to perform any GitHub issue/discussion actions you request
+
+**Note**: Before providing the token, you may want to purge `.specstory` interaction logs. See `docs/SPECSTORY_PURGE_OPTIONS.md` for options.
 
 ## Commit Messages vs PR Messages
 

@@ -90,12 +90,14 @@ This document captures the coding principles, rules, and expectations for AI age
 
 **Question**: Are there specific phrases or contexts that indicate the user wants proposals vs. direct implementation?
 
-## GitHub Issues Integration
+## GitHub Issues and Discussions Integration
 
-- **Issue References**: When working on a GitHub issue, reference it in all related commits: `<type>: <description> (#<issue-number>)`
-- **Closing Issues**: Use `Fixes #123`, `Closes #123`, or `Resolves #123` in the final commit to automatically close the issue when merged to default branch
+- **Issue References**: When working on a GitHub issue, reference it in all related commits: `🦾 [project-prefix]: <description> (#<issue-number>)`
+- **Closing Issues**: Use `Resolves #123` in the final commit to automatically close the issue when merged to default branch
 - **Working on Existing Issues**: When directed to an issue number (e.g., "Work on #123"), acknowledge it and reference in all commits
-- **Issue Creation**: I can draft issue content for you to create, but cannot create issues directly (no GitHub API access)
+- **Issue Creation**: If GitHub token is provided, I will create issues directly when requested. Otherwise, I'll draft issue content for you to create manually
+- **Discussions**: If you say something is "for discussion", I will create a GitHub Discussion in `therious/lab` project rather than committing to project documentation prematurely
+- **Token Usage**: When token is provided, I will use it to create/update issues and discussions as requested
 - **See**: `docs/GITHUB_ISSUES_WORKFLOW.md` for complete workflow details
 
 ## Uncertainties and Questions
