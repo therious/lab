@@ -367,13 +367,15 @@ defmodule Elections.Voting do
         
         # Calculate algorithm results - each algorithm is individually protected
         # Even if ALL algorithms fail, we still return basic stats
+        # Algorithm failures are expected and acceptable - no warnings needed
         algorithm_results = if vote_count > 0 do
+          election_id = election.identifier || "unknown"
           %{
-            ranked_pairs: safe_calculate_algorithm(fn -> Elections.Algorithms.RankedPairs.calculate(ballot_for_algorithms, ballot_votes) end, "ranked_pairs"),
-            shulze: safe_calculate_algorithm(fn -> Elections.Algorithms.Shulze.calculate(ballot_for_algorithms, ballot_votes) end, "shulze"),
-            score: safe_calculate_algorithm(fn -> Elections.Algorithms.Score.calculate(ballot_for_algorithms, ballot_votes) end, "score"),
-            irv_stv: safe_calculate_algorithm(fn -> Elections.Algorithms.IRVSTV.calculate(ballot_for_algorithms, ballot_votes) end, "irv_stv"),
-            coombs: safe_calculate_algorithm(fn -> Elections.Algorithms.Coombs.calculate(ballot_for_algorithms, ballot_votes) end, "coombs")
+            ranked_pairs: safe_calculate_algorithm(fn -> Elections.Algorithms.RankedPairs.calculate(ballot_for_algorithms, ballot_votes) end, "ranked_pairs", election_id, ballot_title),
+            shulze: safe_calculate_algorithm(fn -> Elections.Algorithms.Shulze.calculate(ballot_for_algorithms, ballot_votes) end, "shulze", election_id, ballot_title),
+            score: safe_calculate_algorithm(fn -> Elections.Algorithms.Score.calculate(ballot_for_algorithms, ballot_votes) end, "score", election_id, ballot_title),
+            irv_stv: safe_calculate_algorithm(fn -> Elections.Algorithms.IRVSTV.calculate(ballot_for_algorithms, ballot_votes) end, "irv_stv", election_id, ballot_title),
+            coombs: safe_calculate_algorithm(fn -> Elections.Algorithms.Coombs.calculate(ballot_for_algorithms, ballot_votes) end, "coombs", election_id, ballot_title)
           }
         else
           # No votes for this ballot - return empty results structure
@@ -445,28 +447,28 @@ defmodule Elections.Voting do
   end
 
   # Helper to safely calculate algorithm results, returning error structure on failure
+  # Algorithm failures are expected and acceptable - they should fail silently
   # Algorithm failures should NEVER prevent basic stats from being shown
-  defp safe_calculate_algorithm(algorithm_fun, method_name) do
+  defp safe_calculate_algorithm(algorithm_fun, method_name, election_identifier, ballot_title) do
     try do
       result = algorithm_fun.()
       # Validate that result is a map with expected structure
       if is_map(result) do
         result
       else
-        require Logger
-        Logger.warning("Algorithm #{method_name} returned invalid result type: #{inspect(result)}")
+        # Invalid result format - fail silently, no warning
         %{method: method_name, winners: [], status: "error", error: "Invalid result format"}
       end
     rescue
       e ->
-        require Logger
-        Logger.warning("Algorithm #{method_name} failed: #{inspect(e)}")
-        # Return error structure - this should not prevent other algorithms or basic stats from showing
-        %{method: method_name, winners: [], status: "error", error: "Calculation failed: #{Exception.message(e)}"}
+        # Algorithm failure is expected and acceptable - fail silently
+        # No warning needed as algorithm failures are a normal part of operation
+        %{method: method_name, winners: [], status: "error", error: "Calculation failed"}
     catch
       kind, reason ->
+        # Only log unexpected throws (not normal exceptions) with context
         require Logger
-        Logger.warning("Algorithm #{method_name} threw #{kind}: #{inspect(reason)}")
+        Logger.warning("Algorithm #{method_name} threw #{kind} for election #{election_identifier}, ballot #{ballot_title}: #{inspect(reason)}")
         %{method: method_name, winners: [], status: "error", error: "Algorithm threw #{kind}"}
     end
   end
