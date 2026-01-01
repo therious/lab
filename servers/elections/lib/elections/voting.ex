@@ -16,7 +16,7 @@ defmodule Elections.Voting do
   """
   def submit_vote(election_identifier, token, ballot_data) when is_binary(election_identifier) do
     RepoManager.with_repo(election_identifier, fn repo ->
-      repo.transaction(fn ->
+      result = repo.transaction(fn ->
         with {:ok, election} <- get_election(repo, election_identifier),
              {:ok, vote_token} <- get_and_validate_token(repo, token, election.id),
              :ok <- check_voting_window(election),
@@ -26,6 +26,13 @@ defmodule Elections.Voting do
           error -> repo.rollback(error)
         end
       end)
+      
+      # Unwrap transaction result - if rolled back, return the error directly
+      case result do
+        {:ok, view_token} -> {:ok, view_token}
+        {:error, error} -> error  # This is the rolled back error tuple
+        other -> {:error, other}  # Fallback for unexpected transaction results
+      end
     end)
   end
 
