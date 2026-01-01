@@ -305,14 +305,23 @@ defmodule Elections.Voting do
     end)
 
     # Return results with metadata - always complete
+    # Safely serialize DateTime values
+    safe_serialize_dt = fn dt ->
+      try do
+        if dt, do: DateTime.to_iso8601(dt), else: nil
+      rescue
+        _ -> nil
+      end
+    end
+    
     %{
       results: results,
       metadata: %{
         total_votes: length(votes),
-        vote_timestamps: Enum.map(vote_timestamps, fn ts -> DateTime.to_iso8601(ts) end),
-        voting_start: DateTime.to_iso8601(election.voting_start),
-        voting_end: DateTime.to_iso8601(election.voting_end),
-        election_identifier: election.identifier
+        vote_timestamps: Enum.map(vote_timestamps, safe_serialize_dt) |> Enum.filter(&(&1 != nil)),
+        voting_start: safe_serialize_dt.(election.voting_start),
+        voting_end: safe_serialize_dt.(election.voting_end),
+        election_identifier: election.identifier || ""
       }
     }
   end
