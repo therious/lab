@@ -197,6 +197,7 @@ export function LandingPage() {
       sessionStorage.setItem('vote_token', token);
       sessionStorage.setItem('view_token', view_token);
       sessionStorage.setItem('election_identifier', selectedElection);
+      sessionStorage.setItem('user_email', email); // Store email for display
 
       // Load election details with ballots
       const electionResponse = await fetch(`/api/elections/${selectedElection}`);

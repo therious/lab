@@ -9,6 +9,7 @@ import {SummaryView} from './components/SummaryView';
 import {BallotView} from './components/BallotView';
 import {ResultsView} from './components/ResultsView';
 import {Layout, Navbar, NavLink, CenterBody} from './components/Layout';
+import {UserProfile} from './components/UserProfile';
 
 export default function App() {
   const {ballots, currentElection, token, votes, confirmations, submitted} = useSelector((s: TotalState) => s.election);
@@ -180,6 +181,9 @@ export default function App() {
     );
   }
 
+  // Get user email from sessionStorage
+  const userEmail = React.useMemo(() => sessionStorage.getItem('user_email'), []);
+  
   return (
     <Layout>
       <Navbar>
@@ -292,6 +296,7 @@ export default function App() {
             </NavLink>
           );
         })}
+        <UserProfile email={userEmail} hasVoted={submitted} />
       </Navbar>
       <CenterBody>
         <Routes>
