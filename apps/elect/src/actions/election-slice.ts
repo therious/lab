@@ -29,24 +29,55 @@ export interface ElectionState {
   currentElection: Election | null;
   token: string | null;
   viewToken: string | null;
-  electionIdentifier: string | null; // Synced from sessionStorage
-  userEmail: string | null; // Synced from sessionStorage
+  electionIdentifier: string | null; // Restored from sessionStorage
+  userEmail: string | null; // Restored from sessionStorage
   ballots: Ballot[]; // Ballots for current election
   votes: Record<string, BallotVote>; // keyed by ballot title
   confirmations: Record<string, boolean>; // keyed by ballot title
-  submitted: boolean; // Whether the vote has been successfully submitted (synced from sessionStorage)
+  submitted: boolean; // Whether the vote has been successfully submitted (restored from sessionStorage)
 }
 
+// Session-persisted subset of state (restored from sessionStorage on load)
+interface SessionPersistedState {
+  token: string | null;
+  viewToken: string | null;
+  electionIdentifier: string | null;
+  userEmail: string | null;
+  submitted: boolean;
+}
+
+// Restore session-persisted state from sessionStorage
+function restoreFromSessionStorage(): Partial<SessionPersistedState> {
+  if (typeof window === 'undefined' || !window.sessionStorage) {
+    return {};
+  }
+  
+  try {
+    return {
+      token: sessionStorage.getItem('vote_token'),
+      viewToken: sessionStorage.getItem('view_token'),
+      electionIdentifier: sessionStorage.getItem('election_identifier'),
+      userEmail: sessionStorage.getItem('user_email'),
+      submitted: sessionStorage.getItem('has_voted') === 'true',
+    };
+  } catch (e) {
+    console.warn('Failed to read from sessionStorage:', e);
+    return {};
+  }
+}
+
+// Compute initial state with sessionStorage restoration
+const sessionRestored = restoreFromSessionStorage();
 const initialState: ElectionState = {
   currentElection: null,
-  token: null,
-  viewToken: null,
-  electionIdentifier: null,
-  userEmail: null,
+  token: sessionRestored.token || null,
+  viewToken: sessionRestored.viewToken || null,
+  electionIdentifier: sessionRestored.electionIdentifier || null,
+  userEmail: sessionRestored.userEmail || null,
   ballots: [],
   votes: {},
   confirmations: {},
-  submitted: false,
+  submitted: sessionRestored.submitted || false,
 };
 
 type ElectionCreator = (...rest: any) => unknown;
@@ -72,11 +103,17 @@ const initializeElection = (state: ElectionState, {payload}: {payload: {election
     draft.currentElection = payload.election;
     draft.token = payload.token;
     draft.viewToken = payload.viewToken;
+    draft.electionIdentifier = payload.election.identifier;
     draft.ballots = payload.election.ballots || [];
     
     // Only reset submitted flag if it's a different election
+    // (submitted status is restored from sessionStorage at initialization)
     if (!isSameElection) {
-      draft.submitted = false;
+      // Check sessionStorage for submitted status (may have been set by server validation)
+      const hasVoted = typeof window !== 'undefined' && window.sessionStorage 
+        ? sessionStorage.getItem('has_voted') === 'true'
+        : false;
+      draft.submitted = hasVoted;
     }
     
     // Initialize votes for each ballot, preserving existing votes if available
@@ -221,26 +258,8 @@ const clearConfirmations = (state: ElectionState): ElectionState => {
   });
 };
 
-// Set token (for restoring from sessionStorage)
-const setToken = (state: ElectionState, {payload}: {payload: {token: string}}): ElectionState => {
-  return produce(state, draft => {
-    draft.token = payload.token;
-  });
-};
-
-// Set user email (synced from sessionStorage)
-const setUserEmail = (state: ElectionState, {payload}: {payload: {email: string | null}}): ElectionState => {
-  return produce(state, draft => {
-    draft.userEmail = payload.email;
-  });
-};
-
-// Set election identifier (synced from sessionStorage)
-const setElectionIdentifier = (state: ElectionState, {payload}: {payload: {identifier: string | null}}): ElectionState => {
-  return produce(state, draft => {
-    draft.electionIdentifier = payload.identifier;
-  });
-};
+// Note: Session-persisted state (token, viewToken, electionIdentifier, userEmail, submitted)
+// is restored from sessionStorage at slice initialization, not through discrete actions.
 
 // Mark vote as submitted
 const markSubmitted = (state: ElectionState): ElectionState => {
@@ -250,6 +269,14 @@ const markSubmitted = (state: ElectionState): ElectionState => {
     Object.keys(draft.confirmations).forEach(key => {
       draft.confirmations[key] = true;
     });
+    // Persist to sessionStorage
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      try {
+        sessionStorage.setItem('has_voted', 'true');
+      } catch (e) {
+        console.warn('Failed to write to sessionStorage:', e);
+      }
+    }
   });
 };
 
@@ -258,9 +285,6 @@ export const sliceConfig: SliceConfig = {
   initialState,
   reducers: {
     initializeElection,
-    setToken,
-    setUserEmail,
-    setElectionIdentifier,
     moveCandidate,
     reorderCandidate,
     resetBallot,
@@ -270,18 +294,21 @@ export const sliceConfig: SliceConfig = {
     markSubmitted,
   },
   creators: {
-    initializeElection: (election: Election, token: string, viewToken: string) => ({
-      payload: {election, token, viewToken},
-    }),
-    setToken: (token: string) => ({
-      payload: {token},
-    }),
-    setUserEmail: (email: string | null) => ({
-      payload: {email},
-    }),
-    setElectionIdentifier: (identifier: string | null) => ({
-      payload: {identifier},
-    }),
+    initializeElection: (election: Election, token: string, viewToken: string) => {
+      // Also persist to sessionStorage when initializing
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        try {
+          sessionStorage.setItem('vote_token', token);
+          sessionStorage.setItem('view_token', viewToken);
+          sessionStorage.setItem('election_identifier', election.identifier);
+        } catch (e) {
+          console.warn('Failed to write to sessionStorage:', e);
+        }
+      }
+      return {
+        payload: {election, token, viewToken},
+      };
+    },
     moveCandidate: (ballotTitle: string, candidateName: string, fromScore: string, toScore: string, toIndex?: number) => ({
       payload: {ballotTitle, candidateName, fromScore, toScore, toIndex},
     }),

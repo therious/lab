@@ -204,7 +204,10 @@ export function LandingPage() {
       const electionData = await electionResponse.json();
 
       if (electionResponse.ok && electionData.ballots) {
-        // Initialize election in Redux (this stores token in Redux state)
+        // Store user email in sessionStorage (will be restored to Redux on next load)
+        sessionStorage.setItem('user_email', email);
+        
+        // Initialize election in Redux (this stores token and election identifier in sessionStorage)
         actions.election.initializeElection(
           {
             identifier: electionData.identifier,
@@ -217,10 +220,6 @@ export function LandingPage() {
           token,
           view_token
         );
-        
-        // Sync all sessionStorage to Redux
-        actions.election.setElectionIdentifier(selectedElection);
-        actions.election.setUserEmail(email);
 
         // Navigate to summary
         navigate('/summary');

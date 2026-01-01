@@ -44,132 +44,96 @@ export default function App() {
   }
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
-  // Sync ALL sessionStorage state to Redux (one-way: sessionStorage -> Redux)
-  React.useEffect(() => {
-    // Sync token
-    if (sessionToken && !token) {
-      actions.election.setToken(sessionToken);
-    }
-    
-    // View token is set in initializeElection, so we don't need to sync it separately
-    
-    // Sync election identifier
-    const sessionElectionIdentifier = sessionStorage.getItem('election_identifier');
-    if (sessionElectionIdentifier && !electionIdentifier) {
-      actions.election.setElectionIdentifier(sessionElectionIdentifier);
-    }
-    
-    // Sync user email
-    const sessionUserEmail = sessionStorage.getItem('user_email');
-    if (sessionUserEmail && !userEmail) {
-      actions.election.setUserEmail(sessionUserEmail);
-    }
-    
-    // Sync voted status from sessionStorage
-    const hasVoted = sessionStorage.getItem('has_voted') === 'true';
-    if (hasVoted && !submitted) {
-      actions.election.markSubmitted();
-    }
-  }, [sessionToken, token, electionIdentifier, userEmail, submitted]);
+  // Note: Session-persisted state (token, viewToken, electionIdentifier, userEmail, submitted)
+  // is restored from sessionStorage at slice initialization, not through discrete actions.
+  // We only need to validate token status with server and restore election if needed.
 
-  // Initialize election if we have a token but no current election
-  // Also validate token status with server
+  // Initialize election if we have session-persisted state but no current election
+  // Also validate token status with server to get authoritative vote status
   React.useEffect(() => {
-    if (sessionToken && !currentElection) {
+    // Session-persisted state is already in Redux from slice initialization
+    // We just need to load the election if we have the identifier but no election object
+    if (electionIdentifier && !currentElection && token) {
       setIsRestoring(true);
-      const viewToken = sessionStorage.getItem('view_token');
-      const sessionElectionIdentifier = sessionStorage.getItem('election_identifier');
+      const viewToken = viewToken || sessionStorage.getItem('view_token');
       
-      if (sessionElectionIdentifier) {
-        // First, validate token status with server
-        const validateToken = fetch('/api/tokens/check', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            election_identifier: sessionElectionIdentifier,
-            token: sessionToken
-          })
+      // First, validate token status with server (authoritative source)
+      const validateToken = fetch('/api/tokens/check', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          election_identifier: electionIdentifier,
+          token: token
         })
-          .then(async res => {
-            if (!res.ok) {
-              // Token validation failed, but continue with restoration
-              console.warn('Token validation failed, but continuing with restoration');
-              return null;
-            }
-            return res.json();
-          })
-          .catch(err => {
-            console.warn('Token validation error:', err);
+      })
+        .then(async res => {
+          if (!res.ok) {
+            console.warn('Token validation failed, but continuing with restoration');
             return null;
-          });
-        
-        // Load election details using the stored identifier
-        const loadElection = fetch(`/api/elections/${sessionElectionIdentifier}`, {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
+          }
+          return res.json();
         })
-          .then(async res => {
-            const contentType = res.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-              const text = await res.text();
-              throw new Error(`Server returned HTML instead of JSON: ${text.substring(0, 100)}`);
-            }
-            return res.json();
-          });
-        
-        // Wait for both to complete
-        Promise.all([validateToken, loadElection])
-          .then(([tokenStatus, electionData]) => {
-            // Initialize election
-            if (electionData.election && electionData.election.ballots) {
-              actions.election.initializeElection(electionData.election, sessionToken, viewToken || '');
-            } else if (electionData.ballots) {
-              actions.election.initializeElection(
-                {
-                  identifier: sessionElectionIdentifier,
-                  title: electionData.title || sessionElectionIdentifier,
-                  description: electionData.description,
-                  ballots: electionData.ballots,
-                  voting_start: electionData.voting_start,
-                  voting_end: electionData.voting_end,
-                },
-                sessionToken,
-                viewToken || ''
-              );
-            }
-            
-            // Set submitted status based on server token validation (authoritative)
-            if (tokenStatus && tokenStatus.used) {
-              actions.election.markSubmitted();
-              sessionStorage.setItem('has_voted', 'true');
-            } else {
-              // Fall back to sessionStorage if server check failed
-              const hasVoted = sessionStorage.getItem('has_voted') === 'true';
-              if (hasVoted) {
-                actions.election.markSubmitted();
-              }
-            }
-            
-            setIsRestoring(false);
-          })
-          .catch(err => {
-            console.error('Failed to load election:', err);
-            setIsRestoring(false);
-          });
-      } else {
-        // No election identifier stored - can't restore
-        setIsRestoring(false);
-      }
-    } else if (!sessionToken) {
+        .catch(err => {
+          console.warn('Token validation error:', err);
+          return null;
+        });
+      
+      // Load election details
+      const loadElection = fetch(`/api/elections/${electionIdentifier}`, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      })
+        .then(async res => {
+          const contentType = res.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            const text = await res.text();
+            throw new Error(`Server returned HTML instead of JSON: ${text.substring(0, 100)}`);
+          }
+          return res.json();
+        });
+      
+      // Wait for both to complete
+      Promise.all([validateToken, loadElection])
+        .then(([tokenStatus, electionData]) => {
+          // Initialize election (this will also persist to sessionStorage)
+          if (electionData.election && electionData.election.ballots) {
+            actions.election.initializeElection(electionData.election, token, viewToken || '');
+          } else if (electionData.ballots) {
+            actions.election.initializeElection(
+              {
+                identifier: electionIdentifier,
+                title: electionData.title || electionIdentifier,
+                description: electionData.description,
+                ballots: electionData.ballots,
+                voting_start: electionData.voting_start,
+                voting_end: electionData.voting_end,
+              },
+              token,
+              viewToken || ''
+            );
+          }
+          
+          // Update submitted status based on server token validation (authoritative)
+          if (tokenStatus && tokenStatus.used) {
+            actions.election.markSubmitted(); // This will also persist to sessionStorage
+          }
+          
+          setIsRestoring(false);
+        })
+        .catch(err => {
+          console.error('Failed to load election:', err);
+          setIsRestoring(false);
+        });
+    } else if (!electionIdentifier || !token) {
       setIsRestoring(false);
     } else {
       setIsRestoring(false);
     }
-  }, [sessionToken, currentElection]);
+  }, [electionIdentifier, currentElection, token, viewToken]);
 
   // Handle redirects - must be called unconditionally (Rules of Hooks)
   React.useEffect(() => {
