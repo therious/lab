@@ -191,7 +191,7 @@ const RankBadge = styled.span`
 const ToggleSwitch = styled.label<{$checked: boolean}>`
   position: relative;
   display: inline-block;
-  width: 4rem;
+  width: 5.5rem;
   height: 1.75rem;
   cursor: pointer;
   user-select: none;
@@ -227,7 +227,7 @@ const ToggleSlider = styled.span<{$checked: boolean}>`
     position: absolute;
     height: 1.25rem;
     width: 1.25rem;
-    left: ${props => props.$checked ? '2.25rem' : '0.25rem'};
+    left: ${props => props.$checked ? '3.75rem' : '0.25rem'};
     bottom: 0.25rem;
     background-color: white;
     border-radius: 50%;
@@ -244,7 +244,7 @@ const ToggleSlider = styled.span<{$checked: boolean}>`
     ${props => props.$checked ? 'left: 0.5rem;' : 'right: 0.5rem;'}
     font-size: 0.7rem;
     font-weight: bold;
-    color: white;
+    color: ${props => props.$checked ? 'white' : '#000'};
     z-index: 1;
     pointer-events: none;
     white-space: nowrap;
