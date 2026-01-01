@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Routes, Route, Link, useLocation, useNavigate} from 'react-router-dom';
 import {useSelector} from './actions-integration';
 import {actions} from './actions-integration';
@@ -8,9 +8,6 @@ import {VotingInterface} from './components/VotingInterface';
 import {LandingPage} from './components/LandingPage';
 import {VoteTimeline} from './components/VoteTimeline';
 import styled from 'styled-components';
-
-// Experimental feature flag: Set to true to enable equal-width bands
-const EXPERIMENTAL_EQUAL_WIDTH_BANDS = false;
 
 const BAND_CONFIG = [
   { score: '5', label: 'Excellent', color: '#2e7d32' },
@@ -135,21 +132,6 @@ const BallotCard = styled.div`
   &:hover {
     background-color: #f5f5f5;
   }
-`;
-
-const BallotDescription = styled.p`
-  color: #666;
-  font-size: 0.9rem;
-  margin: 0.5rem 0;
-  width: 100%;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.4;
-  max-height: calc(1.4em * 3);
-  box-sizing: border-box;
 `;
 
 const CandidateName = styled.span`
@@ -573,26 +555,6 @@ function SummaryView() {
         // If exactly 4 total, show all 4 by name (3 + 1)
         const shouldShowAll = unrankedCandidates.length === 4;
         
-        // Render ballot card - use experimental equal-width bands if enabled
-        if (EXPERIMENTAL_EQUAL_WIDTH_BANDS) {
-          return (
-            <BallotCardWithEqualWidthBands
-              key={ballot.title}
-              ballot={ballot}
-              vote={vote}
-              isConfirmed={isConfirmed}
-              submitted={submitted}
-              candidateRanks={candidateRanks}
-              unrankedCandidates={unrankedCandidates}
-              unrankedToShow={unrankedToShow}
-              unrankedRemaining={unrankedRemaining}
-              shouldShowAll={shouldShowAll}
-              navigate={navigate}
-            />
-          );
-        }
-        
-        // Original implementation (current default)
         return (
           <BallotCard
             key={ballot.title} 
@@ -629,9 +591,6 @@ function SummaryView() {
                 </ConfirmButton>
               ))}
             </div>
-            {ballot.description && (
-              <BallotDescription>{ballot.description}</BallotDescription>
-            )}
             <BandsContainer>
               {BAND_CONFIG.map(({score, label, color}) => {
                 const candidates = vote[score] || [];
