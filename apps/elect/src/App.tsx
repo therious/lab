@@ -15,6 +15,7 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const sessionToken = sessionStorage.getItem('vote_token');
+  const [isRestoring, setIsRestoring] = React.useState(false);
 
   // Determine election status (before any early returns)
   const now = new Date();
@@ -53,6 +54,7 @@ export default function App() {
   // Initialize election if we have a token but no current election
   React.useEffect(() => {
     if (sessionToken && !currentElection) {
+      setIsRestoring(true);
       const viewToken = sessionStorage.getItem('view_token');
       // Try to load election from token
       fetch('/api/tokens/validate', {
@@ -65,8 +67,16 @@ export default function App() {
           if (data.election) {
             actions.election.initializeElection(data.election, sessionToken, viewToken || '');
           }
+          setIsRestoring(false);
         })
-        .catch(err => console.error('Failed to load election:', err));
+        .catch(err => {
+          console.error('Failed to load election:', err);
+          setIsRestoring(false);
+        });
+    } else if (!sessionToken) {
+      setIsRestoring(false);
+    } else {
+      setIsRestoring(false);
     }
   }, [sessionToken, currentElection]);
 
@@ -99,8 +109,19 @@ export default function App() {
     }
   }, [location.pathname, navigate, availableTabs.length, sessionToken, currentElection]);
 
-  // If no token, show landing page (AFTER all hooks are called)
-  if (!sessionToken || !currentElection) {
+  // If no token and not restoring, show landing page (AFTER all hooks are called)
+  // Wait for restoration to complete before showing landing page
+  if (!sessionToken && !isRestoring) {
+    return <LandingPage/>;
+  }
+  
+  // If we have a token but no election yet, wait for restoration (show loading or nothing)
+  if (sessionToken && !currentElection && isRestoring) {
+    return <div style={{padding: '2rem', textAlign: 'center'}}>Loading...</div>;
+  }
+  
+  // If restoration failed or no token after restoration attempt
+  if (!currentElection && !isRestoring) {
     return <LandingPage/>;
   }
 
