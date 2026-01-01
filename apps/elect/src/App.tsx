@@ -688,18 +688,33 @@ function ResultsView() {
         }
         
         const data = await res.json();
+        console.log('[DEBUG] API response status:', res.status, 'data:', data);
+        
         if (!res.ok) {
+          // If we have results despite error status, still try to process them
           if (data.results || data.results?.results) {
+            console.log('[DEBUG] API returned error but has results, processing anyway');
             return data;
           }
-          throw new Error(data.error || data.error_message || 'Failed to load results');
+          // Extract detailed error information
+          const errorMsg = data.error || data.error_message || data.debug_info || 'Failed to load results';
+          const errorCode = data.error_code || 'unknown_error';
+          console.error('[DEBUG] API error:', {errorMsg, errorCode, status: res.status});
+          throw new Error(`${errorMsg} (${errorCode})`);
         }
         return data;
       })
       .then(processResults)
       .catch(err => {
         console.error('Error loading results:', err);
-        setError(err.message || 'Failed to load results');
+        console.error('Error details:', {
+          message: err.message,
+          stack: err.stack,
+          name: err.name
+        });
+        // Show more detailed error message
+        const errorMsg = err.message || 'Failed to load results';
+        setError(`Error occurred while calculating results: ${errorMsg}`);
         setLoading(false);
       });
     
