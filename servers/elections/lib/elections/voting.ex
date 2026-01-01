@@ -369,64 +369,73 @@ defmodule Elections.Voting do
     end
 
     # Calculate results for each ballot - always return complete structure
+    # Wrap each ballot processing in try/rescue to ensure we always return basic stats
     results = Enum.map(ballots, fn ballot ->
-      # Ensure ballot is a map
-      ballot = if is_map(ballot), do: ballot, else: %{}
-      
-      ballot_title = Map.get(ballot, "title", "Untitled Ballot")
-      candidates = case Map.get(ballot, "candidates", []) do
-        candidates when is_list(candidates) -> candidates
-        _ -> []
-      end
-      number_of_winners = case Map.get(ballot, "number_of_winners", 1) do
-        n when is_integer(n) and n > 0 -> n
-        _ -> 1
-      end
-
-      # Extract votes for this ballot from ballot_data
-      ballot_votes = extract_ballot_votes(votes, ballot_title)
-      vote_count = length(ballot_votes)
-      
-      # Check quorum if specified
-      quorum = case Map.get(ballot, "quorum") do
-        q when is_integer(q) and q > 0 -> q
-        _ -> nil
-      end
-      
-      # Determine quorum status
-      quorum_status = if quorum do
-        if vote_count >= quorum do
-          "met"
-        else
-          "not_met"
+      try do
+        # Ensure ballot is a map
+        ballot = if is_map(ballot), do: ballot, else: %{}
+        
+        ballot_title = Map.get(ballot, "title", "Untitled Ballot")
+        candidates = case Map.get(ballot, "candidates", []) do
+          candidates when is_list(candidates) -> candidates
+          _ -> []
         end
-      else
-        nil
-      end
-      
-      # Determine overall result status based on quorum
-      result_status = cond do
-        quorum && vote_count < quorum && DateTime.compare(DateTime.utc_now(), election.voting_end) == :lt ->
-          # Voting still open and quorum not met - in progress
-          "in_progress"
-        quorum && vote_count < quorum ->
-          # Voting closed and quorum not met - no quorum
-          "no_quorum"
-        true ->
-          # Quorum met or no quorum required - use algorithm status
-          nil  # Will be determined by algorithm results
-      end
+        number_of_winners = case Map.get(ballot, "number_of_winners", 1) do
+          n when is_integer(n) and n > 0 -> n
+          _ -> 1
+        end
 
-      # Create ballot map with candidates and number_of_winners for algorithms
-      ballot_for_algorithms = %{
-        "candidates" => candidates,
-        "number_of_winners" => number_of_winners
-      }
-      
-      # Always calculate results - algorithms should handle empty votes gracefully
-      # Wrap in try/rescue to handle any algorithm errors
-      algorithm_results = try do
-        if vote_count > 0 do
+        # Extract votes for this ballot from ballot_data - wrap in try/rescue
+        ballot_votes = try do
+          extract_ballot_votes(votes, ballot_title)
+        rescue
+          e ->
+            require Logger
+            Logger.warning("Error extracting votes for ballot #{ballot_title}: #{inspect(e)}")
+            []  # Return empty list on error
+        end
+        
+        vote_count = length(ballot_votes)
+        
+        # Check quorum if specified
+        quorum = case Map.get(ballot, "quorum") do
+          q when is_integer(q) and q > 0 -> q
+          _ -> nil
+        end
+        
+        # Determine quorum status
+        quorum_status = if quorum do
+          if vote_count >= quorum do
+            "met"
+          else
+            "not_met"
+          end
+        else
+          nil
+        end
+        
+        # Determine overall result status based on quorum
+        result_status = cond do
+          quorum && vote_count < quorum && DateTime.compare(DateTime.utc_now(), election.voting_end) == :lt ->
+            # Voting still open and quorum not met - in progress
+            "in_progress"
+          quorum && vote_count < quorum ->
+            # Voting closed and quorum not met - no quorum
+            "no_quorum"
+          true ->
+            # Quorum met or no quorum required - use algorithm status
+            nil  # Will be determined by algorithm results
+        end
+
+        # Create ballot map with candidates and number_of_winners for algorithms
+        ballot_for_algorithms = %{
+          "candidates" => candidates,
+          "number_of_winners" => number_of_winners
+        }
+        
+        # Calculate algorithm results - each algorithm is individually protected
+        # Even if ALL algorithms fail, we still return basic stats
+        algorithm_results = if vote_count > 0 do
           %{
             ranked_pairs: safe_calculate_algorithm(fn -> Elections.Algorithms.RankedPairs.calculate(ballot_for_algorithms, ballot_votes) end, "ranked_pairs"),
             shulze: safe_calculate_algorithm(fn -> Elections.Algorithms.Shulze.calculate(ballot_for_algorithms, ballot_votes) end, "shulze"),
@@ -438,25 +447,47 @@ defmodule Elections.Voting do
           # No votes for this ballot - return empty results structure
           build_empty_results(candidates)
         end
+        
+        # Always return basic stats, even if algorithms failed
+        %{
+          ballot_title: ballot_title,
+          candidates: candidates,
+          number_of_winners: number_of_winners,
+          vote_count: vote_count,
+          quorum: quorum,
+          quorum_status: quorum_status,
+          result_status: result_status,
+          is_referendum: Map.get(ballot, "yesNoReferendum", false),
+          results: algorithm_results
+        }
       rescue
         e ->
+          # If anything fails in ballot processing, return minimal structure with error info
           require Logger
-          Logger.error("Error calculating algorithm results for ballot #{ballot_title}: #{inspect(e)}")
-          # Return empty results structure on error
-          build_empty_results(candidates)
+          Logger.error("Critical error processing ballot: #{inspect(e)}")
+          
+          # Extract what we can safely
+          ballot = if is_map(ballot), do: ballot, else: %{}
+          ballot_title = Map.get(ballot, "title", "Untitled Ballot")
+          candidates = case Map.get(ballot, "candidates", []) do
+            candidates when is_list(candidates) -> candidates
+            _ -> []
+          end
+          
+          # Return minimal structure with error status
+          %{
+            ballot_title: ballot_title,
+            candidates: candidates,
+            number_of_winners: Map.get(ballot, "number_of_winners", 1),
+            vote_count: 0,  # Can't determine safely
+            quorum: nil,
+            quorum_status: nil,
+            result_status: "error",
+            is_referendum: Map.get(ballot, "yesNoReferendum", false),
+            results: build_empty_results(candidates),
+            error: "Error processing ballot: #{Exception.message(e)}"
+          }
       end
-      
-      %{
-        ballot_title: ballot_title,
-        candidates: candidates,
-        number_of_winners: number_of_winners,
-        vote_count: vote_count,
-        quorum: quorum,
-        quorum_status: quorum_status,
-        result_status: result_status,
-        is_referendum: Map.get(ballot, "yesNoReferendum", false),
-        results: algorithm_results
-      }
     end)
 
     # Return results with metadata - always complete
@@ -481,15 +512,30 @@ defmodule Elections.Voting do
     }
   end
 
-  # Helper to safely calculate algorithm results, returning empty structure on error
+  # Helper to safely calculate algorithm results, returning error structure on failure
+  # Algorithm failures should NEVER prevent basic stats from being shown
   defp safe_calculate_algorithm(algorithm_fun, method_name) do
     try do
-      algorithm_fun.()
+      result = algorithm_fun.()
+      # Validate that result is a map with expected structure
+      if is_map(result) do
+        result
+      else
+        require Logger
+        Logger.warning("Algorithm #{method_name} returned invalid result type: #{inspect(result)}")
+        %{method: method_name, winners: [], status: "error", error: "Invalid result format"}
+      end
     rescue
       e ->
         require Logger
         Logger.warning("Algorithm #{method_name} failed: #{inspect(e)}")
-        %{method: method_name, winners: [], status: "error", error: "Calculation failed"}
+        # Return error structure - this should not prevent other algorithms or basic stats from showing
+        %{method: method_name, winners: [], status: "error", error: "Calculation failed: #{Exception.message(e)}"}
+    catch
+      kind, reason ->
+        require Logger
+        Logger.warning("Algorithm #{method_name} threw #{kind}: #{inspect(reason)}")
+        %{method: method_name, winners: [], status: "error", error: "Algorithm threw #{kind}"}
     end
   end
 
