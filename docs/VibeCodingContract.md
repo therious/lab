@@ -13,8 +13,25 @@ This document captures the coding principles, rules, and expectations for AI age
 - **Utilities First**: If new utilities are needed for a feature:
   1. Test and commit the utilities first
   2. Then commit the feature that uses them
-- **Commit Message Format**: Use descriptive commit messages. The user has mentioned `git commit -m "elect: [message]"` format, though various prefixes have been used (e.g., `feat:`, `fix:`, `refactor:`). **Question**: Should we standardize on a specific prefix format?
-- **GitHub Issue References**: When working on a GitHub issue, reference it in commit messages: `<type>: <description> (#<issue-number>)`. Use `Fixes #123`, `Closes #123`, or `Resolves #123` in the final commit to automatically close the issue when merged. See `docs/GITHUB_ISSUES_WORKFLOW.md` for details.
+- **Commit Message Format**: 
+  - **Required Format**: `🤖 [project-prefix]: <short one-liner> (#<issue-number>)`
+  - **Emoji Prefix**: Always start with 🤖 (mechanical arm emoji) to indicate assisted coding
+  - **Project Prefix**: Use `elect:` for elect project-specific commits, omit for general/root commits
+  - **Short Description**: One-line summary of what the commit fundamentally does
+  - **Issue Reference**: Include `(#<issue-number>)` when working on an issue
+  - **Extended Body**: Use extended git comment format (blank line, then bullet points or details)
+  - **Example**:
+    ```
+    🤖 elect: Fix tab highlighting to ensure only one active tab (#123)
+    
+    - Use exact path matching for ballot tabs instead of startsWith
+    - Fix badge calculation to correctly exclude unranked candidates
+    - Ensure Summary and Results tabs use consistent active state logic
+    ```
+- **GitHub Issue References**: 
+  - **Multiple Commits**: All commits in a chain (refactor, utilities, feature) should reference the issue: `🤖 elect: Refactor component structure (#123)`
+  - **Final Commit**: Use `Resolves #123` in the final commit to automatically close the issue when merged: `🤖 elect: Resolves #123 - Implement logout functionality`
+  - See `docs/GITHUB_ISSUES_WORKFLOW.md` for complete workflow details
 
 ### 2. Verification and Testing
 

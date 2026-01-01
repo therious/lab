@@ -83,35 +83,44 @@ GitHub recognizes these keywords in commit messages (case-insensitive):
 
 ### Commit Message Convention
 
-**Format**:
+**Required Format**:
 ```
-<type>: <short description> (#<issue-number>)
+🤖 [project-prefix]: <short one-liner> (#<issue-number>)
 
-<optional longer description>
+<extended body with details/bullet points>
 ```
 
-**Types**:
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `refactor:` - Code refactoring
-- `docs:` - Documentation changes
-- `test:` - Test additions/changes
-- `chore:` - Maintenance tasks
+**Components**:
+1. **🤖 Emoji**: Always start with mechanical arm emoji (indicates assisted coding)
+2. **Project Prefix**: Use `elect:` for elect project, omit for general commits
+3. **Short Description**: One-line summary of what the commit fundamentally does
+4. **Issue Reference**: Include `(#<issue-number>)` when working on an issue
+5. **Extended Body**: Blank line, then bullet points or detailed explanation
 
 **Examples**:
 ```
-fix: Correct tab highlighting logic (#123)
+🤖 elect: Fix tab highlighting to ensure only one active tab (#123)
 
-- Use exact path matching for ballot tabs
-- Fix badge calculation to exclude unranked candidates
+- Use exact path matching for ballot tabs instead of startsWith
+- Fix badge calculation to correctly exclude unranked candidates
+- Ensure Summary and Results tabs use consistent active state logic
 ```
 
 ```
-feat: Add logout functionality (#124)
+🤖 elect: Refactor component structure (#124)
 
-- Add logout action to election slice
-- Add middleware to clear sessionStorage
-- Update success modal with logout button
+- Extract SummaryView component from App.tsx
+- Extract constants to dedicated constants.ts file
+- Extract utility functions to utils.tsx
+```
+
+```
+🤖 elect: Resolves #124 - Implement logout functionality
+
+- Add logout action to election slice that restores initial state
+- Add middleware to clear sessionStorage before logout action
+- Update success modal with Logout (default) and View Results buttons
+- Add hover logout button to UserProfile component
 ```
 
 ### Closing Issues
@@ -160,13 +169,70 @@ We can create a GitHub Action workflow to:
 
 **When PR is merged**: GitHub automatically closes #123
 
-## Questions for User
+## GitHub API Access
 
-1. **Issue Creation**: Do you want me to draft issue content for you to create, or will you create issues directly?
-2. **Commit Keywords**: Should I use `Fixes`, `Closes`, or `Resolves` in commit messages? (All work the same way)
-3. **Multiple Commits**: Should every commit reference the issue, or just the final one?
-4. **Issue Templates**: Should we create GitHub issue templates for common request types?
-5. **Automation**: Should we create a GitHub Action workflow for enhanced issue management?
+### Personal Access Token (PAT)
+
+**Yes, you can provide a GitHub Personal Access Token for issue read/write access.**
+
+**Token Requirements**:
+- **Scopes Needed**: 
+  - `repo` scope (includes issues read/write) OR
+  - Fine-grained token with `Issues: Read and write` permission for `therious/lab` repository
+- **Security**: Store token securely, set expiration date
+- **Limitation**: I don't currently have a direct GitHub API tool, but I can use the token via command-line `gh` CLI or HTTP requests if you provide it
+
+**To Generate Token**:
+1. GitHub Settings → Developer settings → Personal access tokens
+2. Generate new token (classic) or fine-grained token
+3. Select `repo` scope (for classic) or `Issues: Read and write` (for fine-grained)
+4. Copy token securely (only shown once)
+
+**Note**: If you provide a token, I can create and update issues programmatically. Otherwise, I'll draft issue content for you to create manually.
+
+## Commit Messages vs PR Messages
+
+**Answer to Question 2**: Yes, commit messages (not just PR messages) can impact issue status when merged to the default branch. GitHub scans all commit messages in a PR when it's merged.
+
+**How It Works**:
+- When a PR is merged to `main`/`master`, GitHub scans all commit messages in that PR
+- If any commit contains `Fixes #123`, `Closes #123`, or `Resolves #123`, the issue is automatically closed
+- This works even if the PR description doesn't mention the issue
+
+**Best Practice**: Use `Resolves #123` in the final commit that completes the work.
+
+## Manual vs Automatic Issue Closing
+
+**Answer to Question 3**: You have two options:
+
+**Option A - Automatic Closing (Recommended)**:
+- Use `Resolves #123` in the final commit
+- GitHub automatically closes the issue when PR is merged
+- You can still manually close if needed
+
+**Option B - Manual Closing**:
+- Reference issues in commits: `🤖 elect: Fix tab highlighting (#123)`
+- Don't use closing keywords
+- You manually close issues when you consider them done
+- More control, but requires manual tracking
+
+**Recommendation**: Use automatic closing with `Resolves #123` in final commit, but you can always manually close/reopen if needed.
+
+## Multiple Commits Per Issue
+
+**When working on an issue that requires multiple commits** (e.g., refactor → utilities → feature):
+
+1. **Refactor commit**: `🤖 elect: Refactor component structure (#123)`
+2. **Utilities commit**: `🤖 elect: Add utility functions for formatting (#123)`
+3. **Feature commit**: `🤖 elect: Resolves #123 - Implement new feature`
+
+All commits reference the issue, but only the final one uses `Resolves` to close it.
+
+## Remaining Questions
+
+1. **Issue Creation**: Do you want me to draft issue content for you to create, or will you provide a token for me to create issues directly?
+2. **Issue Templates**: Should we create GitHub issue templates for common request types?
+3. **Automation**: Should we create a GitHub Action workflow for enhanced issue management?
 
 ---
 
