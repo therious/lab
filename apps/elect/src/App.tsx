@@ -49,8 +49,14 @@ export default function App() {
     if (sessionToken && !token) {
       // Token exists in sessionStorage but not in Redux - restore it
       actions.election.setToken(sessionToken);
+      
+      // Restore voted status from sessionStorage
+      const hasVoted = sessionStorage.getItem('has_voted') === 'true';
+      if (hasVoted && !submitted) {
+        actions.election.markSubmitted();
+      }
     }
-  }, [sessionToken, token]);
+  }, [sessionToken, token, submitted]);
 
   // Initialize election if we have a token but no current election
   React.useEffect(() => {
