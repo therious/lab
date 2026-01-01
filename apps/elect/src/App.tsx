@@ -191,7 +191,7 @@ const RankBadge = styled.span`
 const ToggleSwitch = styled.label<{$checked: boolean}>`
   position: relative;
   display: inline-block;
-  width: 6.5rem;
+  width: 7.375rem;
   height: 1.75rem;
   cursor: pointer;
   user-select: none;
