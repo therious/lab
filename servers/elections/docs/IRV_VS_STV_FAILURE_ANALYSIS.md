@@ -3,6 +3,10 @@
 ## Question
 Can STV algorithm fail where IRV would succeed in single-winner elections? Can IRV fail where STV would succeed?
 
+**Clarification**: By "failure" we mean:
+1. **Producing a different result** (electing different winner)
+2. **Failing to produce any result** (error, exception, infinite loop) where the other would succeed
+
 ## Theoretical Analysis
 
 ### True IRV Algorithm (Single Winner)
