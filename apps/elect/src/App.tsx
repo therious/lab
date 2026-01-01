@@ -181,8 +181,8 @@ export default function App() {
     );
   }
 
-  // Get user email from sessionStorage
-  const userEmail = React.useMemo(() => sessionStorage.getItem('user_email'), []);
+  // Get user email from sessionStorage (read directly, no hook needed)
+  const userEmail = sessionStorage.getItem('user_email');
   
   return (
     <Layout>
