@@ -14,23 +14,23 @@ This document captures the coding principles, rules, and expectations for AI age
   1. Test and commit the utilities first
   2. Then commit the feature that uses them
 - **Commit Message Format**: 
-  - **Required Format**: `🤖 [project-prefix]: <short one-liner> (#<issue-number>)`
-  - **Emoji Prefix**: Always start with 🤖 (mechanical arm emoji) to indicate assisted coding
+  - **Required Format**: `🦾 [project-prefix]: <short one-liner> (#<issue-number>)`
+  - **Emoji Prefix**: Always start with 🦾 (mechanical arm emoji) to indicate assisted coding - symbolizes leverage of agent performing individual requests on demand (not autonomous robot)
   - **Project Prefix**: Use `elect:` for elect project-specific commits, omit for general/root commits
   - **Short Description**: One-line summary of what the commit fundamentally does
   - **Issue Reference**: Include `(#<issue-number>)` when working on an issue
   - **Extended Body**: Use extended git comment format (blank line, then bullet points or details)
   - **Example**:
     ```
-    🤖 elect: Fix tab highlighting to ensure only one active tab (#123)
+    🦾 elect: Fix tab highlighting to ensure only one active tab (#123)
     
     - Use exact path matching for ballot tabs instead of startsWith
     - Fix badge calculation to correctly exclude unranked candidates
     - Ensure Summary and Results tabs use consistent active state logic
     ```
 - **GitHub Issue References**: 
-  - **Multiple Commits**: All commits in a chain (refactor, utilities, feature) should reference the issue: `🤖 elect: Refactor component structure (#123)`
-  - **Final Commit**: Use `Resolves #123` in the final commit to automatically close the issue when merged: `🤖 elect: Resolves #123 - Implement logout functionality`
+  - **Multiple Commits**: All commits in a chain (refactor, utilities, feature) should reference the issue: `🦾 elect: Refactor component structure (#123)`
+  - **Final Commit**: Use `Resolves #123` in the final commit to automatically close the issue when merged: `🦾 elect: Resolves #123 - Implement logout functionality`
   - See `docs/GITHUB_ISSUES_WORKFLOW.md` for complete workflow details
 
 ### 2. Verification and Testing

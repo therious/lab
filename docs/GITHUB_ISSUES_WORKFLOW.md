@@ -85,13 +85,13 @@ GitHub recognizes these keywords in commit messages (case-insensitive):
 
 **Required Format**:
 ```
-🤖 [project-prefix]: <short one-liner> (#<issue-number>)
+🦾 [project-prefix]: <short one-liner> (#<issue-number>)
 
 <extended body with details/bullet points>
 ```
 
 **Components**:
-1. **🤖 Emoji**: Always start with mechanical arm emoji (indicates assisted coding)
+1. **🦾 Emoji**: Always start with mechanical arm emoji (indicates assisted coding - leverage of agent performing individual requests on demand, not autonomous robot)
 2. **Project Prefix**: Use `elect:` for elect project, omit for general commits
 3. **Short Description**: One-line summary of what the commit fundamentally does
 4. **Issue Reference**: Include `(#<issue-number>)` when working on an issue
@@ -211,7 +211,7 @@ We can create a GitHub Action workflow to:
 - You can still manually close if needed
 
 **Option B - Manual Closing**:
-- Reference issues in commits: `🤖 elect: Fix tab highlighting (#123)`
+- Reference issues in commits: `🦾 elect: Fix tab highlighting (#123)`
 - Don't use closing keywords
 - You manually close issues when you consider them done
 - More control, but requires manual tracking
@@ -222,9 +222,9 @@ We can create a GitHub Action workflow to:
 
 **When working on an issue that requires multiple commits** (e.g., refactor → utilities → feature):
 
-1. **Refactor commit**: `🤖 elect: Refactor component structure (#123)`
-2. **Utilities commit**: `🤖 elect: Add utility functions for formatting (#123)`
-3. **Feature commit**: `🤖 elect: Resolves #123 - Implement new feature`
+1. **Refactor commit**: `🦾 elect: Refactor component structure (#123)`
+2. **Utilities commit**: `🦾 elect: Add utility functions for formatting (#123)`
+3. **Feature commit**: `🦾 elect: Resolves #123 - Implement new feature`
 
 All commits reference the issue, but only the final one uses `Resolves` to close it.
 
