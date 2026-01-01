@@ -48,13 +48,13 @@ const CenterBody = styled.main`
 
 const SummaryContainer = styled.div`
   padding: 1rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, max-content));
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 1.5rem;
   height: 100%;
   overflow-y: auto;
-  align-items: start;
-  justify-items: start;
+  align-content: flex-start;
 `;
 
 const ElectionSummaryCard = styled(Link)`
@@ -353,7 +353,7 @@ function SummaryView() {
       )}
       
       <SummaryContainer>
-        <div style={{gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
+        <div style={{width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
           <h1 style={{margin: 0}}>{currentElection?.title || 'Election Summary'}</h1>
           {ballots.length > 0 && !submitted && (
             <SubmitButton 
