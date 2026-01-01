@@ -454,7 +454,8 @@ defmodule Elections.Voting do
       result = algorithm_fun.()
       # Validate that result is a map with expected structure
       if is_map(result) do
-        result
+        # Convert tuple keys to JSON-serializable format (strings or lists)
+        sanitize_for_json(result)
       else
         # Invalid result format - fail silently, no warning
         %{method: method_name, winners: [], status: "error", error: "Invalid result format"}
@@ -472,6 +473,38 @@ defmodule Elections.Voting do
         %{method: method_name, winners: [], status: "error", error: "Algorithm threw #{kind}"}
     end
   end
+
+  # Convert data structures to JSON-serializable format
+  # Recursively converts tuple keys in maps to string keys
+  defp sanitize_for_json(data) when is_map(data) do
+    data
+    |> Enum.map(fn
+      # Convert tuple keys to string keys
+      {{k1, k2} = key, value} when is_tuple(key) ->
+        key_str = "#{k1},#{k2}"
+        {key_str, sanitize_for_json(value)}
+      
+      {{k1, k2, k3} = key, value} when is_tuple(key) ->
+        key_str = "#{k1},#{k2},#{k3}"
+        {key_str, sanitize_for_json(value)}
+      
+      # Keep other keys as-is
+      {key, value} ->
+        {key, sanitize_for_json(value)}
+    end)
+    |> Enum.into(%{})
+  end
+
+  defp sanitize_for_json(data) when is_list(data) do
+    Enum.map(data, &sanitize_for_json/1)
+  end
+
+  defp sanitize_for_json(data) when is_tuple(data) do
+    # Convert tuples to lists for JSON serialization
+    Tuple.to_list(data) |> sanitize_for_json()
+  end
+
+  defp sanitize_for_json(data), do: data
 
   # Build empty results structure for ballots with no votes
   defp build_empty_results(candidates) do
