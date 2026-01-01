@@ -6,35 +6,47 @@ The election summary view uses a **masonry grid layout** to efficiently pack bal
 
 ## Current Implementation
 
-### Masonry Grid Library
+### Flexbox with Natural Wrapping
 
-We use **[Masonry Grid](https://masonry-grid.js.org/)** (`masonry-grid` npm package) for the summary view layout.
+We use **CSS Flexbox with `flex-wrap`** for the summary view layout.
 
-**Why Masonry Grid:**
-- **TypeScript-first**: Built with TypeScript and includes type definitions
-- **Zero dependencies**: Lightweight and doesn't add unnecessary dependencies
-- **First-class React support**: Designed specifically for React applications
-- **Responsive**: Built-in responsive breakpoint configuration
-- **Performance**: Efficient layout algorithm that minimizes reflows
+**Why Flexbox:**
+- **Natural wrapping**: Cards wrap based on their actual width, not fixed columns
+- **No clipping**: All cards that fit in the window are visible
+- **Content-based sizing**: Cards size to their content (bands determine width)
+- **Simple and reliable**: Native CSS, no external dependencies
+- **Responsive**: Automatically adapts to window size
 
 **Configuration:**
-- `minWidth`: Minimum width for each column (350px) - columns are calculated automatically based on container width
-- `gap`: Spacing between items (24px)
-- Automatically calculates number of columns based on container width and `minWidth`
+- Container: `display: flex; flex-wrap: wrap; gap: 1.5rem;`
+- Cards: `width: max-content; min-width: 280px;`
+- Bands: `width: max-content;` (size to widest content)
 
 **Usage:**
 ```tsx
-import MasonryGrid from 'masonry-grid';
-
-<MasonryGrid
-  minWidth={350}
-  gap={24}
->
-  {ballots.map(ballot => <BallotCard ... />)}
-</MasonryGrid>
+<CardsContainer>
+  {ballots.map(ballot => (
+    <BallotCard>
+      <BandsContainer>
+        {/* Bands size to content */}
+      </BandsContainer>
+    </BallotCard>
+  ))}
+</CardsContainer>
 ```
 
-**Note:** The library uses a default export, not a named export. It automatically calculates the number of columns based on the container width divided by `minWidth`.
+**Note:** Cards wrap naturally when they don't fit. Each card sizes to its content, ensuring no clipping occurs.
+
+## Previous Implementation
+
+### Masonry Grid Library (Removed)
+
+We initially tried **[Masonry Grid](https://masonry-grid.js.org/)** but removed it because:
+- **Fixed column calculation**: Calculated a fixed number of columns based on `containerWidth / minWidth`
+- **Clipping issue**: When cards were wider than the calculated column width, they would clip
+- **No natural wrapping**: Items were forced into fixed columns, not based on actual width
+
+This approach didn't work for variable-width cards that need to size to their content.
 
 ## Alternative Libraries Considered
 
