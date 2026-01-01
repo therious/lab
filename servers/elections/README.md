@@ -254,8 +254,27 @@ For detailed API testing examples, see [docs/TESTING.md](./docs/TESTING.md).
 
 ## Related Documentation
 
+### Core Documentation
 - [Elect Webapp README](../../apps/elect/README.md) - React voting interface
 - [docs/TESTING.md](./docs/TESTING.md) - Detailed API testing guide
 - [docs/DATABASE_INSPECTION.md](./docs/DATABASE_INSPECTION.md) - Database inspection guide
 - [docs/SQLITE_CONNECTION.md](./docs/SQLITE_CONNECTION.md) - DataGrip connection details
+
+### Algorithm Documentation
+- [docs/ALGORITHM_FAILURE_ANALYSIS.md](./docs/ALGORITHM_FAILURE_ANALYSIS.md) - Common failure reasons for Coombs and IRV/STV
+- [docs/MULTIPLE_WINNERS_ANALYSIS.md](./docs/MULTIPLE_WINNERS_ANALYSIS.md) - Analysis of multiple winner support across algorithms
+- [docs/MULTIPLE_WINNERS_IMPLEMENTATION_PLAN.md](./docs/MULTIPLE_WINNERS_IMPLEMENTATION_PLAN.md) - Plan for implementing proper multiple winners for Condorcet methods
+- [docs/IRV_STV_IMPLEMENTATION_ANALYSIS.md](./docs/IRV_STV_IMPLEMENTATION_ANALYSIS.md) - Detailed analysis of IRV/STV implementation
+- [docs/COOMBS_IMPLEMENTATION_ANALYSIS.md](./docs/COOMBS_IMPLEMENTATION_ANALYSIS.md) - Detailed analysis of Coombs implementation
+- [docs/IRV_VS_STV_FAILURE_ANALYSIS.md](./docs/IRV_VS_STV_FAILURE_ANALYSIS.md) - Analysis of IRV vs STV for single-winner elections
+- [docs/WINNER_ORDERING_NOTATION.md](./docs/WINNER_ORDERING_NOTATION.md) - Winner ordering notation specification (three-tier tie system)
+- [docs/WINNER_ORDERING_ANALYSIS.md](./docs/WINNER_ORDERING_ANALYSIS.md) - Analysis of winner ordering across algorithms
+
+### Architecture Documentation
+- [docs/REPO_ARCHITECTURE_OPTIONS.md](./docs/REPO_ARCHITECTURE_OPTIONS.md) - Repository architecture options for multi-database elections
+- [docs/VOTES_MIGRATION.md](./docs/VOTES_MIGRATION.md) - Notes on vote migration from old to new database architecture
+- [docs/ISSUES_AND_FIXES.md](./docs/ISSUES_AND_FIXES.md) - Historical record of issues and their fixes
+
+### Testing & Development
+- [docs/TENNESSEE_CAPITAL_TEST_PLAN.md](./docs/TENNESSEE_CAPITAL_TEST_PLAN.md) - Plan for generating test votes for Tennessee Capital election
 - [docs/MONITORING.md](./docs/MONITORING.md) - Server monitoring guide
