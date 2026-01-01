@@ -945,6 +945,33 @@ export default function App() {
   const navigate = useNavigate();
   const sessionToken = sessionStorage.getItem('vote_token');
 
+  // Determine election status (before any early returns)
+  const now = new Date();
+  const votingEnd = currentElection?.voting_end ? new Date(currentElection.voting_end) : null;
+  const votingStart = currentElection?.voting_start ? new Date(currentElection.voting_start) : null;
+  const isClosed = votingEnd && now > votingEnd;
+  const isOpen = votingStart && votingEnd && now >= votingStart && now <= votingEnd;
+  const isUpcoming = votingStart && now < votingStart;
+
+  // Build list of available tabs based on election status
+  const availableTabs: Array<{path: string; label: string; element: React.ReactElement}> = [];
+  
+  // Results tab is always available
+  availableTabs.push({path: '/results', label: 'Results', element: <ResultsView/>});
+  
+  // Summary and ballot tabs only available if election is open or upcoming
+  if ((isOpen || isUpcoming) && currentElection) {
+    availableTabs.push({path: '/summary', label: 'Summary', element: <SummaryView/>});
+    ballots.forEach((ballot: Ballot) => {
+      availableTabs.push({
+        path: `/ballot/${encodeURIComponent(ballot.title)}`,
+        label: ballot.title,
+        element: <BallotView/>
+      });
+    });
+  }
+
+  // ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
   // Sync sessionStorage token to Redux if present
   React.useEffect(() => {
     if (sessionToken && !token) {
@@ -976,39 +1003,10 @@ export default function App() {
     }
   }, [sessionToken, token]);
 
-  // If no token, show landing page
-  if (!sessionToken || !currentElection) {
-    return <LandingPage/>;
-  }
-
-  // Determine election status
-  const now = new Date();
-  const votingEnd = currentElection.voting_end ? new Date(currentElection.voting_end) : null;
-  const votingStart = currentElection.voting_start ? new Date(currentElection.voting_start) : null;
-  const isClosed = votingEnd && now > votingEnd;
-  const isOpen = votingStart && votingEnd && now >= votingStart && now <= votingEnd;
-  const isUpcoming = votingStart && now < votingStart;
-
-  // Build list of available tabs based on election status
-  const availableTabs: Array<{path: string; label: string; element: React.ReactElement}> = [];
-  
-  // Results tab is always available
-  availableTabs.push({path: '/results', label: 'Results', element: <ResultsView/>});
-  
-  // Summary and ballot tabs only available if election is open or upcoming
-  if (isOpen || isUpcoming) {
-    availableTabs.push({path: '/summary', label: 'Summary', element: <SummaryView/>});
-    ballots.forEach((ballot: Ballot) => {
-      availableTabs.push({
-        path: `/ballot/${encodeURIComponent(ballot.title)}`,
-        label: ballot.title,
-        element: <BallotView/>
-      });
-    });
-  }
-
   // Handle redirects - must be called unconditionally (Rules of Hooks)
   React.useEffect(() => {
+    if (!sessionToken || !currentElection) return;
+    
     if (availableTabs.length === 1) {
       // Single tab: redirect to it if not already there
       if (location.pathname !== availableTabs[0].path && !location.pathname.startsWith(availableTabs[0].path)) {
@@ -1032,7 +1030,12 @@ export default function App() {
         navigate(availableTabs[0].path, {replace: true});
       }
     }
-  }, [location.pathname, navigate, availableTabs.length]);
+  }, [location.pathname, navigate, availableTabs.length, sessionToken, currentElection]);
+
+  // If no token, show landing page (AFTER all hooks are called)
+  if (!sessionToken || !currentElection) {
+    return <LandingPage/>;
+  }
 
   // If only one tab, render it directly without navbar
   if (availableTabs.length === 1) {
