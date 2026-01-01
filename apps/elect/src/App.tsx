@@ -84,7 +84,8 @@ const BandsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  width: max-content;
+  width: 100%;
+  min-width: max-content;
   box-sizing: border-box;
 `;
 
@@ -97,7 +98,8 @@ const BandRow = styled.div<{$color: string}>`
   border: 2px solid ${props => props.$color};
   border-radius: 4px;
   min-height: 2.5rem;
-  width: max-content;
+  width: 100%;
+  min-width: max-content;
   box-sizing: border-box;
 `;
 
@@ -124,9 +126,11 @@ const BallotCard = styled.div`
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  width: max-content;
+  width: 100%;
+  min-width: fit-content;
   height: fit-content;
   margin-bottom: 1.5rem;
+  box-sizing: border-box;
   
   &:hover {
     background-color: #f5f5f5;
@@ -371,7 +375,7 @@ function SummaryView() {
         </div>
         <MasonryGridContainer>
           <MasonryGrid
-            minWidth={300}
+            minWidth={280}
             gap={24}
           >
       {ballots.map((ballot: Ballot) => {
