@@ -8,7 +8,6 @@ import {VotingInterface} from './components/VotingInterface';
 import {LandingPage} from './components/LandingPage';
 import {VoteTimeline} from './components/VoteTimeline';
 import styled from 'styled-components';
-import MasonryGrid from 'masonry-grid';
 
 const BAND_CONFIG = [
   { score: '5', label: 'Excellent', color: '#2e7d32' },
@@ -51,10 +50,15 @@ const SummaryContainer = styled.div`
   padding: 1rem;
   height: 100%;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 `;
 
-const MasonryGridContainer = styled.div`
-  width: 100%;
+const CardsContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-content: flex-start;
 `;
 
 const ElectionSummaryCard = styled(Link)`
@@ -84,8 +88,7 @@ const BandsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  width: 100%;
-  min-width: max-content;
+  width: max-content;
   box-sizing: border-box;
 `;
 
@@ -98,8 +101,7 @@ const BandRow = styled.div<{$color: string}>`
   border: 2px solid ${props => props.$color};
   border-radius: 4px;
   min-height: 2.5rem;
-  width: 100%;
-  min-width: max-content;
+  width: max-content;
   box-sizing: border-box;
 `;
 
@@ -126,10 +128,9 @@ const BallotCard = styled.div`
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  min-width: fit-content;
+  width: max-content;
+  min-width: 280px;
   height: fit-content;
-  margin-bottom: 1.5rem;
   box-sizing: border-box;
   
   &:hover {
@@ -373,11 +374,7 @@ function SummaryView() {
             </SubmitButton>
           )}
         </div>
-        <MasonryGridContainer>
-          <MasonryGrid
-            minWidth={280}
-            gap={24}
-          >
+        <CardsContainer>
       {ballots.map((ballot: Ballot) => {
         const vote = votes[ballot.title];
         if (!vote) return null;
@@ -497,8 +494,7 @@ function SummaryView() {
           </BallotCard>
         );
       })}
-          </MasonryGrid>
-        </MasonryGridContainer>
+        </CardsContainer>
       {submitted && (
         <div style={{textAlign: 'center', padding: '2rem', color: '#4caf50', fontSize: '1.2rem', fontWeight: 'bold'}}>
           ✓ Your vote has been successfully submitted
