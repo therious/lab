@@ -509,7 +509,9 @@ function ResultsView() {
     let channel: any = null;
     
     // Dynamically import Phoenix Socket (may not be available in all environments)
-    import('phoenix').then(({Socket}) => {
+    // @ts-ignore - Phoenix doesn't have TypeScript declarations
+    import('phoenix').then((phoenix: any) => {
+      const Socket = phoenix.Socket;
       socket = new Socket('/socket', {});
       socket.connect();
       

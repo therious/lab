@@ -144,6 +144,10 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   const maxCumulative = Math.max(totalVotes, 1);
   const totalPeriods = Math.ceil(electionDuration / unitMs);
   
+  // Use nice round numbers for axis labels (calculate before using)
+  const niceMaxVolume = Math.ceil(maxVolume / 5) * 5 || 5;
+  const niceMaxCumulative = Math.ceil(maxCumulative / 5) * 5 || 5;
+  
   // Chart dimensions
   const chartWidth = 100;
   const chartHeight = 100;
@@ -175,10 +179,6 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   // Generate Y-axis labels with better scaling
   const leftAxisLabels: number[] = [];
   const rightAxisLabels: number[] = [];
-  
-  // Use nice round numbers for axis labels
-  const niceMaxVolume = Math.ceil(maxVolume / 5) * 5 || 5;
-  const niceMaxCumulative = Math.ceil(maxCumulative / 5) * 5 || 5;
   
   for (let i = 0; i <= 5; i++) {
     leftAxisLabels.push(Math.round((i / 5) * niceMaxVolume));
