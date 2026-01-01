@@ -10,7 +10,7 @@
 ### Documentation Status
 
 #### ✅ Keep and Update
-1. **WINNER_ORDERING_NOTATION.md** - Update to three-tier system with * and †
+1. **WINNER_ORDERING_DATA_STRUCTURE.md** (formerly WINNER_ORDERING_NOTATION.md) - Update to three-tier system with * and †
 2. **ALGORITHM_FAILURE_ANALYSIS.md** - Still relevant
 3. **MULTIPLE_WINNERS_ANALYSIS.md** - Still relevant
 4. **MULTIPLE_WINNERS_IMPLEMENTATION_PLAN.md** - Future plan, still relevant
@@ -42,7 +42,7 @@
 
 ### Immediate (Clear)
 1. Delete obsolete plan documents
-2. Update WINNER_ORDERING_NOTATION.md to reflect implementation
+2. Update WINNER_ORDERING_DATA_STRUCTURE.md to reflect implementation
 3. Update READMEs to link to all relevant docs
 
 ### Review Needed

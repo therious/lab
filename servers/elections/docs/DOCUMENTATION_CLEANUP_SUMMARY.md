@@ -10,7 +10,7 @@
 5. **AGENTS.md** - Phoenix boilerplate file, not relevant to elections project
 
 ### ✅ Updated
-1. **WINNER_ORDERING_NOTATION.md** - Completely rewritten to reflect:
+1. **WINNER_ORDERING_DATA_STRUCTURE.md** (formerly WINNER_ORDERING_NOTATION.md) - Completely rewritten to reflect:
    - Three-tier system (statistical, peculiar, ambiguous)
    - Current notation (numbers with * and † symbols)
    - Current implementation details
