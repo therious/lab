@@ -85,14 +85,14 @@ GET /api/dashboard/:id/visualize/:method  # Get visualization data
 
 ## SQLite Database
 
-See [SQLITE_CONNECTION.md](./SQLITE_CONNECTION.md) for DataGrip connection details and useful queries.
+See [docs/DATABASE_INSPECTION.md](./docs/DATABASE_INSPECTION.md) for database inspection details and [docs/SQLITE_CONNECTION.md](./docs/SQLITE_CONNECTION.md) for DataGrip connection details.
 
-**Database Location:** `priv/repo/elections.db`
+**Database Location:** Each election has its own database at `priv/repo/{election-identifier}.db`
 
 **Inspect Database:**
-- **DataGrip**: See [SQLITE_CONNECTION.md](./SQLITE_CONNECTION.md)
-- **Command Line**: `sqlite3 priv/repo/elections.db`
-- **Useful Queries**: See [SQLITE_CONNECTION.md](./SQLITE_CONNECTION.md#useful-queries)
+- **DataGrip**: See [docs/SQLITE_CONNECTION.md](./docs/SQLITE_CONNECTION.md)
+- **Command Line**: `sqlite3 priv/repo/{election-identifier}.db`
+- **Inspection Guide**: See [docs/DATABASE_INSPECTION.md](./docs/DATABASE_INSPECTION.md)
 
 ## Features
 
@@ -227,7 +227,7 @@ cat /tmp/elections-server.pid
 
 ## Testing
 
-For detailed API testing examples, see [TESTING.md](./TESTING.md).
+For detailed API testing examples, see [docs/TESTING.md](./docs/TESTING.md).
 
 ### Quick Test
 
@@ -255,5 +255,7 @@ For detailed API testing examples, see [TESTING.md](./TESTING.md).
 ## Related Documentation
 
 - [Elect Webapp README](../../apps/elect/README.md) - React voting interface
-- [TESTING.md](./TESTING.md) - Detailed API testing guide
-- [SQLITE_CONNECTION.md](./SQLITE_CONNECTION.md) - Database inspection and queries
+- [docs/TESTING.md](./docs/TESTING.md) - Detailed API testing guide
+- [docs/DATABASE_INSPECTION.md](./docs/DATABASE_INSPECTION.md) - Database inspection guide
+- [docs/SQLITE_CONNECTION.md](./docs/SQLITE_CONNECTION.md) - DataGrip connection details
+- [docs/MONITORING.md](./docs/MONITORING.md) - Server monitoring guide

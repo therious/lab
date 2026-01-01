@@ -3,9 +3,10 @@
 This guide explains how to connect to the Elections Server SQLite database for inspection and debugging.
 
 **Related Documentation:**
-- [Elections Server README](./README.md) - Server overview and setup
-- [Elect Webapp README](../../apps/elect/README.md) - UI application
+- [Elections Server README](../README.md) - Server overview and setup
+- [Elect Webapp README](../../../apps/elect/README.md) - UI application
 - [TESTING.md](./TESTING.md) - API testing guide
+- [DATABASE_INSPECTION.md](./DATABASE_INSPECTION.md) - Comprehensive database inspection guide
 
 ## Database Location
 ```

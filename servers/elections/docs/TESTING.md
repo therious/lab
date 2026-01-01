@@ -17,7 +17,7 @@
 
 3. **Access the UI:** Open http://localhost:4000 in your browser
 
-For more details, see the [main README](./README.md) and [Elect webapp README](../../apps/elect/README.md).
+For more details, see the [main README](../README.md) and [Elect webapp README](../../../apps/elect/README.md).
 
 ## Generate Test Tokens
 
@@ -116,11 +116,12 @@ Response includes `election_id`, `election_identifier`, and `tokens` (token + vi
 
 ## Database Inspection
 
-To inspect submitted votes and tokens, see [SQLITE_CONNECTION.md](./SQLITE_CONNECTION.md).
+To inspect submitted votes and tokens, see [DATABASE_INSPECTION.md](./DATABASE_INSPECTION.md) and [SQLITE_CONNECTION.md](./SQLITE_CONNECTION.md).
 
 ## Related Documentation
 
-- [Main README](./README.md) - Server overview and setup
-- [Elect Webapp README](../../apps/elect/README.md) - UI testing and usage
-- [SQLITE_CONNECTION.md](./SQLITE_CONNECTION.md) - Database queries
+- [Main README](../README.md) - Server overview and setup
+- [Elect Webapp README](../../../apps/elect/README.md) - UI testing and usage
+- [DATABASE_INSPECTION.md](./DATABASE_INSPECTION.md) - Database inspection guide
+- [SQLITE_CONNECTION.md](./SQLITE_CONNECTION.md) - DataGrip connection details
 
