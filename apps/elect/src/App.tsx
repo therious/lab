@@ -24,20 +24,19 @@ export default function App() {
   const isOpen = votingStart && votingEnd && now >= votingStart && now <= votingEnd;
   const isUpcoming = votingStart && now < votingStart;
 
-  // Build list of available tabs based on election status
-  const availableTabs: Array<{path: string; label: string; element: React.ReactElement}> = [];
+  // Build list of available tabs based on election status (paths only, no elements)
+  const availableTabs: Array<{path: string; label: string}> = [];
   
   // Results tab is always available
-  availableTabs.push({path: '/results', label: 'Results', element: <ResultsView/>});
+  availableTabs.push({path: '/results', label: 'Results'});
   
   // Summary and ballot tabs only available if election is open (NOT upcoming)
   if (isOpen && currentElection) {
-    availableTabs.push({path: '/summary', label: 'Summary', element: <SummaryView/>});
+    availableTabs.push({path: '/summary', label: 'Summary'});
     ballots.forEach((ballot: Ballot) => {
       availableTabs.push({
         path: `/ballot/${encodeURIComponent(ballot.title)}`,
-        label: ballot.title,
-        element: <BallotView/>
+        label: ballot.title
       });
     });
   }
@@ -107,12 +106,24 @@ export default function App() {
 
   // If only one tab, render it directly without navbar
   if (availableTabs.length === 1) {
+    const singleTab = availableTabs[0];
+    let element: React.ReactElement;
+    if (singleTab.path === '/results') {
+      element = <ResultsView/>;
+    } else if (singleTab.path === '/summary') {
+      element = <SummaryView/>;
+    } else if (singleTab.path.startsWith('/ballot/')) {
+      element = <BallotView/>;
+    } else {
+      element = <ResultsView/>; // fallback
+    }
+    
     return (
       <Layout>
         <CenterBody>
           <Routes>
-            <Route path={availableTabs[0].path} element={availableTabs[0].element}/>
-            <Route path="*" element={availableTabs[0].element}/>
+            <Route path={singleTab.path} element={element}/>
+            <Route path="*" element={element}/>
           </Routes>
         </CenterBody>
       </Layout>
