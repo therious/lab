@@ -87,7 +87,7 @@ const CardsContainer = styled.div`
 const MuuriItem = styled.div`
   width: max-content;
   min-width: 280px;
-  margin: 0.75rem;
+  margin: 0.375rem;
   box-sizing: border-box;
 `;
 
@@ -118,7 +118,8 @@ const BandsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  width: max-content;
+  width: 100%;
+  min-width: max-content;
   box-sizing: border-box;
 `;
 
@@ -131,7 +132,8 @@ const BandRow = styled.div<{$color: string}>`
   border: 2px solid ${props => props.$color};
   border-radius: 4px;
   min-height: 2.5rem;
-  width: max-content;
+  width: 100%;
+  min-width: max-content;
   box-sizing: border-box;
 `;
 
@@ -186,28 +188,22 @@ const RankBadge = styled.span`
   text-align: center;
 `;
 
-const ConfirmButton = styled.button.attrs<{$confirmed: boolean}>(() => ({type: 'button'}))<{$confirmed: boolean}>`
-  padding: 0.5rem 1rem;
-  background: ${props => props.$confirmed ? '#4caf50' : '#2196f3'};
-  color: white;
-  border: none;
-  border-radius: 4px;
+const ConfirmToggle = styled.input.attrs(() => ({type: 'checkbox'}))`
+  width: 1.25rem;
+  height: 1.25rem;
   cursor: pointer;
-  font-weight: bold;
-  margin-top: 0.5rem;
+  margin: 0;
+  flex-shrink: 0;
+`;
 
-  &:hover:not(:disabled) {
-    background: ${props => props.$confirmed ? '#45a049' : '#1976d2'};
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    
-    &:hover {
-      background: ${props => props.$confirmed ? '#4caf50' : '#2196f3'};
-    }
-  }
+const ConfirmLabel = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #333;
+  user-select: none;
 `;
 
 const SubmitButton = styled.button<{$enabled: boolean}>`
@@ -452,31 +448,26 @@ function SummaryView() {
           >
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem'}}>
               <ElectionTitle style={{margin: 0}}>{ballot.title}</ElectionTitle>
-              {!submitted && (isConfirmed ? (
-                <ConfirmButton
-                  $confirmed={true}
-                  onClick={(e) => {
-                    e.preventDefault();
+              {!submitted && (
+                <ConfirmLabel
+                  onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
-                    actions.election.unconfirmBallot(ballot.title);
                   }}
-                  style={{margin: 0}}
                 >
-                  ✓ Confirmed (Click to Undo)
-                </ConfirmButton>
-              ) : (
-                <ConfirmButton
-                  $confirmed={false}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    actions.election.confirmBallot(ballot.title);
-                  }}
-                  style={{margin: 0}}
-                >
-                  Confirm This Ballot
-                </ConfirmButton>
-              ))}
+                  <ConfirmToggle
+                    checked={isConfirmed}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      e.stopPropagation();
+                      if (e.target.checked) {
+                        actions.election.confirmBallot(ballot.title);
+                      } else {
+                        actions.election.unconfirmBallot(ballot.title);
+                      }
+                    }}
+                  />
+                  <span>{isConfirmed ? 'Confirmed' : 'Confirm'}</span>
+                </ConfirmLabel>
+              )}
             </div>
             <BandsContainer>
               {BAND_CONFIG.map(({score, label, color}) => {
