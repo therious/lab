@@ -41,3 +41,4 @@ docs/exclude
 .specstory/**
 **/.specstory/
 **/.specstory/**
+discussions/
