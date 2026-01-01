@@ -942,6 +942,7 @@ function ResultsView() {
 export default function App() {
   const {ballots, currentElection, token, votes, confirmations} = useSelector((s: TotalState) => s.election);
   const location = useLocation();
+  const navigate = useNavigate();
   const sessionToken = sessionStorage.getItem('vote_token');
 
   // Sync sessionStorage token to Redux if present
@@ -980,16 +981,94 @@ export default function App() {
     return <LandingPage/>;
   }
 
+  // Determine election status
+  const now = new Date();
+  const votingEnd = currentElection.voting_end ? new Date(currentElection.voting_end) : null;
+  const votingStart = currentElection.voting_start ? new Date(currentElection.voting_start) : null;
+  const isClosed = votingEnd && now > votingEnd;
+  const isOpen = votingStart && votingEnd && now >= votingStart && now <= votingEnd;
+  const isUpcoming = votingStart && now < votingStart;
+
+  // Build list of available tabs based on election status
+  const availableTabs: Array<{path: string; label: string; element: React.ReactElement}> = [];
+  
+  // Results tab is always available
+  availableTabs.push({path: '/results', label: 'Results', element: <ResultsView/>});
+  
+  // Summary and ballot tabs only available if election is open or upcoming
+  if (isOpen || isUpcoming) {
+    availableTabs.push({path: '/summary', label: 'Summary', element: <SummaryView/>});
+    ballots.forEach((ballot: Ballot) => {
+      availableTabs.push({
+        path: `/ballot/${encodeURIComponent(ballot.title)}`,
+        label: ballot.title,
+        element: <BallotView/>
+      });
+    });
+  }
+
+  // If only one tab, render it directly without navbar
+  if (availableTabs.length === 1) {
+    // Redirect to the only available tab if not already there
+    React.useEffect(() => {
+      if (location.pathname !== availableTabs[0].path && !location.pathname.startsWith(availableTabs[0].path)) {
+        navigate(availableTabs[0].path, {replace: true});
+      }
+    }, [location.pathname, navigate, availableTabs]);
+    
+    return (
+      <Layout>
+        <CenterBody>
+          <Routes>
+            <Route path={availableTabs[0].path} element={availableTabs[0].element}/>
+            <Route path="*" element={availableTabs[0].element}/>
+          </Routes>
+        </CenterBody>
+      </Layout>
+    );
+  }
+
+  // Multiple tabs - show navbar and routes
+  // Redirect invalid paths to appropriate default
+  React.useEffect(() => {
+    const currentPath = location.pathname;
+    const isValidPath = availableTabs.some(tab => {
+      if (tab.path === '/summary' || tab.path === '/') {
+        return currentPath === '/summary' || currentPath === '/';
+      }
+      if (tab.path.startsWith('/ballot/')) {
+        return currentPath.startsWith('/ballot/');
+      }
+      return currentPath === tab.path;
+    });
+    
+    if (!isValidPath) {
+      // Redirect to first available tab (Results)
+      navigate(availableTabs[0].path, {replace: true});
+    }
+  }, [location.pathname, navigate, availableTabs]);
+
   return (
     <Layout>
       <Navbar>
-        <NavLink to="/results" $active={location.pathname === '/results'}>
-          Results
-        </NavLink>
-        <NavLink to="/summary" $active={location.pathname === '/summary' || location.pathname === '/'}>
-          Summary
-        </NavLink>
-        {ballots.map((ballot: Ballot) => {
+        {availableTabs.map(tab => {
+          // Skip individual ballot tabs from navbar (they're in the map below)
+          if (tab.path.startsWith('/ballot/')) {
+            return null;
+          }
+          
+          const isActive = tab.path === '/summary' 
+            ? (location.pathname === '/summary' || location.pathname === '/')
+            : location.pathname === tab.path;
+          
+          return (
+            <NavLink key={tab.path} to={tab.path} $active={isActive}>
+              {tab.label}
+            </NavLink>
+          );
+        })}
+        {/* Individual ballot tabs (only if election is open/upcoming) */}
+        {(isOpen || isUpcoming) && ballots.map((ballot: Ballot) => {
           const vote = votes[ballot.title];
           const isConfirmed = confirmations[ballot.title] || false;
           
@@ -1003,7 +1082,6 @@ export default function App() {
           }
           const allRanked = rankedCount === totalCandidates;
           const partiallyFilled = rankedCount > 0 && rankedCount < totalCandidates;
-          const nothingRanked = rankedCount === 0;
           
           return (
             <NavLink
