@@ -124,9 +124,7 @@ const BallotCard = styled.div`
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  min-width: 300px;
-  max-width: 450px;
+  width: max-content;
   height: fit-content;
   margin-bottom: 1.5rem;
   
@@ -373,7 +371,7 @@ function SummaryView() {
         </div>
         <MasonryGridContainer>
           <MasonryGrid
-            minWidth={350}
+            minWidth={300}
             gap={24}
           >
       {ballots.map((ballot: Ballot) => {
