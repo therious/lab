@@ -783,7 +783,7 @@ function ResultsView() {
           <div style={{marginBottom: '2rem', padding: '1rem', background: '#e8f4f8', borderRadius: '8px', border: '1px solid #ccc'}}>
             <p><strong>Total Ballots Cast:</strong> {metadata.total_votes || 0}</p>
             {votingStart && (
-              <p><strong>Voting Started:</strong> {votingStart.toLocaleString()}</p>
+              <p><strong>Voting {isUpcoming ? 'Starts' : 'Started'}:</strong> {votingStart.toLocaleString()}</p>
             )}
             {votingEnd && (
               <p><strong>Voting {isClosed ? 'Ended' : 'Ends'}:</strong> {votingEnd.toLocaleString()}</p>
