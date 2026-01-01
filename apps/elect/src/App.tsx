@@ -572,12 +572,22 @@ function ResultsView() {
         <h1>Election Results: {currentElection.title}</h1>
         <p style={{color: '#666'}}>No votes have been submitted yet.</p>
         {metadata && (
-          <div style={{marginTop: '1rem', padding: '1rem', background: '#f5f5f5', borderRadius: '4px'}}>
-            <p><strong>Total Ballots Cast:</strong> {metadata.total_votes || 0}</p>
-            {metadata.voting_end && (
-              <p><strong>Voting Ends:</strong> {new Date(metadata.voting_end).toLocaleString()}</p>
+          <>
+            <div style={{marginTop: '1rem', padding: '1rem', background: '#f5f5f5', borderRadius: '4px'}}>
+              <p><strong>Total Ballots Cast:</strong> {metadata.total_votes || 0}</p>
+              {metadata.voting_end && (
+                <p><strong>Voting Ends:</strong> {new Date(metadata.voting_end).toLocaleString()}</p>
+              )}
+            </div>
+            {metadata.voting_start && metadata.voting_end && (
+              <VoteTimeline
+                voteTimestamps={metadata.vote_timestamps || []}
+                votingStart={metadata.voting_start}
+                votingEnd={metadata.voting_end}
+                totalVotes={metadata.total_votes || 0}
+              />
             )}
-          </div>
+          </>
         )}
       </div>
     );

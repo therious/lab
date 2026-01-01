@@ -23,7 +23,7 @@ defmodule Elections.Voting do
              {:ok, _vote} <- create_vote(repo, election, vote_token, ballot_data) do
           vote_token.view_token
         else
-          {:error, reason} = error -> 
+          {:error, _reason} = error -> 
             # Pass the error tuple to rollback - Ecto will wrap it in {:error, ...}
             repo.rollback(error)
           error -> 
@@ -458,13 +458,13 @@ defmodule Elections.Voting do
     rescue
       e ->
         require Logger
-        Logger.warn("Algorithm #{method_name} failed: #{inspect(e)}")
+        Logger.warning("Algorithm #{method_name} failed: #{inspect(e)}")
         %{method: method_name, winners: [], status: "error", error: "Calculation failed"}
     end
   end
 
   # Build empty results structure for ballots with no votes
-  defp build_empty_results(candidates, number_of_winners) do
+  defp build_empty_results(candidates, _number_of_winners) do
     # Initialize scores map with all candidates at 0.0
     candidate_names = Enum.map(candidates, fn c -> Map.get(c, "name", "") end)
     empty_scores = Enum.into(candidate_names, %{}, fn name -> {name, 0.0} end)

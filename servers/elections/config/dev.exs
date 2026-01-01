@@ -61,6 +61,10 @@ config :elections, dev_routes: true
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"
 
+# Reduce Ecto query logging verbosity - only log warnings and errors
+config :elections, Elections.Repo,
+  log: false  # Set to :info or false to reduce query debug output
+
 # Set a higher stacktrace during development. Avoid configuring such
 # in production as building large stacktraces may be expensive.
 config :phoenix, :stacktrace_depth, 20
