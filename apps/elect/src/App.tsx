@@ -122,12 +122,12 @@ const BallotCard = styled.div`
   border-radius: 8px;
   padding: 1rem;
   cursor: pointer;
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
   width: max-content;
   min-width: 300px;
   max-width: 100%;
-  flex: 0 1 auto;
+  align-self: flex-start;
   
   &:hover {
     background-color: #f5f5f5;
@@ -353,7 +353,7 @@ function SummaryView() {
       )}
       
       <SummaryContainer>
-        <div style={{width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
+        <div style={{width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexBasis: '100%'}}>
           <h1 style={{margin: 0}}>{currentElection?.title || 'Election Summary'}</h1>
           {ballots.length > 0 && !submitted && (
             <SubmitButton 
