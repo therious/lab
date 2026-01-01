@@ -48,13 +48,12 @@ const CenterBody = styled.main`
 
 const SummaryContainer = styled.div`
   padding: 1rem;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 1.5rem;
   height: 100%;
   overflow-y: auto;
-  align-items: flex-start;
+  align-items: start;
 `;
 
 const ElectionSummaryCard = styled(Link)`
@@ -84,7 +83,7 @@ const BandsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  width: max-content;
+  width: 100%;
   box-sizing: border-box;
 `;
 
@@ -97,7 +96,7 @@ const BandRow = styled.div<{$color: string}>`
   border: 2px solid ${props => props.$color};
   border-radius: 4px;
   min-height: 2.5rem;
-  width: max-content;
+  width: 100%;
   box-sizing: border-box;
 `;
 
@@ -124,10 +123,9 @@ const BallotCard = styled.div`
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  width: max-content;
-  min-width: 300px;
+  width: 100%;
   max-width: 100%;
-  align-self: flex-start;
+  height: fit-content;
   
   &:hover {
     background-color: #f5f5f5;
@@ -353,7 +351,7 @@ function SummaryView() {
       )}
       
       <SummaryContainer>
-        <div style={{width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexBasis: '100%'}}>
+        <div style={{gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
           <h1 style={{margin: 0}}>{currentElection?.title || 'Election Summary'}</h1>
           {ballots.length > 0 && !submitted && (
             <SubmitButton 
