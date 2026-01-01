@@ -128,8 +128,7 @@ const BallotDescription = styled.p`
   color: #666;
   font-size: 0.9rem;
   margin: 0.5rem 0;
-  width: max-content;
-  max-width: 100%;
+  width: 100%;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -137,6 +136,7 @@ const BallotDescription = styled.p`
   text-overflow: ellipsis;
   line-height: 1.4;
   max-height: calc(1.4em * 3);
+  box-sizing: border-box;
 `;
 
 const CandidateName = styled.span`
