@@ -304,15 +304,42 @@ export function SummaryView() {
   return (
     <>
       {showSuccessModal && (
-        <ModalOverlay onClick={() => setShowSuccessModal(false)}>
-          <ModalContent onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <ModalOverlay onClick={() => {
+          actions.election.logout();
+          navigate('/');
+        }}>
+          <ModalContent 
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === 'Enter') {
+                actions.election.logout();
+                navigate('/');
+              }
+            }}
+            tabIndex={0}
+          >
             <ModalTitle>Vote Submitted Successfully!</ModalTitle>
             <ModalMessage>
               Your vote has been recorded. You can view your submitted vote using your view token if needed.
             </ModalMessage>
             <ModalButtons>
-              <ModalButton $primary onClick={() => setShowSuccessModal(false)}>
-                Close
+              <ModalButton 
+                $primary 
+                onClick={() => {
+                  actions.election.logout();
+                  navigate('/');
+                }}
+                autoFocus
+              >
+                Logout
+              </ModalButton>
+              <ModalButton 
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  navigate('/results');
+                }}
+              >
+                View Interim Results
               </ModalButton>
             </ModalButtons>
           </ModalContent>
