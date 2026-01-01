@@ -23,14 +23,20 @@ defmodule Elections.Voting do
              {:ok, _vote} <- create_vote(repo, election, vote_token, ballot_data) do
           vote_token.view_token
         else
-          error -> repo.rollback(error)
+          {:error, reason} = error -> 
+            # Pass the error tuple to rollback - Ecto will wrap it in {:error, ...}
+            repo.rollback(error)
+          error -> 
+            # Handle non-tuple errors (shouldn't happen, but be safe)
+            repo.rollback({:error, error})
         end
       end)
       
-      # Unwrap transaction result - if rolled back, return the error directly
+      # Unwrap transaction result - Ecto wraps rollback values in {:error, value}
       case result do
         {:ok, view_token} -> {:ok, view_token}
-        {:error, error} -> error  # This is the rolled back error tuple
+        {:error, {:error, reason}} -> {:error, reason}  # Unwrap double-wrapped error
+        {:error, error} -> error  # Single-wrapped error (shouldn't happen with our code)
         other -> {:error, other}  # Fallback for unexpected transaction results
       end
     end)
