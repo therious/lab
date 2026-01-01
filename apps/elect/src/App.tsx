@@ -55,7 +55,7 @@ export default function App() {
     // We just need to load the election if we have the identifier but no election object
     if (electionIdentifier && !currentElection && token) {
       setIsRestoring(true);
-      const viewToken = viewToken || sessionStorage.getItem('view_token');
+      const sessionViewToken = viewToken || sessionStorage.getItem('view_token');
       
       // First, validate token status with server (authoritative source)
       const validateToken = fetch('/api/tokens/check', {
@@ -101,7 +101,7 @@ export default function App() {
         .then(([tokenStatus, electionData]) => {
           // Initialize election (this will also persist to sessionStorage)
           if (electionData.election && electionData.election.ballots) {
-            actions.election.initializeElection(electionData.election, token, viewToken || '');
+            actions.election.initializeElection(electionData.election, token, sessionViewToken || '');
           } else if (electionData.ballots) {
             actions.election.initializeElection(
               {
@@ -113,7 +113,7 @@ export default function App() {
                 voting_end: electionData.voting_end,
               },
               token,
-              viewToken || ''
+              sessionViewToken || ''
             );
           }
           
