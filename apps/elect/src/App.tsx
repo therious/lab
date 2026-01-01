@@ -39,10 +39,12 @@ const CenterBody = styled.main`
 const SummaryContainer = styled.div`
   padding: 1rem;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 1.5rem;
   height: 100%;
   overflow-y: auto;
+  align-items: flex-start;
 `;
 
 const ElectionSummaryCard = styled(Link)`
@@ -338,10 +340,30 @@ function SummaryView() {
           });
         }
         
+        // Find the widest band to determine card width
+        const widestBand = BAND_CONFIG.reduce((max, {score}) => {
+          const candidates = vote[score] || [];
+          return candidates.length > max.length ? candidates : max;
+        }, [] as string[]);
+        
+        // Get unranked candidates and limit to 3, then show "N others"
+        const unrankedCandidates = vote['unranked'] || [];
+        const unrankedToShow = unrankedCandidates.slice(0, 3);
+        const unrankedRemaining = unrankedCandidates.length - 3;
+        
         return (
           <div 
             key={ballot.title} 
-            style={{border: '2px solid #ccc', borderRadius: '8px', padding: '1rem', marginBottom: '1rem', cursor: 'pointer'}}
+            style={{
+              border: '2px solid #ccc', 
+              borderRadius: '8px', 
+              padding: '1rem', 
+              cursor: 'pointer',
+              width: 'fit-content',
+              minWidth: '300px',
+              maxWidth: '100%',
+              flex: '0 1 auto'
+            }}
             onClick={() => {
               const encodedTitle = encodeURIComponent(ballot.title);
               navigate(`/ballot/${encodedTitle}`);
@@ -358,16 +380,28 @@ function SummaryView() {
                   <BandRow key={score} $color={color}>
                     <BandLabel>{label}</BandLabel>
                     <CandidatesList>
-                      {candidates.map((candidateName: string, index: number) => (
-                        <CandidateName key={`${score}-${candidateName}-${index}`}>
-                          {score === 'unranked' ? (
-                            <RankBadge>NR</RankBadge>
-                          ) : (
-                            candidateRanks[candidateName] && <RankBadge>{candidateRanks[candidateName]}</RankBadge>
+                      {score === 'unranked' ? (
+                        <>
+                          {unrankedToShow.map((candidateName: string, index: number) => (
+                            <CandidateName key={`${score}-${candidateName}-${index}`}>
+                              <RankBadge>NR</RankBadge>
+                              {candidateName}
+                            </CandidateName>
+                          ))}
+                          {unrankedRemaining > 0 && (
+                            <CandidateName style={{fontStyle: 'italic', color: '#666'}}>
+                              {unrankedRemaining} other{unrankedRemaining !== 1 ? 's' : ''}
+                            </CandidateName>
                           )}
-                          {candidateName}
-                        </CandidateName>
-                      ))}
+                        </>
+                      ) : (
+                        candidates.map((candidateName: string, index: number) => (
+                          <CandidateName key={`${score}-${candidateName}-${index}`}>
+                            {candidateRanks[candidateName] && <RankBadge>{candidateRanks[candidateName]}</RankBadge>}
+                            {candidateName}
+                          </CandidateName>
+                        ))
+                      )}
                     </CandidatesList>
                   </BandRow>
                 );

@@ -39,7 +39,16 @@ defmodule Elections.Voting do
       
       # Unwrap transaction result - Ecto wraps rollback values in {:error, value}
       case result do
-        {:ok, view_token} -> {:ok, view_token}
+        {:ok, view_token} ->
+          # TEMP DEBUG: Verify vote was actually committed
+          require Logger
+          case get_election(repo, election_identifier) do
+            {:ok, election} ->
+              vote_count = repo.aggregate(from(v in Vote, where: v.election_id == ^election.id), :count)
+              Logger.info("[DEBUG] submit_vote: After transaction, vote_count=#{vote_count} for election_id=#{election.id}")
+            _ -> :ok
+          end
+          {:ok, view_token}
         {:error, {:error, reason}} -> {:error, reason}  # Unwrap double-wrapped error
         {:error, error} -> error  # Single-wrapped error (shouldn't happen with our code)
         other -> {:error, other}  # Fallback for unexpected transaction results
