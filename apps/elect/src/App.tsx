@@ -264,6 +264,165 @@ const ModalButton = styled.button<{$primary?: boolean}>`
   }
 `;
 
+// Experimental component with equal-width bands
+function BallotCardWithEqualWidthBands({
+  ballot,
+  vote,
+  isConfirmed,
+  submitted,
+  candidateRanks,
+  unrankedCandidates,
+  unrankedToShow,
+  unrankedRemaining,
+  shouldShowAll,
+  navigate
+}: {
+  ballot: Ballot;
+  vote: any;
+  isConfirmed: boolean;
+  submitted: boolean;
+  candidateRanks: Record<string, number>;
+  unrankedCandidates: string[];
+  unrankedToShow: string[];
+  unrankedRemaining: number;
+  shouldShowAll: boolean;
+  navigate: (path: string) => void;
+}) {
+  const bandsContainerRef = useRef<HTMLDivElement>(null);
+  const [maxBandWidth, setMaxBandWidth] = useState<number | null>(null);
+  const [isMeasuring, setIsMeasuring] = useState(true);
+
+  useEffect(() => {
+    if (!bandsContainerRef.current) return;
+    
+    // Use requestAnimationFrame to minimize visual artifacts
+    const measureBands = () => {
+      const bandRows = bandsContainerRef.current?.querySelectorAll('[data-band-row]');
+      if (!bandRows || bandRows.length === 0) return;
+      
+      let maxWidth = 0;
+      bandRows.forEach((row) => {
+        const width = (row as HTMLElement).getBoundingClientRect().width;
+        if (width > maxWidth) maxWidth = width;
+      });
+      
+      if (maxWidth > 0) {
+        setMaxBandWidth(maxWidth);
+        setIsMeasuring(false);
+      }
+    };
+    
+    // Small delay to ensure DOM is ready, then measure
+    const timeoutId = setTimeout(() => {
+      requestAnimationFrame(measureBands);
+    }, 0);
+    
+    return () => clearTimeout(timeoutId);
+  }, [vote, ballot.title]);
+
+  return (
+    <BallotCard
+      onClick={() => {
+        const encodedTitle = encodeURIComponent(ballot.title);
+        navigate(`/ballot/${encodedTitle}`);
+      }}
+    >
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem'}}>
+        <ElectionTitle style={{margin: 0}}>{ballot.title}</ElectionTitle>
+        {!submitted && (isConfirmed ? (
+          <ConfirmButton
+            $confirmed={true}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              actions.election.unconfirmBallot(ballot.title);
+            }}
+            style={{margin: 0}}
+          >
+            ✓ Confirmed (Click to Undo)
+          </ConfirmButton>
+        ) : (
+          <ConfirmButton
+            $confirmed={false}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              actions.election.confirmBallot(ballot.title);
+            }}
+            style={{margin: 0}}
+          >
+            Confirm This Ballot
+          </ConfirmButton>
+        ))}
+      </div>
+      {ballot.description && (
+        <BallotDescription>{ballot.description}</BallotDescription>
+      )}
+      <BandsContainer 
+        ref={bandsContainerRef}
+        style={isMeasuring ? { opacity: 0 } : { opacity: 1 }}
+      >
+        {BAND_CONFIG.map(({score, label, color}) => {
+          const candidates = vote[score] || [];
+          if (candidates.length === 0) return null;
+          
+          return (
+            <BandRow 
+              key={score} 
+              $color={color}
+              data-band-row
+              style={maxBandWidth ? { width: `${maxBandWidth}px` } : undefined}
+            >
+              <BandLabel>{label}</BandLabel>
+              <CandidatesList>
+                {score === 'unranked' ? (
+                  <>
+                    {shouldShowAll ? (
+                      unrankedCandidates.map((candidateName: string, index: number) => (
+                        <CandidateName key={`${score}-${candidateName}-${index}`}>
+                          <RankBadge>NR</RankBadge>
+                          {candidateName}
+                        </CandidateName>
+                      ))
+                    ) : (
+                      <>
+                        {unrankedToShow.map((candidateName: string, index: number) => (
+                          <CandidateName key={`${score}-${candidateName}-${index}`}>
+                            <RankBadge>NR</RankBadge>
+                            {candidateName}
+                          </CandidateName>
+                        ))}
+                        {unrankedRemaining > 1 && (
+                          <CandidateName style={{fontStyle: 'italic', color: '#666'}}>
+                            {unrankedRemaining} others
+                          </CandidateName>
+                        )}
+                        {unrankedRemaining === 1 && (
+                          <CandidateName>
+                            <RankBadge>NR</RankBadge>
+                            {unrankedCandidates[3]}
+                          </CandidateName>
+                        )}
+                      </>
+                    )}
+                  </>
+                ) : (
+                  candidates.map((candidateName: string, index: number) => (
+                    <CandidateName key={`${score}-${candidateName}-${index}`}>
+                      {candidateRanks[candidateName] && <RankBadge>{candidateRanks[candidateName]}</RankBadge>}
+                      {candidateName}
+                    </CandidateName>
+                  ))
+                )}
+              </CandidatesList>
+            </BandRow>
+          );
+        })}
+      </BandsContainer>
+    </BallotCard>
+  );
+}
+
 function SummaryView() {
   const {ballots, votes, confirmations, currentElection, token, submitted} = useSelector((s: TotalState) => s.election);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
