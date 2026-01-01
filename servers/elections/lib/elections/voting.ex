@@ -95,20 +95,10 @@ defmodule Elections.Voting do
         election ->
           # Always allow results calculation, even if service window not open
           # The frontend can decide whether to show them
-          # Try to calculate results, but always return something even on error
-          try do
-            results = calculate_all_results(repo, election)
-            {:ok, results}
-          rescue
-            e ->
-              # Log the error for debugging
-              require Logger
-              Logger.error("Error calculating results: #{inspect(e)}")
-              # Return partial results with error information instead of failing completely
-              # This allows the frontend to show what it can (stats, timeline, etc.)
-              partial_results = build_partial_results_on_error(repo, election, e)
-              {:ok, partial_results}
-          end
+          # calculate_all_results is designed to NEVER fail - it always returns basic stats
+          # even if all algorithms fail
+          results = calculate_all_results(repo, election)
+          {:ok, results}
       end
     end)
   end
