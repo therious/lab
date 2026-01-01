@@ -77,6 +77,7 @@ defmodule Elections.Voting do
         {:ok, election} ->
           # Always allow results calculation, even if service window not open
           # The frontend can decide whether to show them
+          # Try to calculate results, but always return something even on error
           try do
             results = calculate_all_results(repo, election)
             {:ok, results}
@@ -85,21 +86,88 @@ defmodule Elections.Voting do
               # Log the error for debugging
               require Logger
               Logger.error("Error calculating results: #{inspect(e)}")
-              error_message = Exception.message(e)
-              # Provide a user-friendly error message if the exception message is empty or unhelpful
-              user_message = cond do
-                error_message == "" or error_message == nil ->
-                  "An error occurred while calculating the election results. Please try again later or contact support if the problem persists."
-                true ->
-                  "An error occurred while calculating the election results: #{error_message}. Please try again later or contact support if the problem persists."
-              end
-              {:error, user_message}
+              # Return partial results with error information instead of failing completely
+              # This allows the frontend to show what it can (stats, timeline, etc.)
+              partial_results = build_partial_results_on_error(repo, election, e)
+              {:ok, partial_results}
           end
 
         error ->
           error
       end
     end)
+  end
+
+  # Build partial results structure when calculation fails
+  defp build_partial_results_on_error(repo, election, error) do
+    # Try to get at least vote count and timestamps
+    votes = try do
+      repo.all(from(v in Vote, where: v.election_id == ^election.id, order_by: [asc: v.inserted_at]))
+    rescue
+      _ -> []
+    end
+
+    vote_timestamps = Enum.map(votes, fn vote -> vote.inserted_at end)
+    ballots = case Map.get(election.config || %{}, "ballots", []) do
+      ballots when is_list(ballots) -> ballots
+      _ -> []
+    end
+
+    # Build minimal results structure
+    results = Enum.map(ballots, fn ballot ->
+      ballot = if is_map(ballot), do: ballot, else: %{}
+      candidates = case Map.get(ballot, "candidates", []) do
+        candidates when is_list(candidates) -> candidates
+        _ -> []
+      end
+      number_of_winners = case Map.get(ballot, "number_of_winners", 1) do
+        n when is_integer(n) and n > 0 -> n
+        _ -> 1
+      end
+
+      # Return error status for all algorithms
+      error_result = %{
+        method: "error",
+        winners: [],
+        status: "error",
+        error: "Calculation failed: #{Exception.message(error)}"
+      }
+
+      %{
+        ballot_title: Map.get(ballot, "title", "Untitled Ballot"),
+        candidates: candidates,
+        number_of_winners: number_of_winners,
+        vote_count: 0,
+        results: %{
+          ranked_pairs: error_result,
+          shulze: error_result,
+          score: error_result,
+          irv_stv: error_result,
+          coombs: error_result
+        }
+      }
+    end)
+
+    safe_serialize_dt = fn dt ->
+      try do
+        if dt, do: DateTime.to_iso8601(dt), else: nil
+      rescue
+        _ -> nil
+      end
+    end
+
+    %{
+      results: results,
+      metadata: %{
+        total_votes: length(votes),
+        vote_timestamps: Enum.map(vote_timestamps, safe_serialize_dt) |> Enum.filter(&(&1 != nil)),
+        voting_start: safe_serialize_dt.(election.voting_start),
+        voting_end: safe_serialize_dt.(election.voting_end),
+        election_identifier: election.identifier || ""
+      },
+      calculation_error: true,
+      error_message: Exception.message(error)
+    }
   end
 
   @doc """
