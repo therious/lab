@@ -1018,9 +1018,9 @@ export default function App() {
                 )}
                 {!isConfirmed && allRanked && (
                   <span style={{
-                    color: '#666',
+                    color: '#2e7d32',
                     fontSize: '1rem',
-                    border: '2px solid #666',
+                    border: '2px solid #a5d6a7',
                     borderRadius: '50%',
                     width: '1.2rem',
                     height: '1.2rem',
@@ -1028,7 +1028,7 @@ export default function App() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 'bold',
-                    background: '#4caf50'
+                    background: '#c8e6c9'
                   }}>
                     ✓
                   </span>
