@@ -20,18 +20,52 @@ defmodule Elections.Algorithms.Score do
 
     number_of_winners = Map.get(ballot, "number_of_winners", 1)
     
-    # Select top N winners
-    winners = candidate_scores 
+    # Select top N winners with ordering information
+    winners_with_scores = candidate_scores 
       |> Enum.sort_by(fn {_candidate, score} -> -score end)
-      |> Enum.take(number_of_winners) 
-      |> Enum.map(&elem(&1, 0))
+      |> Enum.take(number_of_winners)
+    
+    winners = Enum.map(winners_with_scores, &elem(&1, 0))
+    
+    # Build winner_order with statistical tie detection
+    winner_order = build_winner_order(winners_with_scores, "statistical")
 
     %{
       method: "score",
       winners: winners,
       scores: candidate_scores,
+      winner_order: winner_order,
       status: if(length(winners) >= number_of_winners, do: "conclusive", else: "inconclusive")
     }
+  end
+
+  defp build_winner_order(winners_with_metrics, tie_type) do
+    # Group by metric value to detect ties
+    grouped = Enum.group_by(winners_with_metrics, fn {_candidate, metric} -> metric end)
+    
+    # Build ordered list with positions
+    {_, order_list} = 
+      Enum.reduce(Enum.sort_by(Map.keys(grouped), &(-&1)), {1, []}, fn metric_value, {next_position, acc} ->
+        candidates_at_this_metric = Map.get(grouped, metric_value)
+        position = next_position
+        tied = length(candidates_at_this_metric) > 1
+        
+        candidates_order = 
+          Enum.map(candidates_at_this_metric, fn {candidate, _metric} ->
+            %{
+              candidate: candidate,
+              position: position,
+              metric_value: metric_value,
+              tied: tied,
+              tie_type: if(tied, do: tie_type, else: nil)
+            }
+          end)
+        
+        new_next_position = next_position + length(candidates_at_this_metric)
+        {new_next_position, acc ++ candidates_order}
+      end)
+    
+    order_list
   end
 
   defp extract_scores(votes, _config) do

@@ -5,13 +5,75 @@ defmodule Elections.Algorithms.IRVSTV do
 
   def calculate(ballot, votes) do
     rankings = extract_rankings(votes, ballot)
-    winners = run_irv_stv(rankings, ballot, Map.get(ballot, "number_of_winners", 1))
+    winners_with_counts = run_irv_stv(rankings, ballot, Map.get(ballot, "number_of_winners", 1))
+    
+    # Extract winners and build ordering
+    winners = Enum.map(winners_with_counts, fn 
+      {winner, _count} -> winner
+      winner when is_binary(winner) -> winner  # Backward compatibility
+    end)
+    
+    # Build winner_order with statistical tie detection (vote counts are direct preference)
+    winners_with_metrics = Enum.map(winners_with_counts, fn
+      {winner, count} -> {winner, count}
+      winner when is_binary(winner) -> {winner, nil}  # No count available
+    end)
+    
+    winner_order = if Enum.all?(winners_with_metrics, fn {_w, count} -> count != nil end) do
+      build_winner_order(winners_with_metrics, "statistical")
+    else
+      # No vote counts available - ambiguous ordering
+      build_ambiguous_order(winners)
+    end
 
     %{
       method: if(Map.get(ballot, "number_of_winners", 1) == 1, do: "irv", else: "stv"),
       winners: winners,
+      winner_order: winner_order,
       status: if(length(winners) >= Map.get(ballot, "number_of_winners", 1), do: "conclusive", else: "inconclusive")
     }
+  end
+  
+  defp build_winner_order(winners_with_metrics, tie_type) do
+    # Group by metric value to detect ties
+    grouped = Enum.group_by(winners_with_metrics, fn {_candidate, metric} -> metric end)
+    
+    # Build ordered list with positions
+    {_, order_list} = 
+      Enum.reduce(Enum.sort_by(Map.keys(grouped), fn m -> if m, do: -m, else: 0 end), {1, []}, fn metric_value, {next_position, acc} ->
+        candidates_at_this_metric = Map.get(grouped, metric_value)
+        position = next_position
+        tied = length(candidates_at_this_metric) > 1
+        
+        candidates_order = 
+          Enum.map(candidates_at_this_metric, fn {candidate, _metric} ->
+            %{
+              candidate: candidate,
+              position: position,
+              metric_value: metric_value,
+              tied: tied,
+              tie_type: if(tied, do: tie_type, else: nil)
+            }
+          end)
+        
+        new_next_position = next_position + length(candidates_at_this_metric)
+        {new_next_position, acc ++ candidates_order}
+      end)
+    
+    order_list
+  end
+  
+  defp build_ambiguous_order(winners) do
+    # No ordering information - all are ambiguously tied
+    Enum.map(winners, fn winner ->
+      %{
+        candidate: winner,
+        position: 1,
+        metric_value: nil,
+        tied: length(winners) > 1,
+        tie_type: if(length(winners) > 1, do: "ambiguous", else: nil)
+      }
+    end)
   end
 
   defp extract_rankings(votes, config) do
@@ -40,7 +102,8 @@ defmodule Elections.Algorithms.IRVSTV do
 
     run_rounds(rankings, candidate_names, [], number_of_winners, quota)
   end
-
+  
+  # Handle both old format (list of names) and new format (list of {name, count})
   defp run_rounds(_rankings, _remaining, winners, number_of_winners, _quota) when length(winners) >= number_of_winners do
     winners
   end
@@ -54,11 +117,14 @@ defmodule Elections.Algorithms.IRVSTV do
       Enum.split_with(first_prefs, fn {_candidate, count} -> count >= quota end)
 
     new_winners_names = Enum.map(new_winners, &elem(&1, 0))
+    
+    # Track winners with vote counts for ordering
+    new_winners_with_counts = Enum.map(new_winners, fn {candidate, count} -> {candidate, count} end)
 
     if length(new_winners_names) > 0 do
       # Transfer surplus votes
       updated_rankings = transfer_surplus_votes(rankings, new_winners_names, quota)
-      run_rounds(updated_rankings, still_remaining |> Enum.map(&elem(&1, 0)), winners ++ new_winners_names, number_of_winners, quota)
+      run_rounds(updated_rankings, still_remaining |> Enum.map(&elem(&1, 0)), winners ++ new_winners_with_counts, number_of_winners, quota)
     else
       # Eliminate lowest candidate
       # Guard against empty still_remaining (shouldn't happen, but safety check)

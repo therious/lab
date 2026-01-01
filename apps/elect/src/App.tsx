@@ -1010,12 +1010,82 @@ function ResultsView() {
                             statusLabel = 'Unknown';
                           }
                           
+                          // Format winners with ordering
+                          const formatWinnersWithOrdering = (winners: string[], winnerOrder?: any[]) => {
+                            if (!winnerOrder || winnerOrder.length === 0) {
+                              // Fallback to simple list if no ordering available
+                              return winners.join(', ');
+                            }
+                            
+                            // Build ordered display with tooltips
+                            const parts: JSX.Element[] = [];
+                            
+                            winnerOrder.forEach((orderItem, idx) => {
+                              if (idx > 0) {
+                                parts.push(<span key={`sep-${idx}`}>, </span>);
+                              }
+                              
+                              const position = orderItem.position;
+                              const tied = orderItem.tied;
+                              const tieType = orderItem.tie_type;
+                              
+                              // Determine symbol and tooltip
+                              let symbol = '';
+                              let tooltipText = '';
+                              
+                              if (tied && tieType) {
+                                if (tieType === 'statistical') {
+                                  symbol = '';
+                                  // Find all candidates at this position for tooltip
+                                  const tiedCandidates = winnerOrder
+                                    .filter(item => item.position === position)
+                                    .map(item => item.candidate);
+                                  tooltipText = `${tiedCandidates.join(', ')} are statistically tied for ${position}${position === 1 ? 'st' : position === 2 ? 'nd' : position === 3 ? 'rd' : 'th'} place`;
+                                } else if (tieType === 'peculiar') {
+                                  symbol = '*';
+                                  const tiedCandidates = winnerOrder
+                                    .filter(item => item.position === position)
+                                    .map(item => item.candidate);
+                                  tooltipText = `${tiedCandidates.join(', ')} are tied for ${position}${position === 1 ? 'st' : position === 2 ? 'nd' : position === 3 ? 'rd' : 'th'} place by metrics peculiar to this voting method`;
+                                } else if (tieType === 'ambiguous') {
+                                  symbol = '†';
+                                  const tiedCandidates = winnerOrder
+                                    .filter(item => item.position === position)
+                                    .map(item => item.candidate);
+                                  tooltipText = `${tiedCandidates.join(', ')} are only effectively tied for ${position}${position === 1 ? 'st' : position === 2 ? 'nd' : position === 3 ? 'rd' : 'th'} place by this algorithm, having no method with which to order relative to each other`;
+                                }
+                              }
+                              
+                              // Create tooltip element - numbers and symbols same size, not nested superscript
+                              const superscriptStyle: React.CSSProperties = {
+                                fontSize: '0.85em',
+                                verticalAlign: 'super',
+                                cursor: tied ? 'help' : 'default',
+                                textDecoration: tied ? 'underline' : 'none',
+                                textDecorationStyle: tied ? 'dotted' : 'solid',
+                                color: tied ? '#0066cc' : 'inherit',
+                                display: 'inline-block'
+                              };
+                              
+                              parts.push(
+                                <span key={orderItem.candidate}>
+                                  {orderItem.candidate}
+                                  <sup style={superscriptStyle} title={tied ? tooltipText : undefined}>
+                                    {position}{symbol}
+                                  </sup>
+                                </span>
+                              );
+                            });
+                            
+                            return <span>{parts}</span>;
+                          };
+                          
                           return (
                             <div key={method} style={{marginTop: '0.5rem', padding: '0.5rem', background: '#f5f5f5', borderRadius: '4px', borderLeft: `3px solid ${statusColor}`}}>
                               <strong>{formatMethodName(method)}:</strong>
                               {methodResult.winners && methodResult.winners.length > 0 ? (
                                 <span style={{marginLeft: '0.5rem'}}>
-                                  {methodResult.winners.join(', ')}
+                                  {formatWinnersWithOrdering(methodResult.winners, methodResult.winner_order)}
                                 </span>
                               ) : (
                                 <span style={{marginLeft: '0.5rem', color: '#666', fontStyle: 'italic'}}>

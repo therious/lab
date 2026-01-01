@@ -9,14 +9,62 @@ defmodule Elections.Algorithms.Schulze do
     pairwise = build_pairwise_matrix(rankings, ballot)
     strongest_paths = compute_strongest_paths(pairwise, ballot)
     winners = determine_winners(strongest_paths, ballot, Map.get(ballot, "number_of_winners", 1))
+    
+    # Calculate path strengths for all winners for ordering
+    candidates = get_in(ballot, ["candidates"]) || []
+    candidate_names = Enum.map(candidates, & &1["name"])
+    
+    winners_with_strength = 
+      Enum.map(winners, fn winner ->
+        total_strength =
+          Enum.sum(
+            Enum.map(candidate_names, fn other ->
+              if winner != other, do: Map.get(strongest_paths, {winner, other}, 0), else: 0
+            end)
+          )
+        {winner, total_strength}
+      end)
+    
+    # Build winner_order with peculiar tie detection
+    winner_order = build_winner_order(winners_with_strength, "peculiar")
 
     %{
       method: "schulze",
       winners: winners,
       pairwise: pairwise,
       strongest_paths: strongest_paths,
+      winner_order: winner_order,
       status: if(length(winners) >= Map.get(ballot, "number_of_winners", 1), do: "conclusive", else: "inconclusive")
     }
+  end
+
+  defp build_winner_order(winners_with_metrics, tie_type) do
+    # Group by metric value to detect ties
+    grouped = Enum.group_by(winners_with_metrics, fn {_candidate, metric} -> metric end)
+    
+    # Build ordered list with positions
+    {_, order_list} = 
+      Enum.reduce(Enum.sort_by(Map.keys(grouped), &(-&1)), {1, []}, fn metric_value, {next_position, acc} ->
+        candidates_at_this_metric = Map.get(grouped, metric_value)
+        position = next_position
+        tied = length(candidates_at_this_metric) > 1
+        
+        candidates_order = 
+          Enum.map(candidates_at_this_metric, fn {candidate, _metric} ->
+            %{
+              candidate: candidate,
+              position: position,
+              metric_value: metric_value,
+              tied: tied,
+              tie_type: if(tied, do: tie_type, else: nil)
+            }
+          end)
+        
+        new_next_position = next_position + length(candidates_at_this_metric)
+        {new_next_position, acc ++ candidates_order}
+      end)
+    
+    order_list
   end
 
   defp extract_rankings(votes, config) do

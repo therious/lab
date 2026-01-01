@@ -20,12 +20,26 @@ defmodule Elections.Algorithms.RankedPairs do
     
     # Determine winners from locked graph
     winners = determine_winners(locked_pairs, ballot, number_of_winners)
+    
+    # Calculate win counts for ordering
+    win_counts =
+      Enum.reduce(locked_pairs, %{}, fn {winner, _loser, _count}, acc ->
+        Map.update(acc, winner, 1, &(&1 + 1))
+      end)
+    
+    # Build winner_order with peculiar tie detection
+    winners_with_counts = 
+      winners
+      |> Enum.map(fn winner -> {winner, Map.get(win_counts, winner, 0)} end)
+    
+    winner_order = build_winner_order(winners_with_counts, "peculiar")
 
     %{
       method: "ranked_pairs",
       winners: winners,
       pairwise: pairwise,
       locked_pairs: locked_pairs,
+      winner_order: winner_order,
       status: if(length(winners) >= number_of_winners, do: "conclusive", else: "inconclusive")
     }
   end
@@ -147,15 +161,23 @@ defmodule Elections.Algorithms.RankedPairs do
         end)
       end)
 
+    # Always calculate win counts for ordering, even for Condorcet winners
+    win_counts =
+      Enum.reduce(locked_pairs, %{}, fn {winner, _loser, _count}, acc ->
+        Map.update(acc, winner, 1, &(&1 + 1))
+      end)
+
     if length(condorcet_winners) >= number_of_winners do
-      Enum.take(condorcet_winners, number_of_winners)
+      # Use win counts to order Condorcet winners
+      winners_with_counts = 
+        condorcet_winners
+        |> Enum.map(fn name -> {name, Map.get(win_counts, name, 0)} end)
+        |> Enum.sort_by(fn {_name, wins} -> -wins end)
+        |> Enum.take(number_of_winners)
+      
+      Enum.map(winners_with_counts, &elem(&1, 0))
     else
       # If no Condorcet winner, use win counts as tiebreaker
-      win_counts =
-        Enum.reduce(locked_pairs, %{}, fn {winner, _loser, _count}, acc ->
-          Map.update(acc, winner, 1, &(&1 + 1))
-        end)
-
       candidate_names
       |> Enum.map(fn name -> {name, Map.get(win_counts, name, 0)} end)
       |> Enum.sort_by(fn {_name, wins} -> -wins end)
@@ -168,6 +190,35 @@ defmodule Elections.Algorithms.RankedPairs do
     Enum.reduce(locked_pairs, %{}, fn {winner, loser, _count}, acc ->
       Map.put(acc, {winner, loser}, true)
     end)
+  end
+
+  defp build_winner_order(winners_with_metrics, tie_type) do
+    # Group by metric value to detect ties
+    grouped = Enum.group_by(winners_with_metrics, fn {_candidate, metric} -> metric end)
+    
+    # Build ordered list with positions
+    {_, order_list} = 
+      Enum.reduce(Enum.sort_by(Map.keys(grouped), &(-&1)), {1, []}, fn metric_value, {next_position, acc} ->
+        candidates_at_this_metric = Map.get(grouped, metric_value)
+        position = next_position
+        tied = length(candidates_at_this_metric) > 1
+        
+        candidates_order = 
+          Enum.map(candidates_at_this_metric, fn {candidate, _metric} ->
+            %{
+              candidate: candidate,
+              position: position,
+              metric_value: metric_value,
+              tied: tied,
+              tie_type: if(tied, do: tie_type, else: nil)
+            }
+          end)
+        
+        new_next_position = next_position + length(candidates_at_this_metric)
+        {new_next_position, acc ++ candidates_order}
+      end)
+    
+    order_list
   end
 end
 

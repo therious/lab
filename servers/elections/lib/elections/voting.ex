@@ -518,12 +518,12 @@ defmodule Elections.Voting do
     empty_scores = Enum.into(candidate_names, %{}, fn name -> {name, 0.0} end)
     
     %{
-      ranked_pairs: %{method: "ranked_pairs", winners: [], pairwise: %{}, locked_pairs: [], status: "no_votes"},
-      schulze: %{method: "schulze", winners: [], pairwise: %{}, strongest_paths: %{}, status: "no_votes"},
-      score: %{method: "score", winners: [], scores: empty_scores, status: "no_votes"},
-      approval: %{method: "approval", winners: [], approvals: empty_scores, status: "no_votes"},
-      irv_stv: %{method: "irv_stv", winners: [], status: "no_votes"},
-      coombs: %{method: "coombs", winners: [], status: "no_votes"}
+      ranked_pairs: %{method: "ranked_pairs", winners: [], pairwise: %{}, locked_pairs: [], winner_order: [], status: "no_votes"},
+      schulze: %{method: "schulze", winners: [], pairwise: %{}, strongest_paths: %{}, winner_order: [], status: "no_votes"},
+      score: %{method: "score", winners: [], scores: empty_scores, winner_order: [], status: "no_votes"},
+      approval: %{method: "approval", winners: [], approvals: empty_scores, winner_order: [], status: "no_votes"},
+      irv_stv: %{method: "irv_stv", winners: [], winner_order: [], status: "no_votes"},
+      coombs: %{method: "coombs", winners: [], winner_order: [], status: "no_votes"}
     }
   end
 
