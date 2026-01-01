@@ -217,6 +217,13 @@ const clearConfirmations = (state: ElectionState): ElectionState => {
   });
 };
 
+// Set token (for restoring from sessionStorage)
+const setToken = (state: ElectionState, {payload}: {payload: {token: string}}): ElectionState => {
+  return produce(state, draft => {
+    draft.token = payload.token;
+  });
+};
+
 // Mark vote as submitted
 const markSubmitted = (state: ElectionState): ElectionState => {
   return produce(state, draft => {
@@ -233,6 +240,7 @@ export const sliceConfig: SliceConfig = {
   initialState,
   reducers: {
     initializeElection,
+    setToken,
     moveCandidate,
     reorderCandidate,
     resetBallot,
@@ -244,6 +252,9 @@ export const sliceConfig: SliceConfig = {
   creators: {
     initializeElection: (election: Election, token: string, viewToken: string) => ({
       payload: {election, token, viewToken},
+    }),
+    setToken: (token: string) => ({
+      payload: {token},
     }),
     moveCandidate: (ballotTitle: string, candidateName: string, fromScore: string, toScore: string, toIndex?: number) => ({
       payload: {ballotTitle, candidateName, fromScore, toScore, toIndex},
