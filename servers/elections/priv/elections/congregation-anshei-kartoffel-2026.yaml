@@ -2,9 +2,9 @@ identifier: "congregation-anshei-kartoffel-2026"
 title: "Congregation Anshei Kartoffel 2026 Elections"
 description: "Annual elections for spiritual leadership and synagogue governance"
 voting_start: "2026-06-01T00:00:00Z"
-voting_end: "2026-06-30T23:59:59Z"
+voting_end: "2026-07-01T00:00:00Z"
 service_start: "2026-07-01T00:00:00Z"
-service_end: "2026-12-31T23:59:59Z"
+service_end: "2027-01-01T00:00:00Z"
 
 support:
   email: "elections@ansheikartoffel.org"

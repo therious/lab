@@ -2,9 +2,9 @@ identifier: "2026-general-election"
 title: "2026 General Election"
 description: "General election for federal, state, and local offices"
 voting_start: "2025-12-01T00:00:00Z"
-voting_end: "2026-12-31T23:59:59Z"
+voting_end: "2027-01-01T00:00:00Z"
 service_start: "2025-12-01T00:00:00Z"
-service_end: "2026-12-31T23:59:59Z"
+service_end: "2027-01-01T00:00:00Z"
 
 support:
   email: "elections@stateboard.gov"

@@ -772,7 +772,7 @@ function ResultsView() {
   
   return (
     <div style={{padding: '2rem'}}>
-      <h1>Election Results: {currentElection.title}</h1>
+      <h1 style={{marginBottom: '1.3125rem'}}>Election Results: {currentElection.title}</h1>
       {error && (
         <div style={{marginBottom: '1rem', padding: '0.75rem', background: '#ffebee', border: '1px solid #d32f2f', borderRadius: '4px', color: '#c62828'}}>
           <strong>Warning:</strong> {error} (Showing partial results below)
@@ -780,27 +780,39 @@ function ResultsView() {
       )}
       {metadata && (
         <>
-          <div style={{marginBottom: '2rem', padding: '1rem', background: '#e8f4f8', borderRadius: '8px', border: '1px solid #ccc'}}>
-            <p><strong>Total Ballots Cast:</strong> {metadata.total_votes || 0}</p>
+          <div style={{marginBottom: '1rem', padding: '1rem', background: '#e8f4f8', borderRadius: '8px', border: '1px solid #ccc'}}>
+            <p style={{display: 'flex', margin: '0.5rem 0'}}>
+              <strong style={{minWidth: '140px', textAlign: 'right', marginRight: '1rem'}}>Total Ballots Cast:</strong>
+              <span>{metadata.total_votes || 0}</span>
+            </p>
             {votingStart && (
-              <p><strong>Voting {isUpcoming ? 'Starts' : 'Started'}:</strong> {votingStart.toLocaleString()}</p>
+              <p style={{display: 'flex', margin: '0.5rem 0'}}>
+                <strong style={{minWidth: '140px', textAlign: 'right', marginRight: '1rem'}}>Voting {isUpcoming ? 'Starts' : 'Started'}:</strong>
+                <span>{votingStart.toLocaleString()}</span>
+              </p>
             )}
             {votingEnd && (
-              <p><strong>Voting {isClosed ? 'Ended' : 'Ends'}:</strong> {votingEnd.toLocaleString()}</p>
+              <p style={{display: 'flex', margin: '0.5rem 0'}}>
+                <strong style={{minWidth: '140px', textAlign: 'right', marginRight: '1rem'}}>Voting {isClosed ? 'Ended' : 'Ends'}:</strong>
+                <span>{votingEnd.toLocaleString()}</span>
+              </p>
             )}
-            <p><strong>Status:</strong> 
-              <span style={{marginLeft: '0.5rem', fontWeight: 'bold', color: isClosed ? '#d32f2f' : isOpen ? '#2e7d32' : '#ff9800'}}>
+            <p style={{display: 'flex', margin: '0.5rem 0'}}>
+              <strong style={{minWidth: '140px', textAlign: 'right', marginRight: '1rem'}}>Status:</strong>
+              <span style={{fontWeight: 'bold', color: isClosed ? '#d32f2f' : isOpen ? '#2e7d32' : '#ff9800'}}>
                 {isClosed ? 'Closed' : isOpen ? 'Open' : isUpcoming ? 'Upcoming' : 'Unknown'}
               </span>
             </p>
           </div>
           {metadata.voting_start && metadata.voting_end && (
-            <VoteTimeline
-              voteTimestamps={metadata.vote_timestamps || []}
-              votingStart={metadata.voting_start}
-              votingEnd={metadata.voting_end}
-              totalVotes={metadata.total_votes || 0}
-            />
+            <div style={{marginBottom: '1rem'}}>
+              <VoteTimeline
+                voteTimestamps={metadata.vote_timestamps || []}
+                votingStart={metadata.voting_start}
+                votingEnd={metadata.voting_end}
+                totalVotes={metadata.total_votes || 0}
+              />
+            </div>
           )}
         </>
       )}
