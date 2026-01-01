@@ -1,20 +1,22 @@
 /**
  * Middleware to persist session-persisted state to sessionStorage.
  * 
- * Watches for actions that modify session-persisted fields and automatically
- * writes them to sessionStorage as a side effect.
+ * Stores a single JSON object in sessionStorage with key 'election_session'
+ * that exactly matches the SessionPersistedState structure from the election slice.
  * 
- * Session-persisted fields:
- * - token -> 'vote_token'
- * - viewToken -> 'view_token'
- * - electionIdentifier -> 'election_identifier'
- * - userEmail -> 'user_email'
- * - submitted -> 'has_voted'
+ * Session-persisted fields (must match ElectionState structure):
+ * - token: string | null
+ * - viewToken: string | null
+ * - electionIdentifier: string | null
+ * - userEmail: string | null
+ * - submitted: boolean
  */
 
 import {Action, NextF} from '@therious/actions';
 import {ElectionState} from './election-slice';
 import {TotalState} from './combined-slices';
+
+const SESSION_STORAGE_KEY = 'election_session';
 
 export const sessionStorageMiddleware = (store: {getState: () => TotalState}) => (next: NextF) => (action: Action) => {
   const result = next(action);
@@ -28,25 +30,17 @@ export const sessionStorageMiddleware = (store: {getState: () => TotalState}) =>
   const electionState: ElectionState = state.election;
   
   try {
-    // Persist session-persisted fields to sessionStorage
-    if (electionState.token !== null) {
-      sessionStorage.setItem('vote_token', electionState.token);
-    }
+    // Build session-persisted subset matching ElectionState structure exactly
+    const sessionPersisted = {
+      token: electionState.token,
+      viewToken: electionState.viewToken,
+      electionIdentifier: electionState.electionIdentifier,
+      userEmail: electionState.userEmail,
+      submitted: electionState.submitted,
+    };
     
-    if (electionState.viewToken !== null) {
-      sessionStorage.setItem('view_token', electionState.viewToken);
-    }
-    
-    if (electionState.electionIdentifier !== null) {
-      sessionStorage.setItem('election_identifier', electionState.electionIdentifier);
-    }
-    
-    if (electionState.userEmail !== null) {
-      sessionStorage.setItem('user_email', electionState.userEmail);
-    }
-    
-    // Persist submitted status
-    sessionStorage.setItem('has_voted', electionState.submitted ? 'true' : 'false');
+    // Write single JSON object to sessionStorage
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionPersisted));
   } catch (e) {
     console.warn('Failed to write to sessionStorage:', e);
   }

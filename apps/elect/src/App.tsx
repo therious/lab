@@ -15,7 +15,6 @@ export default function App() {
   const {ballots, currentElection, token, viewToken, votes, confirmations, submitted, userEmail, electionIdentifier} = useSelector((s: TotalState) => s.election);
   const location = useLocation();
   const navigate = useNavigate();
-  const sessionToken = sessionStorage.getItem('vote_token');
   const [isRestoring, setIsRestoring] = React.useState(false);
 
   // Determine election status (before any early returns)
@@ -55,7 +54,6 @@ export default function App() {
     // We just need to load the election if we have the identifier but no election object
     if (electionIdentifier && !currentElection && token) {
       setIsRestoring(true);
-      const sessionViewToken = viewToken || sessionStorage.getItem('view_token');
       
       // First, validate token status with server (authoritative source)
       const validateToken = fetch('/api/tokens/check', {
@@ -99,9 +97,9 @@ export default function App() {
       // Wait for both to complete
       Promise.all([validateToken, loadElection])
         .then(([tokenStatus, electionData]) => {
-          // Initialize election (this will also persist to sessionStorage)
+          // Initialize election (middleware will persist to sessionStorage)
           if (electionData.election && electionData.election.ballots) {
-            actions.election.initializeElection(electionData.election, token, sessionViewToken || '');
+            actions.election.initializeElection(electionData.election, token, viewToken || '');
           } else if (electionData.ballots) {
             actions.election.initializeElection(
               {
@@ -113,7 +111,7 @@ export default function App() {
                 voting_end: electionData.voting_end,
               },
               token,
-              sessionViewToken || ''
+              viewToken || ''
             );
           }
           
@@ -137,7 +135,7 @@ export default function App() {
 
   // Handle redirects - must be called unconditionally (Rules of Hooks)
   React.useEffect(() => {
-    if (!sessionToken || !currentElection) return;
+    if (!token || !currentElection) return;
     
     if (availableTabs.length === 1) {
       // Single tab: redirect to it if not already there
@@ -162,16 +160,16 @@ export default function App() {
         navigate(availableTabs[0].path, {replace: true});
       }
     }
-  }, [location.pathname, navigate, availableTabs.length, sessionToken, currentElection]);
+  }, [location.pathname, navigate, availableTabs.length, token, currentElection]);
 
   // If no token and not restoring, show landing page (AFTER all hooks are called)
   // Wait for restoration to complete before showing landing page
-  if (!sessionToken && !isRestoring) {
+  if (!token && !isRestoring) {
     return <LandingPage/>;
   }
   
   // If we have a token but no election yet, wait for restoration (show loading or nothing)
-  if (sessionToken && !currentElection && isRestoring) {
+  if (token && !currentElection && isRestoring) {
     return <div style={{padding: '2rem', textAlign: 'center'}}>Loading...</div>;
   }
   

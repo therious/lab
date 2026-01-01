@@ -38,6 +38,7 @@ export interface ElectionState {
 }
 
 // Session-persisted subset of state (restored from sessionStorage on load)
+// This structure must exactly match the properties in ElectionState
 interface SessionPersistedState {
   token: string | null;
   viewToken: string | null;
@@ -46,6 +47,8 @@ interface SessionPersistedState {
   submitted: boolean;
 }
 
+const SESSION_STORAGE_KEY = 'election_session';
+
 // Restore session-persisted state from sessionStorage
 function restoreFromSessionStorage(): Partial<SessionPersistedState> {
   if (typeof window === 'undefined' || !window.sessionStorage) {
@@ -53,12 +56,19 @@ function restoreFromSessionStorage(): Partial<SessionPersistedState> {
   }
   
   try {
+    const stored = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (!stored) {
+      return {};
+    }
+    
+    const parsed = JSON.parse(stored) as SessionPersistedState;
+    // Validate structure matches SessionPersistedState
     return {
-      token: sessionStorage.getItem('vote_token'),
-      viewToken: sessionStorage.getItem('view_token'),
-      electionIdentifier: sessionStorage.getItem('election_identifier'),
-      userEmail: sessionStorage.getItem('user_email'),
-      submitted: sessionStorage.getItem('has_voted') === 'true',
+      token: parsed.token ?? null,
+      viewToken: parsed.viewToken ?? null,
+      electionIdentifier: parsed.electionIdentifier ?? null,
+      userEmail: parsed.userEmail ?? null,
+      submitted: parsed.submitted ?? false,
     };
   } catch (e) {
     console.warn('Failed to read from sessionStorage:', e);
@@ -108,13 +118,6 @@ const initializeElection = (state: ElectionState, {payload}: {payload: {election
     
     // Only reset submitted flag if it's a different election
     // (submitted status is restored from sessionStorage at initialization)
-    if (!isSameElection) {
-      // Check sessionStorage for submitted status (may have been set by server validation)
-      const hasVoted = typeof window !== 'undefined' && window.sessionStorage 
-        ? sessionStorage.getItem('has_voted') === 'true'
-        : false;
-      draft.submitted = hasVoted;
-    }
     // Middleware will handle sessionStorage persistence
     
     // Initialize votes for each ballot, preserving existing votes if available

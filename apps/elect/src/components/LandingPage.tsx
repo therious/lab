@@ -192,22 +192,19 @@ export function LandingPage() {
         return;
       }
 
-      // Store tokens in both sessionStorage and Redux
+      // Store tokens and email in Redux (middleware will persist to sessionStorage)
       const {token, view_token} = data;
-      sessionStorage.setItem('vote_token', token);
-      sessionStorage.setItem('view_token', view_token);
-      sessionStorage.setItem('election_identifier', selectedElection);
-      sessionStorage.setItem('user_email', email); // Store email for display
+      actions.election.setToken(token);
+      actions.election.setViewToken(view_token);
+      actions.election.setElectionIdentifier(selectedElection);
+      actions.election.setUserEmail(email);
 
       // Load election details with ballots
       const electionResponse = await fetch(`/api/elections/${selectedElection}`);
       const electionData = await electionResponse.json();
 
       if (electionResponse.ok && electionData.ballots) {
-        // Store user email in sessionStorage (will be restored to Redux on next load)
-        sessionStorage.setItem('user_email', email);
-        
-        // Initialize election in Redux (this stores token and election identifier in sessionStorage)
+        // Initialize election in Redux (middleware will persist to sessionStorage)
         actions.election.initializeElection(
           {
             identifier: electionData.identifier,

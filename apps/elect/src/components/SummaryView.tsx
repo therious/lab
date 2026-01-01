@@ -275,10 +275,8 @@ export function SummaryView() {
       if (response.ok) {
         setShowSuccessModal(true);
         setSubmissionError(null);
-        // Mark vote as submitted in Redux
+        // Mark vote as submitted in Redux (middleware will persist to sessionStorage)
         actions.election.markSubmitted();
-        // Store voted status in sessionStorage for persistence across refreshes
-        sessionStorage.setItem('has_voted', 'true');
       } else {
         // Display the user-friendly error message from the server
         let errorMsg = data.error || 'An unexpected error occurred while submitting your vote. Please try again.';
