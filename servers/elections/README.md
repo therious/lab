@@ -267,7 +267,7 @@ For detailed API testing examples, see [docs/TESTING.md](./docs/TESTING.md).
 - [docs/IRV_STV_IMPLEMENTATION_ANALYSIS.md](./docs/IRV_STV_IMPLEMENTATION_ANALYSIS.md) - Detailed analysis of IRV/STV implementation
 - [docs/COOMBS_IMPLEMENTATION_ANALYSIS.md](./docs/COOMBS_IMPLEMENTATION_ANALYSIS.md) - Detailed analysis of Coombs implementation
 - [docs/IRV_VS_STV_FAILURE_ANALYSIS.md](./docs/IRV_VS_STV_FAILURE_ANALYSIS.md) - Analysis of IRV vs STV for single-winner elections
-- [docs/WINNER_ORDERING_NOTATION.md](./docs/WINNER_ORDERING_NOTATION.md) - Winner ordering notation specification (three-tier tie system)
+- [docs/WINNER_ORDERING_DATA_STRUCTURE.md](./docs/WINNER_ORDERING_DATA_STRUCTURE.md) - Winner ordering data structure specification (three-tier tie system)
 - [docs/WINNER_ORDERING_ANALYSIS.md](./docs/WINNER_ORDERING_ANALYSIS.md) - Analysis of winner ordering across algorithms
 
 ### Architecture Documentation

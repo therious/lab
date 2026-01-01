@@ -119,7 +119,7 @@ See [Layout Architecture](./LAYOUT_ARCHITECTURE.md) for detailed information.
 ## Related Documentation
 
 ### Server Documentation
-- [Winner Ordering Notation](../../../servers/elections/docs/WINNER_ORDERING_NOTATION.md) - Data structure and tie classification
+- [Winner Ordering Data Structure](../../../servers/elections/docs/WINNER_ORDERING_DATA_STRUCTURE.md) - Data structure and tie classification
 - [Winner Ordering Analysis](../../../servers/elections/docs/WINNER_ORDERING_ANALYSIS.md) - Algorithm ordering details
 - [Elections Server README](../../../servers/elections/README.md) - Server API and architecture
 

@@ -170,7 +170,7 @@ To inspect the SQLite database used by the elections server, see [SQLITE_CONNECT
 
 ### Server Documentation
 - [Elections Server README](../../servers/elections/README.md) - Server setup and API
-- [Winner Ordering Data Structure](../../servers/elections/docs/WINNER_ORDERING_NOTATION.md) - Data structure and tie classification
+- [Winner Ordering Data Structure](../../servers/elections/docs/WINNER_ORDERING_DATA_STRUCTURE.md) - Data structure and tie classification
 - [Winner Ordering Analysis](../../servers/elections/docs/WINNER_ORDERING_ANALYSIS.md) - Algorithm ordering details
 - [Elections Server TESTING.md](../../servers/elections/docs/TESTING.md) - API testing guide
 - [SQLITE_CONNECTION.md](../../servers/elections/docs/SQLITE_CONNECTION.md) - Database inspection

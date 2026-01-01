@@ -5,7 +5,7 @@
 The UI presents winner ordering information from the server's `winner_order` field using a three-tier tie classification system. This document describes the UI presentation details.
 
 **Related Server Documentation:**
-- [Winner Ordering Notation](../../../servers/elections/docs/WINNER_ORDERING_NOTATION.md) - Data structure and tie classification logic
+- [Winner Ordering Data Structure](../../../servers/elections/docs/WINNER_ORDERING_DATA_STRUCTURE.md) - Data structure and tie classification logic
 - [Winner Ordering Analysis](../../../servers/elections/docs/WINNER_ORDERING_ANALYSIS.md) - Algorithm-by-algorithm ordering details
 
 ## Three-Tier Tie System
