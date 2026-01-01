@@ -208,9 +208,18 @@ export default function App() {
     <Layout>
       <Navbar>
         {availableTabs.map((tab) => {
-          const isActive = location.pathname === tab.path || 
-            (tab.path === '/summary' && location.pathname === '/') ||
-            (tab.path.startsWith('/ballot/') && location.pathname.startsWith('/ballot/'));
+          // Determine if this specific tab is active
+          let isActive = false;
+          if (tab.path === '/summary' || tab.path === '/') {
+            // Summary tab is active if pathname is '/' or '/summary'
+            isActive = location.pathname === '/' || location.pathname === '/summary';
+          } else if (tab.path.startsWith('/ballot/')) {
+            // Ballot tab is active only if pathname exactly matches this ballot path
+            isActive = location.pathname === tab.path;
+          } else {
+            // Results or other tabs - exact match
+            isActive = location.pathname === tab.path;
+          }
           
           // For ballot tabs, show confirmation badge
           let badge = null;
@@ -262,7 +271,12 @@ export default function App() {
             } else if (vote) {
               // Check if all candidates are ranked
               const totalCandidates = currentElection?.ballots?.find(b => b.title === ballotTitle)?.candidates?.length || 0;
-              const rankedCount = Object.values(vote).flat().filter((arr: any) => Array.isArray(arr)).reduce((sum: number, arr: any) => sum + arr.length, 0) - (vote.unranked?.length || 0);
+              // Count ranked candidates (exclude 'unranked' key)
+              const rankedCount = Object.entries(vote)
+                .filter(([key]) => key !== 'unranked')
+                .reduce((sum: number, [, arr]) => {
+                  return sum + (Array.isArray(arr) ? arr.length : 0);
+                }, 0);
               const partiallyFilled = rankedCount > 0 && rankedCount < totalCandidates;
               
               if (rankedCount === totalCandidates) {
