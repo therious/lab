@@ -8,6 +8,7 @@ import {VotingInterface} from './components/VotingInterface';
 import {LandingPage} from './components/LandingPage';
 import {VoteTimeline} from './components/VoteTimeline';
 import styled from 'styled-components';
+import {MuuriComponent} from 'muuri-react';
 
 const BAND_CONFIG = [
   { score: '5', label: 'Excellent', color: '#2e7d32' },
@@ -55,10 +56,37 @@ const SummaryContainer = styled.div`
 `;
 
 const CardsContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  align-content: flex-start;
+  width: 100%;
+  min-height: 200px;
+  
+  /* Muuri grid container styles */
+  .muuri-grid {
+    position: relative;
+  }
+  
+  .muuri-item {
+    position: absolute;
+    width: max-content;
+    min-width: 280px;
+    z-index: 1;
+  }
+  
+  .muuri-item.muuri-item-dragging {
+    z-index: 3;
+  }
+  
+  .muuri-item.muuri-item-releasing {
+    z-index: 2;
+  }
+  
+  .muuri-item.muuri-item-hidden {
+    z-index: 0;
+  }
+`;
+
+const MuuriItem = styled.div`
+  width: max-content;
+  min-width: 280px;
 `;
 
 const ElectionSummaryCard = styled(Link)`
@@ -129,7 +157,6 @@ const BallotCard = styled.div`
   display: flex;
   flex-direction: column;
   width: max-content;
-  min-width: 280px;
   height: fit-content;
   box-sizing: border-box;
   
@@ -375,9 +402,21 @@ function SummaryView() {
           )}
         </div>
         <CardsContainer>
-      {ballots.map((ballot: Ballot) => {
+          <MuuriComponent
+            dragEnabled={false}
+            dragHandle={null}
+            layout={{
+              fillGaps: true,
+              horizontal: false,
+              alignRight: false,
+              alignBottom: false,
+              rounding: false
+            }}
+          >
+      {ballots
+        .filter((ballot: Ballot) => votes[ballot.title])
+        .map((ballot: Ballot) => {
         const vote = votes[ballot.title];
-        if (!vote) return null;
         
         const isConfirmed = confirmations[ballot.title] || false;
         
@@ -402,8 +441,8 @@ function SummaryView() {
         const shouldShowAll = unrankedCandidates.length === 4;
         
         return (
+          <MuuriItem key={ballot.title}>
           <BallotCard
-            key={ballot.title} 
             onClick={() => {
               const encodedTitle = encodeURIComponent(ballot.title);
               navigate(`/ballot/${encodedTitle}`);
@@ -492,8 +531,10 @@ function SummaryView() {
               })}
             </BandsContainer>
           </BallotCard>
+          </MuuriItem>
         );
       })}
+          </MuuriComponent>
         </CardsContainer>
       {submitted && (
         <div style={{textAlign: 'center', padding: '2rem', color: '#4caf50', fontSize: '1.2rem', fontWeight: 'bold'}}>

@@ -6,36 +6,41 @@ The election summary view uses a **masonry grid layout** to efficiently pack bal
 
 ## Current Implementation
 
-### Flexbox with Natural Wrapping
+### Muuri React (Masonry Packing)
 
-We use **CSS Flexbox with `flex-wrap`** for the summary view layout.
+We use **[Muuri React](https://github.com/paol-imi/muuri-react)** (`muuri-react` npm package) for the summary view layout.
 
-**Why Flexbox:**
-- **Natural wrapping**: Cards wrap based on their actual width, not fixed columns
-- **No clipping**: All cards that fit in the window are visible
-- **Content-based sizing**: Cards size to their content (bands determine width)
-- **Simple and reliable**: Native CSS, no external dependencies
-- **Responsive**: Automatically adapts to window size
+**Why Muuri:**
+- **True masonry packing**: Efficiently packs items to minimize vertical space
+- **Variable width/height support**: Handles items with different sizes naturally
+- **Gap filling**: Shorter items fill gaps below taller items
+- **No clipping**: All items that fit are visible and properly arranged
+- **Future features**: Supports drag-and-drop, filtering, sorting (currently disabled)
 
 **Configuration:**
-- Container: `display: flex; flex-wrap: wrap; gap: 1.5rem;`
-- Cards: `width: max-content; min-width: 280px;`
-- Bands: `width: max-content;` (size to widest content)
+- `dragEnabled: false` - Drag-and-drop disabled for now
+- `layout.fillGaps: true` - Enables efficient packing
+- Items: `width: max-content; min-width: 280px;` (size to content)
 
 **Usage:**
 ```tsx
-<CardsContainer>
+import {MuuriComponent} from 'muuri-react';
+
+<MuuriComponent
+  dragEnabled={false}
+  layout={{ fillGaps: true }}
+>
   {ballots.map(ballot => (
-    <BallotCard>
-      <BandsContainer>
-        {/* Bands size to content */}
-      </BandsContainer>
-    </BallotCard>
+    <MuuriItem>
+      <BallotCard>
+        {/* Content sizes to bands */}
+      </BallotCard>
+    </MuuriItem>
   ))}
-</CardsContainer>
+</MuuriComponent>
 ```
 
-**Note:** Cards wrap naturally when they don't fit. Each card sizes to its content, ensuring no clipping occurs.
+**Note:** Muuri automatically packs items efficiently, filling gaps and handling variable widths/heights. Cards size to their content (bands determine width), and Muuri arranges them optimally.
 
 ## Previous Implementation
 

@@ -197,6 +197,12 @@ importers:
       masonry-grid:
         specifier: ^1.0.3
         version: 1.0.3(react-dom@18.2.0)(react@18.2.0)
+      muuri:
+        specifier: ^0.9.5
+        version: 0.9.5
+      muuri-react:
+        specifier: ^3.1.7
+        version: 3.1.7(muuri@0.9.5)(react@18.2.0)
       phoenix:
         specifier: ~1.7.21
         version: 1.7.21
@@ -14122,6 +14128,22 @@ packages:
     resolution: {integrity: sha512-avsJQhyd+680gKXyG/sQc0nXaC6rBkPOfyHYcFb9+hdkqQkR9bdnkJ0AMZhke0oesPqIO+mFFJ+IdBc7mst4IA==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dev: true
+
+  /muuri-react@3.1.7(muuri@0.9.5)(react@18.2.0):
+    resolution: {integrity: sha512-wlYFFXa6JkniSKAQqSM0O/yu5CtnYdXPISlQgnPcMSdseUCWt1sq5wuDGDeICGnA8x4BY5B+6xo5rdaFE/0ELw==}
+    peerDependencies:
+      muuri: ^0.8.0
+      react: ^17.0.2
+    dependencies:
+      '@babel/runtime': 7.24.1
+      muuri: 0.9.5
+      prop-types: 15.8.1
+      react: 18.2.0
+    dev: false
+
+  /muuri@0.9.5:
+    resolution: {integrity: sha512-nJL9/Pd5IaIXGAVunBs/LLQ+v6tPkvlqCYrlauWESgkVFr+F+CRf8HnayRh4AqiQ1S/PIEN39fhJSe4L5rLlxg==}
+    dev: false
 
   /mz@2.7.0:
     resolution: {integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==}
