@@ -74,7 +74,7 @@ const BandsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  width: 100%;
+  width: max-content;
   box-sizing: border-box;
 `;
 
@@ -87,7 +87,7 @@ const BandRow = styled.div<{$color: string}>`
   border: 2px solid ${props => props.$color};
   border-radius: 4px;
   min-height: 2.5rem;
-  width: 100%;
+  width: max-content;
   box-sizing: border-box;
 `;
 
@@ -114,7 +114,7 @@ const BallotCard = styled.div`
   cursor: pointer;
   display: inline-flex;
   flex-direction: column;
-  width: fit-content;
+  width: max-content;
   min-width: 300px;
   max-width: 100%;
   flex: 0 1 auto;
@@ -128,7 +128,8 @@ const BallotDescription = styled.p`
   color: #666;
   font-size: 0.9rem;
   margin: 0.5rem 0;
-  width: 100%;
+  width: max-content;
+  max-width: 100%;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
