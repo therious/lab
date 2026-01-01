@@ -67,9 +67,8 @@ export default function App() {
           }
         })
         .catch(err => console.error('Failed to load election:', err));
-      }
     }
-  );
+  }, [sessionToken, currentElection]);
 
   // Handle redirects - must be called unconditionally (Rules of Hooks)
   React.useEffect(() => {
