@@ -12,7 +12,7 @@ import {Layout, Navbar, NavLink, CenterBody} from './components/Layout';
 import {UserProfile} from './components/UserProfile';
 
 export default function App() {
-  const {ballots, currentElection, token, votes, confirmations, submitted, userEmail, electionIdentifier} = useSelector((s: TotalState) => s.election);
+  const {ballots, currentElection, token, viewToken, votes, confirmations, submitted, userEmail, electionIdentifier} = useSelector((s: TotalState) => s.election);
   const location = useLocation();
   const navigate = useNavigate();
   const sessionToken = sessionStorage.getItem('vote_token');
@@ -51,11 +51,7 @@ export default function App() {
       actions.election.setToken(sessionToken);
     }
     
-    // Sync view token (stored in initializeElection, but ensure it's set)
-    const sessionViewToken = sessionStorage.getItem('view_token');
-    if (sessionViewToken && !useSelector((s: TotalState) => s.election.viewToken)) {
-      // View token is set in initializeElection, so we'll handle it there
-    }
+    // View token is set in initializeElection, so we don't need to sync it separately
     
     // Sync election identifier
     const sessionElectionIdentifier = sessionStorage.getItem('election_identifier');
