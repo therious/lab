@@ -16,7 +16,9 @@ defmodule Elections.Application do
       ElectionsWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:elections, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Elections.PubSub},
-      # Elections.Repo is no longer started here - repos are created dynamically per election
+      # Elections.Repo must be started for put_dynamic_repo to work
+      # It uses a default database config, but individual election repos are created dynamically
+      Elections.Repo,
       # Start a worker by calling: Elections.Worker.start_link(arg)
       # {Elections.Worker, arg},
       # Start to serve requests, typically the last entry

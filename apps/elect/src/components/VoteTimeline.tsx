@@ -105,8 +105,24 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   const end = new Date(votingEnd);
   const timeRemaining = Math.max(0, end.getTime() - now.getTime());
   
-  const hoursRemaining = Math.floor(timeRemaining / (1000 * 60 * 60));
+  // Calculate time remaining with days, hours, and minutes
+  const daysRemaining = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+  const hoursRemaining = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minutesRemaining = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+  
+  // Format number with comma grouping for thousands
+  const formatNumber = (n: number) => n.toLocaleString('en-US');
+  
+  // Format time remaining string
+  const formatTimeRemaining = () => {
+    if (daysRemaining > 0) {
+      return `${formatNumber(daysRemaining)} day${daysRemaining !== 1 ? 's' : ''}, ${formatNumber(hoursRemaining)} hour${hoursRemaining !== 1 ? 's' : ''}`;
+    } else if (hoursRemaining > 0) {
+      return `${formatNumber(hoursRemaining)} hour${hoursRemaining !== 1 ? 's' : ''}, ${formatNumber(minutesRemaining)} minute${minutesRemaining !== 1 ? 's' : ''}`;
+    } else {
+      return `${formatNumber(minutesRemaining)} minute${minutesRemaining !== 1 ? 's' : ''}`;
+    }
+  };
   
   // Parse timestamps and group by time period
   const parsedTimestamps = voteTimestamps.map(ts => new Date(ts)).filter(d => !isNaN(d.getTime()));
@@ -214,7 +230,7 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
           <TimelineTitle>Vote Timeline</TimelineTitle>
           <TimeRemaining>
             {timeRemaining > 0 ? (
-              <>Time Remaining: {hoursRemaining}h {minutesRemaining}m</>
+              <>Time Remaining: {formatTimeRemaining()}</>
             ) : (
               <>Voting Closed</>
             )}
@@ -235,7 +251,7 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
         <TimelineTitle>Vote Timeline</TimelineTitle>
         <TimeRemaining>
           {timeRemaining > 0 ? (
-            <>Time Remaining: {hoursRemaining}h {minutesRemaining}m</>
+            <>Time Remaining: {formatTimeRemaining()}</>
           ) : (
             <>Voting Closed</>
           )}
