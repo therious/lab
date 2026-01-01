@@ -1007,15 +1007,35 @@ export default function App() {
     });
   }
 
-  // If only one tab, render it directly without navbar
-  if (availableTabs.length === 1) {
-    // Redirect to the only available tab if not already there
-    React.useEffect(() => {
+  // Handle redirects - must be called unconditionally (Rules of Hooks)
+  React.useEffect(() => {
+    if (availableTabs.length === 1) {
+      // Single tab: redirect to it if not already there
       if (location.pathname !== availableTabs[0].path && !location.pathname.startsWith(availableTabs[0].path)) {
         navigate(availableTabs[0].path, {replace: true});
       }
-    }, [location.pathname, navigate, availableTabs]);
-    
+    } else {
+      // Multiple tabs: redirect invalid paths to first available tab
+      const currentPath = location.pathname;
+      const isValidPath = availableTabs.some(tab => {
+        if (tab.path === '/summary' || tab.path === '/') {
+          return currentPath === '/summary' || currentPath === '/';
+        }
+        if (tab.path.startsWith('/ballot/')) {
+          return currentPath.startsWith('/ballot/');
+        }
+        return currentPath === tab.path;
+      });
+      
+      if (!isValidPath) {
+        // Redirect to first available tab (Results)
+        navigate(availableTabs[0].path, {replace: true});
+      }
+    }
+  }, [location.pathname, navigate, availableTabs.length]);
+
+  // If only one tab, render it directly without navbar
+  if (availableTabs.length === 1) {
     return (
       <Layout>
         <CenterBody>
@@ -1027,26 +1047,6 @@ export default function App() {
       </Layout>
     );
   }
-
-  // Multiple tabs - show navbar and routes
-  // Redirect invalid paths to appropriate default
-  React.useEffect(() => {
-    const currentPath = location.pathname;
-    const isValidPath = availableTabs.some(tab => {
-      if (tab.path === '/summary' || tab.path === '/') {
-        return currentPath === '/summary' || currentPath === '/';
-      }
-      if (tab.path.startsWith('/ballot/')) {
-        return currentPath.startsWith('/ballot/');
-      }
-      return currentPath === tab.path;
-    });
-    
-    if (!isValidPath) {
-      // Redirect to first available tab (Results)
-      navigate(availableTabs[0].path, {replace: true});
-    }
-  }, [location.pathname, navigate, availableTabs]);
 
   return (
     <Layout>
