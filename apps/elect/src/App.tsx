@@ -11,7 +11,7 @@ import {ResultsView} from './components/ResultsView';
 import {Layout, Navbar, NavLink, CenterBody} from './components/Layout';
 
 export default function App() {
-  const {ballots, currentElection, token, votes, confirmations} = useSelector((s: TotalState) => s.election);
+  const {ballots, currentElection, token, votes, confirmations, submitted} = useSelector((s: TotalState) => s.election);
   const location = useLocation();
   const navigate = useNavigate();
   const sessionToken = sessionStorage.getItem('vote_token');
@@ -133,7 +133,6 @@ export default function App() {
             const ballotTitle = decodeURIComponent(tab.path.split('/ballot/')[1]);
             const vote = votes[ballotTitle];
             const isConfirmed = confirmations[ballotTitle] || false;
-            const submitted = useSelector((s: TotalState) => s.election.submitted);
             
             if (submitted) {
               // Show green checkmark when submitted
