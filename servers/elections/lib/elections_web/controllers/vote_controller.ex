@@ -36,9 +36,18 @@ defmodule ElectionsWeb.VoteController do
         |> json(%{error: "The voting window for this election has closed. Votes can no longer be submitted."})
 
       {:error, changeset} when is_struct(changeset) ->
+        errors = format_errors(changeset)
+        error_message = build_validation_error_message(errors)
+        support_info = get_support_info(election_identifier)
+        
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{error: "There was a problem with your ballot data. Please try again or contact support if the problem persists.", details: format_errors(changeset)})
+        |> json(%{
+          error: error_message,
+          error_code: "VALIDATION_ERROR",
+          details: errors,
+          support: support_info
+        })
 
       {:error, reason} when is_binary(reason) ->
         conn
@@ -72,6 +81,45 @@ defmodule ElectionsWeb.VoteController do
         String.replace(acc, "%{#{key}}", to_string(value))
       end)
     end)
+  end
+
+  defp build_validation_error_message(errors) do
+    case errors do
+      %{ballot_data: [msg | _]} ->
+        "Your ballot data is invalid: #{msg}. Please check your selections and try again."
+      
+      %{election_id: _} ->
+        "The election identifier is missing or invalid. Please refresh the page and try again."
+      
+      %{vote_token_id: _} ->
+        "Your voting token is invalid. Please request a new ballot access token."
+      
+      _ ->
+        error_list = Enum.map_join(errors, "; ", fn {field, messages} ->
+          "#{field}: #{Enum.join(messages, ", ")}"
+        end)
+        "There was a problem with your vote submission: #{error_list}. Please check your selections and try again."
+    end
+  end
+
+  defp get_support_info(election_identifier) do
+    case Elections.Elections.get_election(election_identifier) do
+      {:ok, election} ->
+        config = election.config || %{}
+        support = config["support"] || %{}
+        %{
+          email: support["email"],
+          phone: support["phone"],
+          message: support["message"] || "If you continue to experience issues, please contact the election administrator."
+        }
+      
+      _ ->
+        %{
+          email: nil,
+          phone: nil,
+          message: "If you continue to experience issues, please contact the election administrator."
+        }
+    end
   end
 end
 

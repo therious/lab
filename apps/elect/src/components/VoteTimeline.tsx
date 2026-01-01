@@ -105,22 +105,30 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   const end = new Date(votingEnd);
   const timeRemaining = Math.max(0, end.getTime() - now.getTime());
   
-  // Calculate time remaining with days, hours, and minutes
+  // Calculate time remaining with days, hours, minutes, and seconds
   const daysRemaining = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
   const hoursRemaining = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minutesRemaining = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+  const secondsRemaining = Math.floor((timeRemaining % (1000 * 60)) / 1000);
   
   // Format number with comma grouping for thousands
   const formatNumber = (n: number) => n.toLocaleString('en-US');
   
-  // Format time remaining string
+  // Format time remaining string with appropriate granularity
   const formatTimeRemaining = () => {
     if (daysRemaining > 0) {
       return `${formatNumber(daysRemaining)} day${daysRemaining !== 1 ? 's' : ''}, ${formatNumber(hoursRemaining)} hour${hoursRemaining !== 1 ? 's' : ''}`;
-    } else if (hoursRemaining > 0) {
+    } else if (hoursRemaining >= 12) {
       return `${formatNumber(hoursRemaining)} hour${hoursRemaining !== 1 ? 's' : ''}, ${formatNumber(minutesRemaining)} minute${minutesRemaining !== 1 ? 's' : ''}`;
-    } else {
+    } else if (hoursRemaining > 0) {
+      // Less than 12 hours - show minutes
+      return `${formatNumber(hoursRemaining)} hour${hoursRemaining !== 1 ? 's' : ''}, ${formatNumber(minutesRemaining)} minute${minutesRemaining !== 1 ? 's' : ''}`;
+    } else if (minutesRemaining >= 10) {
+      // Less than 1 hour, at least 10 minutes - show minutes only
       return `${formatNumber(minutesRemaining)} minute${minutesRemaining !== 1 ? 's' : ''}`;
+    } else {
+      // Less than 10 minutes - show minutes and seconds
+      return `${formatNumber(minutesRemaining)} minute${minutesRemaining !== 1 ? 's' : ''}, ${formatNumber(secondsRemaining)} second${secondsRemaining !== 1 ? 's' : ''}`;
     }
   };
   

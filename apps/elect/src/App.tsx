@@ -279,7 +279,21 @@ function SummaryView() {
         actions.election.markSubmitted();
       } else {
         // Display the user-friendly error message from the server
-        setSubmissionError(data.error || 'An unexpected error occurred while submitting your vote. Please try again.');
+        let errorMsg = data.error || 'An unexpected error occurred while submitting your vote. Please try again.';
+        
+        // Add support information if available
+        if (data.support) {
+          const supportParts: string[] = [];
+          if (data.support.email) supportParts.push(`Email: ${data.support.email}`);
+          if (data.support.phone) supportParts.push(`Phone: ${data.support.phone}`);
+          if (supportParts.length > 0) {
+            errorMsg += `\n\n${data.support.message || 'Contact support:'} ${supportParts.join(', ')}`;
+          } else if (data.support.message) {
+            errorMsg += `\n\n${data.support.message}`;
+          }
+        }
+        
+        setSubmissionError(errorMsg);
       }
     } catch (err) {
       console.error('Error submitting vote:', err);
@@ -320,7 +334,23 @@ function SummaryView() {
       )}
       
       <SummaryContainer>
-        <h1>{currentElection?.title || 'Election Summary'}</h1>
+        <div style={{width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
+          <h1 style={{margin: 0}}>{currentElection?.title || 'Election Summary'}</h1>
+          {ballots.length > 0 && !submitted && (
+            <SubmitButton 
+              $enabled={allConfirmed && !token?.startsWith('preview-')} 
+              onClick={handleSubmit} 
+              disabled={!allConfirmed || token?.startsWith('preview-')}
+              style={{margin: 0}}
+            >
+              {token?.startsWith('preview-') 
+                ? 'Preview Mode - Voting Not Yet Open' 
+                : allConfirmed 
+                  ? 'Submit All Votes' 
+                  : `Confirm ${ballots.length - Object.values(confirmations).filter(Boolean).length} more ballot(s) to submit`}
+            </SubmitButton>
+          )}
+        </div>
       {ballots.map((ballot: Ballot) => {
         const vote = votes[ballot.title];
         if (!vote) return null;
@@ -346,10 +376,12 @@ function SummaryView() {
           return candidates.length > max.length ? candidates : max;
         }, [] as string[]);
         
-        // Get unranked candidates and limit to 3, then show "N others"
+        // Get unranked candidates and limit to 3, then show "N others" (but show name if only 1 remaining)
         const unrankedCandidates = vote['unranked'] || [];
         const unrankedToShow = unrankedCandidates.slice(0, 3);
         const unrankedRemaining = unrankedCandidates.length - 3;
+        // If exactly 4 total, show all 4 by name (3 + 1)
+        const shouldShowAll = unrankedCandidates.length === 4;
         
         return (
           <div 
@@ -369,8 +401,35 @@ function SummaryView() {
               navigate(`/ballot/${encodedTitle}`);
             }}
           >
-            <ElectionTitle>{ballot.title}</ElectionTitle>
-            {ballot.description && <p style={{color: '#666', fontSize: '0.9rem', margin: '0.5rem 0'}}>{ballot.description}</p>}
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem'}}>
+              <ElectionTitle style={{margin: 0}}>{ballot.title}</ElectionTitle>
+              {!submitted && (isConfirmed ? (
+                <ConfirmButton
+                  $confirmed={true}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    actions.election.unconfirmBallot(ballot.title);
+                  }}
+                  style={{margin: 0}}
+                >
+                  ✓ Confirmed (Click to Undo)
+                </ConfirmButton>
+              ) : (
+                <ConfirmButton
+                  $confirmed={false}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    actions.election.confirmBallot(ballot.title);
+                  }}
+                  style={{margin: 0}}
+                >
+                  Confirm This Ballot
+                </ConfirmButton>
+              ))}
+            </div>
+            {ballot.description && <p style={{color: '#666', fontSize: '0.9rem', margin: '0.5rem 0', wordWrap: 'break-word'}}>{ballot.description}</p>}
             <BandsContainer>
               {BAND_CONFIG.map(({score, label, color}) => {
                 const candidates = vote[score] || [];
@@ -382,16 +441,34 @@ function SummaryView() {
                     <CandidatesList>
                       {score === 'unranked' ? (
                         <>
-                          {unrankedToShow.map((candidateName: string, index: number) => (
-                            <CandidateName key={`${score}-${candidateName}-${index}`}>
-                              <RankBadge>NR</RankBadge>
-                              {candidateName}
-                            </CandidateName>
-                          ))}
-                          {unrankedRemaining > 0 && (
-                            <CandidateName style={{fontStyle: 'italic', color: '#666'}}>
-                              {unrankedRemaining} other{unrankedRemaining !== 1 ? 's' : ''}
-                            </CandidateName>
+                          {shouldShowAll ? (
+                            // Show all 4 by name
+                            unrankedCandidates.map((candidateName: string, index: number) => (
+                              <CandidateName key={`${score}-${candidateName}-${index}`}>
+                                <RankBadge>NR</RankBadge>
+                                {candidateName}
+                              </CandidateName>
+                            ))
+                          ) : (
+                            <>
+                              {unrankedToShow.map((candidateName: string, index: number) => (
+                                <CandidateName key={`${score}-${candidateName}-${index}`}>
+                                  <RankBadge>NR</RankBadge>
+                                  {candidateName}
+                                </CandidateName>
+                              ))}
+                              {unrankedRemaining > 1 && (
+                                <CandidateName style={{fontStyle: 'italic', color: '#666'}}>
+                                  {unrankedRemaining} others
+                                </CandidateName>
+                              )}
+                              {unrankedRemaining === 1 && (
+                                <CandidateName>
+                                  <RankBadge>NR</RankBadge>
+                                  {unrankedCandidates[3]}
+                                </CandidateName>
+                              )}
+                            </>
                           )}
                         </>
                       ) : (
@@ -407,45 +484,9 @@ function SummaryView() {
                 );
               })}
             </BandsContainer>
-            {!submitted && (isConfirmed ? (
-              <ConfirmButton
-                $confirmed={true}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  actions.election.unconfirmBallot(ballot.title);
-                }}
-              >
-                ✓ Confirmed (Click to Undo)
-              </ConfirmButton>
-            ) : (
-              <ConfirmButton
-                $confirmed={false}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  actions.election.confirmBallot(ballot.title);
-                }}
-              >
-                Confirm This Ballot
-              </ConfirmButton>
-            ))}
           </div>
         );
       })}
-      {ballots.length > 0 && !submitted && (
-        <SubmitButton 
-          $enabled={allConfirmed && !token?.startsWith('preview-')} 
-          onClick={handleSubmit} 
-          disabled={!allConfirmed || token?.startsWith('preview-')}
-        >
-          {token?.startsWith('preview-') 
-            ? 'Preview Mode - Voting Not Yet Open' 
-            : allConfirmed 
-              ? 'Submit All Votes' 
-              : `Confirm ${ballots.length - Object.values(confirmations).filter(Boolean).length} more ballot(s) to submit`}
-        </SubmitButton>
-      )}
       {submitted && (
         <div style={{textAlign: 'center', padding: '2rem', color: '#4caf50', fontSize: '1.2rem', fontWeight: 'bold'}}>
           ✓ Your vote has been successfully submitted
