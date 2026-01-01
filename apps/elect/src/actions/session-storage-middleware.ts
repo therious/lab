@@ -12,10 +12,11 @@
  * - submitted -> 'has_voted'
  */
 
-import {Middleware} from '@therious/actions';
+import {Action, NextF} from '@therious/actions';
 import {ElectionState} from './election-slice';
+import {TotalState} from './combined-slices';
 
-export const sessionStorageMiddleware: Middleware = (store) => (next) => (action) => {
+export const sessionStorageMiddleware = (store: {getState: () => TotalState}) => (next: NextF) => (action: Action) => {
   const result = next(action);
   
   // Only run in browser environment
