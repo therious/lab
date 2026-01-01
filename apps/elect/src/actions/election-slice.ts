@@ -115,6 +115,7 @@ const initializeElection = (state: ElectionState, {payload}: {payload: {election
         : false;
       draft.submitted = hasVoted;
     }
+    // Middleware will handle sessionStorage persistence
     
     // Initialize votes for each ballot, preserving existing votes if available
     draft.ballots.forEach(ballot => {
@@ -258,8 +259,30 @@ const clearConfirmations = (state: ElectionState): ElectionState => {
   });
 };
 
-// Note: Session-persisted state (token, viewToken, electionIdentifier, userEmail, submitted)
-// is restored from sessionStorage at slice initialization, not through discrete actions.
+// Setter actions for session-persisted state (middleware will handle sessionStorage persistence)
+const setToken = (state: ElectionState, {payload}: {payload: {token: string}}): ElectionState => {
+  return produce(state, draft => {
+    draft.token = payload.token;
+  });
+};
+
+const setViewToken = (state: ElectionState, {payload}: {payload: {viewToken: string}}): ElectionState => {
+  return produce(state, draft => {
+    draft.viewToken = payload.viewToken;
+  });
+};
+
+const setUserEmail = (state: ElectionState, {payload}: {payload: {email: string | null}}): ElectionState => {
+  return produce(state, draft => {
+    draft.userEmail = payload.email;
+  });
+};
+
+const setElectionIdentifier = (state: ElectionState, {payload}: {payload: {identifier: string | null}}): ElectionState => {
+  return produce(state, draft => {
+    draft.electionIdentifier = payload.identifier;
+  });
+};
 
 // Mark vote as submitted
 const markSubmitted = (state: ElectionState): ElectionState => {
@@ -269,14 +292,7 @@ const markSubmitted = (state: ElectionState): ElectionState => {
     Object.keys(draft.confirmations).forEach(key => {
       draft.confirmations[key] = true;
     });
-    // Persist to sessionStorage
-    if (typeof window !== 'undefined' && window.sessionStorage) {
-      try {
-        sessionStorage.setItem('has_voted', 'true');
-      } catch (e) {
-        console.warn('Failed to write to sessionStorage:', e);
-      }
-    }
+    // Middleware will handle sessionStorage persistence
   });
 };
 
@@ -285,6 +301,10 @@ export const sliceConfig: SliceConfig = {
   initialState,
   reducers: {
     initializeElection,
+    setToken,
+    setViewToken,
+    setUserEmail,
+    setElectionIdentifier,
     moveCandidate,
     reorderCandidate,
     resetBallot,
@@ -294,21 +314,21 @@ export const sliceConfig: SliceConfig = {
     markSubmitted,
   },
   creators: {
-    initializeElection: (election: Election, token: string, viewToken: string) => {
-      // Also persist to sessionStorage when initializing
-      if (typeof window !== 'undefined' && window.sessionStorage) {
-        try {
-          sessionStorage.setItem('vote_token', token);
-          sessionStorage.setItem('view_token', viewToken);
-          sessionStorage.setItem('election_identifier', election.identifier);
-        } catch (e) {
-          console.warn('Failed to write to sessionStorage:', e);
-        }
-      }
-      return {
-        payload: {election, token, viewToken},
-      };
-    },
+    initializeElection: (election: Election, token: string, viewToken: string) => ({
+      payload: {election, token, viewToken},
+    }),
+    setToken: (token: string) => ({
+      payload: {token},
+    }),
+    setViewToken: (viewToken: string) => ({
+      payload: {viewToken},
+    }),
+    setUserEmail: (email: string | null) => ({
+      payload: {email},
+    }),
+    setElectionIdentifier: (identifier: string | null) => ({
+      payload: {identifier},
+    }),
     moveCandidate: (ballotTitle: string, candidateName: string, fromScore: string, toScore: string, toIndex?: number) => ({
       payload: {ballotTitle, candidateName, fromScore, toScore, toIndex},
     }),

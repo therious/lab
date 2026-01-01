@@ -12,9 +12,10 @@ import {
 } from '@therious/actions';
 
 import {sliceConfig as electionSlice, ElectionState} from './election-slice';
+import {sessionStorageMiddleware} from './session-storage-middleware';
 
 export const allSlices = [requestSlice, notifySlice, coverageSlice, electionSlice];
-export const allMiddlewares = [fatalMiddleware, coverageMiddleware, loggingMiddleware];
+export const allMiddlewares = [fatalMiddleware, coverageMiddleware, loggingMiddleware, sessionStorageMiddleware];
 export const middlewareInits = [coverageMiddlewareInit];
 
 export type TotalState = {
