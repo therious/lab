@@ -971,9 +971,9 @@ function ResultsView() {
                   };
 
                   return methodFamilies.map((family, familyIdx) => {
-                    const familyMethods = family.methods
-                      .map(method => [method, ballotResult.results?.[method]])
-                      .filter(([_, result]) => result !== undefined);
+                    const familyMethods: Array<[string, any]> = family.methods
+                      .map(method => [method, ballotResult.results?.[method]] as [string, any])
+                      .filter(([_, result]) => result !== undefined) as Array<[string, any]>;
 
                     if (familyMethods.length === 0) return null;
 
