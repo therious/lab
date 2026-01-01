@@ -97,8 +97,52 @@ defmodule Elections.Voting do
           # The frontend can decide whether to show them
           # calculate_all_results is designed to NEVER fail - it always returns basic stats
           # even if all algorithms fail
-          results = calculate_all_results(repo, election)
-          {:ok, results}
+          # Wrap in try/rescue as a safety net, though it should never be needed
+          try do
+            results = calculate_all_results(repo, election)
+            {:ok, results}
+          rescue
+            e ->
+              require Logger
+              Logger.error("Unexpected error in calculate_all_results: #{inspect(e)}")
+              Logger.error("Stacktrace: #{Exception.format_stacktrace(__STACKTRACE__)}")
+              # Return minimal results structure even on unexpected error
+              ballots = case Map.get(election.config || %{}, "ballots", []) do
+                ballots when is_list(ballots) -> ballots
+                _ -> []
+              end
+              minimal_results = Enum.map(ballots, fn ballot ->
+                ballot = if is_map(ballot), do: ballot, else: %{}
+                %{
+                  ballot_title: Map.get(ballot, "title", "Untitled Ballot"),
+                  candidates: Map.get(ballot, "candidates", []),
+                  number_of_winners: Map.get(ballot, "number_of_winners", 1),
+                  vote_count: 0,
+                  quorum: nil,
+                  quorum_status: nil,
+                  result_status: "error",
+                  is_referendum: Map.get(ballot, "yesNoReferendum", false),
+                  results: %{
+                    ranked_pairs: %{method: "ranked_pairs", winners: [], status: "error", error: "Unexpected calculation error"},
+                    shulze: %{method: "shulze", winners: [], status: "error", error: "Unexpected calculation error"},
+                    score: %{method: "score", winners: [], status: "error", error: "Unexpected calculation error"},
+                    irv_stv: %{method: "irv_stv", winners: [], status: "error", error: "Unexpected calculation error"},
+                    coombs: %{method: "coombs", winners: [], status: "error", error: "Unexpected calculation error"}
+                  },
+                  error: "Unexpected error: #{Exception.message(e)}"
+                }
+              end)
+              {:ok, %{
+                results: minimal_results,
+                metadata: %{
+                  total_votes: 0,
+                  vote_timestamps: [],
+                  voting_start: if(election.voting_start, do: DateTime.to_iso8601(election.voting_start), else: nil),
+                  voting_end: if(election.voting_end, do: DateTime.to_iso8601(election.voting_end), else: nil),
+                  election_identifier: election.identifier || ""
+                }
+              }}
+          end
       end
     end)
   end
