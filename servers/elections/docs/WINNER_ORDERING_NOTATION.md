@@ -7,7 +7,7 @@ The system uses a three-tier classification for winner ordering ties:
 - **Peculiar Ties**: Algorithmic metrics that don't represent direct preference (path strength, win count)
 - **Ambiguous Ties**: No ordering information available
 
-**UI Presentation**: See [Winner Ordering Presentation](../../apps/elect/docs/WINNER_ORDERING_PRESENTATION.md) for how this data is displayed in the UI.
+**UI Presentation**: See [Winner Ordering Presentation](../../../apps/elect/docs/WINNER_ORDERING_PRESENTATION.md) for how this data is displayed in the UI.
 
 ## Data Structure
 
@@ -85,4 +85,4 @@ Positions are calculated such that:
 ## Related Documentation
 
 - [Winner Ordering Analysis](./WINNER_ORDERING_ANALYSIS.md) - Algorithm-by-algorithm ordering details
-- [Winner Ordering Presentation](../../apps/elect/docs/WINNER_ORDERING_PRESENTATION.md) - UI presentation of this data
+- [Winner Ordering Presentation](../../../apps/elect/docs/WINNER_ORDERING_PRESENTATION.md) - UI presentation of this data

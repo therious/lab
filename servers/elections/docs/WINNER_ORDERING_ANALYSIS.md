@@ -82,4 +82,4 @@ All algorithms return a `winner_order` field with:
 
 **Data Structure**: See [Winner Ordering Data Structure](./WINNER_ORDERING_NOTATION.md) for the complete data structure specification.
 
-**UI Presentation**: See [Winner Ordering Presentation](../../apps/elect/docs/WINNER_ORDERING_PRESENTATION.md) for how this data is displayed in the UI.
+**UI Presentation**: See [Winner Ordering Presentation](../../../apps/elect/docs/WINNER_ORDERING_PRESENTATION.md) for how this data is displayed in the UI.
