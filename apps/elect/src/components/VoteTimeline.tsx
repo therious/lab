@@ -230,7 +230,7 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
     xAxisTicks.push({time: period, label});
   }
   
-  // Handle edge case: if no votes, show empty chart
+  // Handle edge case: if no vote data available, show empty chart
   if (parsedTimestamps.length === 0) {
     return (
       <TimelineContainer>
@@ -246,7 +246,7 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
         </TimelineHeader>
         <ChartContainer>
           <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#999'}}>
-            No votes submitted yet
+            Awaiting election data - timeline will appear once vote activity is available
           </div>
         </ChartContainer>
       </TimelineContainer>
