@@ -14,6 +14,7 @@ This document captures the coding principles, rules, and expectations for AI age
   1. Test and commit the utilities first
   2. Then commit the feature that uses them
 - **Commit Message Format**: Use descriptive commit messages. The user has mentioned `git commit -m "elect: [message]"` format, though various prefixes have been used (e.g., `feat:`, `fix:`, `refactor:`). **Question**: Should we standardize on a specific prefix format?
+- **GitHub Issue References**: When working on a GitHub issue, reference it in commit messages: `<type>: <description> (#<issue-number>)`. Use `Fixes #123`, `Closes #123`, or `Resolves #123` in the final commit to automatically close the issue when merged. See `docs/GITHUB_ISSUES_WORKFLOW.md` for details.
 
 ### 2. Verification and Testing
 
@@ -71,6 +72,14 @@ This document captures the coding principles, rules, and expectations for AI age
 - Test each fix before moving to the next issue
 
 **Question**: Are there specific phrases or contexts that indicate the user wants proposals vs. direct implementation?
+
+## GitHub Issues Integration
+
+- **Issue References**: When working on a GitHub issue, reference it in all related commits: `<type>: <description> (#<issue-number>)`
+- **Closing Issues**: Use `Fixes #123`, `Closes #123`, or `Resolves #123` in the final commit to automatically close the issue when merged to default branch
+- **Working on Existing Issues**: When directed to an issue number (e.g., "Work on #123"), acknowledge it and reference in all commits
+- **Issue Creation**: I can draft issue content for you to create, but cannot create issues directly (no GitHub API access)
+- **See**: `docs/GITHUB_ISSUES_WORKFLOW.md` for complete workflow details
 
 ## Uncertainties and Questions
 
