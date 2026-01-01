@@ -49,11 +49,12 @@ const CenterBody = styled.main`
 const SummaryContainer = styled.div`
   padding: 1rem;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, max-content));
   gap: 1.5rem;
   height: 100%;
   overflow-y: auto;
   align-items: start;
+  justify-items: start;
 `;
 
 const ElectionSummaryCard = styled(Link)`
@@ -83,7 +84,7 @@ const BandsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  width: 100%;
+  width: max-content;
   box-sizing: border-box;
 `;
 
@@ -96,7 +97,7 @@ const BandRow = styled.div<{$color: string}>`
   border: 2px solid ${props => props.$color};
   border-radius: 4px;
   min-height: 2.5rem;
-  width: 100%;
+  width: max-content;
   box-sizing: border-box;
 `;
 
@@ -123,7 +124,8 @@ const BallotCard = styled.div`
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  width: 100%;
+  width: max-content;
+  min-width: 300px;
   max-width: 100%;
   height: fit-content;
   
