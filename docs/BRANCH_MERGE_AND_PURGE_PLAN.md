@@ -9,31 +9,29 @@ This document outlines a safe, incremental approach to:
 
 ## Current Situation
 
-- **Multiple work directories**: `../lab`, `../lab-a`, `lab-b` (current)
-- **.specstory files**: May be tracked in git history
+- **Git Worktrees**: `lab`, `lab-a`, and `lab-b` are all worktrees of the same repository
+  - They share the same git history, branches, and remotes
+  - Only one `.git` directory (typically in `lab`)
+  - Changes in one worktree affect all worktrees
+- **.specstory files**: Were tracked in git history (now removed from index)
 - **Goal**: Mega branch with all features, clean history, safe merge to main
+
+**Important**: Since these are worktrees, the purge and branch operations only need to be done once - they affect all worktrees automatically.
 
 ## Phase 1: Branch Analysis
 
 ### Step 1.1: Inventory All Branches
 
-**Action**: Analyze branches across all three directories to identify:
-- Feature branches
-- Redundant branches (same work, different names)
-- Branches ready for merging
-- Branches that need work before merging
+**Action**: Analyze branches in the shared repository (worktrees share branches)
+
+**Note**: Since `lab`, `lab-a`, and `lab-b` are worktrees, they all share the same branches. We only need to analyze once.
 
 **Commands to run**:
 ```bash
-# From lab-b
-cd /Users/hzamir/work/lab-b
-git branch -a > /tmp/lab-b-branches.txt
-
-cd /Users/hzamir/work/lab
-git branch -a > /tmp/lab-branches.txt 2>/dev/null || echo "Not a git repo"
-
-cd /Users/hzamir/work/lab-a
-git branch -a > /tmp/lab-a-branches.txt 2>/dev/null || echo "Not a git repo"
+# From any worktree (they all see the same branches)
+cd /Users/hzamir/work/lab-b  # or lab, or lab-a
+git branch -a > /tmp/all-branches.txt
+git worktree list > /tmp/worktrees.txt
 ```
 
 ### Step 1.2: Compare Branch Contents
@@ -91,35 +89,24 @@ git add .
 git commit -m "Resolve conflicts from <feature-branch> merge"
 ```
 
-### Step 2.3: Handle Cross-Repository Features
+### Step 2.3: Handle Cross-Worktree Features
 
-**If features are in lab or lab-a**:
+**Since all worktrees share the same repository**:
 
-**Option A - Remote Merge**:
+All branches are already available from any worktree. Simply merge them:
+
 ```bash
-# Add other repos as remotes
-git remote add lab-origin /Users/hzamir/work/lab
-git remote add lab-a-origin /Users/hzamir/work/lab-a
-
-# Fetch branches
-git fetch lab-origin
-git fetch lab-a-origin
-
-# Merge specific branches
-git merge lab-origin/<branch-name>
-```
-
-**Option B - Cherry-pick**:
-```bash
-# Get commits from other repo
-cd /Users/hzamir/work/lab
-git log --oneline <branch-name> > /tmp/commits.txt
-
-# Cherry-pick into mega branch
+# From any worktree (lab-b, lab, or lab-a)
 cd /Users/hzamir/work/lab-b
 git checkout mega-feature-branch
-git cherry-pick <commit-hash>
+
+# All branches are visible from any worktree
+git merge <branch-name> --no-ff -m "Merge <branch-name> into mega branch"
 ```
+
+**Note**: If a branch is checked out in another worktree, you may need to:
+1. Switch to that worktree and checkout a different branch, OR
+2. Use `git worktree add` to create a temporary worktree for that branch
 
 ## Phase 3: Purge .specstory from History
 

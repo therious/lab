@@ -20,24 +20,22 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPO_DIRS=("$PROJECT_ROOT" "/Users/hzamir/work/lab" "/Users/hzamir/work/lab-a")
 REPO_NAMES=("lab-b" "lab" "lab-a")
 
-echo "## Repository Status"
-echo ""
+# Check if this is a worktree
+if [ -f "$GIT_DIR" ] && grep -q "gitdir:" "$GIT_DIR" 2>/dev/null; then
+    # This is a worktree - get the main git dir
+    MAIN_GIT_DIR=$(cat "$GIT_DIR" | sed 's/gitdir: //')
+    MAIN_WORKTREE=$(cd "$MAIN_GIT_DIR/.." && pwd)
+else
+    # This is the main worktree
+    MAIN_WORKTREE="$PROJECT_ROOT"
+    MAIN_GIT_DIR="$GIT_DIR"
+fi
 
-for i in "${!REPO_DIRS[@]}"; do
-    DIR="${REPO_DIRS[$i]}"
-    NAME="${REPO_NAMES[$i]}"
-    
-    if [ -d "$DIR/.git" ]; then
-        echo -e "${GREEN}✓${NC} $NAME: Git repository found"
-        cd "$DIR"
-        CURRENT_BRANCH=$(git branch --show-current)
-        echo "  Current branch: $CURRENT_BRANCH"
-        echo "  Branches: $(git branch | wc -l | xargs) local, $(git branch -r | wc -l | xargs) remote"
-    else
-        echo -e "${RED}✗${NC} $NAME: Not a git repository or doesn't exist"
-    fi
-    echo ""
-done
+echo "## Repository Status (Git Worktrees)"
+echo ""
+echo -e "${BLUE}Main repository:${NC} $MAIN_WORKTREE"
+echo -e "${BLUE}Git directory:${NC} $MAIN_GIT_DIR"
+echo ""
 
 echo "## Branch Comparison (lab-b)"
 echo ""
