@@ -87,6 +87,8 @@ const CardsContainer = styled.div`
 const MuuriItem = styled.div`
   width: max-content;
   min-width: 280px;
+  margin: 0.75rem;
+  box-sizing: border-box;
 `;
 
 const ElectionSummaryCard = styled(Link)`
