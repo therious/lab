@@ -460,7 +460,7 @@ defmodule Elections.Voting do
         %{method: method_name, winners: [], status: "error", error: "Invalid result format"}
       end
     rescue
-      e ->
+      _e ->
         # Algorithm failure is expected and acceptable - fail silently
         # No warning needed as algorithm failures are a normal part of operation
         %{method: method_name, winners: [], status: "error", error: "Calculation failed"}
