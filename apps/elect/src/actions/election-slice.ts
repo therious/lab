@@ -99,21 +99,11 @@ const initializeElection = (state: ElectionState, {payload}: {payload: {election
   });
 };
 
-// Helper function to check if all candidates are ranked for a ballot
-const areAllCandidatesRanked = (vote: BallotVote, ballot: Ballot): boolean => {
-  if (!vote || !ballot) return false;
-  const unrankedCount = (vote.unranked || []).length;
-  return unrankedCount === 0;
-};
-
 // Move candidate to a score band
 const moveCandidate = (state: ElectionState, {payload}: {payload: {ballotTitle: string; candidateName: string; fromScore: string; toScore: string; toIndex?: number}}): ElectionState => {
   return produce(state, draft => {
     const vote = draft.votes[payload.ballotTitle];
     if (!vote) return;
-
-    const ballot = draft.ballots.find(b => b.title === payload.ballotTitle);
-    if (!ballot) return;
 
     // If moving within the same band, handle reordering
     if (payload.fromScore === payload.toScore && payload.fromScore !== 'unranked') {
@@ -129,9 +119,9 @@ const moveCandidate = (state: ElectionState, {payload}: {payload: {ballotTitle: 
       
       const [removed] = band.splice(fromIndex, 1);
       band.splice(toIndex, 0, removed);
-      // Update confirmation state based on whether all candidates are ranked
+      // Unconfirm ballot when rankings change
       if (!draft.submitted) {
-        draft.confirmations[payload.ballotTitle] = areAllCandidatesRanked(vote, ballot);
+        draft.confirmations[payload.ballotTitle] = false;
       }
       return;
     }
@@ -157,9 +147,9 @@ const moveCandidate = (state: ElectionState, {payload}: {payload: {ballotTitle: 
       }
     }
     
-    // Update confirmation state based on whether all candidates are ranked
+    // Unconfirm ballot when rankings change
     if (!draft.submitted) {
-      draft.confirmations[payload.ballotTitle] = areAllCandidatesRanked(vote, ballot);
+      draft.confirmations[payload.ballotTitle] = false;
     }
   });
 };
@@ -170,9 +160,6 @@ const reorderCandidate = (state: ElectionState, {payload}: {payload: {ballotTitl
     const vote = draft.votes[payload.ballotTitle];
     if (!vote) return;
 
-    const ballot = draft.ballots.find(b => b.title === payload.ballotTitle);
-    if (!ballot) return;
-
     const band = vote[payload.score];
     if (!band || payload.fromIndex < 0 || payload.fromIndex >= band.length || payload.toIndex < 0 || payload.toIndex >= band.length) {
       return;
@@ -181,9 +168,9 @@ const reorderCandidate = (state: ElectionState, {payload}: {payload: {ballotTitl
     const [removed] = band.splice(payload.fromIndex, 1);
     band.splice(payload.toIndex, 0, removed);
     
-    // Update confirmation state based on whether all candidates are ranked
+    // Unconfirm ballot when rankings change
     if (!draft.submitted) {
-      draft.confirmations[payload.ballotTitle] = areAllCandidatesRanked(vote, ballot);
+      draft.confirmations[payload.ballotTitle] = false;
     }
   });
 };
@@ -207,15 +194,10 @@ const resetBallot = (state: ElectionState, {payload}: {payload: {ballotTitle: st
   });
 };
 
-// Confirm a ballot (only if all candidates are ranked)
+// Confirm a ballot
 const confirmBallot = (state: ElectionState, {payload}: {payload: {ballotTitle: string}}): ElectionState => {
   return produce(state, draft => {
-    const vote = draft.votes[payload.ballotTitle];
-    const ballot = draft.ballots.find(b => b.title === payload.ballotTitle);
-    if (vote && ballot) {
-      // Only confirm if all candidates are ranked
-      draft.confirmations[payload.ballotTitle] = areAllCandidatesRanked(vote, ballot);
-    }
+    draft.confirmations[payload.ballotTitle] = true;
   });
 };
 
