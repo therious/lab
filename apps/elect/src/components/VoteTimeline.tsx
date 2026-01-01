@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import styled from 'styled-components';
 
 const TimelineContainer = styled.div`
@@ -14,6 +14,25 @@ const TimelineHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  cursor: pointer;
+  user-select: none;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+const CollapseButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  color: #666;
+  
+  &:hover {
+    color: #333;
+  }
 `;
 
 const TimelineTitle = styled.h3`
@@ -100,6 +119,7 @@ interface VoteTimelineProps {
 }
 
 export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes}: VoteTimelineProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const now = new Date();
   const start = new Date(votingStart);
   const end = new Date(votingEnd);
@@ -234,8 +254,11 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   if (parsedTimestamps.length === 0) {
     return (
       <TimelineContainer>
-        <TimelineHeader>
-          <TimelineTitle>Vote Timeline</TimelineTitle>
+        <TimelineHeader onClick={() => setIsCollapsed(!isCollapsed)}>
+          <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+            <CollapseButton>{isCollapsed ? '▶' : '▼'}</CollapseButton>
+            <TimelineTitle>Vote Timeline</TimelineTitle>
+          </div>
           <TimeRemaining>
             {timeRemaining > 0 ? (
               <>Time Remaining: {formatTimeRemaining()}</>
@@ -244,19 +267,24 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
             )}
           </TimeRemaining>
         </TimelineHeader>
-        <ChartContainer>
-          <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#999'}}>
-            Awaiting election data - timeline will appear once vote activity is available
-          </div>
-        </ChartContainer>
+        {!isCollapsed && (
+          <ChartContainer>
+            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#999'}}>
+              Awaiting election data - timeline will appear once vote activity is available
+            </div>
+          </ChartContainer>
+        )}
       </TimelineContainer>
     );
   }
   
   return (
     <TimelineContainer>
-      <TimelineHeader>
-        <TimelineTitle>Vote Timeline</TimelineTitle>
+      <TimelineHeader onClick={() => setIsCollapsed(!isCollapsed)}>
+        <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+          <CollapseButton>{isCollapsed ? '▶' : '▼'}</CollapseButton>
+          <TimelineTitle>Vote Timeline</TimelineTitle>
+        </div>
         <TimeRemaining>
           {timeRemaining > 0 ? (
             <>Time Remaining: {formatTimeRemaining()}</>
@@ -266,6 +294,7 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
         </TimeRemaining>
       </TimelineHeader>
       
+      {!isCollapsed && (
       <ChartContainer>
         <YAxisLeft>
           {leftAxisLabels.reverse().map((label, idx) => (
@@ -358,11 +387,14 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
           ))}
         </YAxisRight>
       </ChartContainer>
+      )}
       
+      {!isCollapsed && (
       <div style={{marginTop: '0.5rem', fontSize: '0.85rem', color: '#666', display: 'flex', justifyContent: 'space-between'}}>
         <span>Left: Votes per {timeUnit}</span>
         <span>Right: Cumulative Total</span>
       </div>
+      )}
     </TimelineContainer>
   );
 }

@@ -204,10 +204,6 @@ const ToggleInput = styled.input.attrs(() => ({type: 'checkbox'}))`
   
   &:checked + span {
     background-color: #4caf50;
-    
-    &::before {
-      transform: translateX(2.25rem);
-    }
   }
 `;
 
@@ -774,7 +770,7 @@ function ResultsView() {
       )}
       {metadata && (
         <>
-          <div style={{marginBottom: '2rem', padding: '1rem', background: '#e8f4f8', borderRadius: '8px'}}>
+          <div style={{marginBottom: '2rem', padding: '1rem', background: '#e8f4f8', borderRadius: '8px', border: '1px solid #ccc'}}>
             <p><strong>Total Ballots Cast:</strong> {metadata.total_votes || 0}</p>
             {votingStart && (
               <p><strong>Voting Started:</strong> {votingStart.toLocaleString()}</p>
@@ -798,12 +794,25 @@ function ResultsView() {
           )}
         </>
       )}
-      {ballots.map((ballotResult: any, idx: number) => {
+      <MuuriComponent
+        dragEnabled={false}
+        layout={{
+          fillGaps: true,
+          horizontal: false,
+          alignRight: false,
+          alignBottom: false,
+          rounding: false
+        }}
+      >
+      {ballots
+        .filter((ballotResult: any) => ballotResult)
+        .map((ballotResult: any, idx: number) => {
         const voteCount = ballotResult.vote_count || 0;
         const hasVotes = voteCount > 0;
         
         return (
-          <div key={idx} style={{marginBottom: '2rem', border: '1px solid #ccc', padding: '1rem', borderRadius: '8px'}}>
+          <MuuriItem key={idx}>
+          <div style={{border: '1px solid #ccc', padding: '1rem', borderRadius: '8px', width: 'max-content', minWidth: '300px'}}>
             <h2>{ballotResult.ballot_title}</h2>
             {ballotResult.is_referendum && (
               <p style={{fontStyle: 'italic', color: '#666'}}>Referendum</p>
@@ -912,8 +921,10 @@ function ResultsView() {
               </p>
             )}
           </div>
+          </MuuriItem>
         );
       })}
+      </MuuriComponent>
     </div>
   );
 }
@@ -1038,10 +1049,14 @@ export default function App() {
                     fontSize: '0.75rem',
                     background: '#ff9800',
                     color: 'white',
-                    padding: '0.1rem 0.3rem',
-                    borderRadius: '10px',
+                    padding: '0',
+                    borderRadius: '50%',
                     fontWeight: 'bold',
-                    display: 'inline-block'
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '1.2rem',
+                    height: '1.2rem'
                   }}>
                     {Math.round((rankedCount / totalCandidates) * 100)}%
                   </span>
