@@ -9,11 +9,14 @@ defmodule Elections.Application do
 
   @impl true
   def start(_type, _args) do
+    # Initialize repo cache before starting supervisors
+    Elections.RepoManager.init_cache()
+
     children = [
       ElectionsWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:elections, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Elections.PubSub},
-      Elections.Repo,
+      # Elections.Repo is no longer started here - repos are created dynamically per election
       # Start a worker by calling: Elections.Worker.start_link(arg)
       # {Elections.Worker, arg},
       # Start to serve requests, typically the last entry
@@ -25,7 +28,7 @@ defmodule Elections.Application do
     opts = [strategy: :one_for_one, name: Elections.Supervisor]
     result = Supervisor.start_link(children, opts)
 
-    # Load election configs after repo is started
+    # Load election configs (this will create repos dynamically as needed)
     Elections.ConfigLoader.load_elections_from_yaml()
 
     # Create test data for closed elections (in dev/test mode)
