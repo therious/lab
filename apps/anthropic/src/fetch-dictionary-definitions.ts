@@ -161,11 +161,11 @@ Return ONLY valid JSON, no additional text or explanation.`;
     
     // Validate each word has required fields and transform to compact format
     words = words
-      .filter(w => w.hebrew && w.english)
+      .filter(w => w.h && w.e)
       .map(w => ({
-        h: w.hebrew,
-        e: w.english,
-        ...(w.partOfSpeech ? { t: w.partOfSpeech } : {}),
+        h: w.h,
+        e: w.e,
+        ...(w.t ? { t: w.t } : {}),
       }));
   } catch (error: any) {
     console.warn(`⚠️  Failed to parse JSON for root ${rootId}: ${error.message}`);

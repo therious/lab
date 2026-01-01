@@ -8,7 +8,7 @@
  */
 
 import { roots } from './roots.js';
-import type { DefinitionSimilarityGrade } from './definition-similarity-grades';
+import type { DefinitionSimilarityGrade } from '../../roots/src/roots/definition-similarity-grades';
 import * as fs from 'fs';
 import * as path from 'path';
 

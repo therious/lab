@@ -36,10 +36,10 @@ export function useGraphWorker(): UseGraphWorkerResult {
   const [tooltipCounts, setTooltipCounts] = useState<TooltipCounts>({ 
     n: 0, x: 0, w: 0, y: 0, q: 0, pruneRemoved: 0,
     afterMischalfim: { nodes: 0, edges: 0 },
-    meaningStage: { nodesAdded: 0, edgesAdded: 0 },
-    extraDegreesStage: { nodesAdded: 0, edgesAdded: 0 },
-    pruneStage: { edgesRemoved: 0 },
-    removeFreeStage: { nodesRemoved: 0 },
+    meaningStage: { nodesAdded: 0, edgesAdded: 0, nodesTotal: 0, edgesTotal: 0 },
+    extraDegreesStage: { nodesAdded: 0, edgesAdded: 0, nodesTotal: 0, edgesTotal: 0 },
+    pruneStage: { edgesRemoved: 0, edgesTotal: 0, nodesTotal: 0 },
+    removeFreeStage: { nodesRemoved: 0, nodesTotal: 0, edgesTotal: 0 },
   });
   const pendingGraphDataRef = useRef<PendingGraphData | null>(null);
   const graphUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);

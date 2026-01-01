@@ -47,11 +47,11 @@ export function computeGraphDiff(
         oldNode.label !== newNode.label ||
         JSON.stringify(oldNode.color) !== JSON.stringify(newNode.color)
       ) {
-        // Preserve position from old node if it exists
-        const updatedNode: GraphNode = {
+        // Preserve position from old node if it exists (x/y are runtime properties from vis.js)
+        const updatedNode: GraphNode & { x?: number; y?: number } = {
           ...newNode,
-          x: oldNode.x,
-          y: oldNode.y,
+          ...(oldNode.x !== undefined && { x: oldNode.x }),
+          ...(oldNode.y !== undefined && { y: oldNode.y }),
         };
         nodesToUpdate.push(updatedNode);
       }
