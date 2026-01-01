@@ -281,9 +281,13 @@ defmodule Elections.Voting do
 
     case repo.insert(changeset) do
       {:ok, vote} ->
-        # TEMP DEBUG: Log successful vote creation
+        # TEMP DEBUG: Log successful vote creation and verify it's in DB
         require Logger
         Logger.info("[DEBUG] create_vote: vote_id=#{vote.id}, election_id=#{election.id}, election_identifier=#{election.identifier}")
+        
+        # TEMP DEBUG: Immediately query to see if vote is visible
+        vote_check = repo.get(Vote, vote.id)
+        Logger.info("[DEBUG] create_vote: Immediate query for vote_id=#{vote.id} returned: #{if vote_check, do: "FOUND", else: "NOT FOUND"}")
         
         # Mark token as used (unless in dev mode)
         unless @dev_mode do
