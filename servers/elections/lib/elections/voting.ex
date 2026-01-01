@@ -15,6 +15,11 @@ defmodule Elections.Voting do
   Submit a vote for an election using election identifier.
   """
   def submit_vote(election_identifier, token, ballot_data) when is_binary(election_identifier) do
+    # TEMP DEBUG: Log database path for vote submission
+    db_path = RepoManager.db_path(election_identifier)
+    require Logger
+    Logger.info("[DEBUG] submit_vote: election=#{election_identifier}, db_path=#{db_path}")
+    
     RepoManager.with_repo(election_identifier, fn repo ->
       result = repo.transaction(fn ->
         with {:ok, election} <- get_election(repo, election_identifier),
@@ -267,6 +272,10 @@ defmodule Elections.Voting do
 
     case repo.insert(changeset) do
       {:ok, vote} ->
+        # TEMP DEBUG: Log successful vote creation
+        require Logger
+        Logger.info("[DEBUG] create_vote: vote_id=#{vote.id}, election_id=#{election.id}, election_identifier=#{election.identifier}")
+        
         # Mark token as used (unless in dev mode)
         unless @dev_mode do
           vote_token
@@ -319,9 +328,16 @@ defmodule Elections.Voting do
   end
 
   defp calculate_all_results(repo, election) do
+    # TEMP DEBUG: Log database path and election info for results query
+    db_path = RepoManager.db_path(election.identifier || "")
+    require Logger
+    Logger.info("[DEBUG] calculate_all_results: election_id=#{election.id}, election_identifier=#{election.identifier}, db_path=#{db_path}")
+    
     # Safely get votes - handle case where election might not exist or have no votes
     votes = try do
-      repo.all(from(v in Vote, where: v.election_id == ^election.id, order_by: [asc: v.inserted_at]))
+      votes_found = repo.all(from(v in Vote, where: v.election_id == ^election.id, order_by: [asc: v.inserted_at]))
+      Logger.info("[DEBUG] calculate_all_results: found #{length(votes_found)} votes in database")
+      votes_found
     rescue
       e ->
         require Logger
@@ -406,14 +422,14 @@ defmodule Elections.Voting do
           }
         else
           # No votes for this ballot - return empty results structure
-          build_empty_results(candidates, number_of_winners)
+          build_empty_results(candidates)
         end
       rescue
         e ->
           require Logger
           Logger.error("Error calculating algorithm results for ballot #{ballot_title}: #{inspect(e)}")
           # Return empty results structure on error
-          build_empty_results(candidates, number_of_winners)
+          build_empty_results(candidates)
       end
       
       %{
@@ -464,7 +480,7 @@ defmodule Elections.Voting do
   end
 
   # Build empty results structure for ballots with no votes
-  defp build_empty_results(candidates, _number_of_winners) do
+  defp build_empty_results(candidates) do
     # Initialize scores map with all candidates at 0.0
     candidate_names = Enum.map(candidates, fn c -> Map.get(c, "name", "") end)
     empty_scores = Enum.into(candidate_names, %{}, fn name -> {name, 0.0} end)
