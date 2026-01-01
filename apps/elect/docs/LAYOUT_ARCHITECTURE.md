@@ -18,27 +18,23 @@ We use **[Masonry Grid](https://masonry-grid.js.org/)** (`masonry-grid` npm pack
 - **Performance**: Efficient layout algorithm that minimizes reflows
 
 **Configuration:**
-- Default: 3 columns
-- Responsive breakpoints:
-  - Mobile (0px+): 1 column
-  - Tablet (768px+): 2 columns
-  - Desktop (1024px+): 3 columns
-- Gap: 24px between items
+- `minWidth`: Minimum width for each column (350px) - columns are calculated automatically based on container width
+- `gap`: Spacing between items (24px)
+- Automatically calculates number of columns based on container width and `minWidth`
 
 **Usage:**
 ```tsx
+import MasonryGrid from 'masonry-grid';
+
 <MasonryGrid
-  column={3}
+  minWidth={350}
   gap={24}
-  responsive={{
-    0: {column: 1},
-    768: {column: 2},
-    1024: {column: 3}
-  }}
 >
   {ballots.map(ballot => <BallotCard ... />)}
 </MasonryGrid>
 ```
+
+**Note:** The library uses a default export, not a named export. It automatically calculates the number of columns based on the container width divided by `minWidth`.
 
 ## Alternative Libraries Considered
 

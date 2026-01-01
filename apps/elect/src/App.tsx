@@ -8,7 +8,7 @@ import {VotingInterface} from './components/VotingInterface';
 import {LandingPage} from './components/LandingPage';
 import {VoteTimeline} from './components/VoteTimeline';
 import styled from 'styled-components';
-import {MasonryGrid} from 'masonry-grid';
+import MasonryGrid from 'masonry-grid';
 
 const BAND_CONFIG = [
   { score: '5', label: 'Excellent', color: '#2e7d32' },
@@ -373,13 +373,8 @@ function SummaryView() {
         </div>
         <MasonryGridContainer>
           <MasonryGrid
-            column={3}
+            minWidth={350}
             gap={24}
-            responsive={{
-              0: {column: 1},
-              768: {column: 2},
-              1024: {column: 3}
-            }}
           >
       {ballots.map((ballot: Ballot) => {
         const vote = votes[ballot.title];
