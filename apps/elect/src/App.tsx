@@ -1049,14 +1049,14 @@ export default function App() {
                     fontSize: '0.75rem',
                     background: '#ff9800',
                     color: 'white',
-                    padding: '0',
-                    borderRadius: '50%',
+                    padding: '0 0.3rem',
+                    borderRadius: '10px',
                     fontWeight: 'bold',
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: '1.2rem',
-                    height: '1.2rem'
+                    height: '1.2rem',
+                    minWidth: '1.2rem'
                   }}>
                     {Math.round((rankedCount / totalCandidates) * 100)}%
                   </span>
