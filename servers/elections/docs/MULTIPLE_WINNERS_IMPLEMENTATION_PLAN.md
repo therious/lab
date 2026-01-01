@@ -337,6 +337,8 @@ end
 
 ## UI/UX Considerations
 
+**Note**: UI presentation details are documented in the [Elect UI Documentation](../../apps/elect/docs/UI_FEATURES.md).
+
 ### Method Naming:
 - **Option A**: "Ranked Pairs (Multi-Winner)" - indicates extension
 - **Option B**: "Ranked Pairs" - same name, context determines behavior

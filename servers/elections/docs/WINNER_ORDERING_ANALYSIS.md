@@ -80,7 +80,6 @@ All algorithms return a `winner_order` field with:
 - `tied`: Boolean indicating if tied
 - `tie_type`: "statistical", "peculiar", "ambiguous", or `nil`
 
-The frontend displays this with:
-- Numbers (not ordinals): 1, 2, 3
-- Symbols: * for peculiar, † for ambiguous
-- Tooltips explaining the tie type
+**Data Structure**: See [Winner Ordering Data Structure](./WINNER_ORDERING_NOTATION.md) for the complete data structure specification.
+
+**UI Presentation**: See [Winner Ordering Presentation](../../apps/elect/docs/WINNER_ORDERING_PRESENTATION.md) for how this data is displayed in the UI.

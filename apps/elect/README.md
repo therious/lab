@@ -163,8 +163,15 @@ To inspect the SQLite database used by the elections server, see [SQLITE_CONNECT
 
 ## Related Documentation
 
+### UI Documentation
+- [UI Features](./docs/UI_FEATURES.md) - Tab management, badges, conditional views
+- [Winner Ordering Presentation](./docs/WINNER_ORDERING_PRESENTATION.md) - How winner ordering is displayed
 - [Layout Architecture](./docs/LAYOUT_ARCHITECTURE.md) - Summary view masonry layout implementation
+
+### Server Documentation
 - [Elections Server README](../servers/elections/README.md) - Server setup and API
-- [Elections Server TESTING.md](../servers/elections/TESTING.md) - API testing guide
-- [SQLITE_CONNECTION.md](../servers/elections/SQLITE_CONNECTION.md) - Database inspection
+- [Winner Ordering Data Structure](../servers/elections/docs/WINNER_ORDERING_NOTATION.md) - Data structure and tie classification
+- [Winner Ordering Analysis](../servers/elections/docs/WINNER_ORDERING_ANALYSIS.md) - Algorithm ordering details
+- [Elections Server TESTING.md](../servers/elections/docs/TESTING.md) - API testing guide
+- [SQLITE_CONNECTION.md](../servers/elections/docs/SQLITE_CONNECTION.md) - Database inspection
 
