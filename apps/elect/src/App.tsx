@@ -188,22 +188,67 @@ const RankBadge = styled.span`
   text-align: center;
 `;
 
-const ConfirmToggle = styled.input.attrs(() => ({type: 'checkbox'}))`
-  width: 1.25rem;
-  height: 1.25rem;
+const ToggleSwitch = styled.label<{$checked: boolean}>`
+  position: relative;
+  display: inline-block;
+  width: 4rem;
+  height: 1.75rem;
   cursor: pointer;
-  margin: 0;
-  flex-shrink: 0;
+  user-select: none;
 `;
 
-const ConfirmLabel = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  font-size: 0.9rem;
-  color: #333;
-  user-select: none;
+const ToggleInput = styled.input.attrs(() => ({type: 'checkbox'}))`
+  opacity: 0;
+  width: 0;
+  height: 0;
+  
+  &:checked + span {
+    background-color: #4caf50;
+    
+    &::before {
+      transform: translateX(2.25rem);
+    }
+  }
+`;
+
+const ToggleSlider = styled.span<{$checked: boolean}>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  border-radius: 1.75rem;
+  transition: 0.3s;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    height: 1.25rem;
+    width: 1.25rem;
+    left: ${props => props.$checked ? '2.25rem' : '0.25rem'};
+    bottom: 0.25rem;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+  }
+  
+  &::after {
+    content: '${props => props.$checked ? 'Confirmed' : 'Confirm'}';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    ${props => props.$checked ? 'left: 0.5rem;' : 'right: 0.5rem;'}
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: white;
+    z-index: 1;
+    pointer-events: none;
+    white-space: nowrap;
+  }
 `;
 
 const SubmitButton = styled.button<{$enabled: boolean}>`
@@ -449,12 +494,13 @@ function SummaryView() {
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem'}}>
               <ElectionTitle style={{margin: 0}}>{ballot.title}</ElectionTitle>
               {!submitted && (
-                <ConfirmLabel
+                <ToggleSwitch
+                  $checked={isConfirmed}
                   onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
                   }}
                 >
-                  <ConfirmToggle
+                  <ToggleInput
                     checked={isConfirmed}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       e.stopPropagation();
@@ -465,8 +511,8 @@ function SummaryView() {
                       }
                     }}
                   />
-                  <span>{isConfirmed ? 'Confirmed' : 'Confirm'}</span>
-                </ConfirmLabel>
+                  <ToggleSlider $checked={isConfirmed} />
+                </ToggleSwitch>
               )}
             </div>
             <BandsContainer>
