@@ -191,7 +191,7 @@ const RankBadge = styled.span`
 const ToggleSwitch = styled.label<{$checked: boolean}>`
   position: relative;
   display: inline-block;
-  width: 5.5rem;
+  width: 6.5rem;
   height: 1.75rem;
   cursor: pointer;
   user-select: none;
@@ -223,7 +223,7 @@ const ToggleSlider = styled.span<{$checked: boolean}>`
     position: absolute;
     height: 1.25rem;
     width: 1.25rem;
-    left: ${props => props.$checked ? '3.75rem' : '0.25rem'};
+    left: ${props => props.$checked ? '4.75rem' : '0.25rem'};
     bottom: 0.25rem;
     background-color: white;
     border-radius: 50%;
@@ -233,7 +233,7 @@ const ToggleSlider = styled.span<{$checked: boolean}>`
   }
   
   &::after {
-    content: '${props => props.$checked ? 'Confirmed' : 'Confirm'}';
+    content: '${props => props.$checked ? 'Confirmed' : 'Unconfirmed'}';
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -1029,7 +1029,7 @@ export default function App() {
                 )}
                 {!isConfirmed && allRanked && (
                   <span style={{
-                    color: '#2e7d32',
+                    color: '#a5d6a7',
                     fontSize: '1rem',
                     border: '2px solid #a5d6a7',
                     borderRadius: '50%',
