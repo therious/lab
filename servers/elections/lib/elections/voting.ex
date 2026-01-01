@@ -280,13 +280,24 @@ defmodule Elections.Voting do
         )
 
         # Calculate and broadcast updated results
+        # Use election identifier so we can set the dynamic repo in the task process
+        election_identifier = election.identifier
         Task.start(fn ->
-          results = calculate_all_results(repo, election)
-          Phoenix.PubSub.broadcast(
-            Elections.PubSub,
-            "dashboard:#{election.identifier}",
-            {:results_updated, election.identifier, results}
-          )
+          RepoManager.with_repo(election_identifier, fn task_repo ->
+            # Re-fetch election to ensure we have the latest data
+            case ElectionsContext.get_election(election_identifier) do
+              {:ok, latest_election} ->
+                results = calculate_all_results(task_repo, latest_election)
+                Phoenix.PubSub.broadcast(
+                  Elections.PubSub,
+                  "dashboard:#{election_identifier}",
+                  {:results_updated, election_identifier, results}
+                )
+              _ ->
+                # Election not found, skip broadcast
+                :ok
+            end
+          end)
         end)
 
         {:ok, vote}
