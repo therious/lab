@@ -1,6 +1,6 @@
-defmodule Elections.Algorithms.Shulze do
+defmodule Elections.Algorithms.Schulze do
   @moduledoc """
-  Shulze method (Schulze method) implementation.
+  Schulze method implementation (also known as Schwartz Sequential Dropping).
   """
 
   def calculate(ballot, votes) do
@@ -11,7 +11,7 @@ defmodule Elections.Algorithms.Shulze do
     winners = determine_winners(strongest_paths, ballot, Map.get(ballot, "number_of_winners", 1))
 
     %{
-      method: "shulze",
+      method: "schulze",
       winners: winners,
       pairwise: pairwise,
       strongest_paths: strongest_paths,

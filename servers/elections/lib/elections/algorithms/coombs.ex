@@ -61,10 +61,16 @@ defmodule Elections.Algorithms.Coombs do
     else
       # Eliminate candidate with most last-place votes (Coombs variant)
       last_prefs = count_last_preferences(rankings, remaining)
-      {_most_disliked, _count} = Enum.max_by(last_prefs, fn {_c, count} -> count end)
-      eliminated = last_prefs |> Enum.max_by(fn {_c, count} -> count end) |> elem(0)
-      updated_rankings = eliminate_candidate(rankings, eliminated)
-      run_coombs_rounds(updated_rankings, List.delete(remaining, eliminated), winners, number_of_winners, quota)
+      
+      # Guard against empty last_prefs (shouldn't happen, but safety check)
+      if Enum.empty?(last_prefs) or Enum.empty?(remaining) do
+        # No more candidates to eliminate, return current winners
+        winners
+      else
+        eliminated = last_prefs |> Enum.max_by(fn {_c, count} -> count end) |> elem(0)
+        updated_rankings = eliminate_candidate(rankings, eliminated)
+        run_coombs_rounds(updated_rankings, List.delete(remaining, eliminated), winners, number_of_winners, quota)
+      end
     end
   end
 

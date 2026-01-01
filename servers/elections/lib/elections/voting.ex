@@ -368,12 +368,17 @@ defmodule Elections.Voting do
         # Calculate algorithm results - each algorithm is individually protected
         # Even if ALL algorithms fail, we still return basic stats
         # Algorithm failures are expected and acceptable - no warnings needed
+        # Ordered by method family: Condorcet, Rating, Runoff
         algorithm_results = if vote_count > 0 do
           election_id = election.identifier || "unknown"
           %{
+            # Condorcet Methods
             ranked_pairs: safe_calculate_algorithm(fn -> Elections.Algorithms.RankedPairs.calculate(ballot_for_algorithms, ballot_votes) end, "ranked_pairs", election_id, ballot_title),
-            shulze: safe_calculate_algorithm(fn -> Elections.Algorithms.Shulze.calculate(ballot_for_algorithms, ballot_votes) end, "shulze", election_id, ballot_title),
+            schulze: safe_calculate_algorithm(fn -> Elections.Algorithms.Schulze.calculate(ballot_for_algorithms, ballot_votes) end, "schulze", election_id, ballot_title),
+            # Rating Methods
             score: safe_calculate_algorithm(fn -> Elections.Algorithms.Score.calculate(ballot_for_algorithms, ballot_votes) end, "score", election_id, ballot_title),
+            approval: safe_calculate_algorithm(fn -> Elections.Algorithms.Approval.calculate(ballot_for_algorithms, ballot_votes) end, "approval", election_id, ballot_title),
+            # Runoff Methods
             irv_stv: safe_calculate_algorithm(fn -> Elections.Algorithms.IRVSTV.calculate(ballot_for_algorithms, ballot_votes) end, "irv_stv", election_id, ballot_title),
             coombs: safe_calculate_algorithm(fn -> Elections.Algorithms.Coombs.calculate(ballot_for_algorithms, ballot_votes) end, "coombs", election_id, ballot_title)
           }
@@ -514,8 +519,9 @@ defmodule Elections.Voting do
     
     %{
       ranked_pairs: %{method: "ranked_pairs", winners: [], pairwise: %{}, locked_pairs: [], status: "no_votes"},
-      shulze: %{method: "shulze", winners: [], pairwise: %{}, strongest_paths: %{}, status: "no_votes"},
+      schulze: %{method: "schulze", winners: [], pairwise: %{}, strongest_paths: %{}, status: "no_votes"},
       score: %{method: "score", winners: [], scores: empty_scores, status: "no_votes"},
+      approval: %{method: "approval", winners: [], approvals: empty_scores, status: "no_votes"},
       irv_stv: %{method: "irv_stv", winners: [], status: "no_votes"},
       coombs: %{method: "coombs", winners: [], status: "no_votes"}
     }

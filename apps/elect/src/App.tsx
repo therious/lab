@@ -940,56 +940,100 @@ function ResultsView() {
                 )}
                 
                 <h3 style={{marginTop: '1rem'}}>Results by Method:</h3>
-                {Object.entries(ballotResult.results || {}).map(([method, methodResult]: [string, any]) => {
-                  const status = methodResult.status || 'unknown';
-                  const isError = status === 'error' || methodResult.error;
-                  const isNoVotes = status === 'no_votes';
-                  const isConclusive = status === 'conclusive';
-                  const isInconclusive = status === 'inconclusive';
-                  
-                  // Determine status color and label
-                  let statusColor = '#666';
-                  let statusLabel = status;
-                  if (isError) {
-                    statusColor = '#d32f2f';
-                    statusLabel = 'Error';
-                  } else if (isNoVotes) {
-                    statusColor = '#999';
-                    statusLabel = 'No Votes';
-                  } else if (isConclusive) {
-                    statusColor = '#2e7d32';
-                    statusLabel = 'Final';
-                  } else if (isInconclusive) {
-                    statusColor = '#ff9800';
-                    statusLabel = 'Indeterminate';
-                  } else {
-                    statusColor = '#2196f3';
-                    statusLabel = 'Intermediate';
-                  }
-                  
-                  return (
-                    <div key={method} style={{marginTop: '0.5rem', padding: '0.5rem', background: '#f5f5f5', borderRadius: '4px', borderLeft: `3px solid ${statusColor}`}}>
-                      <strong>{method.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}:</strong>
-                      {methodResult.winners && methodResult.winners.length > 0 ? (
-                        <span style={{marginLeft: '0.5rem'}}>
-                          {methodResult.winners.join(', ')}
-                        </span>
-                      ) : (
-                        <span style={{marginLeft: '0.5rem', color: '#666', fontStyle: 'italic'}}>
-                          {isNoVotes ? 'No votes yet' : isError ? 'Calculation failed' : 'No winners determined'}
-                        </span>
-                      )}
-                      <span style={{marginLeft: '0.5rem', fontSize: '0.9rem', color: statusColor, fontWeight: 'bold'}}>
-                        [{statusLabel}]
-                      </span>
-                      {methodResult.error && (
-                        <div style={{marginTop: '0.25rem', marginLeft: '1rem', fontSize: '0.85rem', color: '#d32f2f'}}>
-                          Error: {methodResult.error}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                {(() => {
+                  // Define method families and their order
+                  const methodFamilies = [
+                    {
+                      name: 'Condorcet',
+                      methods: ['ranked_pairs', 'schulze']
+                    },
+                    {
+                      name: 'Rating',
+                      methods: ['score', 'approval']
+                    },
+                    {
+                      name: 'Runoff',
+                      methods: ['irv_stv', 'coombs']
+                    }
+                  ];
+
+                  // Method name formatting
+                  const formatMethodName = (method: string): string => {
+                    const nameMap: {[key: string]: string} = {
+                      'ranked_pairs': 'Ranked Pairs',
+                      'schulze': 'Schulze',
+                      'score': 'Score',
+                      'approval': 'Approval',
+                      'irv_stv': 'IRV/STV',
+                      'coombs': 'Coombs'
+                    };
+                    return nameMap[method] || method.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+                  };
+
+                  return methodFamilies.map((family, familyIdx) => {
+                    const familyMethods = family.methods
+                      .map(method => [method, ballotResult.results?.[method]])
+                      .filter(([_, result]) => result !== undefined);
+
+                    if (familyMethods.length === 0) return null;
+
+                    return (
+                      <div key={family.name} style={{marginTop: familyIdx > 0 ? '1rem' : '0', marginBottom: '0.5rem'}}>
+                        <h4 style={{fontSize: '0.9rem', fontWeight: 'bold', color: '#666', marginBottom: '0.5rem', textTransform: 'uppercase'}}>{family.name} Methods</h4>
+                        {familyMethods.map(([method, methodResult]: [string, any]) => {
+                          const status = methodResult.status || 'unknown';
+                          const isError = status === 'error' || methodResult.error;
+                          const isNoVotes = status === 'no_votes';
+                          const isConclusive = status === 'conclusive';
+                          const isInconclusive = status === 'inconclusive';
+                          
+                          // Determine status color and label
+                          let statusColor = '#666';
+                          let statusLabel = status;
+                          if (isError) {
+                            statusColor = '#d32f2f';
+                            statusLabel = 'Error';
+                          } else if (isNoVotes) {
+                            statusColor = '#999';
+                            statusLabel = 'No Votes';
+                          } else if (isConclusive) {
+                            statusColor = '#2e7d32';
+                            statusLabel = 'Final';
+                          } else if (isInconclusive) {
+                            statusColor = '#ff9800';
+                            statusLabel = 'Indeterminate';
+                          } else {
+                            statusColor = '#2196f3';
+                            statusLabel = 'Intermediate';
+                          }
+                          
+                          return (
+                            <div key={method} style={{marginTop: '0.5rem', padding: '0.5rem', background: '#f5f5f5', borderRadius: '4px', borderLeft: `3px solid ${statusColor}`}}>
+                              <strong>{formatMethodName(method)}:</strong>
+                              {methodResult.winners && methodResult.winners.length > 0 ? (
+                                <span style={{marginLeft: '0.5rem'}}>
+                                  {methodResult.winners.join(', ')}
+                                </span>
+                              ) : (
+                                <span style={{marginLeft: '0.5rem', color: '#666', fontStyle: 'italic'}}>
+                                  {isNoVotes ? 'No votes yet' : isError ? 'Calculation failed' : 'No winners determined'}
+                                </span>
+                              )}
+                              <span style={{marginLeft: '0.5rem', fontSize: '0.9rem', color: statusColor, fontWeight: 'bold'}}>
+                                [{statusLabel}]
+                              </span>
+                              {methodResult.error && (
+                                <div style={{marginTop: '0.25rem', marginLeft: '1rem', fontSize: '0.85rem', color: '#d32f2f'}}>
+                                  Error: {methodResult.error}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             ) : (
               <p style={{marginTop: '1rem', color: '#666', fontStyle: 'italic'}}>

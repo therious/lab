@@ -61,10 +61,15 @@ defmodule Elections.Algorithms.IRVSTV do
       run_rounds(updated_rankings, still_remaining |> Enum.map(&elem(&1, 0)), winners ++ new_winners_names, number_of_winners, quota)
     else
       # Eliminate lowest candidate
-      {_lowest_candidate, _lowest_count} = Enum.min_by(still_remaining, fn {_c, count} -> count end)
-      eliminated = still_remaining |> Enum.min_by(fn {_c, count} -> count end) |> elem(0)
-      updated_rankings = eliminate_candidate(rankings, eliminated)
-      run_rounds(updated_rankings, List.delete(remaining, eliminated), winners, number_of_winners, quota)
+      # Guard against empty still_remaining (shouldn't happen, but safety check)
+      if Enum.empty?(still_remaining) or Enum.empty?(remaining) do
+        # No more candidates to eliminate, return current winners
+        winners
+      else
+        eliminated = still_remaining |> Enum.min_by(fn {_c, count} -> count end) |> elem(0)
+        updated_rankings = eliminate_candidate(rankings, eliminated)
+        run_rounds(updated_rankings, List.delete(remaining, eliminated), winners, number_of_winners, quota)
+      end
     end
   end
 
