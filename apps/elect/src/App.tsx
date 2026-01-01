@@ -451,59 +451,97 @@ function ResultsView() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Load initial results and set up websocket connection
   React.useEffect(() => {
-    if (currentElection) {
-      setLoading(true);
-      setError(null);
-      fetch(`/api/dashboard/${currentElection.identifier}`, {
-        headers: {
-          'Accept': 'application/json'
+    if (!currentElection) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    // Helper to process and set results
+    const processResults = (data: any) => {
+      // Handle both old format (array) and new format (object with results and metadata)
+      if (data.results && Array.isArray(data.results)) {
+        setResults({ballots: data.results, metadata: data.metadata || null});
+      } else if (data.results && data.results.results && Array.isArray(data.results.results)) {
+        setResults({ballots: data.results.results, metadata: data.results.metadata || null});
+      } else if (data.results && typeof data.results === 'object' && data.results.results) {
+        setResults({ballots: data.results.results || [], metadata: data.results.metadata || null});
+      } else {
+        setResults({ballots: data.results || [], metadata: data.metadata || null});
+      }
+      setLoading(false);
+    };
+    
+    // Load initial results via REST API
+    fetch(`/api/dashboard/${currentElection.identifier}`, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+      .then(async res => {
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await res.text();
+          const titleMatch = text.match(/<title>(.*?)<\/title>/i);
+          const errorTitle = titleMatch ? titleMatch[1] : 'Server Error';
+          throw new Error(`Server returned HTML instead of JSON: ${errorTitle}`);
         }
+        
+        const data = await res.json();
+        if (!res.ok) {
+          if (data.results || data.results?.results) {
+            return data;
+          }
+          throw new Error(data.error || data.error_message || 'Failed to load results');
+        }
+        return data;
       })
-        .then(async res => {
-          const contentType = res.headers.get('content-type');
-          if (!contentType || !contentType.includes('application/json')) {
-            // Server returned HTML error page instead of JSON
-            const text = await res.text();
-            const titleMatch = text.match(/<title>(.*?)<\/title>/i);
-            const errorTitle = titleMatch ? titleMatch[1] : 'Server Error';
-            throw new Error(`Server returned HTML instead of JSON: ${errorTitle}`);
-          }
-          
-          const data = await res.json();
-          // Even if response is not OK, try to extract partial results if available
-          if (!res.ok) {
-            // If we have partial results, use them; otherwise throw error
-            if (data.results || data.results?.results) {
-              return data;
-            }
-            throw new Error(data.error || data.error_message || 'Failed to load results');
-          }
-          return data;
+      .then(processResults)
+      .catch(err => {
+        console.error('Error loading results:', err);
+        setError(err.message || 'Failed to load results');
+        setLoading(false);
+      });
+    
+    // Set up websocket connection for real-time updates
+    let socket: any = null;
+    let channel: any = null;
+    
+    // Dynamically import Phoenix Socket (may not be available in all environments)
+    import('phoenix').then(({Socket}) => {
+      socket = new Socket('/socket', {});
+      socket.connect();
+      
+      channel = socket.channel(`dashboard:${currentElection.identifier}`, {});
+      
+      channel.on('results_updated', (payload: any) => {
+        // Update results when server broadcasts new results
+        if (payload.results) {
+          processResults(payload.results);
+        }
+      });
+      
+      channel.join()
+        .receive('ok', () => {
+          console.log('Joined dashboard channel for', currentElection.identifier);
         })
-        .then(data => {
-          // Handle both old format (array) and new format (object with results and metadata)
-          if (data.results && Array.isArray(data.results)) {
-            // Old format: results is array, metadata might be separate
-            setResults({ballots: data.results, metadata: data.metadata || null});
-          } else if (data.results && data.results.results && Array.isArray(data.results.results)) {
-            // New format: results.results is array, results.metadata exists
-            setResults({ballots: data.results.results, metadata: data.results.metadata || null});
-          } else if (data.results && typeof data.results === 'object' && data.results.results) {
-            // New format with metadata
-            setResults({ballots: data.results.results || [], metadata: data.results.metadata || null});
-          } else {
-            // Fallback
-            setResults({ballots: data.results || [], metadata: data.metadata || null});
-          }
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error('Error loading results:', err);
-          setError(err.message || 'Failed to load results');
-          setLoading(false);
+        .receive('error', (resp: any) => {
+          console.error('Unable to join dashboard channel:', resp);
         });
-    }
+    }).catch((err) => {
+      console.warn('Phoenix Socket not available, using REST API only:', err);
+    });
+    
+    // Cleanup: leave channel and disconnect socket
+    return () => {
+      if (channel) {
+        channel.leave();
+      }
+      if (socket) {
+        socket.disconnect();
+      }
+    };
   }, [currentElection]);
 
   if (!currentElection) {
@@ -533,7 +571,7 @@ function ResultsView() {
         <p style={{color: '#666'}}>No votes have been submitted yet.</p>
         {metadata && (
           <div style={{marginTop: '1rem', padding: '1rem', background: '#f5f5f5', borderRadius: '4px'}}>
-            <p><strong>Total Votes:</strong> {metadata.total_votes || 0}</p>
+            <p><strong>Total Ballots Cast:</strong> {metadata.total_votes || 0}</p>
             {metadata.voting_end && (
               <p><strong>Voting Ends:</strong> {new Date(metadata.voting_end).toLocaleString()}</p>
             )}
@@ -562,7 +600,7 @@ function ResultsView() {
       {metadata && (
         <>
           <div style={{marginBottom: '2rem', padding: '1rem', background: '#e8f4f8', borderRadius: '8px'}}>
-            <p><strong>Total Votes Submitted:</strong> {metadata.total_votes || 0}</p>
+            <p><strong>Total Ballots Cast:</strong> {metadata.total_votes || 0}</p>
             {votingStart && (
               <p><strong>Voting Started:</strong> {votingStart.toLocaleString()}</p>
             )}
@@ -595,7 +633,6 @@ function ResultsView() {
             {ballotResult.is_referendum && (
               <p style={{fontStyle: 'italic', color: '#666'}}>Referendum</p>
             )}
-            <p><strong>Vote Count:</strong> {voteCount} {voteCount === 1 ? 'vote' : 'votes'}</p>
             {!ballotResult.is_referendum && (
               <p><strong>Elect:</strong> {ballotResult.number_of_winners} out of {ballotResult.candidates?.length || 0} candidates</p>
             )}

@@ -207,6 +207,31 @@ defmodule Elections.Voting do
 
   # Private functions
 
+  # Determine throttle delay based on election characteristics
+  # For small elections (coop, school), update immediately
+  # For large elections (national), throttle to avoid overwhelming clients
+  defp get_throttle_delay(election_identifier) do
+    # Simple heuristic: check if identifier suggests a large election
+    identifier_lower = String.downcase(election_identifier)
+    
+    cond do
+      # National or large-scale elections - throttle to 2 seconds
+      String.contains?(identifier_lower, "national") or
+      String.contains?(identifier_lower, "federal") or
+      String.contains?(identifier_lower, "presidential") ->
+        2000
+      
+      # State-level elections - throttle to 1 second
+      String.contains?(identifier_lower, "state") or
+      String.contains?(identifier_lower, "gubernatorial") ->
+        1000
+      
+      # Small elections (coop, school, local) - no throttle
+      true ->
+        0
+    end
+  end
+
   defp get_election(repo, election_identifier) do
     case repo.get_by(Election, identifier: election_identifier) do
       nil -> {:error, :election_not_found}
@@ -236,8 +261,10 @@ defmodule Elections.Voting do
   defp check_voting_window(election) do
     now = DateTime.utc_now()
 
+    # voting_end is exclusive: if it's 7:00pm, voting ends at 7:00pm (not inclusive)
+    # So we check: now >= voting_start && now < voting_end
     if DateTime.compare(now, election.voting_start) != :lt &&
-         DateTime.compare(now, election.voting_end) != :gt do
+         DateTime.compare(now, election.voting_end) == :lt do
       :ok
     else
       {:error, :voting_window_closed}
@@ -279,10 +306,19 @@ defmodule Elections.Voting do
           {:vote_submitted, election.identifier, %{vote_id: vote.id}}
         )
 
-        # Calculate and broadcast updated results
+        # Calculate and broadcast updated results with throttling
         # Use election identifier so we can set the dynamic repo in the task process
         election_identifier = election.identifier
+        
+        # Throttle updates: for large elections, delay broadcast to avoid overwhelming clients
+        # Check if this is a "large" election (could be based on vote count, but for now use a simple delay)
+        throttle_ms = get_throttle_delay(election_identifier)
+        
         Task.start(fn ->
+          if throttle_ms > 0 do
+            Process.sleep(throttle_ms)
+          end
+          
           RepoManager.with_repo(election_identifier, fn task_repo ->
             # Re-fetch election to ensure we have the latest data
             case ElectionsContext.get_election(election_identifier) do

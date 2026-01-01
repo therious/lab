@@ -64,11 +64,12 @@ defmodule Elections.Elections do
     ballots = Map.get(config, "ballots", [])
     
     # Determine election status
+    # voting_end is exclusive: if it's 7:00pm, voting ends at 7:00pm (not inclusive)
     status = cond do
       # Compare using DateTime.compare for proper date comparison
       DateTime.compare(voting_start, now) == :gt -> "upcoming"
-      DateTime.compare(voting_start, now) != :gt and DateTime.compare(voting_end, now) != :lt -> "open"
-      DateTime.compare(voting_end, now) == :lt -> "closed"
+      DateTime.compare(voting_start, now) != :gt and DateTime.compare(voting_end, now) == :gt -> "open"
+      DateTime.compare(voting_end, now) != :gt -> "closed"  # voting_end <= now means closed
       true -> "unknown"
     end
     

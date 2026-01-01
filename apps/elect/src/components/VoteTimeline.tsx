@@ -155,7 +155,7 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   const cumulativePath = cumulativeData.length > 0
     ? cumulativeData.map((point, idx) => {
         const x = padding + (point.time / electionDuration) * plotWidth;
-        const y = padding + plotHeight - (point.cumulative / maxCumulative) * plotHeight;
+        const y = padding + plotHeight - (point.cumulative / niceMaxCumulative) * plotHeight;
         return `${idx === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
       }).join(' ')
     : '';
@@ -167,18 +167,43 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
     if (count > 0 || i === 0 || i === totalPeriods) {
       const x = padding + (i / Math.max(totalPeriods, 1)) * plotWidth;
       const width = Math.max(plotWidth / Math.max(totalPeriods, 1), 0.5);
-      const height = (count / maxVolume) * plotHeight * 0.8; // Use 80% of height for bars
+      const height = (count / niceMaxVolume) * plotHeight * 0.8; // Use 80% of height for bars
       bars.push({x, width, height, count});
     }
   }
   
-  // Generate Y-axis labels
+  // Generate Y-axis labels with better scaling
   const leftAxisLabels: number[] = [];
   const rightAxisLabels: number[] = [];
   
+  // Use nice round numbers for axis labels
+  const niceMaxVolume = Math.ceil(maxVolume / 5) * 5 || 5;
+  const niceMaxCumulative = Math.ceil(maxCumulative / 5) * 5 || 5;
+  
   for (let i = 0; i <= 5; i++) {
-    leftAxisLabels.push(Math.round((i / 5) * maxVolume));
-    rightAxisLabels.push(Math.round((i / 5) * maxCumulative));
+    leftAxisLabels.push(Math.round((i / 5) * niceMaxVolume));
+    rightAxisLabels.push(Math.round((i / 5) * niceMaxCumulative));
+  }
+  
+  // Generate X-axis tickmarks based on time unit
+  const xAxisTicks: Array<{time: number; label: string}> = [];
+  const numTicks = Math.min(totalPeriods + 1, 10); // Max 10 ticks
+  
+  for (let i = 0; i <= numTicks; i++) {
+    const period = Math.floor((i / numTicks) * totalPeriods);
+    const timeMs = start.getTime() + (period * unitMs);
+    const tickDate = new Date(timeMs);
+    
+    let label = '';
+    if (timeUnit === 'day') {
+      label = tickDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
+    } else if (timeUnit === 'hour') {
+      label = tickDate.toLocaleTimeString('en-US', {hour: 'numeric', hour12: true});
+    } else {
+      label = tickDate.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true});
+    }
+    
+    xAxisTicks.push({time: period, label});
   }
   
   // Handle edge case: if no votes, show empty chart
@@ -241,6 +266,32 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
                   stroke="#e0e0e0"
                   strokeWidth="0.5"
                 />
+              );
+            })}
+            
+            {/* X-axis tickmarks */}
+            {xAxisTicks.map((tick, idx) => {
+              const x = padding + (tick.time / Math.max(totalPeriods, 1)) * plotWidth;
+              return (
+                <g key={idx}>
+                  <line
+                    x1={x}
+                    y1={padding + plotHeight}
+                    x2={x}
+                    y2={padding + plotHeight + 2}
+                    stroke="#666"
+                    strokeWidth="1"
+                  />
+                  <text
+                    x={x}
+                    y={padding + plotHeight + 8}
+                    textAnchor="middle"
+                    fontSize="2"
+                    fill="#666"
+                  >
+                    {tick.label}
+                  </text>
+                </g>
               );
             })}
             
