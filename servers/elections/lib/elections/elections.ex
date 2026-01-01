@@ -110,9 +110,28 @@ defmodule Elections.Elections do
     # Take up to 3 most important ballots for summary
     Enum.take(prioritized, 3)
     |> Enum.map(fn ballot ->
+      is_referendum = Map.get(ballot, "yesNoReferendum", false)
+      candidates = Map.get(ballot, "candidates", [])
+      candidate_count = length(candidates)
+      number_of_winners = Map.get(ballot, "number_of_winners", 1)
+      
+      summary = if is_referendum do
+        # For referendums, just say it's a referendum
+        "Referendum"
+      else
+        # For regular ballots, show "Elect N out of M candidates"
+        if candidate_count > 0 do
+          "Elect #{number_of_winners} out of #{candidate_count} candidates"
+        else
+          "Untitled Ballot"
+        end
+      end
+      
       %{
         title: Map.get(ballot, "title", "Untitled Ballot"),
-        candidate_count: length(Map.get(ballot, "candidates", []))
+        candidate_count: candidate_count,
+        summary: summary,
+        is_referendum: is_referendum
       }
     end)
   end

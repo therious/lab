@@ -10,6 +10,7 @@ ballots:
   - title: "Wallpaper/Carpet Combination"
     description: "Select the preferred combination of wallpaper and carpet for common areas renovation"
     number_of_winners: 1
+    quorum: 50
     candidates:
       - name: "Classic Beige / Neutral Gray"
       - name: "Modern Blue / Light Blue"
@@ -46,6 +47,7 @@ ballots:
   - title: "Renovation Assessment"
     description: "Vote on whether to assess owners a one-time $2 per square foot fee for renovations"
     number_of_winners: 1
+    yesNoReferendum: true
     candidates:
       - name: "Yes - Approve Assessment"
       - name: "No - Reject Assessment"

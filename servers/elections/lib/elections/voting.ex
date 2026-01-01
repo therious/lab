@@ -333,6 +333,37 @@ defmodule Elections.Voting do
 
       # Extract votes for this ballot from ballot_data
       ballot_votes = extract_ballot_votes(votes, ballot_title)
+      vote_count = length(ballot_votes)
+      
+      # Check quorum if specified
+      quorum = case Map.get(ballot, "quorum") do
+        q when is_integer(q) and q > 0 -> q
+        _ -> nil
+      end
+      
+      # Determine quorum status
+      quorum_status = if quorum do
+        if vote_count >= quorum do
+          "met"
+        else
+          "not_met"
+        end
+      else
+        nil
+      end
+      
+      # Determine overall result status based on quorum
+      result_status = cond do
+        quorum && vote_count < quorum && DateTime.compare(DateTime.utc_now(), election.voting_end) == :lt ->
+          # Voting still open and quorum not met - in progress
+          "in_progress"
+        quorum && vote_count < quorum ->
+          # Voting closed and quorum not met - no quorum
+          "no_quorum"
+        true ->
+          # Quorum met or no quorum required - use algorithm status
+          nil  # Will be determined by algorithm results
+      end
 
       # Create ballot map with candidates and number_of_winners for algorithms
       ballot_for_algorithms = %{
@@ -343,7 +374,7 @@ defmodule Elections.Voting do
       # Always calculate results - algorithms should handle empty votes gracefully
       # Wrap in try/rescue to handle any algorithm errors
       algorithm_results = try do
-        if length(ballot_votes) > 0 do
+        if vote_count > 0 do
           %{
             ranked_pairs: safe_calculate_algorithm(fn -> Elections.Algorithms.RankedPairs.calculate(ballot_for_algorithms, ballot_votes) end, "ranked_pairs"),
             shulze: safe_calculate_algorithm(fn -> Elections.Algorithms.Shulze.calculate(ballot_for_algorithms, ballot_votes) end, "shulze"),
@@ -367,7 +398,11 @@ defmodule Elections.Voting do
         ballot_title: ballot_title,
         candidates: candidates,
         number_of_winners: number_of_winners,
-        vote_count: length(ballot_votes),
+        vote_count: vote_count,
+        quorum: quorum,
+        quorum_status: quorum_status,
+        result_status: result_status,
+        is_referendum: Map.get(ballot, "yesNoReferendum", false),
         results: algorithm_results
       }
     end)

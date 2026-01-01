@@ -592,8 +592,38 @@ function ResultsView() {
         return (
           <div key={idx} style={{marginBottom: '2rem', border: '1px solid #ccc', padding: '1rem', borderRadius: '8px'}}>
             <h2>{ballotResult.ballot_title}</h2>
+            {ballotResult.is_referendum && (
+              <p style={{fontStyle: 'italic', color: '#666'}}>Referendum</p>
+            )}
             <p><strong>Vote Count:</strong> {voteCount} {voteCount === 1 ? 'vote' : 'votes'}</p>
-            <p><strong>Number of Winners:</strong> {ballotResult.number_of_winners}</p>
+            {!ballotResult.is_referendum && (
+              <p><strong>Elect:</strong> {ballotResult.number_of_winners} out of {ballotResult.candidates?.length || 0} candidates</p>
+            )}
+            {ballotResult.quorum && (
+              <p>
+                <strong>Quorum:</strong> {ballotResult.quorum} votes required
+                {ballotResult.quorum_status === 'met' ? (
+                  <span style={{marginLeft: '0.5rem', color: '#2e7d32', fontWeight: 'bold'}}>✓ Met</span>
+                ) : (
+                  <span style={{marginLeft: '0.5rem', color: '#d32f2f', fontWeight: 'bold'}}>✗ Not Met ({voteCount}/{ballotResult.quorum})</span>
+                )}
+              </p>
+            )}
+            {ballotResult.result_status && (
+              <p>
+                <strong>Result Status:</strong>
+                <span style={{
+                  marginLeft: '0.5rem',
+                  fontWeight: 'bold',
+                  color: ballotResult.result_status === 'in_progress' ? '#ff9800' : 
+                         ballotResult.result_status === 'no_quorum' ? '#d32f2f' : '#666'
+                }}>
+                  {ballotResult.result_status === 'in_progress' ? 'In Progress (Quorum Not Met)' :
+                   ballotResult.result_status === 'no_quorum' ? 'No Quorum' :
+                   ballotResult.result_status}
+                </span>
+              </p>
+            )}
             
             {hasVotes ? (
               <div style={{marginTop: '1rem'}}>
