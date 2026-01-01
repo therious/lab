@@ -194,6 +194,9 @@ importers:
       immer:
         specifier: ~10.0.4
         version: 10.0.4
+      masonry-grid:
+        specifier: ^1.0.3
+        version: 1.0.3(react-dom@18.2.0)(react@18.2.0)
       phoenix:
         specifier: ~1.7.21
         version: 1.7.21
@@ -13354,6 +13357,16 @@ packages:
   /markdown-table@3.0.4:
     resolution: {integrity: sha512-wiYz4+JrLyb/DqW2hkFJxP7Vd7JuTDm77fvbM8VfEQdmSMqcImWeeRbHwZjBjIFki/VaMK2BhFi7oUUZeM5bqw==}
     dev: true
+
+  /masonry-grid@1.0.3(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-QdOVgAFwAC4msLX+c0HKq1FG3MalPXPwB7yBsTbCZPcLJ6DEY9miWOfzv2W6K6HnQuIvcjftoDqljaAEPkX+PQ==}
+    peerDependencies:
+      react: ^16.6.1
+      react-dom: ^16.6.3
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
 
   /matcher@3.0.0:
     resolution: {integrity: sha512-OkeDaAZ/bQCxeFAozM55PKcKU0yJMPGifLwV4Qgjitu+5MoAfSQN4lsLJeXZ1b8w0x+/Emda6MZgXS1jvsapng==}

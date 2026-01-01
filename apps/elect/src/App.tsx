@@ -8,6 +8,7 @@ import {VotingInterface} from './components/VotingInterface';
 import {LandingPage} from './components/LandingPage';
 import {VoteTimeline} from './components/VoteTimeline';
 import styled from 'styled-components';
+import {MasonryGrid} from 'masonry-grid';
 
 const BAND_CONFIG = [
   { score: '5', label: 'Excellent', color: '#2e7d32' },
@@ -48,13 +49,12 @@ const CenterBody = styled.main`
 
 const SummaryContainer = styled.div`
   padding: 1rem;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 1.5rem;
   height: 100%;
   overflow-y: auto;
-  align-content: flex-start;
+`;
+
+const MasonryGridContainer = styled.div`
+  width: 100%;
 `;
 
 const ElectionSummaryCard = styled(Link)`
@@ -124,10 +124,11 @@ const BallotCard = styled.div`
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  width: max-content;
+  width: 100%;
   min-width: 300px;
-  max-width: 100%;
+  max-width: 450px;
   height: fit-content;
+  margin-bottom: 1.5rem;
   
   &:hover {
     background-color: #f5f5f5;
@@ -370,6 +371,16 @@ function SummaryView() {
             </SubmitButton>
           )}
         </div>
+        <MasonryGridContainer>
+          <MasonryGrid
+            column={3}
+            gap={24}
+            responsive={{
+              0: {column: 1},
+              768: {column: 2},
+              1024: {column: 3}
+            }}
+          >
       {ballots.map((ballot: Ballot) => {
         const vote = votes[ballot.title];
         if (!vote) return null;
@@ -489,6 +500,8 @@ function SummaryView() {
           </BallotCard>
         );
       })}
+          </MasonryGrid>
+        </MasonryGridContainer>
       {submitted && (
         <div style={{textAlign: 'center', padding: '2rem', color: '#4caf50', fontSize: '1.2rem', fontWeight: 'bold'}}>
           ✓ Your vote has been successfully submitted

@@ -106,6 +106,7 @@ See [Elections Server TESTING.md](../servers/elections/TESTING.md) for API testi
 - **State Management**: Redux with `@therious/actions`
 - **Styling**: Styled Components
 - **Drag & Drop**: Atlassian Pragmatic Drag and Drop
+- **Layout**: Masonry Grid for summary view (see [Layout Architecture](./docs/LAYOUT_ARCHITECTURE.md))
 - **Routing**: React Router DOM
 - **Configuration**: `@therious/boot` for YAML config loading
 
@@ -162,6 +163,7 @@ To inspect the SQLite database used by the elections server, see [SQLITE_CONNECT
 
 ## Related Documentation
 
+- [Layout Architecture](./docs/LAYOUT_ARCHITECTURE.md) - Summary view masonry layout implementation
 - [Elections Server README](../servers/elections/README.md) - Server setup and API
 - [Elections Server TESTING.md](../servers/elections/TESTING.md) - API testing guide
 - [SQLITE_CONNECTION.md](../servers/elections/SQLITE_CONNECTION.md) - Database inspection
