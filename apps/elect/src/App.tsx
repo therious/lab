@@ -74,8 +74,8 @@ const BandsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  flex: 1;
-  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
 `;
 
 const BandRow = styled.div<{$color: string}>`
@@ -87,6 +87,8 @@ const BandRow = styled.div<{$color: string}>`
   border: 2px solid ${props => props.$color};
   border-radius: 4px;
   min-height: 2.5rem;
+  width: 100%;
+  box-sizing: border-box;
 `;
 
 const BandLabel = styled.div`
@@ -103,6 +105,37 @@ const CandidatesList = styled.div`
   gap: 0.5rem;
   flex: 1;
   align-items: center;
+`;
+
+const BallotCard = styled.div`
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  width: fit-content;
+  min-width: 300px;
+  max-width: 100%;
+  flex: 0 1 auto;
+  
+  &:hover {
+    background-color: #f5f5f5;
+  }
+`;
+
+const BallotDescription = styled.p`
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+  width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+  max-height: calc(1.4em * 3);
 `;
 
 const CandidateName = styled.span`
@@ -370,12 +403,6 @@ function SummaryView() {
           });
         }
         
-        // Find the widest band to determine card width
-        const widestBand = BAND_CONFIG.reduce((max, {score}) => {
-          const candidates = vote[score] || [];
-          return candidates.length > max.length ? candidates : max;
-        }, [] as string[]);
-        
         // Get unranked candidates and limit to 3, then show "N others" (but show name if only 1 remaining)
         const unrankedCandidates = vote['unranked'] || [];
         const unrankedToShow = unrankedCandidates.slice(0, 3);
@@ -384,18 +411,8 @@ function SummaryView() {
         const shouldShowAll = unrankedCandidates.length === 4;
         
         return (
-          <div 
+          <BallotCard
             key={ballot.title} 
-            style={{
-              border: '2px solid #ccc', 
-              borderRadius: '8px', 
-              padding: '1rem', 
-              cursor: 'pointer',
-              width: 'fit-content',
-              minWidth: '300px',
-              maxWidth: '100%',
-              flex: '0 1 auto'
-            }}
             onClick={() => {
               const encodedTitle = encodeURIComponent(ballot.title);
               navigate(`/ballot/${encodedTitle}`);
@@ -429,7 +446,9 @@ function SummaryView() {
                 </ConfirmButton>
               ))}
             </div>
-            {ballot.description && <p style={{color: '#666', fontSize: '0.9rem', margin: '0.5rem 0', wordWrap: 'break-word'}}>{ballot.description}</p>}
+            {ballot.description && (
+              <BallotDescription>{ballot.description}</BallotDescription>
+            )}
             <BandsContainer>
               {BAND_CONFIG.map(({score, label, color}) => {
                 const candidates = vote[score] || [];
@@ -484,7 +503,7 @@ function SummaryView() {
                 );
               })}
             </BandsContainer>
-          </div>
+          </BallotCard>
         );
       })}
       {submitted && (
