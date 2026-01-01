@@ -245,13 +245,15 @@ const ToggleSlider = styled.span<{$checked: boolean}>`
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    ${props => props.$checked ? 'left: 0.5rem;' : 'left: 0.5rem;'}
     font-size: 0.7rem;
     font-weight: bold;
     color: ${props => props.$checked ? 'white' : '#000'};
     z-index: 1;
     pointer-events: none;
     white-space: nowrap;
+    ${props => props.$checked 
+      ? 'left: 0.5rem;' 
+      : 'right: 0.5rem;'}
   }
 `;
 
