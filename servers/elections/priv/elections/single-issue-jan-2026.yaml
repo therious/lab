@@ -1,0 +1,22 @@
+identifier: "single-issue-jan-2026"
+title: "Single Issue Election - January 2026"
+description: "Test election for single issue voting"
+voting_start: "2026-01-01T00:00:00Z"
+voting_end: "2026-01-22T00:00:00Z"
+service_start: "2026-01-01T00:00:00Z"
+service_end: "2026-02-01T00:00:00Z"
+
+support:
+  email: "elections@test.org"
+  phone: "(555) 123-4567"
+  message: "For assistance with this election, please contact support."
+
+ballots:
+  - title: "Community Center Renovation"
+    description: "Should the community center be renovated with a budget of $500,000?"
+    number_of_winners: 1
+    yesNoReferendum: true
+    candidates:
+      - name: "Yes - Approve Renovation"
+      - name: "No - Reject Renovation"
+
