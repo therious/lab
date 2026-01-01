@@ -816,16 +816,17 @@ function ResultsView() {
           )}
         </>
       )}
-      <MuuriComponent
-        dragEnabled={false}
-        layout={{
-          fillGaps: true,
-          horizontal: false,
-          alignRight: false,
-          alignBottom: false,
-          rounding: false
-        }}
-      >
+      <div style={{marginLeft: '-0.375rem'}}>
+        <MuuriComponent
+          dragEnabled={false}
+          layout={{
+            fillGaps: true,
+            horizontal: false,
+            alignRight: false,
+            alignBottom: false,
+            rounding: false
+          }}
+        >
       {ballots
         .filter((ballotResult: any) => ballotResult)
         .map((ballotResult: any, idx: number) => {
@@ -946,7 +947,8 @@ function ResultsView() {
           </MuuriItem>
         );
       })}
-      </MuuriComponent>
+        </MuuriComponent>
+      </div>
     </div>
   );
 }
