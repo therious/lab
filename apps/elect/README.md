@@ -4,7 +4,7 @@ React-based voting interface for the Elections system. This application provides
 
 ## Overview
 
-Elect is a React + Vite application that connects to the [Elections Server](../servers/elections/README.md) to provide a user-friendly voting interface. Users can drag candidates into score bands (0-5) and view election summaries.
+Elect is a React + Vite application that connects to the [Elections Server](../../servers/elections/README.md) to provide a user-friendly voting interface. Users can drag candidates into score bands (0-5) and view election summaries.
 
 ## Quick Start
 
@@ -17,7 +17,7 @@ Elect is a React + Vite application that connects to the [Elections Server](../s
    ```
    This starts Vite dev server on `http://localhost:5173` with hot reload.
 
-2. **Note:** In dev mode, the app expects the elections server to be running separately. See [Elections Server README](../servers/elections/README.md) for server setup.
+2. **Note:** In dev mode, the app expects the elections server to be running separately. See [Elections Server README](../../servers/elections/README.md) for server setup.
 
 ### Production Build and Serve
 
@@ -54,7 +54,7 @@ Elect is a React + Vite application that connects to the [Elections Server](../s
 
 The app loads election configuration from `/config.yaml` (served from `public/config.yaml`). The elections server also loads configs from `servers/elections/priv/elections/*.yaml`.
 
-See [Elections Server README](../servers/elections/README.md) for election configuration format.
+See [Elections Server README](../../servers/elections/README.md) for election configuration format.
 
 ## Testing
 
@@ -88,7 +88,7 @@ fetch('/api/debug/token?election_title=Presidential Election')
 
 ### Integration Testing
 
-See [Elections Server TESTING.md](../servers/elections/TESTING.md) for API testing examples.
+See [Elections Server TESTING.md](../../servers/elections/docs/TESTING.md) for API testing examples.
 
 ## Features
 
@@ -136,11 +136,11 @@ The elect app communicates with the elections server via:
 - **Static Assets**: Served from elections server's `priv/static/`
 - **Configuration**: Elections loaded from server's YAML files
 
-For server details, see [Elections Server README](../servers/elections/README.md).
+For server details, see [Elections Server README](../../servers/elections/README.md).
 
 ## Database Inspection
 
-To inspect the SQLite database used by the elections server, see [SQLITE_CONNECTION.md](../servers/elections/SQLITE_CONNECTION.md).
+To inspect the SQLite database used by the elections server, see [SQLITE_CONNECTION.md](../../servers/elections/docs/SQLITE_CONNECTION.md).
 
 **Database Location:** `servers/elections/priv/repo/elections.db`
 
@@ -169,9 +169,9 @@ To inspect the SQLite database used by the elections server, see [SQLITE_CONNECT
 - [Layout Architecture](./docs/LAYOUT_ARCHITECTURE.md) - Summary view masonry layout implementation
 
 ### Server Documentation
-- [Elections Server README](../servers/elections/README.md) - Server setup and API
-- [Winner Ordering Data Structure](../servers/elections/docs/WINNER_ORDERING_NOTATION.md) - Data structure and tie classification
-- [Winner Ordering Analysis](../servers/elections/docs/WINNER_ORDERING_ANALYSIS.md) - Algorithm ordering details
-- [Elections Server TESTING.md](../servers/elections/docs/TESTING.md) - API testing guide
-- [SQLITE_CONNECTION.md](../servers/elections/docs/SQLITE_CONNECTION.md) - Database inspection
+- [Elections Server README](../../servers/elections/README.md) - Server setup and API
+- [Winner Ordering Data Structure](../../servers/elections/docs/WINNER_ORDERING_NOTATION.md) - Data structure and tie classification
+- [Winner Ordering Analysis](../../servers/elections/docs/WINNER_ORDERING_ANALYSIS.md) - Algorithm ordering details
+- [Elections Server TESTING.md](../../servers/elections/docs/TESTING.md) - API testing guide
+- [SQLITE_CONNECTION.md](../../servers/elections/docs/SQLITE_CONNECTION.md) - Database inspection
 
