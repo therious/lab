@@ -988,6 +988,8 @@ function ResultsView() {
                           const isInconclusive = status === 'inconclusive';
                           
                           // Determine status color and label
+                          // Algorithm status "conclusive" means the algorithm found enough winners
+                          // But we need to check if election is closed to show "Final" vs "Conclusive"
                           let statusColor = '#666';
                           let statusLabel = status;
                           if (isError) {
@@ -997,14 +999,15 @@ function ResultsView() {
                             statusColor = '#999';
                             statusLabel = 'No Votes';
                           } else if (isConclusive) {
+                            // "Final" only if election is closed, otherwise "Conclusive"
                             statusColor = '#2e7d32';
-                            statusLabel = 'Final';
+                            statusLabel = isClosed ? 'Final' : 'Conclusive';
                           } else if (isInconclusive) {
                             statusColor = '#ff9800';
                             statusLabel = 'Indeterminate';
                           } else {
                             statusColor = '#2196f3';
-                            statusLabel = 'Intermediate';
+                            statusLabel = 'Unknown';
                           }
                           
                           return (
