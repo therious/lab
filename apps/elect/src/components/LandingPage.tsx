@@ -241,6 +241,7 @@ export function LandingPage() {
           {elections.map(election => {
             const isUpcoming = election.status === 'upcoming';
             const isOpen = election.status === 'open';
+            const isClosed = election.status === 'closed';
             
             return (
               <ElectionCard
@@ -258,6 +259,11 @@ export function LandingPage() {
                 {isOpen && (
                   <span style={{marginLeft: '0.5rem', fontSize: '0.85rem', color: '#4caf50', fontWeight: 'normal'}}>
                     (Open)
+                  </span>
+                )}
+                {isClosed && (
+                  <span style={{marginLeft: '0.5rem', fontSize: '0.85rem', color: '#d32f2f', fontWeight: 'normal'}}>
+                    (Closed)
                   </span>
                 )}
               </ElectionTitle>
