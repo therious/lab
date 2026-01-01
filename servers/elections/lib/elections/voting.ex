@@ -250,9 +250,18 @@ defmodule Elections.Voting do
 
     # Calculate results for each ballot - always return complete structure
     results = Enum.map(ballots, fn ballot ->
+      # Ensure ballot is a map
+      ballot = if is_map(ballot), do: ballot, else: %{}
+      
       ballot_title = Map.get(ballot, "title", "Untitled Ballot")
-      candidates = Map.get(ballot, "candidates", [])
-      number_of_winners = Map.get(ballot, "number_of_winners", 1)
+      candidates = case Map.get(ballot, "candidates", []) do
+        candidates when is_list(candidates) -> candidates
+        _ -> []
+      end
+      number_of_winners = case Map.get(ballot, "number_of_winners", 1) do
+        n when is_integer(n) and n > 0 -> n
+        _ -> 1
+      end
 
       # Extract votes for this ballot from ballot_data
       ballot_votes = extract_ballot_votes(votes, ballot_title)
