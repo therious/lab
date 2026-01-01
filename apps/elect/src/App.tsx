@@ -436,9 +436,16 @@ function SummaryView() {
             >
               {token?.startsWith('preview-') 
                 ? 'Preview Mode - Voting Not Yet Open' 
-                : allConfirmed 
-                  ? 'Submit All Votes' 
-                  : `Confirm ${ballots.length - Object.values(confirmations).filter(Boolean).length} more ballot(s) to submit`}
+                : (() => {
+                    const unconfirmedCount = ballots.length - Object.values(confirmations).filter(Boolean).length;
+                    if (allConfirmed) {
+                      return ballots.length === 1 ? 'Submit Ballot' : 'Submit All Ballots';
+                    } else {
+                      return unconfirmedCount === 1 
+                        ? 'Confirm 1 more ballot' 
+                        : `Confirm ${unconfirmedCount} more ballots`;
+                    }
+                  })()}
             </SubmitButton>
           )}
         </div>
