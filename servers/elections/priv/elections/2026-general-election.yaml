@@ -6,6 +6,11 @@ voting_end: "2026-12-31T23:59:59Z"
 service_start: "2025-12-01T00:00:00Z"
 service_end: "2026-12-31T23:59:59Z"
 
+support:
+  email: "elections@stateboard.gov"
+  phone: "1-800-555-0100"
+  message: "For assistance with voting issues, please contact the State Board of Elections."
+
 ballots:
   - title: "Presidential Ballot"
     description: "4-year term beginning January 20, 2026. The President serves as head of state and head of government, with executive authority over federal agencies and the power to sign or veto legislation."

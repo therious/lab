@@ -6,6 +6,11 @@ voting_end: "2026-06-30T23:59:59Z"
 service_start: "2026-07-01T00:00:00Z"
 service_end: "2026-12-31T23:59:59Z"
 
+support:
+  email: "elections@ansheikartoffel.org"
+  phone: "(555) 456-7890"
+  message: "For assistance with synagogue elections, please contact the Congregation Office."
+
 ballots:
   - title: "Rabbi"
     description: "Spiritual leader of the congregation, responsible for religious services, education, and pastoral care"

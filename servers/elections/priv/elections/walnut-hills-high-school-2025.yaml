@@ -6,6 +6,11 @@ voting_end: "2025-11-30T23:59:59Z"
 service_start: "2025-12-01T00:00:00Z"
 service_end: "2026-12-31T23:59:59Z"
 
+support:
+  email: "student.elections@walnuthills.edu"
+  phone: "(555) 345-6789"
+  message: "For help with student elections, contact the Student Activities Office."
+
 ballots:
   - title: "Student Body President"
     description: "Elected leader of the student body, represents students to administration"
