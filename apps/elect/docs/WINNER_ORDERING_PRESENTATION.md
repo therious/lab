@@ -20,13 +20,13 @@ The server classifies ties into three categories:
 ### Position Notation
 
 - **Format**: Superscript numbers (not ordinals): 1, 2, 3, 4, etc.
-- **Example**: "Alice<sup>1</sup>, Bob<sup>2</sup>, Charlie<sup>2</sup>"
+- **Example**: `"Alice<sup>1</sup>, Bob<sup>2</sup>, Charlie<sup>2</sup>"`
 - **Rationale**: Numbers are more compact and consistent than ordinals (1st, 2nd, 3rd)
 
 ### Tie Symbols
 
 - **Statistical Ties**: No special symbol (clean appearance for true ties)
-- **Peculiar Ties**: Superscript asterisk (*) - "Alice<sup>1*</sup>"
+- **Peculiar Ties**: Superscript asterisk (*) - `"Alice<sup>1*</sup>"`
 - **Ambiguous Ties**: Superscript dagger (†) - "Alice<sup>1†</sup>"
 - **Symbol Size**: Numbers and symbols are same size (not nested superscript)
 
@@ -51,22 +51,22 @@ Tied superscripts display tooltips on hover with specific language:
 ## Display Examples
 
 ### Statistical Tie
-"Alice<sup>1</sup>, Bob<sup>2</sup>, Charlie<sup>2</sup>, David<sup>4</sup>"
+`"Alice<sup>1</sup>, Bob<sup>2</sup>, Charlie<sup>2</sup>, David<sup>4</sup>"`
 - Bob and Charlie statistically tied for 2nd
 - No special symbol
 
 ### Peculiar Tie
-"Alice<sup>1*</sup>, Bob<sup>2*</sup>, Charlie<sup>2*</sup>, David<sup>4*</sup>"
+`"Alice<sup>1*</sup>, Bob<sup>2*</sup>, Charlie<sup>2*</sup>, David<sup>4*</sup>"`
 - Bob and Charlie peculiarly tied for 2nd
 - Asterisk indicates peculiar tie
 
 ### Ambiguous Tie
-"Alice<sup>1†</sup>, Bob<sup>2†</sup>, Charlie<sup>3†</sup>"
+`"Alice<sup>1†</sup>, Bob<sup>2†</sup>, Charlie<sup>3†</sup>"`
 - Order is unknown (no metrics available)
 - Dagger indicates ambiguous ordering
 
 ### Mixed Example
-"Alice<sup>1</sup>, Bob<sup>2*</sup>, Charlie<sup>2*</sup>, David<sup>4†</sup>, Eve<sup>4†</sup>"
+`"Alice<sup>1</sup>, Bob<sup>2*</sup>, Charlie<sup>2*</sup>, David<sup>4†</sup>, Eve<sup>4†</sup>"`
 - Alice: Statistical (true tie/ordering)
 - Bob and Charlie: Peculiar (algorithm metric, not true ordering)
 - David and Eve: Ambiguous (no ordering info)
