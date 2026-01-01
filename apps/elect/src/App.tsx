@@ -232,14 +232,6 @@ const ToggleSlider = styled.span<{$checked: boolean}>`
     z-index: 2;
   }
   
-  /* When unchecked, position text on right side with equal padding */
-  ${props => !props.$checked && `
-    &::after {
-      left: auto;
-      right: 0.5rem;
-    }
-  `}
-  
   &::after {
     content: '${props => props.$checked ? 'Confirmed' : 'Unconfirmed'}';
     position: absolute;
