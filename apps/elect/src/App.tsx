@@ -471,7 +471,12 @@ function ResultsView() {
           }
           
           const data = await res.json();
+          // Even if response is not OK, try to extract partial results if available
           if (!res.ok) {
+            // If we have partial results, use them; otherwise throw error
+            if (data.results || data.results?.results) {
+              return data;
+            }
             throw new Error(data.error || data.error_message || 'Failed to load results');
           }
           return data;
@@ -538,16 +543,37 @@ function ResultsView() {
     );
   }
 
+  // Determine election status
+  const now = new Date();
+  const votingEnd = metadata?.voting_end ? new Date(metadata.voting_end) : null;
+  const votingStart = metadata?.voting_start ? new Date(metadata.voting_start) : null;
+  const isClosed = votingEnd && now > votingEnd;
+  const isOpen = votingStart && votingEnd && now >= votingStart && now <= votingEnd;
+  const isUpcoming = votingStart && now < votingStart;
+  
   return (
     <div style={{padding: '2rem'}}>
       <h1>Election Results: {currentElection.title}</h1>
+      {error && (
+        <div style={{marginBottom: '1rem', padding: '0.75rem', background: '#ffebee', border: '1px solid #d32f2f', borderRadius: '4px', color: '#c62828'}}>
+          <strong>Warning:</strong> {error} (Showing partial results below)
+        </div>
+      )}
       {metadata && (
         <>
           <div style={{marginBottom: '2rem', padding: '1rem', background: '#e8f4f8', borderRadius: '8px'}}>
             <p><strong>Total Votes Submitted:</strong> {metadata.total_votes || 0}</p>
-            {metadata.voting_end && (
-              <p><strong>Voting Ends:</strong> {new Date(metadata.voting_end).toLocaleString()}</p>
+            {votingStart && (
+              <p><strong>Voting Started:</strong> {votingStart.toLocaleString()}</p>
             )}
+            {votingEnd && (
+              <p><strong>Voting {isClosed ? 'Ended' : 'Ends'}:</strong> {votingEnd.toLocaleString()}</p>
+            )}
+            <p><strong>Status:</strong> 
+              <span style={{marginLeft: '0.5rem', fontWeight: 'bold', color: isClosed ? '#d32f2f' : isOpen ? '#2e7d32' : '#ff9800'}}>
+                {isClosed ? 'Closed' : isOpen ? 'Open' : isUpcoming ? 'Upcoming' : 'Unknown'}
+              </span>
+            </p>
           </div>
           {metadata.voting_start && metadata.voting_end && (
             <VoteTimeline
@@ -587,25 +613,56 @@ function ResultsView() {
                 )}
                 
                 <h3 style={{marginTop: '1rem'}}>Results by Method:</h3>
-                {Object.entries(ballotResult.results || {}).map(([method, methodResult]: [string, any]) => (
-                  <div key={method} style={{marginTop: '0.5rem', padding: '0.5rem', background: '#f5f5f5', borderRadius: '4px'}}>
-                    <strong>{method.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}:</strong>
-                    {methodResult.winners && methodResult.winners.length > 0 ? (
-                      <span style={{marginLeft: '0.5rem'}}>
-                        {methodResult.winners.join(', ')}
+                {Object.entries(ballotResult.results || {}).map(([method, methodResult]: [string, any]) => {
+                  const status = methodResult.status || 'unknown';
+                  const isError = status === 'error' || methodResult.error;
+                  const isNoVotes = status === 'no_votes';
+                  const isConclusive = status === 'conclusive';
+                  const isInconclusive = status === 'inconclusive';
+                  
+                  // Determine status color and label
+                  let statusColor = '#666';
+                  let statusLabel = status;
+                  if (isError) {
+                    statusColor = '#d32f2f';
+                    statusLabel = 'Error';
+                  } else if (isNoVotes) {
+                    statusColor = '#999';
+                    statusLabel = 'No Votes';
+                  } else if (isConclusive) {
+                    statusColor = '#2e7d32';
+                    statusLabel = 'Final';
+                  } else if (isInconclusive) {
+                    statusColor = '#ff9800';
+                    statusLabel = 'Indeterminate';
+                  } else {
+                    statusColor = '#2196f3';
+                    statusLabel = 'Intermediate';
+                  }
+                  
+                  return (
+                    <div key={method} style={{marginTop: '0.5rem', padding: '0.5rem', background: '#f5f5f5', borderRadius: '4px', borderLeft: `3px solid ${statusColor}`}}>
+                      <strong>{method.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}:</strong>
+                      {methodResult.winners && methodResult.winners.length > 0 ? (
+                        <span style={{marginLeft: '0.5rem'}}>
+                          {methodResult.winners.join(', ')}
+                        </span>
+                      ) : (
+                        <span style={{marginLeft: '0.5rem', color: '#666', fontStyle: 'italic'}}>
+                          {isNoVotes ? 'No votes yet' : isError ? 'Calculation failed' : 'No winners determined'}
+                        </span>
+                      )}
+                      <span style={{marginLeft: '0.5rem', fontSize: '0.9rem', color: statusColor, fontWeight: 'bold'}}>
+                        [{statusLabel}]
                       </span>
-                    ) : (
-                      <span style={{marginLeft: '0.5rem', color: '#666', fontStyle: 'italic'}}>
-                        {voteCount > 0 ? 'Calculating...' : 'No votes yet'}
-                      </span>
-                    )}
-                    {methodResult.status && (
-                      <span style={{marginLeft: '0.5rem', fontSize: '0.9rem', color: '#666'}}>
-                        ({methodResult.status})
-                      </span>
-                    )}
-                  </div>
-                ))}
+                      {methodResult.error && (
+                        <div style={{marginTop: '0.25rem', marginLeft: '1rem', fontSize: '0.85rem', color: '#d32f2f'}}>
+                          Error: {methodResult.error}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <p style={{marginTop: '1rem', color: '#666', fontStyle: 'italic'}}>
