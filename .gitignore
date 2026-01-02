@@ -54,3 +54,7 @@ servers/elections/priv/repo/*.db-wal
 # Elixir/Phoenix dependencies (managed by Mix)
 **/deps/
 **/_build/
+
+# API keys (never commit)
+apps/anthropic/anthropic-key.txt
+**/*key*.txt
