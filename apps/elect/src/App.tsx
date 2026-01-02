@@ -280,21 +280,21 @@ export default function App() {
               const partiallyFilled = rankedCount > 0 && rankedCount < totalCandidates;
               
               if (rankedCount === totalCandidates) {
-                // All ranked but not confirmed - show pastel green check
+                // All ranked but not confirmed - show round pastel green and grey badge
                 badge = (
                   <span style={{
                     marginLeft: '0.5rem',
                     fontSize: '0.75rem',
                     border: '2px solid #a5d6a7',
-                    color: '#a5d6a7',
-                    padding: '0 0.3rem',
-                    borderRadius: '10px',
+                    color: '#999',
+                    padding: '0',
+                    borderRadius: '50%',
                     fontWeight: 'bold',
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     height: '1.2rem',
-                    minWidth: '1.2rem',
+                    width: '1.2rem',
                     background: 'transparent'
                   }}>
                     ✓
@@ -304,6 +304,7 @@ export default function App() {
                 // Partially filled - show percentage
                 badge = (
                   <span style={{
+                    marginLeft: '0.5rem',
                     fontSize: '0.75rem',
                     background: '#ff9800',
                     color: 'white',
