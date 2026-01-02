@@ -178,7 +178,7 @@ export default function App() {
     return <LandingPage/>;
   }
 
-  // If only one tab, render it directly without navbar
+  // If only one tab, render it directly without navbar (but show UserProfile)
   if (availableTabs.length === 1) {
     const singleTab = availableTabs[0];
     let element: React.ReactElement;
@@ -194,6 +194,10 @@ export default function App() {
     
     return (
       <Layout>
+        {/* Show UserProfile in same position as Navbar when tabs are hidden */}
+        <Navbar style={{justifyContent: 'flex-end'}}>
+          <UserProfile email={userEmail} hasVoted={submitted} />
+        </Navbar>
         <CenterBody>
           <Routes>
             <Route path={singleTab.path} element={element}/>
