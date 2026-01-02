@@ -80,8 +80,13 @@ export function UserProfile({email, hasVoted}: UserProfileProps) {
     return null;
   }
 
-  const handleLogout = () => {
+  const handleLogout = (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    // Dispatch logout action - middleware will clear sessionStorage
     actions.election.logout();
+    // Navigate after logout
     navigate('/');
   };
 
@@ -89,6 +94,8 @@ export function UserProfile({email, hasVoted}: UserProfileProps) {
     <ProfileContainer
       onMouseEnter={() => setShowLogout(true)}
       onMouseLeave={() => setShowLogout(false)}
+      onClick={handleLogout}
+      title="Click to log out securely"
     >
       <EmailText>{email}</EmailText>
       <StatusBadge $voted={hasVoted}>

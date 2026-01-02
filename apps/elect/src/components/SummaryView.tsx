@@ -305,6 +305,7 @@ export function SummaryView() {
     <>
       {showSuccessModal && (
         <ModalOverlay onClick={() => {
+          // Dispatch logout action - middleware will clear sessionStorage
           actions.election.logout();
           navigate('/');
         }}>
@@ -312,6 +313,9 @@ export function SummaryView() {
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
             onKeyDown={(e: React.KeyboardEvent) => {
               if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                // Dispatch logout action - middleware will clear sessionStorage
                 actions.election.logout();
                 navigate('/');
               }
@@ -326,6 +330,7 @@ export function SummaryView() {
               <ModalButton 
                 $primary 
                 onClick={() => {
+                  // Dispatch logout action - middleware will clear sessionStorage
                   actions.election.logout();
                   navigate('/');
                 }}
