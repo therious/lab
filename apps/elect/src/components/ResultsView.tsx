@@ -282,10 +282,13 @@ export function ResultsView() {
   }
 
   // Determine election status (for open/closed elections)
-  const votingEnd = metadata?.voting_end ? new Date(metadata.voting_end) : null;
-  const votingStart = metadata?.voting_start ? new Date(metadata.voting_start) : null;
-  const isClosed = votingEnd && now > votingEnd;
-  const isOpen = votingStart && votingEnd && now >= votingStart && now <= votingEnd;
+  // Use metadata dates if available, otherwise fall back to election dates
+  const metadataVotingEnd = metadata?.voting_end ? new Date(metadata.voting_end) : null;
+  const metadataVotingStart = metadata?.voting_start ? new Date(metadata.voting_start) : null;
+  const votingEndForStatus = metadataVotingEnd || votingEnd;
+  const votingStartForStatus = metadataVotingStart || votingStart;
+  const isClosed = votingEndForStatus && now > votingEndForStatus;
+  const isOpen = votingStartForStatus && votingEndForStatus && now >= votingStartForStatus && now <= votingEndForStatus;
   
   return (
     <div style={{padding: '2rem'}}>
@@ -322,7 +325,7 @@ export function ResultsView() {
             </p>
           </div>
           {/* Only show timeline for open/closed elections, not upcoming */}
-          {!isUpcoming && metadata.voting_start && metadata.voting_end && (
+          {!isUpcoming && metadataVotingStart && metadataVotingEnd && (
             <div style={{marginBottom: '1rem'}}>
               <VoteTimeline
                 voteTimestamps={metadata.vote_timestamps || []}
