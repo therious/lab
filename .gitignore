@@ -50,3 +50,7 @@ discussions/
 servers/elections/priv/repo/*.db
 servers/elections/priv/repo/*.db-shm
 servers/elections/priv/repo/*.db-wal
+
+# Elixir/Phoenix dependencies (managed by Mix)
+**/deps/
+**/_build/
