@@ -42,3 +42,11 @@ docs/exclude
 **/.specstory/
 **/.specstory/**
 discussions/
+
+# SQLite database files (runtime data, not source code)
+**/*.db
+**/*.db-shm
+**/*.db-wal
+servers/elections/priv/repo/*.db
+servers/elections/priv/repo/*.db-shm
+servers/elections/priv/repo/*.db-wal
