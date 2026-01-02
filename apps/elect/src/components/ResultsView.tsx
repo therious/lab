@@ -152,6 +152,92 @@ export function ResultsView() {
     return <div style={{padding: '2rem'}}>No election selected</div>;
   }
 
+  // Determine election status early to check if upcoming
+  const now = new Date();
+  const votingStart = currentElection.voting_start ? new Date(currentElection.voting_start) : null;
+  const votingEnd = currentElection.voting_end ? new Date(currentElection.voting_end) : null;
+  const isUpcoming = votingStart && now < votingStart;
+
+  // For upcoming elections, show preview page instead of results
+  if (isUpcoming) {
+    return (
+      <div style={{padding: '2rem'}}>
+        <h1 style={{marginBottom: '1.3125rem'}}>Election Preview: {currentElection.title}</h1>
+        {currentElection.description && (
+          <p style={{marginBottom: '1rem', color: '#666'}}>{currentElection.description}</p>
+        )}
+        {votingStart && (
+          <div style={{marginBottom: '1rem', padding: '1rem', background: '#e8f4f8', borderRadius: '8px', border: '1px solid #ccc'}}>
+            <p style={{display: 'flex', margin: '0.5rem 0'}}>
+              <strong style={{minWidth: '140px', textAlign: 'right', marginRight: '1rem'}}>Voting Starts:</strong>
+              <span>{votingStart.toLocaleString()}</span>
+            </p>
+            {votingEnd && (
+              <p style={{display: 'flex', margin: '0.5rem 0'}}>
+                <strong style={{minWidth: '140px', textAlign: 'right', marginRight: '1rem'}}>Voting Ends:</strong>
+                <span>{votingEnd.toLocaleString()}</span>
+              </p>
+            )}
+            <p style={{display: 'flex', margin: '0.5rem 0'}}>
+              <strong style={{minWidth: '140px', textAlign: 'right', marginRight: '1rem'}}>Status:</strong>
+              <span style={{fontWeight: 'bold', color: '#ff9800'}}>Upcoming</span>
+            </p>
+          </div>
+        )}
+        <div style={{marginLeft: '-0.375rem'}}>
+          <MuuriComponent
+            dragEnabled={false}
+            layout={{
+              fillGaps: true,
+              horizontal: false,
+              alignRight: false,
+              alignBottom: false,
+              rounding: false
+            }}
+          >
+            {currentElection.ballots?.map((ballot, idx) => (
+              <MuuriItem key={idx}>
+                <div style={{border: '1px solid #ccc', padding: '1rem', borderRadius: '8px', width: 'max-content', minWidth: '300px'}}>
+                  <h2>{ballot.title}</h2>
+                  {ballot.description && (
+                    <p style={{fontStyle: 'italic', color: '#666', marginBottom: '0.5rem'}}>{ballot.description}</p>
+                  )}
+                  {ballot.number_of_winners !== undefined && ballot.candidates && (
+                    <p style={{marginBottom: '1rem'}}>
+                      <strong>Elect:</strong> {ballot.number_of_winners} out of {ballot.candidates.length} candidates
+                    </p>
+                  )}
+                  {ballot.candidates && ballot.candidates.length > 0 && (
+                    <div style={{marginTop: '1rem'}}>
+                      <h3 style={{fontSize: '1rem', marginBottom: '0.5rem'}}>Candidates:</h3>
+                      <ul style={{listStyle: 'none', padding: 0, margin: 0}}>
+                        {ballot.candidates.map((candidate, cIdx) => (
+                          <li key={cIdx} style={{
+                            padding: '0.5rem',
+                            marginBottom: '0.25rem',
+                            background: '#f5f5f5',
+                            borderRadius: '4px'
+                          }}>
+                            <strong>{candidate.name}</strong>
+                            {candidate.affiliation && (
+                              <span style={{marginLeft: '0.5rem', color: '#666', fontSize: '0.9rem'}}>
+                                ({candidate.affiliation})
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </MuuriItem>
+            ))}
+          </MuuriComponent>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return <div style={{padding: '2rem'}}>Loading results...</div>;
   }
@@ -195,13 +281,11 @@ export function ResultsView() {
     );
   }
 
-  // Determine election status
-  const now = new Date();
+  // Determine election status (for open/closed elections)
   const votingEnd = metadata?.voting_end ? new Date(metadata.voting_end) : null;
   const votingStart = metadata?.voting_start ? new Date(metadata.voting_start) : null;
   const isClosed = votingEnd && now > votingEnd;
   const isOpen = votingStart && votingEnd && now >= votingStart && now <= votingEnd;
-  const isUpcoming = votingStart && now < votingStart;
   
   return (
     <div style={{padding: '2rem'}}>
@@ -237,7 +321,8 @@ export function ResultsView() {
               </span>
             </p>
           </div>
-          {metadata.voting_start && metadata.voting_end && (
+          {/* Only show timeline for open/closed elections, not upcoming */}
+          {!isUpcoming && metadata.voting_start && metadata.voting_end && (
             <div style={{marginBottom: '1rem'}}>
               <VoteTimeline
                 voteTimestamps={metadata.vote_timestamps || []}
