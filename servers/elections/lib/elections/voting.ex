@@ -321,12 +321,10 @@ defmodule Elections.Voting do
 
   # Extract ballot processing into separate function for parallel execution
   defp process_ballot(ballot, votes, election) do
-    try do
-      # Ensure ballot is a map
-      ballot = if is_map(ballot), do: ballot, else: %{}
-      
-      # Extract ballot title with validation and logging
-      ballot_title = case Map.get(ballot, "title") do
+    # Extract ballot title FIRST, before any processing that might fail
+    # This ensures we preserve the original title even if processing errors occur
+    ballot = if is_map(ballot), do: ballot, else: %{}
+    ballot_title = case Map.get(ballot, "title") do
         nil ->
           require Logger
           Logger.warning("Ballot missing 'title' field in election #{election.identifier || "unknown"}. Ballot keys: #{inspect(Map.keys(ballot))}. Using 'Untitled Ballot' as fallback.")
@@ -342,6 +340,8 @@ defmodule Elections.Voting do
           Logger.warning("Ballot 'title' field is not a string in election #{election.identifier || "unknown"}: #{inspect(other)}. Using 'Untitled Ballot' as fallback.")
           "Untitled Ballot"
       end
+    
+    try do
       candidates = case Map.get(ballot, "candidates", []) do
         candidates when is_list(candidates) -> candidates
         _ -> []
@@ -451,20 +451,12 @@ defmodule Elections.Voting do
     rescue
       e ->
         # If anything fails in ballot processing, return minimal structure with error info
+        # Use the ballot_title that was extracted earlier - don't try to extract it again
         require Logger
-        Logger.error("Critical error processing ballot: #{inspect(e)}")
+        Logger.error("Critical error processing ballot '#{ballot_title}' in election #{election.identifier || "unknown"}: #{inspect(e)}")
         
-        # Extract what we can safely
+        # Extract what we can safely (but preserve the already-extracted ballot_title)
         ballot = if is_map(ballot), do: ballot, else: %{}
-        ballot_title = case Map.get(ballot, "title") do
-          nil -> 
-            require Logger
-            Logger.error("Ballot missing 'title' in error handler for election #{election.identifier || "unknown"}. Ballot keys: #{inspect(Map.keys(ballot))}")
-            "Untitled Ballot"
-          "" -> "Untitled Ballot"
-          title when is_binary(title) -> title
-          _ -> "Untitled Ballot"
-        end
         candidates = case Map.get(ballot, "candidates", []) do
           candidates when is_list(candidates) -> candidates
           _ -> []
