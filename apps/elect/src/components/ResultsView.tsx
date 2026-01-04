@@ -6,7 +6,6 @@ import {VoteTimeline} from './VoteTimeline';
 import {MuuriItem} from './Layout';
 import {METHOD_FAMILIES} from './constants';
 import {formatMethodName, formatWinnersWithOrdering, getStatusColorAndLabel} from './utils';
-
 // Format numbers with comma grouping for thousands (e.g., 1234 -> "1,234")
 // Use this for all vote counts, quorum numbers, and any voting-related numbers
 const formatVoteCount = (count: number | null | undefined): string => {
