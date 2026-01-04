@@ -4,11 +4,99 @@ defmodule Elections.Algorithms.Schulze do
   """
 
   def calculate(ballot, votes) do
+    number_of_winners = Map.get(ballot, "number_of_winners", 1)
+    
+    # Use Sequential Schulze for multiple winners
+    if number_of_winners > 1 do
+      calculate_sequential(ballot, votes, number_of_winners)
+    else
+      # Single winner - use standard Schulze
+      calculate_single_winner(ballot, votes)
+    end
+  end
+  
+  # Sequential Schulze: run Schulze, remove winner, re-run on remaining candidates
+  defp calculate_sequential(ballot, votes, number_of_winners) do
+    candidates = get_in(ballot, ["candidates"]) || []
+    candidate_names = Enum.map(candidates, & &1["name"])
+    
+    winners = select_winners_sequentially(ballot, votes, candidate_names, [], number_of_winners)
+    
+    # Calculate full results with all winners (use original ballot for full calculation)
+    rankings = extract_rankings(votes, ballot)
+    pairwise = build_pairwise_matrix(rankings, ballot)
+    strongest_paths = compute_strongest_paths(pairwise, ballot)
+    
+    # Calculate path strengths for all winners for ordering
+    winners_with_strength = 
+      Enum.map(winners, fn winner ->
+        total_strength =
+          Enum.sum(
+            Enum.map(candidate_names, fn other ->
+              if winner != other, do: Map.get(strongest_paths, {winner, other}, 0), else: 0
+            end)
+          )
+        {winner, total_strength}
+      end)
+    
+    # Build winner_order with peculiar tie detection
+    winner_order = build_winner_order(winners_with_strength, "peculiar")
+    
+    %{
+      method: "schulze",
+      winners: winners,
+      pairwise: pairwise,
+      strongest_paths: strongest_paths,
+      winner_order: winner_order,
+      status: if(length(winners) >= number_of_winners, do: "conclusive", else: "inconclusive")
+    }
+  end
+  
+  defp select_winners_sequentially(_ballot, _votes, _remaining, winners, number_of_winners) 
+    when length(winners) >= number_of_winners do
+    # We have enough winners
+    Enum.reverse(winners)
+  end
+  
+  defp select_winners_sequentially(ballot, votes, remaining, winners, number_of_winners) do
+    if Enum.empty?(remaining) do
+      # No more candidates - return what we have
+      Enum.reverse(winners)
+    else
+      # Create a modified ballot with only remaining candidates
+      remaining_candidates = 
+        get_in(ballot, ["candidates"]) 
+        |> Enum.filter(fn c -> c["name"] in remaining end)
+      
+      modified_ballot = Map.put(ballot, "candidates", remaining_candidates)
+      
+      # Run single-winner Schulze on remaining candidates
+      result = calculate_single_winner(modified_ballot, votes)
+      winner = List.first(result.winners)
+      
+      if winner do
+        # Add winner and recurse
+        select_winners_sequentially(
+          ballot,
+          votes,
+          List.delete(remaining, winner),
+          [winner | winners],
+          number_of_winners
+        )
+      else
+        # No winner found - return what we have
+        Enum.reverse(winners)
+      end
+    end
+  end
+  
+  # Single-winner Schulze (original implementation)
+  defp calculate_single_winner(ballot, votes) do
     # Similar to Ranked Pairs but uses strongest path algorithm
     rankings = extract_rankings(votes, ballot)
     pairwise = build_pairwise_matrix(rankings, ballot)
     strongest_paths = compute_strongest_paths(pairwise, ballot)
-    winners = determine_winners(strongest_paths, ballot, Map.get(ballot, "number_of_winners", 1))
+    winners = determine_winners(strongest_paths, ballot, 1)
     
     # Calculate path strengths for all winners for ordering
     candidates = get_in(ballot, ["candidates"]) || []
@@ -34,7 +122,7 @@ defmodule Elections.Algorithms.Schulze do
       pairwise: pairwise,
       strongest_paths: strongest_paths,
       winner_order: winner_order,
-      status: if(length(winners) >= Map.get(ballot, "number_of_winners", 1), do: "conclusive", else: "inconclusive")
+      status: if(length(winners) >= 1, do: "conclusive", else: "inconclusive")
     }
   end
 
