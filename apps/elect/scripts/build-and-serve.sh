@@ -30,7 +30,7 @@ cd "$ELECT_DIR"
 
 # Now build the UI (build info already generated and embedded)
 echo -e "${BLUE}Building Elect UI...${NC}"
-tsc && vite build
+pnpm build
 
 echo -e "${BLUE}Copying built assets to elections server...${NC}"
 ELECT_BUILD_DIR="dist"
