@@ -36,6 +36,9 @@ defmodule ElectionsWeb.Router do
     get "/dashboard/:identifier", DashboardController, :show
     get "/dashboard/:identifier/tally", DashboardController, :tally
     get "/dashboard/:identifier/visualize/:method", DashboardController, :visualize
+    
+    # Build info endpoint (available before login)
+    get "/build-info", BuildInfoController, :show
   end
 
   scope "/", ElectionsWeb do
@@ -45,6 +48,3 @@ defmodule ElectionsWeb.Router do
     get "/*path", PageController, :home
   end
 end
-
-    # Build info endpoint (available before login)
-    get "/build-info", BuildInfoController, :show
