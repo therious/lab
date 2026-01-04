@@ -41,10 +41,11 @@ defmodule BuildInfoGenerator do
   
   defp get_git_info do
     try do
-      # Get repo root (2 levels up from scripts: scripts -> elections -> repo root)
-      repo_root = Path.expand(Path.join([__DIR__, "..", ".."]))
+      # Get repo root (3 levels up from scripts: scripts -> elections -> servers -> repo root)
+      repo_root = Path.expand(Path.join([__DIR__, "..", "..", ".."]))
       
       # Always run git commands from repo root to ensure consistency with UI script
+      # This ensures we get the latest commit hash for the entire repo
       commit_hash = System.cmd("git", ["rev-parse", "HEAD"], cd: repo_root)
                     |> elem(0)
                     |> String.trim()
