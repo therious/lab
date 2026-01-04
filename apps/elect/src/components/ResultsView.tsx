@@ -73,6 +73,8 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
   }, []);
   
   // Load initial results and set up websocket connection
+  // Use election identifier instead of the whole object to avoid re-running on object reference changes
+  const electionId = currentElection?.identifier;
   React.useEffect(() => {
     if (!currentElection) return;
     
@@ -225,12 +227,10 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
     // Dynamically import Phoenix Socket (may not be available in all environments)
     // @ts-ignore - Phoenix doesn't have TypeScript declarations
     import('phoenix').then((phoenix: any) => {
-      let websocketConnected = false;
       const Socket = phoenix.Socket;
       socket = new Socket('/socket', {});
       socket.connect();
       
-      debugLog('[WebSocket] Connecting to dashboard channel for election:', currentElection.identifier);
       channel = socket.channel(`dashboard:${currentElection.identifier}`, {});
       
       channel.on('results_updated', (payload: any) => {
@@ -255,7 +255,6 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
           // WebSocket payload structure: {election_id: "...", results: {results: [...], metadata: {...}}, buildInfo: {...}}
           // processResults expects: {results: {results: [...], metadata: {...}}}
           const currentTotal = results?.metadata?.total_votes;
-          const currentResults = resultsRef.current;
           const newTotal = payload.results?.metadata?.total_votes;
           debugLog('[WebSocket] Vote count change:', currentTotal, '→', newTotal);
           
@@ -311,7 +310,6 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
         
         // Update vote count immediately without waiting for full results calculation
         if (payload.vote_count !== undefined && payload.vote_count !== null) {
-          const currentResults = resultsRef.current;
           const currentTotal = results?.metadata?.total_votes || 0;
           const newTotal = payload.vote_count;
           
@@ -348,16 +346,6 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
           }
         }
       });
-          websocketConnected = true;
-          console.log('[WebSocket] ✅ Connected - real-time updates enabled');
-          // Stop polling if WebSocket is connected
-          if (pollInterval) {
-          console.warn('[WebSocket] Falling back to polling for updates');
-            clearInterval(pollInterval);
-            pollInterval = null;
-            debugLog('[WebSocket] Stopped polling - WebSocket connected');
-          console.warn('[WebSocket] Falling back to polling for updates');
-          }
       
       channel.join()
         .receive('ok', () => {
@@ -372,7 +360,6 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
           console.error('[WebSocket] ❌ Timeout joining dashboard channel');
         });
     }).catch((err) => {
-      console.warn('[WebSocket] Error details:', err.message);
       // Always log errors, even if debug is off
       console.warn('Phoenix Socket not available, using REST API only:', err);
     });
@@ -389,7 +376,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
         socket.disconnect();
       }
     };
-  }, [currentElection]); // Only re-run when election changes, not when results/loading change
+  }, [electionId]); // Only re-run when election identifier changes // Only re-run when election changes, not when results/loading change
 
   if (!currentElection) {
     return <div style={{padding: '2rem'}}>No election selected</div>;
@@ -477,22 +464,6 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
             ))}
           </MuuriComponent>
         </div>
-      <div style={{marginBottom: '1rem', padding: '1rem', background: '#f5f5f5', borderRadius: '8px', border: '1px solid #ddd'}}>
-        <h1 style={{marginBottom: '0.5rem'}}>Election: {currentElection.title}</h1>
-        {currentElection.description && (
-          <p style={{color: '#666', marginBottom: '0.5rem'}}>{currentElection.description}</p>
-        )}
-        <div style={{fontSize: '0.9rem', color: '#888'}}>
-          <strong>Election ID:</strong> {currentElection.identifier}
-          {currentElection.voting_start && (
-            <> | <strong>Starts:</strong> {new Date(currentElection.voting_start).toLocaleString()}</>
-          )}
-          {currentElection.voting_end && (
-            <> | <strong>Ends:</strong> {new Date(currentElection.voting_end).toLocaleString()}</>
-          )}
-        </div>
-      </div>
-      <h2 style={{marginBottom: '1.3125rem'}}>Results</h2>
       </div>
     );
   }
