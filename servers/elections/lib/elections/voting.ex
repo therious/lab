@@ -260,7 +260,15 @@ defmodule Elections.Voting do
 
     # Extract ballots from config - ensure we have a valid ballots list
     ballots = case Map.get(election.config || %{}, "ballots", []) do
-      ballots when is_list(ballots) -> ballots
+      ballots when is_list(ballots) -> 
+        # Validate that each ballot has a title
+        Enum.each(ballots, fn ballot ->
+          if is_map(ballot) && (is_nil(Map.get(ballot, "title")) || Map.get(ballot, "title") == "") do
+            require Logger
+            Logger.warning("Ballot in election #{election.identifier || "unknown"} is missing or has empty 'title' field. Ballot keys: #{inspect(Map.keys(ballot))}")
+          end
+        end)
+        ballots
       _ -> []
     end
 
@@ -317,7 +325,23 @@ defmodule Elections.Voting do
       # Ensure ballot is a map
       ballot = if is_map(ballot), do: ballot, else: %{}
       
-      ballot_title = Map.get(ballot, "title", "Untitled Ballot")
+      # Extract ballot title with validation and logging
+      ballot_title = case Map.get(ballot, "title") do
+        nil ->
+          require Logger
+          Logger.warning("Ballot missing 'title' field in election #{election.identifier || "unknown"}. Ballot keys: #{inspect(Map.keys(ballot))}. Using 'Untitled Ballot' as fallback.")
+          "Untitled Ballot"
+        "" ->
+          require Logger
+          Logger.warning("Ballot has empty 'title' field in election #{election.identifier || "unknown"}. Using 'Untitled Ballot' as fallback.")
+          "Untitled Ballot"
+        title when is_binary(title) ->
+          title
+        other ->
+          require Logger
+          Logger.warning("Ballot 'title' field is not a string in election #{election.identifier || "unknown"}: #{inspect(other)}. Using 'Untitled Ballot' as fallback.")
+          "Untitled Ballot"
+      end
       candidates = case Map.get(ballot, "candidates", []) do
         candidates when is_list(candidates) -> candidates
         _ -> []
@@ -432,7 +456,15 @@ defmodule Elections.Voting do
         
         # Extract what we can safely
         ballot = if is_map(ballot), do: ballot, else: %{}
-        ballot_title = Map.get(ballot, "title", "Untitled Ballot")
+        ballot_title = case Map.get(ballot, "title") do
+          nil -> 
+            require Logger
+            Logger.error("Ballot missing 'title' in error handler for election #{election.identifier || "unknown"}. Ballot keys: #{inspect(Map.keys(ballot))}")
+            "Untitled Ballot"
+          "" -> "Untitled Ballot"
+          title when is_binary(title) -> title
+          _ -> "Untitled Ballot"
+        end
         candidates = case Map.get(ballot, "candidates", []) do
           candidates when is_list(candidates) -> candidates
           _ -> []
@@ -456,7 +488,12 @@ defmodule Elections.Voting do
 
   defp build_error_ballot_result(ballot) do
     ballot = if is_map(ballot), do: ballot, else: %{}
-    ballot_title = Map.get(ballot, "title", "Untitled Ballot")
+    ballot_title = case Map.get(ballot, "title") do
+      nil -> "Untitled Ballot"
+      "" -> "Untitled Ballot"
+      title when is_binary(title) -> title
+      _ -> "Untitled Ballot"
+    end
     candidates = case Map.get(ballot, "candidates", []) do
       candidates when is_list(candidates) -> candidates
       _ -> []
