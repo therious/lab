@@ -10,6 +10,7 @@ defmodule Elections.VoteQueue do
   
   use GenServer
   require Logger
+  import Ecto.Query
   
   alias Elections.RepoManager
   alias Elections.{VoteToken, Vote}
