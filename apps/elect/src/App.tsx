@@ -16,21 +16,22 @@ export default function App() {
   const {ballots, currentElection, token, viewToken, votes, confirmations, submitted, userEmail, electionIdentifier} = useSelector((s: TotalState) => s.election);
   const location = useLocation();
   const navigate = useNavigate();
+  const [serverBuildInfo, setServerBuildInfo] = React.useState<any>(null);
+  const [isRestoring, setIsRestoring] = React.useState(false);
+
   // Fetch server build info immediately (before login)
   React.useEffect(() => {
     fetch("/api/build-info")
       .then(res => res.json())
       .then(data => {
         if (data.commitHash) {
-          setServerCommitHash(data.commitHash);
+          setServerBuildInfo(data);
         }
       })
       .catch(err => {
         console.warn("Could not fetch server build info:", err);
       });
   }, []); // Run once on mount
-  const [serverCommitHash, setServerCommitHash] = React.useState<string | null>(null);
-  const [isRestoring, setIsRestoring] = React.useState(false);
 
   // Determine election status (before any early returns)
   const now = new Date();
@@ -198,20 +199,43 @@ export default function App() {
     const singleTab = availableTabs[0];
     let element: React.ReactElement;
     if (singleTab.path === '/results') {
-      element = <ResultsView setServerCommitHash={setServerCommitHash} />;
+      element = <ResultsView setServerCommitHash={(hash) => { 
+        if (hash && !serverBuildInfo) {
+          // Fetch full server build info when hash is provided
+          fetch("/api/build-info")
+            .then(res => res.json())
+            .then(data => {
+              if (data.commitHash) {
+                setServerBuildInfo(data);
+              }
+            })
+            .catch(() => {});
+        }
+      }} />;
     } else if (singleTab.path === '/summary') {
       element = <SummaryView/>;
     } else if (singleTab.path.startsWith('/ballot/')) {
       element = <BallotView/>;
     } else {
-      element = <ResultsView setServerCommitHash={setServerCommitHash} />; // fallback
+      element = <ResultsView setServerCommitHash={(hash) => { 
+        if (hash && !serverBuildInfo) {
+          fetch("/api/build-info")
+            .then(res => res.json())
+            .then(data => {
+              if (data.commitHash) {
+                setServerBuildInfo(data);
+              }
+            })
+            .catch(() => {});
+        }
+      }} />; // fallback
     }
     
     return (
       <Layout>
         {/* Show UserProfile in same position as Navbar when tabs are hidden */}
         <Navbar style={{justifyContent: 'flex-end', display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
-          <BuildInfo serverCommitHash={serverCommitHash} />
+          <BuildInfo serverBuildInfo={serverBuildInfo} />
           <UserProfile email={userEmail} hasVoted={submitted} />
         </Navbar>
         <CenterBody>
@@ -227,7 +251,6 @@ export default function App() {
   return (
     <Layout>
       <Navbar style={{display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
-          <BuildInfo serverCommitHash={serverCommitHash} />
         {availableTabs.map((tab) => {
           // Determine if this specific tab is active
           let isActive = false;
@@ -352,12 +375,24 @@ export default function App() {
             </NavLink>
           );
         })}
+        <BuildInfo serverBuildInfo={serverBuildInfo} />
         <UserProfile email={userEmail} hasVoted={submitted} />
       </Navbar>
       <CenterBody>
         <Routes>
           <Route path="/" element={<SummaryView/>}/>
-          <Route path="/results" element={<ResultsView setServerCommitHash={setServerCommitHash} />}/>
+          <Route path="/results" element={<ResultsView setServerCommitHash={(hash) => { 
+            if (hash && !serverBuildInfo) {
+              fetch("/api/build-info")
+                .then(res => res.json())
+                .then(data => {
+                  if (data.commitHash) {
+                    setServerBuildInfo(data);
+                  }
+                })
+                .catch(() => {});
+            }
+          }} />}/>
           <Route path="/summary" element={<SummaryView/>}/>
           <Route path="/ballot/:title" element={<BallotView/>}/>
         </Routes>
