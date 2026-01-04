@@ -8,9 +8,9 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# Get directories
-ELECT_DIR="$(dirname "$0")/.."
-SERVER_DIR="../../servers/elections"
+# Get absolute paths to avoid issues when changing directories
+ELECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+SERVER_DIR="$(cd "$ELECT_DIR/../../servers/elections" && pwd)"
 
 echo -e "${BLUE}Generating build info for UI and server (same git state)...${NC}"
 
@@ -28,7 +28,7 @@ cd "$SERVER_DIR"
 mix buildinfo.generate
 cd "$ELECT_DIR"
 
-# Now build the UI (build info already generated and embedded)
+# Now build the UI (build info already generated, but pnpm build will regenerate it - that's fine, same hash)
 echo -e "${BLUE}Building Elect UI...${NC}"
 pnpm build
 
