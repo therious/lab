@@ -150,7 +150,7 @@ type TimelineMode = 'overview' | 'realtime';
 type TimeScale = '5min' | '1hr' | '1day' | 'whole';
 
 export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes}: VoteTimelineProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true) // Default to collapsed;
   const [mode, setMode] = useState<TimelineMode>('overview');
   const [scale, setScale] = useState<TimeScale>('whole');
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -197,6 +197,27 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
       return `${formatNumber(minutesRemaining)} minute${minutesRemaining !== 1 ? 's' : ''}, ${formatNumber(secondsRemaining)} second${secondsRemaining !== 1 ? 's' : ''}`;
     }
   };
+  
+  // Early return if collapsed - don't run any graph calculations
+  if (isCollapsed) {
+    return (
+      <TimelineContainer>
+        <TimelineHeader onClick={() => setIsCollapsed(!isCollapsed)}>
+          <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+            <CollapseButton>{isCollapsed ? '▶' : '▼'}</CollapseButton>
+            <TimelineTitle>Vote Timeline</TimelineTitle>
+          </div>
+          <TimeRemaining>
+            {timeRemaining > 0 ? (
+              <>Time Remaining: {formatTimeRemaining()}</>
+            ) : (
+              <>Voting Closed</>
+            )}
+          </TimeRemaining>
+        </TimelineHeader>
+      </TimelineContainer>
+    );
+  }
   
   // Parse timestamps and group by time period
   const parsedTimestamps = useMemo(() => voteTimestamps.map(ts => new Date(ts)).filter(d => !isNaN(d.getTime())), [voteTimestamps]);
