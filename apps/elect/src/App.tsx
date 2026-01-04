@@ -10,11 +10,13 @@ import {BallotView} from './components/BallotView';
 import {ResultsView} from './components/ResultsView';
 import {Layout, Navbar, NavLink, CenterBody} from './components/Layout';
 import {UserProfile} from './components/UserProfile';
+import {BuildInfo} from './components/BuildInfo';
 
 export default function App() {
   const {ballots, currentElection, token, viewToken, votes, confirmations, submitted, userEmail, electionIdentifier} = useSelector((s: TotalState) => s.election);
   const location = useLocation();
   const navigate = useNavigate();
+  const [serverCommitHash, setServerCommitHash] = React.useState<string | null>(null);
   const [isRestoring, setIsRestoring] = React.useState(false);
 
   // Determine election status (before any early returns)
@@ -183,19 +185,20 @@ export default function App() {
     const singleTab = availableTabs[0];
     let element: React.ReactElement;
     if (singleTab.path === '/results') {
-      element = <ResultsView/>;
+      element = <ResultsView setServerCommitHash={setServerCommitHash} />;
     } else if (singleTab.path === '/summary') {
       element = <SummaryView/>;
     } else if (singleTab.path.startsWith('/ballot/')) {
       element = <BallotView/>;
     } else {
-      element = <ResultsView/>; // fallback
+      element = <ResultsView setServerCommitHash={setServerCommitHash} />; // fallback
     }
     
     return (
       <Layout>
         {/* Show UserProfile in same position as Navbar when tabs are hidden */}
-        <Navbar style={{justifyContent: 'flex-end'}}>
+        <Navbar style={{justifyContent: 'flex-end', display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
+          <BuildInfo serverCommitHash={serverCommitHash} />
           <UserProfile email={userEmail} hasVoted={submitted} />
         </Navbar>
         <CenterBody>
@@ -210,7 +213,8 @@ export default function App() {
 
   return (
     <Layout>
-      <Navbar>
+      <Navbar style={{display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
+          <BuildInfo serverCommitHash={serverCommitHash} />
         {availableTabs.map((tab) => {
           // Determine if this specific tab is active
           let isActive = false;
@@ -340,7 +344,7 @@ export default function App() {
       <CenterBody>
         <Routes>
           <Route path="/" element={<SummaryView/>}/>
-          <Route path="/results" element={<ResultsView/>}/>
+          <Route path="/results" element={<ResultsView setServerCommitHash={setServerCommitHash} />}/>
           <Route path="/summary" element={<SummaryView/>}/>
           <Route path="/ballot/:title" element={<BallotView/>}/>
         </Routes>

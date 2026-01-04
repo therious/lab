@@ -24,6 +24,8 @@ interface BuildInfoProps {
  * This component is designed to be reusable across all applications.
  * For applications without servers, only the UI build info will be displayed.
  * 
+ * Styled to match UserProfile widget: same padding, background, border-radius, border
+ * 
  * @param serverCommitHash - Optional server commit hash to display alongside UI hash
  * @param className - Optional CSS class name
  * @param style - Optional inline styles
@@ -31,17 +33,20 @@ interface BuildInfoProps {
 export function BuildInfo({ serverCommitHash, className, style }: BuildInfoProps) {
   const uiBuildInfo: BuildInfoData = buildInfoJson as BuildInfoData;
   
+  // Match UserProfile styling: padding: 0.5rem 1rem, background: #f8f9fa, border-radius: 8px, border: 1px solid #dee2e6
   const defaultStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: '0.5rem',
-    left: '0.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: '0.25rem',
+    padding: '0.5rem 1rem',
+    background: '#f8f9fa',
+    borderRadius: '8px',
+    border: '1px solid #dee2e6',
     fontSize: '10px',
     color: '#666',
     fontFamily: 'monospace',
-    zIndex: 9999,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    padding: '0.25rem 0.5rem',
-    borderRadius: '4px',
+    lineHeight: '1.2',
     ...style
   };
   

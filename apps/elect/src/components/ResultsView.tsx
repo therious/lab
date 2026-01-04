@@ -6,7 +6,6 @@ import {VoteTimeline} from './VoteTimeline';
 import {MuuriItem} from './Layout';
 import {METHOD_FAMILIES} from './constants';
 import {formatMethodName, formatWinnersWithOrdering, getStatusColorAndLabel} from './utils';
-import {BuildInfo} from './BuildInfo';
 
 // Format numbers with comma grouping for thousands (e.g., 1234 -> "1,234")
 // Use this for all vote counts, quorum numbers, and any voting-related numbers
@@ -41,14 +40,19 @@ const debugWarn = (...args: any[]) => {
   }
 };
 
-export function ResultsView() {
+export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash: string | null) => void} = {}) {
   const {currentElection} = useSelector((s: TotalState) => s.election);
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date()); // For periodic relative time updates
-  const [serverCommitHash, setServerCommitHash] = useState<string | null>(null);
+  
+  // Use refs to avoid stale closures in polling interval
+  const errorRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    errorRef.current = error;
+  }, [error]);
 
   // Polling interval for fallback updates (1 second)
   const POLL_INTERVAL_MS = 1000;
@@ -151,7 +155,7 @@ export function ResultsView() {
         
         // Extract server build info (commit hash) if present
         if (data.buildInfo?.commitHash) {
-          setServerCommitHash(data.buildInfo.commitHash);
+          setServerCommitHash?.(data.buildInfo.commitHash);
         }
         
         if (!res.ok) {
@@ -200,7 +204,7 @@ export function ResultsView() {
     pollInterval = setInterval(() => {
       // Poll regardless of loading state to ensure regular updates
       // Only skip if we have an error (don't spam on errors)
-      if (!error) {
+      if (!errorRef.current) {
         debugLog('[ResultsView] Polling for results update');
         fetchResults().catch(err => {
           debugWarn('[ResultsView] Poll error:', err);
@@ -248,7 +252,7 @@ export function ResultsView() {
           
           // Extract server build info if present in WebSocket payload
           if (payload.buildInfo?.commitHash) {
-            setServerCommitHash(payload.buildInfo.commitHash);
+            setServerCommitHash?.(payload.buildInfo.commitHash);
           }
           
           // Verify payload structure before processing
@@ -513,7 +517,6 @@ export function ResultsView() {
   
   return (
     <div style={{padding: '2rem'}}>
-      <BuildInfo serverCommitHash={serverCommitHash} />
       <h1 style={{marginBottom: '1.3125rem'}}>Election Results: {currentElection.title}</h1>
       {error && (
         <div style={{marginBottom: '1rem', padding: '0.75rem', background: '#ffebee', border: '1px solid #d32f2f', borderRadius: '4px', color: '#c62828'}}>
