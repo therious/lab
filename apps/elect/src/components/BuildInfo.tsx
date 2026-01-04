@@ -147,7 +147,6 @@ export function BuildInfo({ serverBuildInfo, className, style }: BuildInfoProps)
     color: '#fff',
     padding: '0.5rem',
     borderRadius: '4px',
-    whiteSpace: 'nowrap',
     zIndex: 10000,
     boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
     pointerEvents: 'none',
