@@ -230,8 +230,9 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
     return {windowStart, windowEnd};
   };
   
-  // Filter timestamps based on mode and scale
-  const {windowStart, windowEnd} = mode === 'realtime' ? getTimeWindow(scale) : {windowStart: start, windowEnd: end};
+  // Filter timestamps based on scale (works in both overview and realtime modes)
+  // In overview mode, scale still filters the view but doesn't auto-update
+  const {windowStart, windowEnd} = scale !== 'whole' ? getTimeWindow(scale) : {windowStart: start, windowEnd: end};
   const filteredTimestamps = parsedTimestamps.filter(ts => {
     const tsTime = ts.getTime();
     return tsTime >= windowStart.getTime() && tsTime <= windowEnd.getTime();
@@ -252,18 +253,13 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
     unitMs = 1000 * 60 * 60; // hours
   }
   
-  // For realtime mode with short scales, use finer granularity
-  if (mode === 'realtime') {
-    if (scale === '5min') {
-      timeUnit = 'minute';
-      unitMs = 1000 * 60;
-    } else if (scale === '1hr') {
-      timeUnit = 'minute';
-      unitMs = 1000 * 60;
-    } else if (scale === '1day') {
-      timeUnit = 'hour';
-      unitMs = 1000 * 60 * 60;
-    }
+  // For short scales, use finer granularity
+  if (scale === '5min' || scale === '1hr') {
+    timeUnit = 'minute';
+    unitMs = 1000 * 60;
+  } else if (scale === '1day') {
+    timeUnit = 'hour';
+    unitMs = 1000 * 60 * 60;
   }
   
   // Group votes by time period (relative to window start)
@@ -432,7 +428,6 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
                 onClick={(e) => {
                   e.stopPropagation();
                   setMode('overview');
-                  setScale('whole');
                 }}
               >
                 Overview
@@ -442,26 +437,24 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
                 onClick={(e) => {
                   e.stopPropagation();
                   setMode('realtime');
-                  if (scale === 'whole') setScale('1hr');
                 }}
               >
                 Real-time
               </ToggleButton>
-              {mode === 'realtime' && (
-                <ScaleSelect
-                  value={scale}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    setScale(e.target.value as TimeScale);
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <option value="5min">Last 5 min</option>
-                  <option value="1hr">Last hour</option>
-                  <option value="1day">Last day</option>
-                  <option value="whole">Whole election</option>
-                </ScaleSelect>
-              )}
+              <ScaleSelect
+                value={scale}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setScale(e.target.value as TimeScale);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                title="Select time scale for timeline view"
+              >
+                <option value="5min">Last 5 min</option>
+                <option value="1hr">Last hour</option>
+                <option value="1day">Last day</option>
+                <option value="whole">Whole election</option>
+              </ScaleSelect>
             </ModeToggle>
           )}
           <TimeRemaining>
@@ -594,8 +587,8 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
       {!isCollapsed && (
       <div style={{marginTop: '0.5rem', fontSize: '0.85rem', color: '#666', display: 'flex', justifyContent: 'space-between'}}>
         <span>Left: Votes per {timeUnit}</span>
-        <span>Right: {mode === 'realtime' && scale !== 'whole' ? 'Cumulative (window)' : 'Cumulative Total'}</span>
-        {mode === 'realtime' && (
+        <span>Right: {scale !== 'whole' ? 'Cumulative (window)' : 'Cumulative Total'}</span>
+        {scale !== 'whole' && (
           <span style={{fontStyle: 'italic'}}>
             Showing: {filteredTimestamps.length} of {parsedTimestamps.length} votes
           </span>
