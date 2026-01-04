@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import styled from 'styled-components';
 import {actions} from '../actions-integration';
+import {BuildInfo} from './BuildInfo';
 
 const Container = styled.div`
   display: flex;
@@ -11,6 +12,13 @@ const Container = styled.div`
   min-height: 100vh;
   padding: 2rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+`;
+
+const BuildInfoContainer = styled.div`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
 `;
 
 const Card = styled.div`
@@ -130,7 +138,22 @@ export function LandingPage() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [serverBuildInfo, setServerBuildInfo] = useState<any>(null);
   const navigate = useNavigate();
+
+  // Fetch server build info on mount
+  React.useEffect(() => {
+    fetch("/api/build-info")
+      .then(res => res.json())
+      .then(data => {
+        if (data.commitHash) {
+          setServerBuildInfo(data);
+        }
+      })
+      .catch(err => {
+        console.warn("Could not fetch server build info:", err);
+      });
+  }, []);
 
   // Load elections on mount
   React.useEffect(() => {
@@ -233,6 +256,9 @@ export function LandingPage() {
 
   return (
     <Container>
+      <BuildInfoContainer>
+        <BuildInfo serverBuildInfo={serverBuildInfo} />
+      </BuildInfoContainer>
       <Card>
         <Title>Select an Election</Title>
         
@@ -315,4 +341,3 @@ export function LandingPage() {
     </Container>
   );
 }
-
