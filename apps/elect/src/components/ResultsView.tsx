@@ -46,9 +46,19 @@ export function ResultsView() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date()); // For periodic relative time updates
 
   // Polling interval for fallback updates (1 second)
   const POLL_INTERVAL_MS = 1000;
+  
+  // Update current time every second to refresh relative time display
+  React.useEffect(() => {
+    const timeInterval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    
+    return () => clearInterval(timeInterval);
+  }, []);
   
   // Load initial results and set up websocket connection
   React.useEffect(() => {
@@ -600,9 +610,10 @@ export function ResultsView() {
                   const pendingVotes = totalVotes - processedVotes;
                   
                   // Format last update timestamp with relative time
+                  // Use currentTime state so it updates every second
                   const formatTimestamp = (date: Date | null) => {
                     if (!date) return '';
-                    const now = new Date();
+                    const now = currentTime; // Use state instead of new Date() for periodic updates
                     const diffMs = now.getTime() - date.getTime();
                     const diffSeconds = Math.floor(diffMs / 1000);
                     const diffMinutes = Math.floor(diffSeconds / 60);
