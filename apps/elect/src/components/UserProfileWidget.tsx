@@ -4,7 +4,7 @@ import {UserProfile} from './UserProfile';
 
 interface UserProfileWidgetProps {
   serverBuildInfo?: any;
-  userEmail?: string;
+  userEmail?: string | null;
   hasVoted?: boolean;
 }
 
@@ -22,7 +22,7 @@ export function UserProfileWidget({ serverBuildInfo, userEmail, hasVoted }: User
       marginLeft: 'auto'
     }}>
       <BuildInfo serverBuildInfo={serverBuildInfo} />
-      <UserProfile email={userEmail} hasVoted={hasVoted} />
+      {userEmail && <UserProfile email={userEmail} hasVoted={hasVoted ?? false} />}
     </div>
   );
 }
