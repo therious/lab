@@ -43,6 +43,9 @@ interface BuildInfoProps {
 export function BuildInfo({ serverBuildInfo, className, style }: BuildInfoProps) {
   const uiBuildInfo: BuildInfoData = buildInfoJson as BuildInfoData;
   const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState<'top' | 'bottom'>('top');
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const tooltipRef = React.useRef<HTMLDivElement>(null);
   
   const hashesMatch = serverBuildInfo?.commitHash === uiBuildInfo.commitHash;
   
@@ -82,6 +85,28 @@ export function BuildInfo({ serverBuildInfo, className, style }: BuildInfoProps)
       // Ignore date parsing errors
     }
   }
+  
+  // Calculate tooltip position to avoid clipping
+  React.useEffect(() => {
+    if (showTooltip && containerRef.current && tooltipRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const tooltipRect = tooltipRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const spaceAbove = containerRect.top;
+      const spaceBelow = viewportHeight - containerRect.bottom;
+      const tooltipHeight = tooltipRect.height || 200; // Estimate if not yet rendered
+      
+      // Position above if there's enough space, otherwise below
+      if (spaceAbove >= tooltipHeight + 10) {
+        setTooltipPosition('top');
+      } else if (spaceBelow >= tooltipHeight + 10) {
+        setTooltipPosition('bottom');
+      } else {
+        // Not enough space on either side - choose the side with more space
+        setTooltipPosition(spaceAbove > spaceBelow ? 'top' : 'bottom');
+      }
+    }
+  }, [showTooltip]);
   
   // Build tooltip content
   const tooltipContent = (
@@ -139,10 +164,12 @@ export function BuildInfo({ serverBuildInfo, className, style }: BuildInfoProps)
   
   const tooltipStyle: React.CSSProperties = {
     position: 'absolute',
-    bottom: '100%',
     left: '50%',
     transform: 'translateX(-50%)',
-    marginBottom: '0.5rem',
+    ...(tooltipPosition === 'top' 
+      ? { bottom: '100%', marginBottom: '0.5rem' }
+      : { top: '100%', marginTop: '0.5rem' }
+    ),
     background: '#333',
     color: '#fff',
     padding: '0.5rem',
@@ -151,11 +178,15 @@ export function BuildInfo({ serverBuildInfo, className, style }: BuildInfoProps)
     boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
     pointerEvents: 'none',
     minWidth: '300px',
-    whiteSpace: 'normal' as const
+    maxWidth: '400px',
+    whiteSpace: 'normal' as const,
+    maxHeight: '80vh',
+    overflowY: 'auto' as const
   };
   
   return (
     <div 
+      ref={containerRef}
       className={className} 
       style={defaultStyle}
       onMouseEnter={() => setShowTooltip(true)}
@@ -189,7 +220,7 @@ export function BuildInfo({ serverBuildInfo, className, style }: BuildInfoProps)
       )}
       
       {showTooltip && (
-        <div style={tooltipStyle}>
+        <div ref={tooltipRef} style={tooltipStyle}>
           {tooltipContent}
         </div>
       )}
