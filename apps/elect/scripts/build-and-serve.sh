@@ -22,9 +22,20 @@ mkdir -p "$SERVER_STATIC_DIR"
 cp -r "$ELECT_BUILD_DIR"/* "$SERVER_STATIC_DIR/"
 
 echo -e "${GREEN}Assets copied successfully!${NC}"
-echo -e "${YELLOW}Starting elections server...${NC}"
+echo -e "${YELLOW}Ensuring Elixir dependencies are installed...${NC}"
 
 cd ../../servers/elections
+
+# Check if dependencies are installed by looking for mix.lock and deps directory
+# mix deps.get is idempotent, but we check to avoid unnecessary work
+if [ ! -f "mix.lock" ] || [ ! -d "deps" ] || [ -z "$(ls -A deps 2>/dev/null)" ]; then
+    echo -e "${BLUE}Installing Elixir dependencies...${NC}"
+    mix deps.get
+else
+    echo -e "${GREEN}✓ Elixir dependencies already installed${NC}"
+fi
+
+echo -e "${YELLOW}Starting elections server...${NC}"
 
 # Check if server is already running
 if lsof -Pi :4000 -sTCP:LISTEN -t >/dev/null ; then

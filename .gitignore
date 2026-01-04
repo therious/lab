@@ -51,6 +51,10 @@ servers/elections/priv/repo/*.db
 servers/elections/priv/repo/*.db-shm
 servers/elections/priv/repo/*.db-wal
 
+# Built static files (generated from apps/elect build)
+# Note: priv/elections/ (YAML configs) and priv/repo/migrations/ are source and should be tracked
+servers/elections/priv/static/
+
 # Elixir/Phoenix dependencies (managed by Mix)
 **/deps/
 **/_build/
