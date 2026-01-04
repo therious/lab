@@ -235,7 +235,6 @@ export default function App() {
         {/* Show UserProfile in same position as Navbar when tabs are hidden */}
         <Navbar style={{justifyContent: 'flex-end'}}>
           <UserProfileWidget serverBuildInfo={serverBuildInfo} userEmail={userEmail} hasVoted={submitted} />
-          <UserProfileWidget serverBuildInfo={serverBuildInfo} userEmail={userEmail} hasVoted={submitted} />
         </Navbar>
         <CenterBody>
           <Routes>
@@ -376,7 +375,6 @@ export default function App() {
         })}
         <UserProfileWidget serverBuildInfo={serverBuildInfo} userEmail={userEmail} hasVoted={submitted} />
         <UserProfileWidget serverBuildInfo={serverBuildInfo} userEmail={userEmail} hasVoted={submitted} />
-      </Navbar>
       <CenterBody>
         <Routes>
           <Route path="/" element={<SummaryView/>}/>
