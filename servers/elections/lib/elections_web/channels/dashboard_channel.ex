@@ -18,6 +18,16 @@ defmodule ElectionsWeb.DashboardChannel do
     {:noreply, socket}
   end
 
+  def handle_info({:results_updated, election_identifier, results, build_info}, socket) do
+    push(socket, "results_updated", %{
+      election_id: election_identifier, 
+      results: results,
+      buildInfo: build_info
+    })
+    {:noreply, socket}
+  end
+  
+  # Backward compatibility - handle old format without build_info
   def handle_info({:results_updated, election_identifier, results}, socket) do
     push(socket, "results_updated", %{election_id: election_identifier, results: results})
     {:noreply, socket}

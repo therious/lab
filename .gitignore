@@ -55,6 +55,10 @@ servers/elections/priv/repo/*.db-wal
 # Note: priv/elections/ (YAML configs) and priv/repo/migrations/ are source and should be tracked
 servers/elections/priv/static/
 
+# Build artifacts - generated at build time
+**/build-info.json
+**/src/build-info.json
+
 # Elixir/Phoenix dependencies (managed by Mix)
 **/deps/
 **/_build/

@@ -81,7 +81,9 @@ defmodule Elections.MixProject do
         "esbuild elections --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"],
+      # Generate BuildInfo before compile
+      compile: ["buildinfo.generate", "compile"]
     ]
   end
 end

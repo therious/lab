@@ -6,6 +6,7 @@ import {VoteTimeline} from './VoteTimeline';
 import {MuuriItem} from './Layout';
 import {METHOD_FAMILIES} from './constants';
 import {formatMethodName, formatWinnersWithOrdering, getStatusColorAndLabel} from './utils';
+import {BuildInfo} from './BuildInfo';
 
 // Format numbers with comma grouping for thousands (e.g., 1234 -> "1,234")
 // Use this for all vote counts, quorum numbers, and any voting-related numbers
@@ -47,6 +48,7 @@ export function ResultsView() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date()); // For periodic relative time updates
+  const [serverCommitHash, setServerCommitHash] = useState<string | null>(null);
 
   // Polling interval for fallback updates (1 second)
   const POLL_INTERVAL_MS = 1000;
@@ -147,6 +149,11 @@ export function ResultsView() {
         debugLog('[ResultsView] API response status:', res.status);
         debugLog('[ResultsView] Total votes in response:', data.results?.metadata?.total_votes || 'unknown');
         
+        // Extract server build info (commit hash) if present
+        if (data.buildInfo?.commitHash) {
+          setServerCommitHash(data.buildInfo.commitHash);
+        }
+        
         if (!res.ok) {
           // If we have results despite error status, still try to process them
           if (data.results || data.results?.results) {
@@ -233,11 +240,16 @@ export function ResultsView() {
         // Backend broadcasts: {:results_updated, election_id, results}
         // Channel pushes: %{election_id: "...", results: {results: [...], metadata: {...}}}
         if (payload.results) {
-          // WebSocket payload structure: {election_id: "...", results: {results: [...], metadata: {...}}}
+          // WebSocket payload structure: {election_id: "...", results: {results: [...], metadata: {...}}, buildInfo: {...}}
           // processResults expects: {results: {results: [...], metadata: {...}}}
           const currentTotal = results?.metadata?.total_votes;
           const newTotal = payload.results?.metadata?.total_votes;
           debugLog('[WebSocket] Vote count change:', currentTotal, '→', newTotal);
+          
+          // Extract server build info if present in WebSocket payload
+          if (payload.buildInfo?.commitHash) {
+            setServerCommitHash(payload.buildInfo.commitHash);
+          }
           
           // Verify payload structure before processing
           if (!payload.results || typeof payload.results !== 'object') {
@@ -501,6 +513,7 @@ export function ResultsView() {
   
   return (
     <div style={{padding: '2rem'}}>
+      <BuildInfo serverCommitHash={serverCommitHash} />
       <h1 style={{marginBottom: '1.3125rem'}}>Election Results: {currentElection.title}</h1>
       {error && (
         <div style={{marginBottom: '1rem', padding: '0.75rem', background: '#ffebee', border: '1px solid #d32f2f', borderRadius: '4px', color: '#c62828'}}>

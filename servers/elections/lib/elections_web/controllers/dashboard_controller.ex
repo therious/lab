@@ -2,6 +2,7 @@ defmodule ElectionsWeb.DashboardController do
   use ElectionsWeb, :controller
 
   alias Elections.Voting
+  alias Elections.BuildInfo
 
   def index(conn, _params) do
     elections = Voting.list_available_elections()
@@ -12,7 +13,13 @@ defmodule ElectionsWeb.DashboardController do
     try do
       case Voting.get_election_results(election_identifier) do
         {:ok, results} ->
-          conn |> json(%{election_identifier: election_identifier, results: results})
+          # Include server build info (commit hash) in response
+          build_info = %{commitHash: BuildInfo.commit_hash()}
+          conn |> json(%{
+            election_identifier: election_identifier, 
+            results: results,
+            buildInfo: build_info
+          })
 
         {:error, :election_not_found} ->
           conn

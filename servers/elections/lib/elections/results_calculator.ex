@@ -15,6 +15,7 @@ defmodule Elections.ResultsCalculator do
   alias Elections.{Election, Vote}
   alias Elections.RepoManager
   alias Elections.Voting
+  alias Elections.BuildInfo
   
   @debug_logging Application.compile_env(:elections, :debug_logging, false)
   @min_calculation_interval_ms 2000  # Minimum 2 seconds between calculations during high volume
@@ -57,7 +58,7 @@ defmodule Elections.ResultsCalculator do
         debug_log(:info, "[ResultsCalculator] Calculation in progress for #{election_identifier}, queuing recalculation")
         {:noreply, Map.put(state, election_identifier, {:queued, now})}
       
-      {:queued, queued_at} ->
+      {:queued, _queued_at} ->
         # Already queued - no need to queue again
         debug_log(:info, "[ResultsCalculator] Already queued for #{election_identifier}")
         {:noreply, state}
@@ -136,10 +137,12 @@ defmodule Elections.ResultsCalculator do
             if results_vote_count == 0 do
               debug_log(:warning, "[ResultsCalculator] Results show 0 votes but vote_count was #{vote_count} - skipping broadcast")
             else
+              # Include build info (commit hash) in broadcast
+              build_info = %{commitHash: BuildInfo.commit_hash()}
               Phoenix.PubSub.broadcast(
                 Elections.PubSub,
                 "dashboard:#{election_identifier}",
-                {:results_updated, election_identifier, results}
+                {:results_updated, election_identifier, results, build_info}
               )
               debug_log(:info, "[ResultsCalculator] Broadcast results for #{election_identifier}, total_votes=#{results_vote_count}")
             end
