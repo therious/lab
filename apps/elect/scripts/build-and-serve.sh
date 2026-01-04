@@ -27,6 +27,21 @@ echo -e "${YELLOW}Ensuring Elixir dependencies are installed...${NC}"
 
 cd ../../servers/elections
 
+# Check if server is already running and stop it if so
+if lsof -Pi :4000 -sTCP:LISTEN -t >/dev/null ; then
+    SERVER_PID=$(lsof -Pi :4000 -sTCP:LISTEN -t | head -1)
+    echo -e "${YELLOW}Stopping existing server on port 4000 (PID: $SERVER_PID)...${NC}"
+    kill $SERVER_PID 2>/dev/null || true
+    # Wait for server to stop
+    sleep 1
+    # Force kill if still running
+    if lsof -Pi :4000 -sTCP:LISTEN -t >/dev/null ; then
+        kill -9 $SERVER_PID 2>/dev/null || true
+        sleep 1
+    fi
+    echo -e "${GREEN}✓ Server stopped${NC}"
+fi
+
 # Check if dependencies are installed by looking for mix.lock and deps directory
 # mix deps.get is idempotent, but we check to avoid unnecessary work
 if [ ! -f "mix.lock" ] || [ ! -d "deps" ] || [ -z "$(ls -A deps 2>/dev/null)" ]; then
@@ -46,27 +61,17 @@ mix compile
 
 echo -e "${YELLOW}Starting elections server...${NC}"
 
-# Check if server is already running
-if lsof -Pi :4000 -sTCP:LISTEN -t >/dev/null ; then
-    SERVER_PID=$(lsof -Pi :4000 -sTCP:LISTEN -t | head -1)
-    echo -e "${YELLOW}Server already running on port 4000 (PID: $SERVER_PID)${NC}"
-    echo -e "${RED}⚠️  Server needs to be restarted to use fresh build info${NC}"
-    echo -e "${YELLOW}Please stop the server and run 'pnpm serve' again, or restart manually${NC}"
-    echo -e "${GREEN}Server URL: http://localhost:4000${NC}"
-    echo -e "${GREEN}API URL: http://localhost:4000/api${NC}"
-else
-    mix phx.server &
-    SERVER_PID=$!
-    echo $SERVER_PID > /tmp/elections-server.pid
-    
-    # Wait a moment for server to start
-    sleep 2
-    
-    echo -e "${GREEN}✓ Elections server started (PID: $SERVER_PID)${NC}"
-    echo -e "${GREEN}Server URL: http://localhost:4000${NC}"
-    echo -e "${GREEN}API URL: http://localhost:4000/api${NC}"
-    echo -e "${YELLOW}Press Ctrl+C to stop the server${NC}"
-    
-    # Wait for server process
-    wait $SERVER_PID
-fi
+mix phx.server &
+SERVER_PID=$!
+echo $SERVER_PID > /tmp/elections-server.pid
+
+# Wait a moment for server to start
+sleep 2
+
+echo -e "${GREEN}✓ Elections server started (PID: $SERVER_PID)${NC}"
+echo -e "${GREEN}Server URL: http://localhost:4000${NC}"
+echo -e "${GREEN}API URL: http://localhost:4000/api${NC}"
+echo -e "${YELLOW}Press Ctrl+C to stop the server${NC}"
+
+# Wait for server process
+wait $SERVER_PID
