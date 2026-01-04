@@ -35,6 +35,12 @@ else
     echo -e "${GREEN}✓ Elixir dependencies already installed${NC}"
 fi
 
+echo -e "${YELLOW}Regenerating server build info and recompiling...${NC}"
+# Force regeneration of build info and recompilation to ensure fresh build
+# This ensures server commit hash matches UI commit hash
+mix buildinfo.generate
+mix compile --force
+
 echo -e "${YELLOW}Starting elections server...${NC}"
 
 # Check if server is already running
@@ -58,4 +64,3 @@ else
     # Wait for server process
     wait $SERVER_PID
 fi
-
