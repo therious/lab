@@ -8,15 +8,6 @@ defmodule Elections.BuildInfo do
   # Use absolute path based on source file location
   @build_info_path Path.expand("build_info.json", __DIR__)
   
-  # Default build info map
-  @default_build_info %{
-    "commitHash" => "unknown",
-    "branch" => "unknown",
-    "authorDate" => DateTime.utc_now() |> DateTime.to_iso8601(),
-    "commitDate" => DateTime.utc_now() |> DateTime.to_iso8601(),
-    "buildDate" => DateTime.utc_now() |> DateTime.to_iso8601()
-  }
-  
   # Compile-time constant - loaded once when module is compiled
   # Inline the logic here since module attributes can't call functions defined in the same module
   @build_info (
@@ -28,17 +19,43 @@ defmodule Elections.BuildInfo do
             try do
               case Jason.decode(content) do
                 {:ok, info} -> info
-                {:error, _} -> @default_build_info
+                {:error, _} -> 
+                  %{
+                    "commitHash" => "unknown",
+                    "branch" => "unknown",
+                    "authorDate" => DateTime.utc_now() |> DateTime.to_iso8601(),
+                    "commitDate" => DateTime.utc_now() |> DateTime.to_iso8601(),
+                    "buildDate" => DateTime.utc_now() |> DateTime.to_iso8601()
+                  }
               end
             rescue
-              _ -> @default_build_info
+              _ -> 
+                %{
+                  "commitHash" => "unknown",
+                  "branch" => "unknown",
+                  "authorDate" => DateTime.utc_now() |> DateTime.to_iso8601(),
+                  "commitDate" => DateTime.utc_now() |> DateTime.to_iso8601(),
+                  "buildDate" => DateTime.utc_now() |> DateTime.to_iso8601()
+                }
             end
           {:error, _} ->
             # Jason not available at compile time - return default
-            @default_build_info
+            %{
+              "commitHash" => "unknown",
+              "branch" => "unknown",
+              "authorDate" => DateTime.utc_now() |> DateTime.to_iso8601(),
+              "commitDate" => DateTime.utc_now() |> DateTime.to_iso8601(),
+              "buildDate" => DateTime.utc_now() |> DateTime.to_iso8601()
+            }
         end
       {:error, _} ->
-        @default_build_info
+        %{
+          "commitHash" => "unknown",
+          "branch" => "unknown",
+          "authorDate" => DateTime.utc_now() |> DateTime.to_iso8601(),
+          "commitDate" => DateTime.utc_now() |> DateTime.to_iso8601(),
+          "buildDate" => DateTime.utc_now() |> DateTime.to_iso8601()
+        }
     end
   )
   
