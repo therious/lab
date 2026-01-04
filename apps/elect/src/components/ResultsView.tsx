@@ -225,8 +225,10 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
     // Dynamically import Phoenix Socket (may not be available in all environments)
     // @ts-ignore - Phoenix doesn't have TypeScript declarations
     import('phoenix').then((phoenix: any) => {
+      let websocketConnected = false;
       const Socket = phoenix.Socket;
       socket = new Socket('/socket', {});
+      debugLog('[WebSocket] Connecting to dashboard channel for election:', currentElection.identifier);
       socket.connect();
       
       channel = socket.channel(`dashboard:${currentElection.identifier}`, {});
@@ -252,7 +254,8 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
         if (payload.results) {
           // WebSocket payload structure: {election_id: "...", results: {results: [...], metadata: {...}}, buildInfo: {...}}
           // processResults expects: {results: {results: [...], metadata: {...}}}
-          const currentTotal = results?.metadata?.total_votes;
+          const currentTotal = resultsRef.current?.metadata?.total_votes;
+          const currentResults = resultsRef.current;
           const newTotal = payload.results?.metadata?.total_votes;
           debugLog('[WebSocket] Vote count change:', currentTotal, '→', newTotal);
           
@@ -298,6 +301,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
           // processResults expects: {results: {results: [...], metadata: {...}}}
           debugLog('[WebSocket] Processing update - vote count:', currentTotalVotes, '→', newTotalVotes);
           processResults({results: payload.results});
+          const currentResults = resultsRef.current;
         } else {
           debugWarn('[WebSocket] Payload missing results:', payload);
         }
@@ -334,7 +338,17 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
                   voting_start: currentElection.voting_start,
                   voting_end: currentElection.voting_end,
                   election_identifier: currentElection.identifier
-                }
+          websocketConnected = true;
+          console.log('[WebSocket] ✅ Connected - real-time updates enabled');
+          // Stop polling if WebSocket is connected
+          console.warn('[WebSocket] Falling back to polling for updates');
+          if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+          console.warn('[WebSocket] Falling back to polling for updates');
+            debugLog('[WebSocket] Stopped polling - WebSocket connected');
+          }
+      console.warn('[WebSocket] Error details:', err.message);
               });
               setLastUpdateTime(new Date());
             } else {
@@ -473,9 +487,28 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
   if (error) {
     return (
       <div style={{padding: '2rem'}}>
-        <h1>Election Results: {currentElection.title}</h1>
-        <p style={{color: '#c33'}}>{error}</p>
+      <div style={{marginBottom: '1rem', padding: '1rem', background: '#f5f5f5', borderRadius: '8px', border: '1px solid #ddd'}}>
+        <h1 style={{marginBottom: '0.5rem'}}>Election: {currentElection.title}</h1>
+        {currentElection.description && (
+          <p style={{color: '#666', marginBottom: '0.5rem'}}>{currentElection.description}</p>
+        )}
+        <div style={{fontSize: '0.9rem', color: '#888'}}>
+          <strong>Election ID:</strong> {currentElection.identifier}
+          {currentElection.voting_start && (
+            <> | <strong>Starts:</strong> {new Date(currentElection.voting_start).toLocaleString()}</>
+          )}
+          {currentElection.voting_end && (
+            <> | <strong>Ends:</strong> {new Date(currentElection.voting_end).toLocaleString()}</>
+          )}
+        </div>
       </div>
+      <h2 style={{marginBottom: '1.3125rem'}}>Results</h2>
+          {currentElection.voting_end && (
+            <> | <strong>Ends:</strong> {new Date(currentElection.voting_end).toLocaleString()}</>
+          )}
+        </div>
+      </div>
+      <h2 style={{marginBottom: '1.3125rem'}}>Results</h2>
     );
   }
 
