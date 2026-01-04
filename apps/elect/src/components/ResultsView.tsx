@@ -324,27 +324,29 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
         debugLog('[WebSocket] Vote submitted:', payload);
         
         // Update vote count immediately without waiting for full results calculation
+        // Use resultsRef to avoid stale closure issues
+        const currentResults = resultsRef.current;
         if (payload.vote_count !== undefined && payload.vote_count !== null) {
-          const currentTotal = results?.metadata?.total_votes || 0;
+          const currentTotal = currentResults?.metadata?.total_votes || 0;
           const newTotal = payload.vote_count;
           
           if (newTotal > currentTotal) {
             debugLog('[WebSocket] Updating vote count:', currentTotal, '→', newTotal);
             
             // Update metadata vote count immediately for responsive UI
-            if (results && results.metadata) {
+            if (currentResults && currentResults.metadata) {
               setResults({
-                ...results,
+                ...currentResults,
                 metadata: {
-                  ...results.metadata,
+                  ...currentResults.metadata,
                   total_votes: newTotal
                 }
               });
               setLastUpdateTime(new Date());
-            } else if (results) {
+            } else if (currentResults) {
               // If we have results but no metadata, add it
               setResults({
-                ...results,
+                ...currentResults,
                 metadata: {
                   total_votes: newTotal,
                   vote_timestamps: [],
@@ -355,7 +357,17 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
               });
               setLastUpdateTime(new Date());
             } else {
-              // No results yet - still update the timestamp to show activity
+              // No results yet - create minimal structure with vote count
+              setResults({
+                ballots: [],
+                metadata: {
+                  total_votes: newTotal,
+                  vote_timestamps: [],
+                  voting_start: currentElection.voting_start,
+                  voting_end: currentElection.voting_end,
+                  election_identifier: currentElection.identifier
+                }
+              });
               setLastUpdateTime(new Date());
             }
           }
