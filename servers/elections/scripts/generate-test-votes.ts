@@ -7,7 +7,12 @@
  * 2. Generates tokens for voting
  * 3. Creates random votes with bias for general election
  * 4. Submits ~1000 votes
+ * 
+ * Stops automatically when code files are modified
  */
+
+import * as fs from 'fs';
+import * as path from 'path';
 
 const BASE_URL = process.env.ELECTIONS_URL || 'http://localhost:4000';
 const ELECTION_IDENTIFIER = process.env.ELECTION_ID || '2026-general-election';
@@ -240,9 +245,72 @@ function generateRandomVote(election: ElectionData, elapsedSeconds: number): Rec
 }
 
 /**
+ * Watch for code changes and stop test when files are modified
+ */
+function setupFileWatcher(workspaceRoot: string): () => void {
+  const watchPaths = [
+    path.join(workspaceRoot, 'servers/elections/lib'),
+    path.join(workspaceRoot, 'apps/elect/src'),
+  ];
+  
+  const watchers: fs.FSWatcher[] = [];
+  let shouldStop = false;
+  
+  const checkAndStop = (filePath: string) => {
+    // Ignore log files and other non-code files
+    if (filePath.endsWith('.log') || filePath.endsWith('.beam') || filePath.includes('_build')) {
+      return;
+    }
+    
+    if (!shouldStop) {
+      shouldStop = true;
+      console.log(`\n🛑 Code file modified: ${filePath}`);
+      console.log('🛑 Stopping test script...\n');
+      process.exit(0);
+    }
+  };
+  
+  watchPaths.forEach(watchPath => {
+    if (fs.existsSync(watchPath)) {
+      const watcher = fs.watch(watchPath, { recursive: true }, (eventType, filename) => {
+        if (filename && (eventType === 'change' || eventType === 'rename')) {
+          const fullPath = path.join(watchPath, filename);
+          checkAndStop(fullPath);
+        }
+      });
+      watchers.push(watcher);
+    }
+  });
+  
+  // Return cleanup function
+  return () => {
+    watchers.forEach(watcher => watcher.close());
+  };
+}
+
+/**
  * Main function
+ * 
+ * NOTE: This script is now on-demand only. It will NOT run automatically.
+ * To run stress tests, explicitly invoke this script.
  */
 async function main() {
+  // Set up file watcher to stop when code changes
+  const workspaceRoot = path.resolve(__dirname, '../../..');
+  const cleanupWatcher = setupFileWatcher(workspaceRoot);
+  
+  // Cleanup on exit
+  process.on('SIGINT', () => {
+    cleanupWatcher();
+    process.exit(0);
+  });
+  process.on('SIGTERM', () => {
+    cleanupWatcher();
+    process.exit(0);
+  });
+  
+  console.log('⚠️  This script is on-demand only. It will stop automatically when code files are modified.');
+  console.log('⚠️  To run stress tests, explicitly invoke this script.\n');
   console.log('=== Test Vote Generator ===');
   if (NUM_VOTES > 0) {
     console.log(`Target: ${NUM_VOTES} votes`);
@@ -375,6 +443,8 @@ async function main() {
   console.log(`❌ Failed: ${failCount}`);
   console.log(`⏱️  Time: ${elapsed}s`);
   console.log(`📊 Rate: ${(successCount / parseFloat(elapsed)).toFixed(1)} votes/sec`);
+  
+  cleanupWatcher();
 }
 
 // Run if executed directly
