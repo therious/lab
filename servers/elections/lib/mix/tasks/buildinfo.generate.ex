@@ -14,21 +14,14 @@ defmodule Mix.Tasks.Buildinfo.Generate do
     project_root = File.cwd!()
     script_path = Path.join([project_root, "scripts", "generate-build-info.exs"])
     
-    # Use Mix.install to run the script with dependencies
-    case System.cmd("elixir", ["-r", "mix.exs", script_path], cd: project_root) do
+    # Run as standalone script (Mix.install handles dependencies)
+    case System.cmd("elixir", [script_path], cd: project_root) do
       {output, 0} ->
         Mix.shell().info(output)
         :ok
-      {_output, _exit_code} ->
-        # Try alternative: run as standalone script
-        case System.cmd("elixir", [script_path], cd: project_root) do
-          {output2, 0} ->
-            Mix.shell().info(output2)
-            :ok
-          {output2, _exit_code2} ->
-            Mix.shell().error("Failed to generate BuildInfo: #{output2}")
-            :error
-        end
+      {output, exit_code} ->
+        Mix.shell().error("Failed to generate BuildInfo (exit code #{exit_code}): #{output}")
+        :error
     end
   end
 end

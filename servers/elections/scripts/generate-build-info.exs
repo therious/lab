@@ -78,8 +78,5 @@ defmodule BuildInfoGenerator do
   end
 end
 
-# Run if executed directly (when called from command line)
-# Also allow running via Mix task
-if System.argv() != [] or Code.ensure_loaded?(Mix) do
-  BuildInfoGenerator.generate()
-end
+# Always run when script is executed
+BuildInfoGenerator.generate()
