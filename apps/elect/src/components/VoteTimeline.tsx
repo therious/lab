@@ -268,24 +268,34 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   const cumulativeData: Array<{time: number; cumulative: number}> = [];
   
   // For cumulative, we need to count votes from election start, not window start
+  // Always build cumulative data from ALL votes (not just filtered), relative to election start
   const votesBeforeWindow = parsedTimestamps.filter(ts => ts.getTime() < windowStart.getTime()).length;
   cumulative = votesBeforeWindow;
   
-  filteredTimestamps.forEach(timestamp => {
-    const timeFromWindowStart = timestamp.getTime() - windowStart.getTime();
-    const period = Math.floor(timeFromWindowStart / unitMs);
-    voteGroups.set(period, (voteGroups.get(period) || 0) + 1);
+  // Build cumulative data from ALL parsed timestamps (not just filtered ones)
+  // This ensures the cumulative line shows the full election progress
+  parsedTimestamps.forEach(timestamp => {
     cumulative++;
-    // For cumulative line, use time from election start
     const timeFromElectionStart = timestamp.getTime() - start.getTime();
     cumulativeData.push({time: timeFromElectionStart, cumulative});
   });
   
+  // Build vote groups from filtered timestamps (for bar chart)
+  filteredTimestamps.forEach(timestamp => {
+    const timeFromWindowStart = timestamp.getTime() - windowStart.getTime();
+    const period = Math.floor(timeFromWindowStart / unitMs);
+    voteGroups.set(period, (voteGroups.get(period) || 0) + 1);
+  });
+  
   // Calculate max values for scaling
   const maxVolume = Math.max(...Array.from(voteGroups.values()), 1);
+  // For cumulative, always use the maximum from cumulativeData to ensure line is visible
+  const maxCumulativeFromData = cumulativeData.length > 0 
+    ? Math.max(...cumulativeData.map(p => p.cumulative), 1)
+    : 1;
   const maxCumulative = mode === 'realtime' && scale !== 'whole' 
-    ? Math.max(cumulative, 1) 
-    : Math.max(totalVotes, 1);
+    ? Math.max(maxCumulativeFromData, 1) 
+    : Math.max(totalVotes, maxCumulativeFromData, 1);
   const totalPeriods = Math.ceil(windowDuration / unitMs);
   
   // Use nice round numbers for axis labels (calculate before using)
@@ -321,8 +331,10 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   
   // Build cumulative line path (always relative to election start for consistency)
   const electionDuration = end.getTime() - start.getTime();
-  const cumulativePath = cumulativeData.length > 0
-    ? cumulativeData.map((point, idx) => {
+  // Sort cumulative data by time to ensure proper line drawing
+  const sortedCumulativeData = cumulativeData.sort((a, b) => a.time - b.time);
+  const cumulativePath = sortedCumulativeData.length > 0
+    ? sortedCumulativeData.map((point, idx) => {
         const x = padding.left + (point.time / electionDuration) * plotWidth;
         const y = padding.top + plotHeight - (point.cumulative / niceMaxCumulative) * plotHeight;
         return `${idx === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
@@ -542,34 +554,43 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
               </BarGroup>
             ))}
             
-            {/* Cumulative line - make it more visible */}
+            {/* Cumulative line - make it more visible with darker green and thicker line */}
             {cumulativePath && (
               <path
                 d={cumulativePath}
                 fill="none"
-                stroke="#4caf50"
-                strokeWidth="2.5"
+                stroke="#2e7d32"
+                strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                style={{filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'}}
+                style={{
+                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+                  opacity: 0.9
+                }}
               />
             )}
             
-            {/* Cumulative line points for better visibility (only in overview mode) */}
-            {mode === 'overview' && cumulativeData.map((point, idx) => {
+            {/* Cumulative line points for better visibility in both modes */}
+            {cumulativeData.map((point, idx) => {
               const x = padding.left + (point.time / electionDuration) * plotWidth;
               const y = padding.top + plotHeight - (point.cumulative / niceMaxCumulative) * plotHeight;
-              return (
-                <circle
-                  key={idx}
-                  cx={x}
-                  cy={y}
-                  r="2"
-                  fill="#4caf50"
-                  stroke="white"
-                  strokeWidth="1"
-                />
-              );
+              // Only show points that are within the visible window
+              const isVisible = x >= padding.left && x <= padding.left + plotWidth;
+              if (isVisible) {
+                return (
+                  <circle
+                    key={idx}
+                    cx={x}
+                    cy={y}
+                    r="2.5"
+                    fill="#2e7d32"
+                    stroke="white"
+                    strokeWidth="1.5"
+                    opacity={0.8}
+                  />
+                );
+              }
+              return null;
             })}
           </svg>
         </ChartArea>
