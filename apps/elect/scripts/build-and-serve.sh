@@ -5,6 +5,7 @@ set -e
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
+RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}Building Elect UI...${NC}"
@@ -45,7 +46,10 @@ echo -e "${YELLOW}Starting elections server...${NC}"
 
 # Check if server is already running
 if lsof -Pi :4000 -sTCP:LISTEN -t >/dev/null ; then
-    echo -e "${YELLOW}Server already running on port 4000${NC}"
+    SERVER_PID=$(lsof -Pi :4000 -sTCP:LISTEN -t | head -1)
+    echo -e "${YELLOW}Server already running on port 4000 (PID: $SERVER_PID)${NC}"
+    echo -e "${RED}⚠️  Server needs to be restarted to use fresh build info${NC}"
+    echo -e "${YELLOW}Please stop the server and run 'pnpm serve' again, or restart manually${NC}"
     echo -e "${GREEN}Server URL: http://localhost:4000${NC}"
     echo -e "${GREEN}API URL: http://localhost:4000/api${NC}"
 else
