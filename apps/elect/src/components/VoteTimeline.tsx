@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useMemo} from 'react';
 import styled from 'styled-components';
 
 const TimelineContainer = styled.div`
@@ -199,7 +199,7 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   };
   
   // Parse timestamps and group by time period
-  const parsedTimestamps = voteTimestamps.map(ts => new Date(ts)).filter(d => !isNaN(d.getTime()));
+  const parsedTimestamps = useMemo(() => voteTimestamps.map(ts => new Date(ts)).filter(d => !isNaN(d.getTime())), [voteTimestamps]);
   
   // Calculate time window for realtime mode
   const getTimeWindow = (scale: TimeScale): {windowStart: Date; windowEnd: Date} => {
@@ -263,33 +263,30 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   }
   
   // Group votes by time period (relative to window start)
-  const voteGroups: Map<number, number> = new Map();
-  let cumulative = 0;
-  const cumulativeData: Array<{time: number; cumulative: number}> = [];
-  
-  // For cumulative, we need to count votes from election start, not window start
-  // Always build cumulative data from ALL votes (not just filtered), relative to election start
-  const votesBeforeWindow = parsedTimestamps.filter(ts => ts.getTime() < windowStart.getTime()).length;
-  cumulative = votesBeforeWindow;
-  
-  // Build cumulative data from ALL parsed timestamps (not just filtered ones)
-  // This ensures the cumulative line shows the full election progress
-  parsedTimestamps.forEach(timestamp => {
-    cumulative++;
-    const timeFromElectionStart = timestamp.getTime() - start.getTime();
-    cumulativeData.push({time: timeFromElectionStart, cumulative});
-  });
+    const data: Array<{time: number; cumulative: number}> = [];
+    const votesBeforeWindow = parsedTimestamps.filter(ts => ts.getTime() < windowStart.getTime()).length;
+    let cumulative = votesBeforeWindow;
+    parsedTimestamps.forEach(timestamp => {
+      cumulative++;
+      const timeFromElectionStart = timestamp.getTime() - start.getTime();
+      data.push({time: timeFromElectionStart, cumulative});
+    });
+    return data;
+  }, [parsedTimestamps, windowStart, start]);
   
   // Build vote groups from filtered timestamps (for bar chart)
   filteredTimestamps.forEach(timestamp => {
     const timeFromWindowStart = timestamp.getTime() - windowStart.getTime();
     const period = Math.floor(timeFromWindowStart / unitMs);
-    voteGroups.set(period, (voteGroups.get(period) || 0) + 1);
-  });
-  
-  // Calculate max values for scaling
-  const maxVolume = Math.max(...Array.from(voteGroups.values()), 1);
-  // For cumulative, always use the maximum from cumulativeData to ensure line is visible
+  const voteGroups = useMemo(() => {
+    const groups: Map<number, number> = new Map();
+    filteredTimestamps.forEach(timestamp => {
+      const timeFromWindowStart = timestamp.getTime() - windowStart.getTime();
+      const period = Math.floor(timeFromWindowStart / unitMs);
+      groups.set(period, (groups.get(period) || 0) + 1);
+    });
+    return groups;
+  }, [filteredTimestamps, windowStart, unitMs]);
   const maxCumulativeFromData = cumulativeData.length > 0 
     ? Math.max(...cumulativeData.map(p => p.cumulative), 1)
     : 1;
@@ -332,7 +329,7 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   // Build cumulative line path (always relative to election start for consistency)
   const electionDuration = end.getTime() - start.getTime();
   // Sort cumulative data by time to ensure proper line drawing
-  const sortedCumulativeData = cumulativeData.sort((a, b) => a.time - b.time);
+  const sortedCumulativeData = [...cumulativeData].sort((a, b) => a.time - b.time);
   const cumulativePath = sortedCumulativeData.length > 0
     ? sortedCumulativeData.map((point, idx) => {
         const x = padding.left + (point.time / electionDuration) * plotWidth;
