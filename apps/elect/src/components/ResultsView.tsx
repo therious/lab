@@ -38,6 +38,7 @@ export function ResultsView() {
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
 
   // Load initial results and set up websocket connection
   React.useEffect(() => {
@@ -97,6 +98,7 @@ export function ResultsView() {
       // Only update if we have valid data
       if (metadata !== null || ballots.length > 0) {
         setResults({ballots, metadata});
+        setLastUpdateTime(new Date());
       } else {
         debugWarn('[DEBUG] Skipping update - no valid data');
       }
@@ -520,7 +522,43 @@ export function ResultsView() {
             
             {hasVotes ? (
               <div style={{marginTop: '1rem'}}>
-                <h3>Tally Summary:</h3>
+                {metadata && metadata.total_votes !== undefined && results && (() => {
+                  // Calculate total votes processed across all ballots
+                  const processedVotes = ballots.reduce((sum: number, ballot: any) => {
+                    return sum + (ballot.vote_count || 0);
+                  }, 0);
+                  const totalVotes = metadata.total_votes || 0;
+                  const pendingVotes = totalVotes - processedVotes;
+                  
+                  // Format last update timestamp with seconds
+                  const formatTimestamp = (date: Date | null) => {
+                    if (!date) return '';
+                    return date.toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: false
+                    });
+                  };
+                  
+                  return (
+                    <div style={{marginBottom: '0.5rem', fontSize: '0.85rem', color: '#666'}}>
+                      {lastUpdateTime && (
+                        <div style={{fontStyle: 'italic', marginBottom: '0.25rem'}}>
+                          Last updated: {formatTimestamp(lastUpdateTime)}
+                        </div>
+                      )}
+                      <div style={{fontStyle: 'italic'}}>
+                        {pendingVotes > 0
+                          ? `${processedVotes.toLocaleString()}/${totalVotes.toLocaleString()} votes processed`
+                          : `${totalVotes.toLocaleString()} votes processed`}
+                      </div>
+                    </div>
+                  );
+                })()}
+                <div style={{marginBottom: '0.5rem'}}>
+                  <h3 style={{margin: 0}}>Tally Summary:</h3>
+                </div>
                 {ballotResult.results?.score && (
                   <div style={{marginTop: '0.5rem', padding: '0.5rem', background: '#e8f4f8', borderRadius: '4px'}}>
                     <strong>Score Voting (Average Scores):</strong>

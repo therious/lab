@@ -65,6 +65,9 @@ config :logger, :default_formatter, format: "[$level] $message\n"
 config :elections, Elections.Repo,
   log: false  # Set to :info or false to reduce query debug output
 
+# Request logging is controlled by debug_logging config
+# POST /api/votes requests are excluded from logging unless debug_logging is true
+
 # Set a higher stacktrace during development. Avoid configuring such
 # in production as building large stacktraces may be expensive.
 config :phoenix, :stacktrace_depth, 20

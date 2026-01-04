@@ -41,6 +41,16 @@ defmodule ElectionsWeb.Endpoint do
 
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
+  
+  # Conditional request logging - only log when debug_logging is enabled
+  # When debug_logging is false, exclude POST /api/votes to avoid performance impact
+  @debug_logging Application.compile_env(:elections, :debug_logging, false)
+  if @debug_logging do
+    plug Plug.Logger
+  else
+    # Filter out POST /api/votes requests to improve performance at high vote rates
+    plug Plug.Logger, log: :info, exclude: ["/api/votes"]
+  end
 
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],

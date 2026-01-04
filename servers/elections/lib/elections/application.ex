@@ -19,8 +19,8 @@ defmodule Elections.Application do
       # Elections.Repo must be started for put_dynamic_repo to work
       # It uses a default database config, but individual election repos are created dynamically
       Elections.Repo,
-      # Start a worker by calling: Elections.Worker.start_link(arg)
-      # {Elections.Worker, arg},
+      # Results calculator GenServer for queued, sequential calculation processing
+      Elections.ResultsCalculator,
       # Start to serve requests, typically the last entry
       ElectionsWeb.Endpoint
     ]

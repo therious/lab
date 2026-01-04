@@ -48,65 +48,10 @@ defmodule Elections.Voting do
       # Unwrap transaction result - Ecto wraps rollback values in {:error, value}
       case result do
         {:ok, view_token} ->
-          # Debug: Verify vote was actually committed
-          case get_election(repo, election_identifier) do
-            {:ok, election} ->
-              vote_count = repo.aggregate(from(v in Vote, where: v.election_id == ^election.id), :count)
-              debug_log(:info, "[DEBUG] submit_vote: After transaction, vote_count=#{vote_count} for election_id=#{election.id}")
-            _ -> :ok
-          end
-          
-          # Broadcast results update AFTER transaction commits
-          # Use election identifier so we can set the dynamic repo in the task process
-          election_id_for_broadcast = election_identifier
-          
-          # Debounce updates: if votes are coming in rapidly, batch them
-          # This adapts to actual server load rather than election type
-          # Simple approach: always wait a short time to batch rapid updates
-          debounce_ms = 500  # Wait 500ms to batch rapid vote submissions
-          
-          Task.start(fn ->
-            # Small delay to batch rapid updates (demand-based, not type-based)
-            Process.sleep(debounce_ms)
-            
-            RepoManager.with_repo(election_id_for_broadcast, fn task_repo ->
-              # Get election directly from repo to avoid nested with_repo call
-              case task_repo.get_by(Election, identifier: election_id_for_broadcast) do
-                nil ->
-                  debug_log(:error, "[DEBUG] Broadcasting results_updated: election not found: #{election_id_for_broadcast}")
-                  :ok
-                
-                latest_election ->
-                  # Verify vote count before calculating
-                  vote_count = task_repo.aggregate(from(v in Vote, where: v.election_id == ^latest_election.id), :count)
-                  debug_log(:info, "[DEBUG] Broadcasting results_updated: election=#{election_id_for_broadcast}, election_id=#{latest_election.id}, vote_count=#{vote_count}")
-                  
-                  # Don't broadcast if vote count is 0 and we expect votes
-                  if vote_count == 0 do
-                    debug_log(:warning, "[DEBUG] Vote count is 0 - skipping broadcast to avoid resetting UI")
-                    :ok
-                  else
-                    results = calculate_all_results(task_repo, latest_election)
-                    
-                    # Verify results structure before broadcasting
-                    results_vote_count = results.metadata.total_votes
-                    debug_log(:info, "[DEBUG] Results metadata total_votes: #{results_vote_count}, results array length: #{length(results.results)}")
-                    
-                    # Double-check: don't broadcast if results show 0 votes
-                    if results_vote_count == 0 do
-                      debug_log(:warning, "[DEBUG] Results show 0 votes but vote_count was #{vote_count} - skipping broadcast")
-                      :ok
-                    else
-                      Phoenix.PubSub.broadcast(
-                        Elections.PubSub,
-                        "dashboard:#{election_id_for_broadcast}",
-                        {:results_updated, election_id_for_broadcast, results}
-                      )
-                    end
-                  end
-              end
-            end)
-          end)
+          # Request results calculation via GenServer queue (async, non-blocking)
+          # This will queue the calculation and process it sequentially,
+          # skipping intermediate calculations if new votes arrive
+          Elections.ResultsCalculator.calculate_results(election_identifier)
           
           {:ok, view_token}
         {:error, {:error, reason}} -> {:error, reason}  # Unwrap double-wrapped error
@@ -327,7 +272,7 @@ defmodule Elections.Voting do
     end
   end
 
-  defp calculate_all_results(repo, election) do
+  def calculate_all_results(repo, election) do
     # Debug: Log database path and election info for results query
     db_path = RepoManager.db_path(election.identifier || "")
     debug_log(:info, "[DEBUG] calculate_all_results: election_id=#{election.id}, election_identifier=#{election.identifier}, db_path=#{db_path}")
@@ -353,134 +298,30 @@ defmodule Elections.Voting do
       _ -> []
     end
 
-    # Calculate results for each ballot - always return complete structure
-    # Wrap each ballot processing in try/rescue to ensure we always return basic stats
-    results = Enum.map(ballots, fn ballot ->
-      try do
-        # Ensure ballot is a map
-        ballot = if is_map(ballot), do: ballot, else: %{}
-        
-        ballot_title = Map.get(ballot, "title", "Untitled Ballot")
-        candidates = case Map.get(ballot, "candidates", []) do
-          candidates when is_list(candidates) -> candidates
-          _ -> []
-        end
-        number_of_winners = case Map.get(ballot, "number_of_winners", 1) do
-          n when is_integer(n) and n > 0 -> n
-          _ -> 1
-        end
-
-        # Extract votes for this ballot from ballot_data - wrap in try/rescue
-        ballot_votes = try do
-          extract_ballot_votes(votes, ballot_title)
-        rescue
-          e ->
-            require Logger
-            Logger.warning("Error extracting votes for ballot #{ballot_title}: #{inspect(e)}")
-            []  # Return empty list on error
-        end
-        
-        vote_count = length(ballot_votes)
-        
-        # Check quorum if specified
-        quorum = case Map.get(ballot, "quorum") do
-          q when is_integer(q) and q > 0 -> q
-          _ -> nil
-        end
-        
-        # Determine quorum status
-        quorum_status = if quorum do
-          if vote_count >= quorum do
-            "met"
-          else
-            "not_met"
-          end
-        else
-          nil
-        end
-        
-        # Determine overall result status based on quorum
-        result_status = cond do
-          quorum && vote_count < quorum && DateTime.compare(DateTime.utc_now(), election.voting_end) == :lt ->
-            # Voting still open and quorum not met - in progress
-            "in_progress"
-          quorum && vote_count < quorum ->
-            # Voting closed and quorum not met - no quorum
-            "no_quorum"
-          true ->
-            # Quorum met or no quorum required - use algorithm status
-            nil  # Will be determined by algorithm results
-        end
-
-        # Create ballot map with candidates and number_of_winners for algorithms
-        ballot_for_algorithms = %{
-          "candidates" => candidates,
-          "number_of_winners" => number_of_winners
-        }
-        
-        # Calculate algorithm results - each algorithm is individually protected
-        # Even if ALL algorithms fail, we still return basic stats
-        # Algorithm failures are expected and acceptable - no warnings needed
-        # Ordered by method family: Condorcet, Rating, Runoff
-        algorithm_results = if vote_count > 0 do
-          election_id = election.identifier || "unknown"
-          %{
-            # Condorcet Methods
-            ranked_pairs: safe_calculate_algorithm(fn -> Elections.Algorithms.RankedPairs.calculate(ballot_for_algorithms, ballot_votes) end, "ranked_pairs", election_id, ballot_title),
-            schulze: safe_calculate_algorithm(fn -> Elections.Algorithms.Schulze.calculate(ballot_for_algorithms, ballot_votes) end, "schulze", election_id, ballot_title),
-            # Rating Methods
-            score: safe_calculate_algorithm(fn -> Elections.Algorithms.Score.calculate(ballot_for_algorithms, ballot_votes) end, "score", election_id, ballot_title),
-            approval: safe_calculate_algorithm(fn -> Elections.Algorithms.Approval.calculate(ballot_for_algorithms, ballot_votes) end, "approval", election_id, ballot_title),
-            # Runoff Methods
-            irv_stv: safe_calculate_algorithm(fn -> Elections.Algorithms.IRVSTV.calculate(ballot_for_algorithms, ballot_votes) end, "irv_stv", election_id, ballot_title),
-            coombs: safe_calculate_algorithm(fn -> Elections.Algorithms.Coombs.calculate(ballot_for_algorithms, ballot_votes) end, "coombs", election_id, ballot_title)
-          }
-        else
-          # No votes for this ballot - return empty results structure
-          build_empty_results(candidates)
-        end
-        
-        # Always return basic stats, even if algorithms failed
-        %{
-          ballot_title: ballot_title,
-          candidates: candidates,
-          number_of_winners: number_of_winners,
-          vote_count: vote_count,
-          quorum: quorum,
-          quorum_status: quorum_status,
-          result_status: result_status,
-          is_referendum: Map.get(ballot, "yesNoReferendum", false),
-          results: algorithm_results
-        }
-      rescue
-        e ->
-          # If anything fails in ballot processing, return minimal structure with error info
+    # Calculate results for each ballot in parallel - ballots are independent
+    # Always return complete structure, wrap each ballot processing in try/rescue
+    results = if Enum.empty?(ballots) do
+      []
+    else
+      ballots
+      |> Task.async_stream(
+        fn ballot -> process_ballot(ballot, votes, election) end,
+        max_concurrency: System.schedulers_online(),
+        timeout: 30_000,
+        on_timeout: :kill_task
+      )
+      |> Enum.map(fn
+        {:ok, result} -> result
+        {:exit, :timeout} -> 
           require Logger
-          Logger.error("Critical error processing ballot: #{inspect(e)}")
-          
-          # Extract what we can safely
-          ballot = if is_map(ballot), do: ballot, else: %{}
-          ballot_title = Map.get(ballot, "title", "Untitled Ballot")
-          candidates = case Map.get(ballot, "candidates", []) do
-            candidates when is_list(candidates) -> candidates
-            _ -> []
-          end
-          
-          # Return minimal structure with error status
-          %{
-            ballot_title: ballot_title,
-            candidates: candidates,
-            number_of_winners: Map.get(ballot, "number_of_winners", 1),
-            vote_count: 0,  # Can't determine safely
-            quorum: nil,
-            quorum_status: nil,
-            result_status: "error",
-            is_referendum: Map.get(ballot, "yesNoReferendum", false),
-            results: build_empty_results(candidates),
-            error: "Error processing ballot: #{Exception.message(e)}"
-          }
-      end
-    end)
+          Logger.error("Ballot processing timed out")
+          build_error_ballot_result(%{})
+        {:exit, reason} ->
+          require Logger
+          Logger.error("Ballot processing failed: #{inspect(reason)}")
+          build_error_ballot_result(%{})
+      end)
+    end
 
     # Return results with metadata - always complete
     # Safely serialize DateTime values
@@ -501,6 +342,156 @@ defmodule Elections.Voting do
         voting_end: safe_serialize_dt.(election.voting_end),
         election_identifier: election.identifier || ""
       }
+    }
+  end
+
+  # Extract ballot processing into separate function for parallel execution
+  defp process_ballot(ballot, votes, election) do
+    try do
+      # Ensure ballot is a map
+      ballot = if is_map(ballot), do: ballot, else: %{}
+      
+      ballot_title = Map.get(ballot, "title", "Untitled Ballot")
+      candidates = case Map.get(ballot, "candidates", []) do
+        candidates when is_list(candidates) -> candidates
+        _ -> []
+      end
+      number_of_winners = case Map.get(ballot, "number_of_winners", 1) do
+        n when is_integer(n) and n > 0 -> n
+        _ -> 1
+      end
+
+      # Extract votes for this ballot from ballot_data - wrap in try/rescue
+      ballot_votes = try do
+        extract_ballot_votes(votes, ballot_title)
+      rescue
+        e ->
+          require Logger
+          Logger.warning("Error extracting votes for ballot #{ballot_title}: #{inspect(e)}")
+          []  # Return empty list on error
+      end
+      
+      vote_count = length(ballot_votes)
+      
+      # Check quorum if specified
+      quorum = case Map.get(ballot, "quorum") do
+        q when is_integer(q) and q > 0 -> q
+        _ -> nil
+      end
+      
+      # Determine quorum status
+      quorum_status = if quorum do
+        if vote_count >= quorum do
+          "met"
+        else
+          "not_met"
+        end
+      else
+        nil
+      end
+      
+      # Determine overall result status based on quorum
+      result_status = cond do
+        quorum && vote_count < quorum && DateTime.compare(DateTime.utc_now(), election.voting_end) == :lt ->
+          # Voting still open and quorum not met - in progress
+          "in_progress"
+        quorum && vote_count < quorum ->
+          # Voting closed and quorum not met - no quorum
+          "no_quorum"
+        true ->
+          # Quorum met or no quorum required - use algorithm status
+          nil  # Will be determined by algorithm results
+      end
+
+      # Create ballot map with candidates and number_of_winners for algorithms
+      ballot_for_algorithms = %{
+        "candidates" => candidates,
+        "number_of_winners" => number_of_winners
+      }
+      
+      # Calculate algorithm results - each algorithm is individually protected
+      # Even if ALL algorithms fail, we still return basic stats
+      # Algorithm failures are expected and acceptable - no warnings needed
+      # Ordered by method family: Condorcet, Rating, Runoff
+      algorithm_results = if vote_count > 0 do
+        election_id = election.identifier || "unknown"
+        %{
+          # Condorcet Methods
+          ranked_pairs: safe_calculate_algorithm(fn -> Elections.Algorithms.RankedPairs.calculate(ballot_for_algorithms, ballot_votes) end, "ranked_pairs", election_id, ballot_title),
+          schulze: safe_calculate_algorithm(fn -> Elections.Algorithms.Schulze.calculate(ballot_for_algorithms, ballot_votes) end, "schulze", election_id, ballot_title),
+          # Rating Methods
+          score: safe_calculate_algorithm(fn -> Elections.Algorithms.Score.calculate(ballot_for_algorithms, ballot_votes) end, "score", election_id, ballot_title),
+          approval: safe_calculate_algorithm(fn -> Elections.Algorithms.Approval.calculate(ballot_for_algorithms, ballot_votes) end, "approval", election_id, ballot_title),
+          # Runoff Methods
+          irv_stv: safe_calculate_algorithm(fn -> Elections.Algorithms.IRVSTV.calculate(ballot_for_algorithms, ballot_votes) end, "irv_stv", election_id, ballot_title),
+          coombs: safe_calculate_algorithm(fn -> Elections.Algorithms.Coombs.calculate(ballot_for_algorithms, ballot_votes) end, "coombs", election_id, ballot_title)
+        }
+      else
+        # No votes for this ballot - return empty results structure
+        build_empty_results(candidates)
+      end
+      
+      # Always return basic stats, even if algorithms failed
+      %{
+        ballot_title: ballot_title,
+        candidates: candidates,
+        number_of_winners: number_of_winners,
+        vote_count: vote_count,
+        quorum: quorum,
+        quorum_status: quorum_status,
+        result_status: result_status,
+        is_referendum: Map.get(ballot, "yesNoReferendum", false),
+        results: algorithm_results
+      }
+    rescue
+      e ->
+        # If anything fails in ballot processing, return minimal structure with error info
+        require Logger
+        Logger.error("Critical error processing ballot: #{inspect(e)}")
+        
+        # Extract what we can safely
+        ballot = if is_map(ballot), do: ballot, else: %{}
+        ballot_title = Map.get(ballot, "title", "Untitled Ballot")
+        candidates = case Map.get(ballot, "candidates", []) do
+          candidates when is_list(candidates) -> candidates
+          _ -> []
+        end
+        
+        # Return minimal structure with error status
+        %{
+          ballot_title: ballot_title,
+          candidates: candidates,
+          number_of_winners: Map.get(ballot, "number_of_winners", 1),
+          vote_count: 0,  # Can't determine safely
+          quorum: nil,
+          quorum_status: nil,
+          result_status: "error",
+          is_referendum: Map.get(ballot, "yesNoReferendum", false),
+          results: build_empty_results(candidates),
+          error: "Error processing ballot: #{Exception.message(e)}"
+        }
+    end
+  end
+
+  defp build_error_ballot_result(ballot) do
+    ballot = if is_map(ballot), do: ballot, else: %{}
+    ballot_title = Map.get(ballot, "title", "Untitled Ballot")
+    candidates = case Map.get(ballot, "candidates", []) do
+      candidates when is_list(candidates) -> candidates
+      _ -> []
+    end
+    
+    %{
+      ballot_title: ballot_title,
+      candidates: candidates,
+      number_of_winners: Map.get(ballot, "number_of_winners", 1),
+      vote_count: 0,
+      quorum: nil,
+      quorum_status: nil,
+      result_status: "error",
+      is_referendum: Map.get(ballot, "yesNoReferendum", false),
+      results: build_empty_results(candidates),
+      error: "Error processing ballot"
     }
   end
 

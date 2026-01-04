@@ -89,7 +89,7 @@ const ChartArea = styled.div`
   left: 50px;
   right: 50px;
   top: 0;
-  bottom: 0;
+  bottom: 40px; /* Space for rotated X-axis labels */
   padding: 0.5rem;
 `;
 
@@ -192,29 +192,49 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   const niceMaxVolume = Math.ceil(maxVolume / 5) * 5 || 5;
   const niceMaxCumulative = Math.ceil(maxCumulative / 5) * 5 || 5;
   
-  // Chart dimensions
-  const chartWidth = 100;
-  const chartHeight = 100;
-  const padding = 5;
-  const plotWidth = chartWidth - (padding * 2);
-  const plotHeight = chartHeight - (padding * 2);
+  // Get actual chart dimensions from container
+  const chartAreaRef = React.useRef<HTMLDivElement>(null);
+  const [chartDimensions, setChartDimensions] = React.useState({width: 800, height: 250});
   
-  // Build cumulative line path
+  React.useEffect(() => {
+    const updateDimensions = () => {
+      if (chartAreaRef.current) {
+        const rect = chartAreaRef.current.getBoundingClientRect();
+        setChartDimensions({
+          width: Math.max(rect.width - 20, 400), // Account for padding
+          height: Math.max(rect.height - 20, 200)
+        });
+      }
+    };
+    
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, [isCollapsed]);
+  
+  // Chart dimensions - use actual pixel dimensions for higher resolution
+  const chartWidth = chartDimensions.width;
+  const chartHeight = chartDimensions.height;
+  const padding = {top: 10, right: 10, bottom: 30, left: 10}; // Extra bottom padding for X-axis labels
+  const plotWidth = chartWidth - padding.left - padding.right;
+  const plotHeight = chartHeight - padding.top - padding.bottom;
+  
+  // Build cumulative line path with higher resolution
   const cumulativePath = cumulativeData.length > 0
     ? cumulativeData.map((point, idx) => {
-        const x = padding + (point.time / electionDuration) * plotWidth;
-        const y = padding + plotHeight - (point.cumulative / niceMaxCumulative) * plotHeight;
-        return `${idx === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
+        const x = padding.left + (point.time / electionDuration) * plotWidth;
+        const y = padding.top + plotHeight - (point.cumulative / niceMaxCumulative) * plotHeight;
+        return `${idx === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
       }).join(' ')
     : '';
   
-  // Build bar chart data
+  // Build bar chart data with higher resolution
   const bars: Array<{x: number; width: number; height: number; count: number}> = [];
   for (let i = 0; i <= totalPeriods; i++) {
     const count = voteGroups.get(i) || 0;
     if (count > 0 || i === 0 || i === totalPeriods) {
-      const x = padding + (i / Math.max(totalPeriods, 1)) * plotWidth;
-      const width = Math.max(plotWidth / Math.max(totalPeriods, 1), 0.5);
+      const x = padding.left + (i / Math.max(totalPeriods, 1)) * plotWidth;
+      const width = Math.max(plotWidth / Math.max(totalPeriods, 1), 1);
       const height = (count / niceMaxVolume) * plotHeight * 0.8; // Use 80% of height for bars
       bars.push({x, width, height, count});
     }
@@ -229,9 +249,11 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
     rightAxisLabels.push(Math.round((i / 5) * niceMaxCumulative));
   }
   
-  // Generate X-axis tickmarks based on time unit
-  const xAxisTicks: Array<{time: number; label: string}> = [];
-  const numTicks = Math.min(totalPeriods + 1, 10); // Max 10 ticks
+  // Generate X-axis tickmarks based on time unit with better formatting
+  const xAxisTicks: Array<{time: number; label: string; fullLabel: string}> = [];
+  // Calculate optimal number of ticks based on chart width (aim for ~100px spacing)
+  const optimalTickSpacing = 100;
+  const numTicks = Math.min(Math.max(3, Math.floor(plotWidth / optimalTickSpacing)), 12);
   
   for (let i = 0; i <= numTicks; i++) {
     const period = Math.floor((i / numTicks) * totalPeriods);
@@ -239,15 +261,27 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
     const tickDate = new Date(timeMs);
     
     let label = '';
+    let fullLabel = '';
+    
     if (timeUnit === 'day') {
       label = tickDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
+      fullLabel = tickDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
     } else if (timeUnit === 'hour') {
-      label = tickDate.toLocaleTimeString('en-US', {hour: 'numeric', hour12: true});
+      const hour = tickDate.getHours();
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const hour12 = hour % 12 || 12;
+      label = `${hour12}${ampm}`;
+      fullLabel = tickDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) + ' ' + label;
     } else {
-      label = tickDate.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true});
+      const hour = tickDate.getHours();
+      const minute = tickDate.getMinutes();
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const hour12 = hour % 12 || 12;
+      label = `${hour12}:${minute.toString().padStart(2, '0')}${ampm}`;
+      fullLabel = tickDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) + ' ' + label;
     }
     
-    xAxisTicks.push({time: period, label});
+    xAxisTicks.push({time: period, label, fullLabel});
   }
   
   // Handle edge case: if no vote data available, show empty chart
@@ -304,46 +338,50 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
           ))}
         </YAxisLeft>
         
-        <ChartArea>
-          <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} style={{width: '100%', height: '100%'}}>
+        <ChartArea ref={chartAreaRef}>
+          <svg width={chartWidth} height={chartHeight} style={{display: 'block'}}>
             {/* Grid lines */}
             {[0, 1, 2, 3, 4, 5].map(i => {
-              const y = padding + (i / 5) * plotHeight;
+              const y = padding.top + (i / 5) * plotHeight;
               return (
                 <line
                   key={i}
-                  x1={padding}
+                  x1={padding.left}
                   y1={y}
-                  x2={padding + plotWidth}
+                  x2={padding.left + plotWidth}
                   y2={y}
                   stroke="#e0e0e0"
-                  strokeWidth="0.5"
+                  strokeWidth="1"
                 />
               );
             })}
             
-            {/* X-axis tickmarks */}
+            {/* X-axis tickmarks with rotated labels */}
             {xAxisTicks.map((tick, idx) => {
-              const x = padding + (tick.time / Math.max(totalPeriods, 1)) * plotWidth;
+              const x = padding.left + (tick.time / Math.max(totalPeriods, 1)) * plotWidth;
               return (
                 <g key={idx}>
                   <line
                     x1={x}
-                    y1={padding + plotHeight}
+                    y1={padding.top + plotHeight}
                     x2={x}
-                    y2={padding + plotHeight + 2}
+                    y2={padding.top + plotHeight + 5}
                     stroke="#666"
-                    strokeWidth="1"
+                    strokeWidth="1.5"
                   />
                   <text
                     x={x}
-                    y={padding + plotHeight + 8}
+                    y={padding.top + plotHeight + 25}
                     textAnchor="middle"
-                    fontSize="2"
+                    fontSize="11"
                     fill="#666"
+                    transform={`rotate(-45 ${x} ${padding.top + plotHeight + 25})`}
+                    style={{fontFamily: 'system-ui, -apple-system, sans-serif'}}
                   >
                     {tick.label}
                   </text>
+                  {/* Full label on hover */}
+                  <title>{tick.fullLabel}</title>
                 </g>
               );
             })}
@@ -353,7 +391,7 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
               <BarGroup key={idx}>
                 <rect
                   x={bar.x}
-                  y={padding + plotHeight - bar.height}
+                  y={padding.top + plotHeight - bar.height}
                   width={bar.width}
                   height={bar.height}
                   fill="#2196f3"
@@ -365,17 +403,35 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
               </BarGroup>
             ))}
             
-            {/* Cumulative line */}
+            {/* Cumulative line - make it more visible */}
             {cumulativePath && (
               <path
                 d={cumulativePath}
                 fill="none"
                 stroke="#4caf50"
-                strokeWidth="2"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                style={{filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'}}
               />
             )}
+            
+            {/* Cumulative line points for better visibility */}
+            {cumulativeData.map((point, idx) => {
+              const x = padding.left + (point.time / electionDuration) * plotWidth;
+              const y = padding.top + plotHeight - (point.cumulative / niceMaxCumulative) * plotHeight;
+              return (
+                <circle
+                  key={idx}
+                  cx={x}
+                  cy={y}
+                  r="2"
+                  fill="#4caf50"
+                  stroke="white"
+                  strokeWidth="1"
+                />
+              );
+            })}
           </svg>
         </ChartArea>
         
