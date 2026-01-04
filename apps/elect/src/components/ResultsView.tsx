@@ -364,7 +364,7 @@ export function ResultsView() {
         socket.disconnect();
       }
     };
-  }, [currentElection, results, loading]);
+  }, [currentElection]); // Only re-run when election changes, not when results/loading change
 
   if (!currentElection) {
     return <div style={{padding: '2rem'}}>No election selected</div>;
