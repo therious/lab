@@ -5,7 +5,8 @@ defmodule Elections.BuildInfo do
   """
   
   # Load build info from JSON file generated at build time
-  @build_info_path Path.join([__DIR__, "build_info.json"])
+  # Use absolute path based on source file location
+  @build_info_path Path.expand("build_info.json", __DIR__)
   
   # Default build info map
   @default_build_info %{
