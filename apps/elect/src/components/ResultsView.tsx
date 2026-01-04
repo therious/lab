@@ -14,16 +14,19 @@ const formatVoteCount = (count: number | null | undefined): string => {
 };
 
 // Debug logging control - check localStorage or URL parameter
+// Debug logging control - ENABLED BY DEFAULT for troubleshooting
 const DEBUG_LOGGING = (() => {
   if (typeof window !== 'undefined') {
-    // Check URL parameter first (e.g., ?debug=true)
+    // Check URL parameter first (e.g., ?debug=false to disable)
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('debug') === 'true') return true;
+    if (urlParams.get('debug') === 'false') return false;
     // Then check localStorage
     const stored = localStorage.getItem('elections:debug');
-    if (stored === 'true') return true;
+    if (stored === 'false') return false;
+    // Default to true for debugging
+    return true;
   }
-  return false;
+  return true; // Enable by default
 })();
 
 // Helper to conditionally log debug messages
@@ -45,9 +48,13 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
+  const resultsRef = React.useRef<any>(null);
   const [currentTime, setCurrentTime] = useState(new Date()); // For periodic relative time updates
   
   // Use refs to avoid stale closures in polling interval
+  React.useEffect(() => {
+    resultsRef.current = results;
+  }, [results]);
   const errorRef = React.useRef<string | null>(null);
   React.useEffect(() => {
     errorRef.current = error;
