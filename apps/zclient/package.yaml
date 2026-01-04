@@ -13,7 +13,7 @@ dependencies:
   ag-grid-community:          &ag ~32.0.2
   ag-grid-enterprise:         *ag
   ag-grid-react:              *ag
-  axios:                      ~1.6.8
+  axios:                      ~1.13.2
   luxon:                      ~1.28.1
   ramda:                      ~0.27.1
   react:                      ~18.2.0

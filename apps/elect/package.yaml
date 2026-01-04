@@ -7,7 +7,6 @@ dependencies:
   '@therious/boot': workspace:*
   '@therious/utils': workspace:*
   immer: ~10.0.4
-  masonry-grid: ^1.0.3
   muuri: ^0.9.5
   muuri-react: ^3.1.7
   phoenix: ~1.7.21

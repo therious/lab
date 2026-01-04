@@ -11,8 +11,8 @@
     "directory": "libs/boot"
   },
   "dependencies": {
-    "axios": "~1.6.8",
-    "js-yaml": "~4.1.0",
+    "axios": "~1.13.2",
+    "js-yaml": "~4.1.1",
     "tsyringe": "~4.8.0",
     "tslib": "^1.9.3"
   },

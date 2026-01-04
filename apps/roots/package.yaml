@@ -16,9 +16,9 @@ dependencies:
   '@therious/utils': workspace:*
   ag-grid-community: ~34.3.1
   ag-grid-react: ~34.3.1
-  axios: ~1.6.8
+  axios: ~1.13.2
   browser-fs-access: ~0.33.0
-  js-yaml: ~4.1.0
+  js-yaml: ~4.1.1
   notistack: ^3.0.0-alpha.11
   react: ~18.2.0
   react-contexify: 6.0.0

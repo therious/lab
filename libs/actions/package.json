@@ -6,7 +6,7 @@
   "private": true,
   "main": "./index.ts",
   "dependencies": {
-    "axios": "~1.6.8"
+    "axios": "~1.13.2"
   },
   "peerDependencies": {
     "@therious/utils": "workspace:*",

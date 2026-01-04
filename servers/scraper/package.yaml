@@ -3,7 +3,7 @@ version:                          0.1.0
 private:                          true
 type:                             module
 dependencies:
-  js-yaml:                        ~4.1.0
+  js-yaml:                        ~4.1.1
   puppeteer:                      ~21.6.0
   '@therious/boot':               'workspace:*'
   reflect-metadata:               ~0.1.13
