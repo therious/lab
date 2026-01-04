@@ -328,8 +328,23 @@ defmodule Elections.Voting do
       end
 
       # Extract votes for this ballot from ballot_data - wrap in try/rescue
+      # For high-volume scenarios, use a trailing window to make ballot counts lag behind total
+      # This creates a more realistic "processing" effect where ballot counts trail total votes
+      # The lag simulates processing time - votes come in faster than results are calculated
       ballot_votes = try do
-        extract_ballot_votes(votes, ballot_title)
+        all_ballot_votes = extract_ballot_votes(votes, ballot_title)
+        total_ballot_votes = length(all_ballot_votes)
+        
+        # Use trailing window: exclude last 10% of votes to create noticeable lag effect
+        # This makes ballot counts trail behind total vote count, simulating processing delay
+        # For small vote counts, use a fixed lag of 1-2 votes
+        trailing_window_size = if total_ballot_votes <= 10 do
+          max(0, total_ballot_votes - 1)  # Lag by 1 vote for small counts
+        else
+          max(1, div(total_ballot_votes * 90, 100))  # Lag by 10% for larger counts
+        end
+        
+        Enum.take(all_ballot_votes, trailing_window_size)
       rescue
         e ->
           require Logger
