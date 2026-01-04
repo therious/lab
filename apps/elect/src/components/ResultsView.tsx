@@ -45,6 +45,33 @@ const ENABLE_GRAPH = (() => {
 })();
 
 // Helper to conditionally log debug messages
+
+// Polling configuration - check URL parameter or localStorage
+// Default: disabled (websocket-only)
+// Enable with ?poll=true or localStorage.setItem('elections:poll', 'true')
+// Configure interval with ?pollInterval=5000 or localStorage.setItem('elections:pollInterval', '5000')
+const POLLING_CONFIG = (() => {
+  if (typeof window !== 'undefined') {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Check if polling is enabled
+    const pollEnabled = urlParams.get('poll') === 'true' || 
+                        localStorage.getItem('elections:poll') === 'true';
+    
+    // Get polling interval (default: 1000ms if enabled, but won't be used if disabled)
+    const pollIntervalParam = urlParams.get('pollInterval');
+    const pollIntervalStorage = localStorage.getItem('elections:pollInterval');
+    const pollInterval = pollIntervalParam 
+      ? parseInt(pollIntervalParam, 10) 
+      : (pollIntervalStorage ? parseInt(pollIntervalStorage, 10) : 1000);
+    
+    return {
+      enabled: pollEnabled,
+      intervalMs: pollInterval > 0 ? pollInterval : 1000
+    };
+  }
+  return { enabled: false, intervalMs: 1000 };
+})();
 const debugLog = (...args: any[]) => {
   if (DEBUG_LOGGING) {
     console.log(...args);
@@ -75,8 +102,9 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
     errorRef.current = error;
   }, [error]);
 
-  // Polling interval for fallback updates (1 second)
-  const POLL_INTERVAL_MS = 1000;
+  // Polling configuration (from POLLING_CONFIG)
+  const POLL_ENABLED = POLLING_CONFIG.enabled;
+  const POLL_INTERVAL_MS = POLLING_CONFIG.intervalMs;
   
   // Update current time every second to refresh relative time display
   React.useEffect(() => {
@@ -222,18 +250,24 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
     debugLog('[ResultsView] Loading results for election:', currentElection.identifier);
     fetchResults();
     
-    // Set up polling for regular updates (fallback if WebSocket is slow)
-    // Poll every second to ensure at least once-per-second updates
-    pollInterval = setInterval(() => {
-      // Poll regardless of loading state to ensure regular updates
-      // Only skip if we have an error (don't spam on errors)
-      if (!errorRef.current) {
-        debugLog('[ResultsView] Polling for results update');
-        fetchResults().catch(err => {
-          debugWarn('[ResultsView] Poll error:', err);
-        });
-      }
-    }, POLL_INTERVAL_MS);
+    // Set up polling for regular updates (only if enabled)
+    // By default, polling is disabled - use websocket-only mode
+    // Enable with ?poll=true or localStorage.setItem('elections:poll', 'true')
+    if (POLL_ENABLED) {
+      debugLog(`[ResultsView] Polling enabled with interval: ${POLL_INTERVAL_MS}ms`);
+      pollInterval = setInterval(() => {
+        // Poll regardless of loading state to ensure regular updates
+        // Only skip if we have an error (don't spam on errors)
+        if (!errorRef.current) {
+          debugLog('[ResultsView] Polling for results update');
+          fetchResults().catch(err => {
+            debugWarn('[ResultsView] Poll error:', err);
+          });
+        }
+      }, POLL_INTERVAL_MS);
+    } else {
+      debugLog('[ResultsView] Polling disabled - using websocket-only mode');
+    }
     
     // Set up websocket connection for real-time updates
     let socket: any = null;
