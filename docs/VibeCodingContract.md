@@ -117,6 +117,8 @@ This document captures the coding principles, rules, and expectations for AI age
 - ❌ Verbose or redundant error messages
 - ❌ Logging warnings for expected algorithm failures
 - ❌ Forgetting to check for compilation errors before declaring work complete
+- ❌ **Committing to detached HEAD instead of checking current branch first**
+- ❌ **Not verifying which worktree you're in before committing**
 
 ## Contract Review Protocol
 
@@ -130,6 +132,23 @@ This document captures the coding principles, rules, and expectations for AI age
 - It is in `.gitignore` and should NEVER be committed
 - It's for local context recovery, not version control
 - Always verify `.gitignore` before committing discussion-related files
+
+## Git Worktree and Branch Management
+
+**CRITICAL: Always verify git state before committing:**
+1. **Check current worktree** - Use `git rev-parse --show-toplevel` or check workspace path to know which worktree you're in
+2. **Check current branch** - Use `git branch --show-current` or `git status` to verify you're on a branch, NOT in detached HEAD
+3. **Use the current branch** - Always commit to the branch that's currently checked out in the worktree
+4. **Never commit to detached HEAD** - If you find yourself in detached HEAD state, either:
+   - Checkout the appropriate branch first: `git checkout <branch-name>`
+   - Or create a branch from current HEAD: `git checkout -b <branch-name>`
+   - Then commit to that branch
+5. **Verify before each commit** - Run `git status` before committing to ensure you're on the correct branch
+
+**If you accidentally commit to detached HEAD:**
+- The commits are still valid, but they need to be merged into a branch
+- Use `git update-ref refs/heads/<branch-name> <commit-hash>` to move the branch pointer
+- Or merge the detached HEAD commits into the target branch from another worktree
 
 ## Session Initialization and Context Recovery
 
