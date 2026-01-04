@@ -228,9 +228,9 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
       let websocketConnected = false;
       const Socket = phoenix.Socket;
       socket = new Socket('/socket', {});
-      debugLog('[WebSocket] Connecting to dashboard channel for election:', currentElection.identifier);
       socket.connect();
       
+      debugLog('[WebSocket] Connecting to dashboard channel for election:', currentElection.identifier);
       channel = socket.channel(`dashboard:${currentElection.identifier}`, {});
       
       channel.on('results_updated', (payload: any) => {
@@ -254,7 +254,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
         if (payload.results) {
           // WebSocket payload structure: {election_id: "...", results: {results: [...], metadata: {...}}, buildInfo: {...}}
           // processResults expects: {results: {results: [...], metadata: {...}}}
-          const currentTotal = resultsRef.current?.metadata?.total_votes;
+          const currentTotal = results?.metadata?.total_votes;
           const currentResults = resultsRef.current;
           const newTotal = payload.results?.metadata?.total_votes;
           debugLog('[WebSocket] Vote count change:', currentTotal, '→', newTotal);
@@ -301,7 +301,6 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
           // processResults expects: {results: {results: [...], metadata: {...}}}
           debugLog('[WebSocket] Processing update - vote count:', currentTotalVotes, '→', newTotalVotes);
           processResults({results: payload.results});
-          const currentResults = resultsRef.current;
         } else {
           debugWarn('[WebSocket] Payload missing results:', payload);
         }
@@ -312,6 +311,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
         
         // Update vote count immediately without waiting for full results calculation
         if (payload.vote_count !== undefined && payload.vote_count !== null) {
+          const currentResults = resultsRef.current;
           const currentTotal = results?.metadata?.total_votes || 0;
           const newTotal = payload.vote_count;
           
@@ -338,17 +338,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
                   voting_start: currentElection.voting_start,
                   voting_end: currentElection.voting_end,
                   election_identifier: currentElection.identifier
-          websocketConnected = true;
-          console.log('[WebSocket] ✅ Connected - real-time updates enabled');
-          // Stop polling if WebSocket is connected
-          console.warn('[WebSocket] Falling back to polling for updates');
-          if (pollInterval) {
-            clearInterval(pollInterval);
-            pollInterval = null;
-          console.warn('[WebSocket] Falling back to polling for updates');
-            debugLog('[WebSocket] Stopped polling - WebSocket connected');
-          }
-      console.warn('[WebSocket] Error details:', err.message);
+                }
               });
               setLastUpdateTime(new Date());
             } else {
@@ -358,6 +348,16 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
           }
         }
       });
+          websocketConnected = true;
+          console.log('[WebSocket] ✅ Connected - real-time updates enabled');
+          // Stop polling if WebSocket is connected
+          if (pollInterval) {
+          console.warn('[WebSocket] Falling back to polling for updates');
+            clearInterval(pollInterval);
+            pollInterval = null;
+            debugLog('[WebSocket] Stopped polling - WebSocket connected');
+          console.warn('[WebSocket] Falling back to polling for updates');
+          }
       
       channel.join()
         .receive('ok', () => {
@@ -372,6 +372,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
           console.error('[WebSocket] ❌ Timeout joining dashboard channel');
         });
     }).catch((err) => {
+      console.warn('[WebSocket] Error details:', err.message);
       // Always log errors, even if debug is off
       console.warn('Phoenix Socket not available, using REST API only:', err);
     });
@@ -476,17 +477,6 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
             ))}
           </MuuriComponent>
         </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return <div style={{padding: '2rem'}}>Loading results...</div>;
-  }
-
-  if (error) {
-    return (
-      <div style={{padding: '2rem'}}>
       <div style={{marginBottom: '1rem', padding: '1rem', background: '#f5f5f5', borderRadius: '8px', border: '1px solid #ddd'}}>
         <h1 style={{marginBottom: '0.5rem'}}>Election: {currentElection.title}</h1>
         {currentElection.description && (
@@ -503,12 +493,20 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
         </div>
       </div>
       <h2 style={{marginBottom: '1.3125rem'}}>Results</h2>
-          {currentElection.voting_end && (
-            <> | <strong>Ends:</strong> {new Date(currentElection.voting_end).toLocaleString()}</>
-          )}
-        </div>
       </div>
-      <h2 style={{marginBottom: '1.3125rem'}}>Results</h2>
+    );
+  }
+
+  if (loading) {
+    return <div style={{padding: '2rem'}}>Loading results...</div>;
+  }
+
+  if (error) {
+    return (
+      <div style={{padding: '2rem'}}>
+        <h1>Election Results: {currentElection.title}</h1>
+        <p style={{color: '#c33'}}>{error}</p>
+      </div>
     );
   }
 
