@@ -16,6 +16,19 @@ export default function App() {
   const {ballots, currentElection, token, viewToken, votes, confirmations, submitted, userEmail, electionIdentifier} = useSelector((s: TotalState) => s.election);
   const location = useLocation();
   const navigate = useNavigate();
+  // Fetch server build info immediately (before login)
+  React.useEffect(() => {
+    fetch("/api/build-info")
+      .then(res => res.json())
+      .then(data => {
+        if (data.commitHash) {
+          setServerCommitHash(data.commitHash);
+        }
+      })
+      .catch(err => {
+        console.warn("Could not fetch server build info:", err);
+      });
+  }, []); // Run once on mount
   const [serverCommitHash, setServerCommitHash] = React.useState<string | null>(null);
   const [isRestoring, setIsRestoring] = React.useState(false);
 

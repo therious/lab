@@ -10,6 +10,7 @@ interface BuildInfoData {
   authorDate: string;
   commitDate: string;
   buildDate: string;
+  mnemonic?: string;
 }
 
 interface BuildInfoProps {
@@ -34,6 +35,7 @@ export function BuildInfo({ serverCommitHash, className, style }: BuildInfoProps
   const uiBuildInfo: BuildInfoData = buildInfoJson as BuildInfoData;
   
   // Match UserProfile styling: padding: 0.5rem 1rem, background: #f8f9fa, border-radius: 8px, border: 1px solid #dee2e6
+  // Add margin-right for gap to the left of UserProfile
   const defaultStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
@@ -47,6 +49,7 @@ export function BuildInfo({ serverCommitHash, className, style }: BuildInfoProps
     color: '#666',
     fontFamily: 'monospace',
     lineHeight: '1.2',
+    marginRight: '0.75rem', // Gap to the left of UserProfile
     ...style
   };
   
@@ -56,6 +59,9 @@ export function BuildInfo({ serverCommitHash, className, style }: BuildInfoProps
         <div>Server: {serverCommitHash}</div>
       )}
       <div>UI: {uiBuildInfo.commitHash}</div>
+      {uiBuildInfo.mnemonic && (
+        <div>{uiBuildInfo.mnemonic}</div>
+      )}
     </div>
   );
 }

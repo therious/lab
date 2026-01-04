@@ -45,3 +45,6 @@ defmodule ElectionsWeb.Router do
     get "/*path", PageController, :home
   end
 end
+
+    # Build info endpoint (available before login)
+    get "/build-info", BuildInfoController, :show
