@@ -118,11 +118,67 @@ This document captures the coding principles, rules, and expectations for AI age
 - ❌ Logging warnings for expected algorithm failures
 - ❌ Forgetting to check for compilation errors before declaring work complete
 
-## Session Initialization
+## Session Initialization and Context Recovery
 
-**At the start of each new session, review this contract to ensure all principles are applied consistently.**
+**At the start of each new session, follow this recovery process to restore context and understanding:**
+
+### Step 1: Read Core Documentation
+1. **Read `docs/VibeCodingContract.md`** (this file) - Understand coding principles and patterns
+2. **Read `docs/README.md`** - Understand project overview
+3. **Read `docs/topics/lab-intro.md`** - Understand project structure and purpose
+
+### Step 2: Review Recent Work
+1. **Check git log** - Review recent commits to understand what was being worked on:
+   ```bash
+   git log --oneline -20
+   ```
+2. **Check git status** - See what files are modified:
+   ```bash
+   git status
+   ```
+3. **Review recent changes** - Understand what was changed:
+   ```bash
+   git diff HEAD
+   ```
+
+### Step 3: Review Discussion Documents
+1. **Read discussion documents in date order** (newest first):
+   - Location: `docs/discussions/`
+   - Format: `YYYY-MM-DD-topic-name.md`
+   - These capture important decisions, design discussions, and context
+2. **Review project-specific docs**:
+   - `apps/elect/docs/` - Elect UI app documentation
+   - `servers/elections/docs/` - Elections server documentation
+
+### Step 4: Check GitHub Issues and Discussions
+1. **Review open GitHub Issues** - See what's being worked on
+2. **Review recent GitHub Discussions** - See design decisions and discussions
+3. **Check for issue references in commits** - Understand what issues were addressed
+
+### Step 5: Understand Current State
+1. **Read relevant code files** - Understand current implementation
+2. **Check for uncommitted changes** - See what's in progress
+3. **Review error logs** - If there were errors, understand what failed
+
+### Step 6: Verify Understanding
+Before declaring readiness, verify:
+- ✅ Understand what project/app you're working on
+- ✅ Understand recent changes and current state
+- ✅ Understand any open issues or tasks
+- ✅ Understand coding principles from contract
+- ✅ Ready to continue where work left off
+
+### Context Preservation
+- **Code** - Documents what was built
+- **VibeCodingContract.md** - Documents how we work
+- **Discussion docs** (`docs/discussions/`) - Documents important decisions and context
+- **GitHub Issues** - Documents what's being worked on
+- **GitHub Discussions** - Documents design decisions
+- **Project docs** - Documents project-specific patterns
+
+**SpecStory is disabled** - We rely on the above sources for context, not SpecStory markdown files.
 
 ---
 
-*Last Updated: Based on interactions through implementation of logout functionality and session storage middleware*
+*Last Updated: Added context recovery instructions and discussion docs structure*
 
