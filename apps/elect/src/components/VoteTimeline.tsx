@@ -549,7 +549,7 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
                   opacity="0.6"
                 />
                 {bar.count > 0 && (
-                  <title>{bar.count} vote{bar.count !== 1 ? 's' : ''}</title>
+                  <title>{formatNumber(bar.count)} vote{bar.count !== 1 ? 's' : ''}</title>
                 )}
               </BarGroup>
             ))}

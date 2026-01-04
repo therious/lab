@@ -7,6 +7,13 @@ import {MuuriItem} from './Layout';
 import {METHOD_FAMILIES} from './constants';
 import {formatMethodName, formatWinnersWithOrdering, getStatusColorAndLabel} from './utils';
 
+// Format numbers with comma grouping for thousands (e.g., 1234 -> "1,234")
+// Use this for all vote counts, quorum numbers, and any voting-related numbers
+const formatVoteCount = (count: number | null | undefined): string => {
+  if (count === null || count === undefined) return '0';
+  return count.toLocaleString('en-US');
+};
+
 // Debug logging control - check localStorage or URL parameter
 const DEBUG_LOGGING = (() => {
   if (typeof window !== 'undefined') {
@@ -454,7 +461,7 @@ export function ResultsView() {
         {metadata && (
           <>
             <div style={{marginTop: '1rem', padding: '1rem', background: '#f5f5f5', borderRadius: '4px'}}>
-              <p><strong>Total Ballots Cast:</strong> {metadata.total_votes || 0}</p>
+              <p><strong>Total Ballots Cast:</strong> {formatVoteCount(metadata.total_votes)}</p>
               {metadata.voting_end && (
                 <p><strong>Voting Ends:</strong> {new Date(metadata.voting_end).toLocaleString()}</p>
               )}
@@ -495,7 +502,7 @@ export function ResultsView() {
           <div style={{marginBottom: '1rem', padding: '1rem', background: '#e8f4f8', borderRadius: '8px', border: '1px solid #ccc'}}>
             <p style={{display: 'flex', margin: '0.5rem 0'}}>
               <strong style={{minWidth: '140px', textAlign: 'right', marginRight: '1rem'}}>Total Ballots Cast:</strong>
-              <span>{metadata.total_votes != null ? metadata.total_votes : '—'}</span>
+              <span>{metadata.total_votes != null ? formatVoteCount(metadata.total_votes) : '—'}</span>
             </p>
             {votingStart && (
               <p style={{display: 'flex', margin: '0.5rem 0'}}>
@@ -558,11 +565,11 @@ export function ResultsView() {
             )}
             {ballotResult.quorum && (
               <p>
-                <strong>Quorum:</strong> {ballotResult.quorum} votes required
+                <strong>Quorum:</strong> {formatVoteCount(ballotResult.quorum)} votes required
                 {ballotResult.quorum_status === 'met' ? (
                   <span style={{marginLeft: '0.5rem', color: '#2e7d32', fontWeight: 'bold'}}>✓ Met</span>
                 ) : (
-                  <span style={{marginLeft: '0.5rem', color: '#d32f2f', fontWeight: 'bold'}}>✗ Not Met ({voteCount}/{ballotResult.quorum})</span>
+                  <span style={{marginLeft: '0.5rem', color: '#d32f2f', fontWeight: 'bold'}}>✗ Not Met ({formatVoteCount(voteCount)}/{formatVoteCount(ballotResult.quorum)})</span>
                 )}
               </p>
             )}
@@ -634,8 +641,8 @@ export function ResultsView() {
                       )}
                       <div style={{fontStyle: 'italic'}}>
                         {pendingVotes > 0
-                          ? `${processedVotes.toLocaleString()}/${totalVotes.toLocaleString()} votes processed`
-                          : `${totalVotes.toLocaleString()} votes processed`}
+                          ? `${formatVoteCount(processedVotes)}/${formatVoteCount(totalVotes)} votes processed`
+                          : `${formatVoteCount(totalVotes)} votes processed`}
                       </div>
                     </div>
                   );
