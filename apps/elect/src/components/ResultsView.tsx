@@ -29,6 +29,21 @@ const DEBUG_LOGGING = (() => {
   return true; // Enable by default
 })();
 
+// Feature flag to disable graph/timeline - can be controlled via URL parameter or localStorage
+const ENABLE_GRAPH = (() => {
+  if (typeof window !== 'undefined') {
+    // Check URL parameter first (e.g., ?graph=false to disable)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('graph') === 'false') return false;
+    // Then check localStorage
+    const stored = localStorage.getItem('elections:graph');
+    if (stored === 'false') return false;
+    // Default to true (graph enabled)
+    return true;
+  }
+  return true; // Enable by default
+})();
+
 // Helper to conditionally log debug messages
 const debugLog = (...args: any[]) => {
   if (DEBUG_LOGGING) {
