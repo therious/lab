@@ -42,6 +42,37 @@ This document captures the coding principles, rules, and expectations for AI age
 - **Test Before Committing**: The user explicitly stated: "In future can you verify that it builds before you tell me it is ready."
 - **Incremental Testing**: When working on multiple issues, test each fix before moving to the next.
 
+### 2.1. Automatic Feature Isolation for Debugging
+
+- **Proactive Isolation**: When encountering runtime errors, infinite loops, performance issues, or unexpected behavior, automatically isolate features/components to identify the root cause:
+  1. **Identify Suspect Components**: Analyze error messages, stack traces, and symptoms to identify which components/features might be causing the issue
+  2. **Create Feature Flags**: Add feature flags (URL parameters or localStorage) to conditionally disable suspect features
+  3. **Isolate Systematically**: Disable features one at a time to narrow down the cause
+  4. **Verify Isolation**: Confirm the issue disappears when the feature is disabled, confirming it as the root cause
+  5. **Fix and Re-enable**: Once the root cause is identified and fixed, remove the feature flag or keep it as a permanent option if useful
+- **Examples**:
+  - Infinite loop in graph calculations → Add `?graph=false` flag to disable VoteTimeline component
+  - Performance issue with polling → Add flag to disable polling and test WebSocket-only mode
+  - Memory leak in component → Add flag to conditionally render the component
+- **Implementation Pattern**:
+  ```typescript
+  // Feature flag controlled via URL parameter or localStorage
+  const ENABLE_FEATURE = (() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('feature') === 'false') return false;
+      const stored = localStorage.getItem('app:feature');
+      if (stored === 'false') return false;
+      return true; // Default enabled
+    }
+    return true;
+  })();
+  
+  // Conditionally render based on flag
+  {ENABLE_FEATURE && <SuspectComponent />}
+  ```
+- **Don't Wait for User Request**: Automatically implement isolation flags when debugging issues, don't wait for explicit user instruction to isolate features
+
 ### 3. Error Handling and Robustness
 
 - **Graceful Degradation**: Algorithm failures should not prevent basic vote statistics from being displayed.
