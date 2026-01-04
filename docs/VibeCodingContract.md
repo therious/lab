@@ -118,6 +118,19 @@ This document captures the coding principles, rules, and expectations for AI age
 - ❌ Logging warnings for expected algorithm failures
 - ❌ Forgetting to check for compilation errors before declaring work complete
 
+## Contract Review Protocol
+
+**Before making fundamental changes to project structure, file organization, or context mechanisms:**
+1. **Read this contract** - Review relevant sections before making changes
+2. **Check `.gitignore`** - Verify what should/shouldn't be committed
+3. **Review established patterns** - Understand why things are structured as they are
+4. **If uncertain, ask** - Don't assume; verify before changing fundamental aspects
+
+**The discussions folder (`docs/discussions/`) is PRIVATE and LOCAL-ONLY:**
+- It is in `.gitignore` and should NEVER be committed
+- It's for local context recovery, not version control
+- Always verify `.gitignore` before committing discussion-related files
+
 ## Session Initialization and Context Recovery
 
 **At the start of each new session, follow this recovery process to restore context and understanding:**
