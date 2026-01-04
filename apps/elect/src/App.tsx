@@ -374,6 +374,7 @@ export default function App() {
           );
         })}
         <UserProfileWidget serverBuildInfo={serverBuildInfo} userEmail={userEmail} hasVoted={submitted} />
+      </Navbar>
       <CenterBody>
         <Routes>
           <Route path="/" element={<SummaryView/>}/>
