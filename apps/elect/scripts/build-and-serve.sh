@@ -39,8 +39,10 @@ fi
 echo -e "${YELLOW}Regenerating server build info and recompiling...${NC}"
 # Force regeneration of build info and recompilation to ensure fresh build
 # This ensures server commit hash matches UI commit hash
+# Clean first to remove any cached compiled modules
+mix clean
 mix buildinfo.generate
-mix compile --force
+mix compile
 
 echo -e "${YELLOW}Starting elections server...${NC}"
 
