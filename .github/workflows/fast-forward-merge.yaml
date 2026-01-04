@@ -1,0 +1,99 @@
+name: Fast Forward Merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  fast-forward:
+    runs-on: ubuntu-latest
+    # Only run on PRs or PR comments
+    if: |
+      (github.event.issue.pull_request != '' || github.event_name == 'pull_request') &&
+      (github.event.comment.body == '/fast-forward' || github.event_name == 'pull_request')
+    
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Get PR information
+        id: pr-info
+        run: |
+          if [ "${{ github.event_name }}" == "issue_comment" ]; then
+            PR_NUMBER=$(gh pr view "${{ github.event.issue.number }}" --json number -q .number)
+            PR_BRANCH=$(gh pr view "${{ github.event.issue.number }}" --json headRefName -q .headRefName)
+            BASE_BRANCH=$(gh pr view "${{ github.event.issue.number }}" --json baseRefName -q .baseRefName)
+          else
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+            PR_BRANCH="${{ github.event.pull_request.head.ref }}"
+            BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+          fi
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "pr_branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+          echo "base_branch=$BASE_BRANCH" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Check if fast-forward is possible
+        id: check-ff
+        run: |
+          BASE_BRANCH="${{ steps.pr-info.outputs.base_branch }}"
+          PR_BRANCH="${{ steps.pr-info.outputs.pr_branch }}"
+          
+          # Fetch all branches
+          git fetch origin $BASE_BRANCH:$BASE_BRANCH
+          git fetch origin $PR_BRANCH:$PR_BRANCH
+          
+          # Check if fast-forward is possible
+          if git merge-base --is-ancestor $BASE_BRANCH $PR_BRANCH; then
+            echo "fast_forward_possible=true" >> $GITHUB_OUTPUT
+            echo "✅ Fast-forward merge is possible"
+          else
+            echo "fast_forward_possible=false" >> $GITHUB_OUTPUT
+            echo "❌ Fast-forward merge is not possible (base branch has new commits)"
+          fi
+      
+      - name: Perform fast-forward merge
+        if: steps.check-ff.outputs.fast_forward_possible == 'true'
+        run: |
+          BASE_BRANCH="${{ steps.pr-info.outputs.base_branch }}"
+          PR_BRANCH="${{ steps.pr-info.outputs.pr_branch }}"
+          PR_NUMBER="${{ steps.pr-info.outputs.pr_number }}"
+          
+          # Checkout base branch
+          git checkout $BASE_BRANCH
+          git reset --hard origin/$BASE_BRANCH
+          
+          # Fast-forward merge
+          git merge --ff-only $PR_BRANCH
+          
+          # Push to base branch
+          git push origin $BASE_BRANCH
+          
+          # Close PR via API
+          gh pr close $PR_NUMBER --comment "Fast-forward merge completed successfully! 🎉"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Comment on PR if fast-forward not possible
+        if: steps.check-ff.outputs.fast_forward_possible == 'false'
+        run: |
+          gh pr comment "${{ steps.pr-info.outputs.pr_number }}" \
+            --body "❌ Fast-forward merge is not possible. The base branch has new commits. Please rebase your branch first."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
