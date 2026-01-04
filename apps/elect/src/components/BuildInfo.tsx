@@ -72,7 +72,7 @@ export function BuildInfo({ serverBuildInfo, className, style }: BuildInfoProps)
     }
   }, [showTooltip]);
   
-  // Build tooltip content
+  // Build tooltip content - grey out server info that matches UI
   const tooltipContent = (
     <div style={{ padding: '0.5rem', fontSize: '10px', fontFamily: 'monospace', lineHeight: '1.4' }}>
       <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>UI Build Info:</div>
@@ -86,17 +86,26 @@ export function BuildInfo({ serverBuildInfo, className, style }: BuildInfoProps)
       {serverBuildInfo && (
         <>
           <div style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>Server Build Info:</div>
-          <div>Hash: {serverBuildInfo.commitHash}</div>
-          <div>Branch: {serverBuildInfo.branch}</div>
-          <div>Author: {serverBuildInfo.authorDate}</div>
-          <div>Commit: {serverBuildInfo.commitDate}</div>
-          <div>Build: {serverBuildInfo.buildDate}</div>
+          <div style={{ color: serverBuildInfo.commitHash === uiBuildInfo.commitHash ? '#999' : '#fff' }}>
+            Hash: {serverBuildInfo.commitHash}
+          </div>
+          <div style={{ color: serverBuildInfo.branch === uiBuildInfo.branch ? '#999' : '#fff' }}>
+            Branch: {serverBuildInfo.branch}
+          </div>
+          <div style={{ color: serverBuildInfo.authorDate === uiBuildInfo.authorDate ? '#999' : '#fff' }}>
+            Author: {serverBuildInfo.authorDate}
+          </div>
+          <div style={{ color: serverBuildInfo.commitDate === uiBuildInfo.commitDate ? '#999' : '#fff' }}>
+            Commit: {serverBuildInfo.commitDate}
+          </div>
+          <div style={{ color: serverBuildInfo.buildDate === uiBuildInfo.buildDate ? '#999' : '#fff' }}>
+            Build: {serverBuildInfo.buildDate}
+          </div>
           
           {!hashesMatch && (
-            <>
-              <div style={{ marginTop: '0.5rem', fontWeight: 'bold', color: '#d32f2f' }}>Differences:</div>
-              <div>Hashes don't match!</div>
-            </>
+            <div style={{ marginTop: '0.5rem', fontWeight: 'bold', color: '#d32f2f' }}>
+              Hashes don't match!
+            </div>
           )}
         </>
       )}
@@ -105,7 +114,6 @@ export function BuildInfo({ serverBuildInfo, className, style }: BuildInfoProps)
   
   // Match UserProfile styling exactly: same padding, background, border-radius, border
   // Same height by using same padding and single line display
-  // Position on right side, just before UserProfile with small gap
   const defaultStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
@@ -119,7 +127,6 @@ export function BuildInfo({ serverBuildInfo, className, style }: BuildInfoProps)
     color: showRed ? '#d32f2f' : '#666',
     fontFamily: 'monospace',
     lineHeight: '1.2',
-    marginRight: '0.75rem', // Small gap before UserProfile
     position: 'relative',
     cursor: 'help',
     ...style

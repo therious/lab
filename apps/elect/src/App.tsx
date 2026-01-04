@@ -9,8 +9,7 @@ import {SummaryView} from './components/SummaryView';
 import {BallotView} from './components/BallotView';
 import {ResultsView} from './components/ResultsView';
 import {Layout, Navbar, NavLink, CenterBody} from './components/Layout';
-import {UserProfile} from './components/UserProfile';
-import {BuildInfo} from './components/BuildInfo';
+import {UserProfileWidget} from './components/UserProfileWidget';
 
 export default function App() {
   const {ballots, currentElection, token, viewToken, votes, confirmations, submitted, userEmail, electionIdentifier} = useSelector((s: TotalState) => s.election);
@@ -234,9 +233,9 @@ export default function App() {
     return (
       <Layout>
         {/* Show UserProfile in same position as Navbar when tabs are hidden */}
-        <Navbar style={{justifyContent: 'flex-end', display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
-          <BuildInfo serverBuildInfo={serverBuildInfo} />
-          <UserProfile email={userEmail} hasVoted={submitted} />
+        <Navbar style={{justifyContent: 'flex-end'}}>
+          <UserProfileWidget serverBuildInfo={serverBuildInfo} userEmail={userEmail} hasVoted={submitted} />
+          <UserProfileWidget serverBuildInfo={serverBuildInfo} userEmail={userEmail} hasVoted={submitted} />
         </Navbar>
         <CenterBody>
           <Routes>
@@ -250,7 +249,7 @@ export default function App() {
 
   return (
     <Layout>
-      <Navbar style={{display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
+      <Navbar style={{}}>
         {availableTabs.map((tab) => {
           // Determine if this specific tab is active
           let isActive = false;
@@ -375,8 +374,8 @@ export default function App() {
             </NavLink>
           );
         })}
-        <BuildInfo serverBuildInfo={serverBuildInfo} />
-        <UserProfile email={userEmail} hasVoted={submitted} />
+        <UserProfileWidget serverBuildInfo={serverBuildInfo} userEmail={userEmail} hasVoted={submitted} />
+        <UserProfileWidget serverBuildInfo={serverBuildInfo} userEmail={userEmail} hasVoted={submitted} />
       </Navbar>
       <CenterBody>
         <Routes>
