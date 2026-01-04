@@ -40,12 +40,18 @@ export function ResultsView() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
 
+  // Polling interval for fallback updates (1 second)
+  const POLL_INTERVAL_MS = 1000;
+  
   // Load initial results and set up websocket connection
   React.useEffect(() => {
     if (!currentElection) return;
     
     setLoading(true);
     setError(null);
+    
+    // Set up polling as fallback for regular updates
+    let pollInterval: NodeJS.Timeout | null = null;
     
     // Helper to process and set results
     const processResults = (data: any) => {
@@ -105,14 +111,13 @@ export function ResultsView() {
       setLoading(false);
     };
     
-    // Load initial results via REST API
-    debugLog('[ResultsView] Loading results for election:', currentElection.identifier);
-    fetch(`/api/dashboard/${currentElection.identifier}`, {
-      headers: {
-        'Accept': 'application/json'
-      }
-    })
-      .then(async res => {
+    // Helper to fetch results
+    const fetchResults = async () => {
+      return fetch(`/api/dashboard/${currentElection.identifier}`, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      }).then(async res => {
         const contentType = res.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
           const text = await res.text();
@@ -160,6 +165,24 @@ export function ResultsView() {
         setError(errorMsg);
         setLoading(false);
       });
+    };
+    
+    // Load initial results via REST API
+    debugLog('[ResultsView] Loading results for election:', currentElection.identifier);
+    fetchResults();
+    
+    // Set up polling for regular updates (fallback if WebSocket is slow)
+    // Poll every second to ensure at least once-per-second updates
+    pollInterval = setInterval(() => {
+      // Poll regardless of loading state to ensure regular updates
+      // Only skip if we have an error (don't spam on errors)
+      if (!error) {
+        debugLog('[ResultsView] Polling for results update');
+        fetchResults().catch(err => {
+          debugWarn('[ResultsView] Poll error:', err);
+        });
+      }
+    }, POLL_INTERVAL_MS);
     
     // Set up websocket connection for real-time updates
     let socket: any = null;
@@ -243,8 +266,44 @@ export function ResultsView() {
       
       channel.on('vote_submitted', (payload: any) => {
         debugLog('[WebSocket] Vote submitted:', payload);
-        // Optionally refresh results when a vote is submitted
-        // (Results will be updated via results_updated event)
+        
+        // Update vote count immediately without waiting for full results calculation
+        if (payload.vote_count !== undefined && payload.vote_count !== null) {
+          const currentTotal = results?.metadata?.total_votes || 0;
+          const newTotal = payload.vote_count;
+          
+          if (newTotal > currentTotal) {
+            debugLog('[WebSocket] Updating vote count:', currentTotal, '→', newTotal);
+            
+            // Update metadata vote count immediately for responsive UI
+            if (results && results.metadata) {
+              setResults({
+                ...results,
+                metadata: {
+                  ...results.metadata,
+                  total_votes: newTotal
+                }
+              });
+              setLastUpdateTime(new Date());
+            } else if (results) {
+              // If we have results but no metadata, add it
+              setResults({
+                ...results,
+                metadata: {
+                  total_votes: newTotal,
+                  vote_timestamps: [],
+                  voting_start: currentElection.voting_start,
+                  voting_end: currentElection.voting_end,
+                  election_identifier: currentElection.identifier
+                }
+              });
+              setLastUpdateTime(new Date());
+            } else {
+              // No results yet - still update the timestamp to show activity
+              setLastUpdateTime(new Date());
+            }
+          }
+        }
       });
       
       channel.join()
@@ -264,8 +323,11 @@ export function ResultsView() {
       console.warn('Phoenix Socket not available, using REST API only:', err);
     });
     
-    // Cleanup: leave channel and disconnect socket
+    // Cleanup: leave channel, disconnect socket, and clear polling
     return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
       if (channel) {
         channel.leave();
       }
@@ -273,7 +335,7 @@ export function ResultsView() {
         socket.disconnect();
       }
     };
-  }, [currentElection]);
+  }, [currentElection, results, loading]);
 
   if (!currentElection) {
     return <div style={{padding: '2rem'}}>No election selected</div>;
@@ -530,15 +592,37 @@ export function ResultsView() {
                   const totalVotes = metadata.total_votes || 0;
                   const pendingVotes = totalVotes - processedVotes;
                   
-                  // Format last update timestamp with seconds
+                  // Format last update timestamp with relative time
                   const formatTimestamp = (date: Date | null) => {
                     if (!date) return '';
-                    return date.toLocaleTimeString('en-US', {
+                    const now = new Date();
+                    const diffMs = now.getTime() - date.getTime();
+                    const diffSeconds = Math.floor(diffMs / 1000);
+                    const diffMinutes = Math.floor(diffSeconds / 60);
+                    const diffHours = Math.floor(diffMinutes / 60);
+                    const diffDays = Math.floor(diffHours / 24);
+                    
+                    let relativeTime = '';
+                    if (diffSeconds < 10) {
+                      relativeTime = 'just now';
+                    } else if (diffSeconds < 60) {
+                      relativeTime = `${diffSeconds} second${diffSeconds !== 1 ? 's' : ''} ago`;
+                    } else if (diffMinutes < 60) {
+                      relativeTime = `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''} ago`;
+                    } else if (diffHours < 24) {
+                      relativeTime = `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+                    } else {
+                      relativeTime = `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+                    }
+                    
+                    const timeString = date.toLocaleTimeString('en-US', {
                       hour: '2-digit',
                       minute: '2-digit',
                       second: '2-digit',
                       hour12: false
                     });
+                    
+                    return `${timeString} (${relativeTime})`;
                   };
                   
                   return (
