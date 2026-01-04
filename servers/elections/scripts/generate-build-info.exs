@@ -41,20 +41,24 @@ defmodule BuildInfoGenerator do
   
   defp get_git_info do
     try do
-      commit_hash = System.cmd("git", ["rev-parse", "HEAD"], cd: Path.join([__DIR__, ".."]))
+      # Get repo root (2 levels up from scripts: scripts -> elections -> repo root)
+      repo_root = Path.expand(Path.join([__DIR__, "..", ".."]))
+      
+      # Always run git commands from repo root to ensure consistency with UI script
+      commit_hash = System.cmd("git", ["rev-parse", "HEAD"], cd: repo_root)
                     |> elem(0)
                     |> String.trim()
       short_hash = String.slice(commit_hash, 0, 8)
       
-      branch = System.cmd("git", ["rev-parse", "--abbrev-ref", "HEAD"], cd: Path.join([__DIR__, ".."]))
+      branch = System.cmd("git", ["rev-parse", "--abbrev-ref", "HEAD"], cd: repo_root)
                |> elem(0)
                |> String.trim()
       
-      author_date = System.cmd("git", ["log", "-1", "--format=%ai"], cd: Path.join([__DIR__, ".."]))
+      author_date = System.cmd("git", ["log", "-1", "--format=%ai"], cd: repo_root)
                     |> elem(0)
                     |> String.trim()
       
-      commit_date = System.cmd("git", ["log", "-1", "--format=%ci"], cd: Path.join([__DIR__, ".."]))
+      commit_date = System.cmd("git", ["log", "-1", "--format=%ci"], cd: repo_root)
                     |> elem(0)
                     |> String.trim()
       

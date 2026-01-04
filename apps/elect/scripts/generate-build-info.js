@@ -15,13 +15,16 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+// Get repo root (3 levels up from scripts directory: scripts -> elect -> apps -> repo root)
+const REPO_ROOT = path.resolve(__dirname, '../../../');
+
 function reverseString(str) {
   return str.split('').reverse().join('');
 }
 
 function getBip39WordList() {
   try {
-    const bip39Path = path.join(__dirname, '../../../libs/utils/src/bip39.ts');
+    const bip39Path = path.join(REPO_ROOT, 'libs/utils/src/bip39.ts');
     if (!fs.existsSync(bip39Path)) {
       return null;
     }
@@ -72,13 +75,14 @@ function hashToMnemonic(hash, wordList, wordCount = 3) {
 
 function getGitInfo() {
   try {
-    const commitHash = execSync('git rev-parse HEAD', { encoding: 'utf-8' }).trim();
+    // Always run git commands from repo root to ensure consistency
+    const commitHash = execSync('git rev-parse HEAD', { cwd: REPO_ROOT, encoding: 'utf-8' }).trim();
     const shortHash = commitHash.substring(0, 8);
     
-    const branch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf-8' }).trim();
+    const branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: REPO_ROOT, encoding: 'utf-8' }).trim();
     
-    const authorDate = execSync('git log -1 --format=%ai', { encoding: 'utf-8' }).trim();
-    const commitDate = execSync('git log -1 --format=%ci', { encoding: 'utf-8' }).trim();
+    const authorDate = execSync('git log -1 --format=%ai', { cwd: REPO_ROOT, encoding: 'utf-8' }).trim();
+    const commitDate = execSync('git log -1 --format=%ci', { cwd: REPO_ROOT, encoding: 'utf-8' }).trim();
     
     // Generate 3-word mnemonic from commit hash
     const wordList = getBip39WordList();
