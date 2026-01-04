@@ -8,13 +8,33 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+# Get directories
+ELECT_DIR="$(dirname "$0")/.."
+SERVER_DIR="../../servers/elections"
+
+echo -e "${BLUE}Generating build info for UI and server (same git state)...${NC}"
+
+# CRITICAL: Generate both UI and server build info at the SAME TIME
+# This ensures they capture the same git commit hash
+cd "$ELECT_DIR"
+
+# Generate UI build info
+echo -e "${YELLOW}Generating UI build info...${NC}"
+node scripts/generate-build-info.js
+
+# Generate server build info immediately after (same git state)
+echo -e "${YELLOW}Generating server build info...${NC}"
+cd "$SERVER_DIR"
+mix buildinfo.generate
+cd "$ELECT_DIR"
+
+# Now build the UI (build info already generated and embedded)
 echo -e "${BLUE}Building Elect UI...${NC}"
-cd "$(dirname "$0")/.."
-pnpm build
+tsc && vite build
 
 echo -e "${BLUE}Copying built assets to elections server...${NC}"
 ELECT_BUILD_DIR="dist"
-SERVER_STATIC_DIR="../../servers/elections/priv/static"
+SERVER_STATIC_DIR="$SERVER_DIR/priv/static"
 
 # Create static directory if it doesn't exist
 mkdir -p "$SERVER_STATIC_DIR"
@@ -25,7 +45,7 @@ cp -r "$ELECT_BUILD_DIR"/* "$SERVER_STATIC_DIR/"
 echo -e "${GREEN}Assets copied successfully!${NC}"
 echo -e "${YELLOW}Ensuring Elixir dependencies are installed...${NC}"
 
-cd ../../servers/elections
+cd "$SERVER_DIR"
 
 # Check if server is already running and stop it if so
 if lsof -Pi :4000 -sTCP:LISTEN -t >/dev/null ; then
@@ -51,12 +71,11 @@ else
     echo -e "${GREEN}✓ Elixir dependencies already installed${NC}"
 fi
 
-echo -e "${YELLOW}Regenerating server build info and recompiling...${NC}"
-# Force regeneration of build info and recompilation to ensure fresh build
-# This ensures server commit hash matches UI commit hash
-# Clean first to remove any cached compiled modules
+echo -e "${YELLOW}Compiling server (build info already generated)...${NC}"
+# Build info was already generated above, but mix compile alias will regenerate it
+# This is fine - it ensures consistency. Clean first to remove cached modules.
 mix clean
-mix buildinfo.generate
+# Compile (the alias will run buildinfo.generate again, ensuring it matches)
 mix compile
 
 echo -e "${YELLOW}Starting elections server...${NC}"

@@ -33,8 +33,8 @@ interface BuildInfoProps {
  * This component is designed to be reusable across all applications.
  * For applications without servers, only the UI build info will be displayed.
  * 
- * Styled to match UserProfile widget: same padding, background, border-radius, border
- * Positioned on the right side, to the left of UserProfile widget
+ * Styled to match UserProfile widget: same height, padding, background, border-radius, border
+ * Positioned on the right side, just before UserProfile widget with small gap
  * 
  * @param serverBuildInfo - Optional full server build info (not just hash)
  * @param className - Optional CSS class name
@@ -48,43 +48,7 @@ export function BuildInfo({ serverBuildInfo, className, style }: BuildInfoProps)
   const tooltipRef = React.useRef<HTMLDivElement>(null);
   
   const hashesMatch = serverBuildInfo?.commitHash === uiBuildInfo.commitHash;
-  
-  // Calculate time differences if hashes don't match
-  let buildTimeDiff: string | null = null;
-  let authorTimeDiff: string | null = null;
-  
-  if (serverBuildInfo && !hashesMatch) {
-    try {
-      const uiBuildTime = new Date(uiBuildInfo.buildDate).getTime();
-      const serverBuildTime = new Date(serverBuildInfo.buildDate).getTime();
-      const buildDiffMs = Math.abs(uiBuildTime - serverBuildTime);
-      const buildDiffSec = Math.floor(buildDiffMs / 1000);
-      const buildDiffMin = Math.floor(buildDiffSec / 60);
-      
-      if (buildDiffMin > 0) {
-        buildTimeDiff = `${buildDiffMin} minute${buildDiffMin !== 1 ? 's' : ''}`;
-      } else {
-        buildTimeDiff = `${buildDiffSec} second${buildDiffSec !== 1 ? 's' : ''}`;
-      }
-      
-      const uiAuthorTime = new Date(uiBuildInfo.authorDate).getTime();
-      const serverAuthorTime = new Date(serverBuildInfo.authorDate).getTime();
-      const authorDiffMs = Math.abs(uiAuthorTime - serverAuthorTime);
-      const authorDiffSec = Math.floor(authorDiffMs / 1000);
-      const authorDiffMin = Math.floor(authorDiffSec / 60);
-      const authorDiffHour = Math.floor(authorDiffMin / 60);
-      
-      if (authorDiffHour > 0) {
-        authorTimeDiff = `${authorDiffHour} hour${authorDiffHour !== 1 ? 's' : ''}`;
-      } else if (authorDiffMin > 0) {
-        authorTimeDiff = `${authorDiffMin} minute${authorDiffMin !== 1 ? 's' : ''}`;
-      } else {
-        authorTimeDiff = `${authorDiffSec} second${authorDiffSec !== 1 ? 's' : ''}`;
-      }
-    } catch (e) {
-      // Ignore date parsing errors
-    }
-  }
+  const showRed = serverBuildInfo && !hashesMatch;
   
   // Calculate tooltip position to avoid clipping
   React.useEffect(() => {
@@ -131,8 +95,7 @@ export function BuildInfo({ serverBuildInfo, className, style }: BuildInfoProps)
           {!hashesMatch && (
             <>
               <div style={{ marginTop: '0.5rem', fontWeight: 'bold', color: '#d32f2f' }}>Differences:</div>
-              {buildTimeDiff && <div>Build time diff: {buildTimeDiff}</div>}
-              {authorTimeDiff && <div>Author time diff: {authorTimeDiff}</div>}
+              <div>Hashes don't match!</div>
             </>
           )}
         </>
@@ -140,23 +103,23 @@ export function BuildInfo({ serverBuildInfo, className, style }: BuildInfoProps)
     </div>
   );
   
-  // Match UserProfile styling: padding: 0.5rem 1rem, background: #f8f9fa, border-radius: 8px, border: 1px solid #dee2e6
-  // Position on right side, to the left of UserProfile with gap
+  // Match UserProfile styling exactly: same padding, background, border-radius, border
+  // Same height by using same padding and single line display
+  // Position on right side, just before UserProfile with small gap
   const defaultStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: '0.25rem',
+    justifyContent: 'center',
     padding: '0.5rem 1rem',
     background: '#f8f9fa',
     borderRadius: '8px',
     border: '1px solid #dee2e6',
     fontSize: '10px',
-    color: '#666',
+    color: showRed ? '#d32f2f' : '#666',
     fontFamily: 'monospace',
     lineHeight: '1.2',
-    marginRight: '0.75rem', // Gap to the left of UserProfile
-    marginLeft: 'auto', // Push to right side
+    marginRight: '0.75rem', // Small gap before UserProfile
     position: 'relative',
     cursor: 'help',
     ...style
@@ -193,30 +156,9 @@ export function BuildInfo({ serverBuildInfo, className, style }: BuildInfoProps)
       onMouseLeave={() => setShowTooltip(false)}
       title="Hover for full build info"
     >
-      {hashesMatch ? (
-        // Hashes match - only show UI info (don't duplicate)
-        <>
-          <div>UI: {uiBuildInfo.commitHash}</div>
-          {uiBuildInfo.mnemonic && (
-            <div>{uiBuildInfo.mnemonic}</div>
-          )}
-        </>
-      ) : (
-        // Hashes don't match - show both
-        <>
-          {serverBuildInfo && (
-            <div>Server: {serverBuildInfo.commitHash}</div>
-          )}
-          <div>UI: {uiBuildInfo.commitHash}</div>
-          {uiBuildInfo.mnemonic && (
-            <div>{uiBuildInfo.mnemonic}</div>
-          )}
-          {buildTimeDiff && authorTimeDiff && (
-            <div style={{ fontSize: '9px', color: '#d32f2f' }}>
-              Diff: {buildTimeDiff} build, {authorTimeDiff} author
-            </div>
-          )}
-        </>
+      <div>UI: {uiBuildInfo.commitHash}</div>
+      {uiBuildInfo.mnemonic && (
+        <div>{uiBuildInfo.mnemonic}</div>
       )}
       
       {showTooltip && (
