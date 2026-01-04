@@ -17,6 +17,7 @@ defmodule Elections.ResultsCalculator do
   alias Elections.Voting
   
   @debug_logging Application.compile_env(:elections, :debug_logging, false)
+  @min_calculation_interval_ms 2000  # Minimum 2 seconds between calculations during high volume
   
   defp debug_log(level, message) do
     if @debug_logging do
@@ -42,46 +43,66 @@ defmodule Elections.ResultsCalculator do
   
   @impl true
   def init(_opts) do
-    # State: %{election_identifier => :calculating | :queued}
+    # State: %{election_identifier => {:calculating, timestamp} | {:queued, timestamp} | :throttled}
     {:ok, %{}}
   end
   
   @impl true
   def handle_cast({:calculate, election_identifier}, state) do
+    now = System.system_time(:millisecond)
+    
     case Map.get(state, election_identifier) do
-      :calculating ->
+      {:calculating, _timestamp} ->
         # Calculation in progress - mark as queued for recalculation after current one finishes
         debug_log(:info, "[ResultsCalculator] Calculation in progress for #{election_identifier}, queuing recalculation")
-        {:noreply, Map.put(state, election_identifier, :queued)}
+        {:noreply, Map.put(state, election_identifier, {:queued, now})}
       
-      :queued ->
+      {:queued, queued_at} ->
         # Already queued - no need to queue again
         debug_log(:info, "[ResultsCalculator] Already queued for #{election_identifier}")
         {:noreply, state}
+      
+      {:throttled, throttled_at} ->
+        # Check if throttle period has passed
+        elapsed = now - throttled_at
+        if elapsed < @min_calculation_interval_ms do
+          # Still throttled - keep throttled
+          debug_log(:info, "[ResultsCalculator] Throttled for #{election_identifier} (#{elapsed}ms since last)")
+          {:noreply, state}
+        else
+          # Throttle expired - start calculation
+          debug_log(:info, "[ResultsCalculator] Starting calculation for #{election_identifier} (throttle expired)")
+          server_pid = self()
+          Task.start(fn -> process_calculation(election_identifier, server_pid) end)
+          {:noreply, Map.put(state, election_identifier, {:calculating, now})}
+        end
       
       nil ->
         # No calculation in progress - start immediately
         debug_log(:info, "[ResultsCalculator] Starting calculation for #{election_identifier}")
         server_pid = self()
         Task.start(fn -> process_calculation(election_identifier, server_pid) end)
-        {:noreply, Map.put(state, election_identifier, :calculating)}
+        {:noreply, Map.put(state, election_identifier, {:calculating, now})}
     end
   end
   
   @impl true
   def handle_info({:calculation_complete, election_identifier}, state) do
+    now = System.system_time(:millisecond)
+    
     case Map.get(state, election_identifier) do
-      :queued ->
-        # New votes arrived during calculation - recalculate immediately
+      {:queued, _queued_at} ->
+        # New votes arrived during calculation - recalculate immediately (throttle checked in handle_cast)
         debug_log(:info, "[ResultsCalculator] Recalculating #{election_identifier} (new votes during calculation)")
         server_pid = self()
         Task.start(fn -> process_calculation(election_identifier, server_pid) end)
-        {:noreply, Map.put(state, election_identifier, :calculating)}
+        {:noreply, Map.put(state, election_identifier, {:calculating, now})}
       
-      :calculating ->
-        # Calculation finished, no new votes - mark as idle
-        debug_log(:info, "[ResultsCalculator] Calculation complete for #{election_identifier}")
-        {:noreply, Map.delete(state, election_identifier)}
+      {:calculating, _calc_started_at} ->
+        # Calculation finished - mark as throttled to prevent rapid recalculations
+        # If new votes arrive, handle_cast will queue them and they'll be processed after throttle
+        debug_log(:info, "[ResultsCalculator] Calculation complete for #{election_identifier}, entering throttle period")
+        {:noreply, Map.put(state, election_identifier, {:throttled, now})}
       
       _ ->
         {:noreply, state}
