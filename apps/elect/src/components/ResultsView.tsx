@@ -7,6 +7,32 @@ import {MuuriItem} from './Layout';
 import {METHOD_FAMILIES} from './constants';
 import {formatMethodName, formatWinnersWithOrdering, getStatusColorAndLabel} from './utils';
 
+// Debug logging control - check localStorage or URL parameter
+const DEBUG_LOGGING = (() => {
+  if (typeof window !== 'undefined') {
+    // Check URL parameter first (e.g., ?debug=true)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('debug') === 'true') return true;
+    // Then check localStorage
+    const stored = localStorage.getItem('elections:debug');
+    if (stored === 'true') return true;
+  }
+  return false;
+})();
+
+// Helper to conditionally log debug messages
+const debugLog = (...args: any[]) => {
+  if (DEBUG_LOGGING) {
+    console.log(...args);
+  }
+};
+
+const debugWarn = (...args: any[]) => {
+  if (DEBUG_LOGGING) {
+    console.warn(...args);
+  }
+};
+
 export function ResultsView() {
   const {currentElection} = useSelector((s: TotalState) => s.election);
   const [results, setResults] = useState<any>(null);
@@ -22,9 +48,21 @@ export function ResultsView() {
     
     // Helper to process and set results
     const processResults = (data: any) => {
-      console.log('[DEBUG] Raw API response:', data);
+      debugLog('[DEBUG] Raw data received:', data);
+      debugLog('[DEBUG] Data structure:', {
+        hasResults: !!data.results,
+        resultsType: typeof data.results,
+        resultsIsArray: Array.isArray(data.results),
+        resultsKeys: data.results ? Object.keys(data.results) : [],
+        nestedResults: data.results?.results ? (Array.isArray(data.results.results) ? `array[${data.results.results.length}]` : typeof data.results.results) : 'none',
+        metadata: data.results?.metadata ? {
+          total_votes: data.results.metadata.total_votes,
+          hasTimestamps: !!data.results.metadata.vote_timestamps
+        } : 'none'
+      });
       
       // API returns: {election_identifier: "...", results: {results: [...], metadata: {...}}}
+      // WebSocket returns: {election_id: "...", results: {results: [...], metadata: {...}}}
       // Extract the nested results structure
       let ballots: any[] = [];
       let metadata: any = null;
@@ -34,25 +72,39 @@ export function ResultsView() {
         if (data.results.results && Array.isArray(data.results.results)) {
           ballots = data.results.results;
           metadata = data.results.metadata || null;
+          debugLog('[DEBUG] Using nested structure - ballots:', ballots.length, 'metadata.total_votes:', metadata?.total_votes);
         } 
         // Check if results is directly an array (old format)
         else if (Array.isArray(data.results)) {
           ballots = data.results;
           metadata = data.metadata || null;
+          debugLog('[DEBUG] Using array format - ballots:', ballots.length);
         }
         // Check if results is an object with a results property
         else if (typeof data.results === 'object' && data.results.results) {
           ballots = Array.isArray(data.results.results) ? data.results.results : [];
           metadata = data.results.metadata || null;
+          debugLog('[DEBUG] Using object.results format - ballots:', ballots.length, 'metadata.total_votes:', metadata?.total_votes);
+        } else {
+          debugWarn('[DEBUG] Unexpected results structure:', data.results);
         }
+      } else {
+        debugWarn('[DEBUG] No results in data:', data);
       }
       
-      console.log('[DEBUG] Processed results - ballots:', ballots.length, 'metadata:', metadata);
-      setResults({ballots, metadata});
+      debugLog('[DEBUG] Final processed - ballots:', ballots.length, 'metadata.total_votes:', metadata?.total_votes);
+      
+      // Only update if we have valid data
+      if (metadata !== null || ballots.length > 0) {
+        setResults({ballots, metadata});
+      } else {
+        debugWarn('[DEBUG] Skipping update - no valid data');
+      }
       setLoading(false);
     };
     
     // Load initial results via REST API
+    debugLog('[ResultsView] Loading results for election:', currentElection.identifier);
     fetch(`/api/dashboard/${currentElection.identifier}`, {
       headers: {
         'Accept': 'application/json'
@@ -68,12 +120,13 @@ export function ResultsView() {
         }
         
         const data = await res.json();
-        console.log('[DEBUG] API response status:', res.status, 'data:', data);
+        debugLog('[ResultsView] API response status:', res.status);
+        debugLog('[ResultsView] Total votes in response:', data.results?.metadata?.total_votes || 'unknown');
         
         if (!res.ok) {
           // If we have results despite error status, still try to process them
           if (data.results || data.results?.results) {
-            console.log('[DEBUG] API returned error but has results, processing anyway');
+            debugLog('[DEBUG] API returned error but has results, processing anyway');
             return data;
           }
           // Extract detailed error information
@@ -120,20 +173,92 @@ export function ResultsView() {
       channel = socket.channel(`dashboard:${currentElection.identifier}`, {});
       
       channel.on('results_updated', (payload: any) => {
+        debugLog('[WebSocket] Received results_updated event:', payload);
+        debugLog('[WebSocket] Payload structure:', {
+          hasElectionId: !!payload.election_id,
+          hasResults: !!payload.results,
+          resultsType: typeof payload.results,
+          resultsIsArray: Array.isArray(payload.results),
+          resultsKeys: payload.results ? Object.keys(payload.results) : [],
+          nestedResults: payload.results?.results ? (Array.isArray(payload.results.results) ? `array[${payload.results.results.length}]` : typeof payload.results.results) : 'none',
+          metadata: payload.results?.metadata ? {
+            total_votes: payload.results.metadata.total_votes,
+            hasTimestamps: !!payload.results.metadata.vote_timestamps
+          } : 'none'
+        });
+        
         // Update results when server broadcasts new results
+        // Backend broadcasts: {:results_updated, election_id, results}
+        // Channel pushes: %{election_id: "...", results: {results: [...], metadata: {...}}}
         if (payload.results) {
-          processResults(payload.results);
+          // WebSocket payload structure: {election_id: "...", results: {results: [...], metadata: {...}}}
+          // processResults expects: {results: {results: [...], metadata: {...}}}
+          const currentTotal = results?.metadata?.total_votes;
+          const newTotal = payload.results?.metadata?.total_votes;
+          debugLog('[WebSocket] Vote count change:', currentTotal, '→', newTotal);
+          
+          // Verify payload structure before processing
+          if (!payload.results || typeof payload.results !== 'object') {
+            debugWarn('[WebSocket] Invalid payload.results:', payload.results);
+            debugWarn('[WebSocket] Skipping update - keeping existing results');
+            return;
+          }
+          
+          // Check if metadata exists and has valid total_votes
+          const newTotalVotes = payload.results.metadata?.total_votes;
+          const currentTotalVotes = results?.metadata?.total_votes;
+          
+          // Reject zero vote updates if:
+          // 1. We already have results with votes > 0, OR
+          // 2. We have any results loaded (even if metadata is null, ballots exist means we had data)
+          if (newTotalVotes === 0 && (currentTotalVotes > 0 || (results && (results.ballots?.length > 0 || Array.isArray(results) && results.length > 0)))) {
+            debugWarn('[WebSocket] Received zero votes but current state has data');
+            debugWarn('[WebSocket] Current vote count:', currentTotalVotes, 'Current ballots:', results?.ballots?.length || (Array.isArray(results) ? results.length : 0));
+            debugWarn('[WebSocket] This might be a calculation error - skipping update');
+            return;
+          }
+          
+          if (!Array.isArray(payload.results.results)) {
+            debugWarn('[WebSocket] payload.results.results is not an array:', payload.results.results);
+            debugWarn('[WebSocket] Skipping update - keeping existing results');
+            return;
+          }
+          
+          if (!payload.results.metadata || typeof payload.results.metadata !== 'object') {
+            debugWarn('[WebSocket] Invalid payload.results.metadata:', payload.results.metadata);
+            debugWarn('[WebSocket] Skipping update - keeping existing results');
+            return;
+          }
+          
+          // WebSocket sends: {election_id: "...", results: {results: [...], metadata: {...}}}
+          // processResults expects: {results: {results: [...], metadata: {...}}}
+          debugLog('[WebSocket] Processing update - vote count:', currentTotalVotes, '→', newTotalVotes);
+          processResults({results: payload.results});
+        } else {
+          debugWarn('[WebSocket] Payload missing results:', payload);
         }
+      });
+      
+      channel.on('vote_submitted', (payload: any) => {
+        debugLog('[WebSocket] Vote submitted:', payload);
+        // Optionally refresh results when a vote is submitted
+        // (Results will be updated via results_updated event)
       });
       
       channel.join()
         .receive('ok', () => {
-          console.log('Joined dashboard channel for', currentElection.identifier);
+          debugLog('[WebSocket] ✅ Joined dashboard channel for', currentElection.identifier);
         })
         .receive('error', (resp: any) => {
-          console.error('Unable to join dashboard channel:', resp);
+          // Always log errors, even if debug is off
+          console.error('[WebSocket] ❌ Unable to join dashboard channel:', resp);
+        })
+        .receive('timeout', () => {
+          // Always log errors, even if debug is off
+          console.error('[WebSocket] ❌ Timeout joining dashboard channel');
         });
     }).catch((err) => {
+      // Always log errors, even if debug is off
       console.warn('Phoenix Socket not available, using REST API only:', err);
     });
     
@@ -251,10 +376,13 @@ export function ResultsView() {
     );
   }
 
+  // Don't show "No votes" message if we're still loading or if metadata shows votes exist
   const ballots = results?.ballots || (Array.isArray(results) ? results : []);
   const metadata = results?.metadata || null;
+  const hasVotes = metadata && metadata.total_votes && metadata.total_votes > 0;
 
-  if (!ballots || ballots.length === 0) {
+  // Only show "No votes" if we have loaded data and confirmed there are no votes
+  if ((!ballots || ballots.length === 0) && !loading && results !== null && !hasVotes) {
     return (
       <div style={{padding: '2rem'}}>
         <h1>Election Results: {currentElection.title}</h1>
@@ -303,7 +431,7 @@ export function ResultsView() {
           <div style={{marginBottom: '1rem', padding: '1rem', background: '#e8f4f8', borderRadius: '8px', border: '1px solid #ccc'}}>
             <p style={{display: 'flex', margin: '0.5rem 0'}}>
               <strong style={{minWidth: '140px', textAlign: 'right', marginRight: '1rem'}}>Total Ballots Cast:</strong>
-              <span>{metadata.total_votes || 0}</span>
+              <span>{metadata.total_votes != null ? metadata.total_votes : '—'}</span>
             </p>
             {votingStart && (
               <p style={{display: 'flex', margin: '0.5rem 0'}}>

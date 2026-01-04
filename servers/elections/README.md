@@ -148,6 +148,34 @@ Connect to `/socket` and join channel `dashboard:<election_id>` for real-time up
 
 In development mode (`dev_mode: true` in `config/dev.exs`), tokens can be reused multiple times for testing purposes.
 
+## Debug Logging
+
+The server includes verbose debug logging that can be enabled for troubleshooting. By default, all `[DEBUG]` log messages are disabled.
+
+### Enable Server-Side Debug Logging
+
+**Option 1: Edit config file (persistent)**
+```elixir
+# In config/dev.exs or config/config.exs
+config :elections, :debug_logging, true
+```
+
+**Option 2: Environment variable (temporary)**
+```bash
+ELIXIR_ERL_OPTIONS="-config config/dev.exs" mix phx.server
+# Then edit config/dev.exs to set :debug_logging to true
+```
+
+After enabling, restart the server to see debug messages in the server logs. Debug messages include:
+- Vote submission details
+- Database query results
+- WebSocket broadcast information
+- Results calculation steps
+
+### Disable Debug Logging
+
+Set `config :elections, :debug_logging, false` in your config file and restart the server.
+
 ## Database Schema
 
 - **elections**: Election configurations and metadata

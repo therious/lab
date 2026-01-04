@@ -10,6 +10,9 @@ import Config
 # Enable test data creation in development
 config :elections, :create_test_data, true
 
+# Enable verbose debug logging (set to true to see [DEBUG] messages)
+config :elections, :debug_logging, false
+
 config :elections, Elections.Repo,
   database: "priv/repo/elections.db"
 

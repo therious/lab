@@ -144,6 +144,47 @@ To inspect the SQLite database used by the elections server, see [SQLITE_CONNECT
 
 **Database Location:** `servers/elections/priv/repo/elections.db`
 
+## Debug Logging
+
+The application includes verbose debug logging that can be enabled for troubleshooting. By default, all `[DEBUG]` console messages are disabled.
+
+### Enable Client-Side Debug Logging
+
+**Option 1: URL Parameter (temporary)**
+Add `?debug=true` to the URL:
+```
+http://localhost:4000?debug=true
+```
+
+**Option 2: Browser Console (persistent)**
+Open browser console and run:
+```javascript
+localStorage.setItem('elections:debug', 'true')
+```
+Then refresh the page.
+
+### Disable Client-Side Debug Logging
+
+**Remove URL parameter:**
+Remove `?debug=true` from the URL.
+
+**Or clear localStorage:**
+```javascript
+localStorage.removeItem('elections:debug')
+```
+Then refresh the page.
+
+### What Gets Logged
+
+When debug logging is enabled, you'll see:
+- WebSocket connection status and events
+- API response structures
+- Results processing steps
+- Vote count changes
+- Data structure analysis
+
+**Note:** Error messages always log regardless of debug setting.
+
 ## Troubleshooting
 
 ### Server not responding
@@ -160,6 +201,12 @@ To inspect the SQLite database used by the elections server, see [SQLITE_CONNECT
 ### Build errors
 - Run `pnpm install` to ensure dependencies are installed
 - Check that workspace dependencies (`@therious/*`) are built: `pnpm --filter . indexOnce`
+
+### Debugging WebSocket Issues
+1. Enable client-side debug logging (see above)
+2. Enable server-side debug logging (see [Elections Server README](../../servers/elections/README.md))
+3. Check browser console for WebSocket connection status
+4. Check server logs for broadcast messages
 
 ## Related Documentation
 

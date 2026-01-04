@@ -10,15 +10,23 @@ defmodule Elections.Voting do
   alias Elections.{Election, VoteToken, Vote}
 
   @dev_mode Application.compile_env(:elections, :dev_mode, false)
+  @debug_logging Application.compile_env(:elections, :debug_logging, false)
+
+  # Helper to conditionally log debug messages
+  defp debug_log(level, message) when level in [:info, :warning, :error] do
+    if @debug_logging do
+      require Logger
+      Logger.log(level, message)
+    end
+  end
 
   @doc """
   Submit a vote for an election using election identifier.
   """
   def submit_vote(election_identifier, token, ballot_data) when is_binary(election_identifier) do
-    # TEMP DEBUG: Log database path for vote submission
+    # Debug: Log database path for vote submission
     db_path = RepoManager.db_path(election_identifier)
-    require Logger
-    Logger.info("[DEBUG] submit_vote: election=#{election_identifier}, db_path=#{db_path}")
+    debug_log(:info, "[DEBUG] submit_vote: election=#{election_identifier}, db_path=#{db_path}")
     
     RepoManager.with_repo(election_identifier, fn repo ->
       result = repo.transaction(fn ->
@@ -40,14 +48,66 @@ defmodule Elections.Voting do
       # Unwrap transaction result - Ecto wraps rollback values in {:error, value}
       case result do
         {:ok, view_token} ->
-          # TEMP DEBUG: Verify vote was actually committed
-          require Logger
+          # Debug: Verify vote was actually committed
           case get_election(repo, election_identifier) do
             {:ok, election} ->
               vote_count = repo.aggregate(from(v in Vote, where: v.election_id == ^election.id), :count)
-              Logger.info("[DEBUG] submit_vote: After transaction, vote_count=#{vote_count} for election_id=#{election.id}")
+              debug_log(:info, "[DEBUG] submit_vote: After transaction, vote_count=#{vote_count} for election_id=#{election.id}")
             _ -> :ok
           end
+          
+          # Broadcast results update AFTER transaction commits
+          # Use election identifier so we can set the dynamic repo in the task process
+          election_id_for_broadcast = election_identifier
+          
+          # Debounce updates: if votes are coming in rapidly, batch them
+          # This adapts to actual server load rather than election type
+          # Simple approach: always wait a short time to batch rapid updates
+          debounce_ms = 500  # Wait 500ms to batch rapid vote submissions
+          
+          Task.start(fn ->
+            # Small delay to batch rapid updates (demand-based, not type-based)
+            Process.sleep(debounce_ms)
+            
+            RepoManager.with_repo(election_id_for_broadcast, fn task_repo ->
+              # Get election directly from repo to avoid nested with_repo call
+              case task_repo.get_by(Election, identifier: election_id_for_broadcast) do
+                nil ->
+                  debug_log(:error, "[DEBUG] Broadcasting results_updated: election not found: #{election_id_for_broadcast}")
+                  :ok
+                
+                latest_election ->
+                  # Verify vote count before calculating
+                  vote_count = task_repo.aggregate(from(v in Vote, where: v.election_id == ^latest_election.id), :count)
+                  debug_log(:info, "[DEBUG] Broadcasting results_updated: election=#{election_id_for_broadcast}, election_id=#{latest_election.id}, vote_count=#{vote_count}")
+                  
+                  # Don't broadcast if vote count is 0 and we expect votes
+                  if vote_count == 0 do
+                    debug_log(:warning, "[DEBUG] Vote count is 0 - skipping broadcast to avoid resetting UI")
+                    :ok
+                  else
+                    results = calculate_all_results(task_repo, latest_election)
+                    
+                    # Verify results structure before broadcasting
+                    results_vote_count = results.metadata.total_votes
+                    debug_log(:info, "[DEBUG] Results metadata total_votes: #{results_vote_count}, results array length: #{length(results.results)}")
+                    
+                    # Double-check: don't broadcast if results show 0 votes
+                    if results_vote_count == 0 do
+                      debug_log(:warning, "[DEBUG] Results show 0 votes but vote_count was #{vote_count} - skipping broadcast")
+                      :ok
+                    else
+                      Phoenix.PubSub.broadcast(
+                        Elections.PubSub,
+                        "dashboard:#{election_id_for_broadcast}",
+                        {:results_updated, election_id_for_broadcast, results}
+                      )
+                    end
+                  end
+              end
+            end)
+          end)
+          
           {:ok, view_token}
         {:error, {:error, reason}} -> {:error, reason}  # Unwrap double-wrapped error
         {:error, error} -> error  # Single-wrapped error (shouldn't happen with our code)
@@ -239,13 +299,12 @@ defmodule Elections.Voting do
 
     case repo.insert(changeset) do
       {:ok, vote} ->
-        # TEMP DEBUG: Log successful vote creation and verify it's in DB
-        require Logger
-        Logger.info("[DEBUG] create_vote: vote_id=#{vote.id}, election_id=#{election.id}, election_identifier=#{election.identifier}")
+        # Debug: Log successful vote creation and verify it's in DB
+        debug_log(:info, "[DEBUG] create_vote: vote_id=#{vote.id}, election_id=#{election.id}, election_identifier=#{election.identifier}")
         
-        # TEMP DEBUG: Immediately query to see if vote is visible
+        # Debug: Immediately query to see if vote is visible
         vote_check = repo.get(Vote, vote.id)
-        Logger.info("[DEBUG] create_vote: Immediate query for vote_id=#{vote.id} returned: #{if vote_check, do: "FOUND", else: "NOT FOUND"}")
+        debug_log(:info, "[DEBUG] create_vote: Immediate query for vote_id=#{vote.id} returned: #{if vote_check, do: "FOUND", else: "NOT FOUND"}")
         
         # Mark token as used (unless in dev mode)
         unless @dev_mode do
@@ -261,36 +320,6 @@ defmodule Elections.Voting do
           {:vote_submitted, election.identifier, %{vote_id: vote.id}}
         )
 
-        # Calculate and broadcast updated results with demand-based debouncing
-        # Use election identifier so we can set the dynamic repo in the task process
-        election_identifier = election.identifier
-        
-        # Debounce updates: if votes are coming in rapidly, batch them
-        # This adapts to actual server load rather than election type
-        # Simple approach: always wait a short time to batch rapid updates
-        debounce_ms = 500  # Wait 500ms to batch rapid vote submissions
-        
-        Task.start(fn ->
-          # Small delay to batch rapid updates (demand-based, not type-based)
-          Process.sleep(debounce_ms)
-          
-          RepoManager.with_repo(election_identifier, fn task_repo ->
-            # Re-fetch election to ensure we have the latest data
-            case ElectionsContext.get_election(election_identifier) do
-              {:ok, latest_election} ->
-                results = calculate_all_results(task_repo, latest_election)
-                Phoenix.PubSub.broadcast(
-                  Elections.PubSub,
-                  "dashboard:#{election_identifier}",
-                  {:results_updated, election_identifier, results}
-                )
-              _ ->
-                # Election not found, skip broadcast
-                :ok
-            end
-          end)
-        end)
-
         {:ok, vote}
 
       error ->
@@ -299,15 +328,14 @@ defmodule Elections.Voting do
   end
 
   defp calculate_all_results(repo, election) do
-    # TEMP DEBUG: Log database path and election info for results query
+    # Debug: Log database path and election info for results query
     db_path = RepoManager.db_path(election.identifier || "")
-    require Logger
-    Logger.info("[DEBUG] calculate_all_results: election_id=#{election.id}, election_identifier=#{election.identifier}, db_path=#{db_path}")
+    debug_log(:info, "[DEBUG] calculate_all_results: election_id=#{election.id}, election_identifier=#{election.identifier}, db_path=#{db_path}")
     
     # Safely get votes - handle case where election might not exist or have no votes
     votes = try do
       votes_found = repo.all(from(v in Vote, where: v.election_id == ^election.id, order_by: [asc: v.inserted_at]))
-      Logger.info("[DEBUG] calculate_all_results: found #{length(votes_found)} votes in database")
+      debug_log(:info, "[DEBUG] calculate_all_results: found #{length(votes_found)} votes in database")
       votes_found
     rescue
       e ->
