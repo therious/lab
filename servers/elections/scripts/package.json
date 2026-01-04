@@ -1,0 +1,12 @@
+{
+  "name": "elections-test-vote-generator",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "generate-votes": "tsx generate-test-votes.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.27",
+    "tsx": "^4.7.0"
+  }
+}

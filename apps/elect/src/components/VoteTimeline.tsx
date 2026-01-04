@@ -14,11 +14,49 @@ const TimelineHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-  cursor: pointer;
   user-select: none;
+`;
+
+const HeaderLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
   
   &:hover {
     opacity: 0.8;
+  }
+`;
+
+const ModeToggle = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 1rem;
+`;
+
+const ToggleButton = styled.button<{$active: boolean}>`
+  padding: 0.25rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: ${props => props.$active ? '#007bff' : 'white'};
+  color: ${props => props.$active ? 'white' : '#333'};
+  cursor: pointer;
+  font-size: 0.85rem;
+  
+  &:hover {
+    background: ${props => props.$active ? '#0056b3' : '#f5f5f5'};
+  }
+`;
+
+const ScaleSelect = styled.select`
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  
+  &:hover {
+    background: #f5f5f5;
   }
 `;
 
@@ -108,9 +146,27 @@ interface VoteTimelineProps {
   totalVotes: number;
 }
 
+type TimelineMode = 'overview' | 'realtime';
+type TimeScale = '5min' | '1hr' | '1day' | 'whole';
+
 export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes}: VoteTimelineProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const now = new Date();
+  const [mode, setMode] = useState<TimelineMode>('overview');
+  const [scale, setScale] = useState<TimeScale>('whole');
+  const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Update current time for realtime mode
+  React.useEffect(() => {
+    if (mode === 'realtime' && !isCollapsed) {
+      const interval = setInterval(() => {
+        setCurrentTime(new Date());
+      }, 1000); // Update every second for realtime mode
+      
+      return () => clearInterval(interval);
+    }
+  }, [mode, isCollapsed]);
+  
+  const now = currentTime;
   const start = new Date(votingStart);
   const end = new Date(votingEnd);
   const timeRemaining = Math.max(0, end.getTime() - now.getTime());
@@ -145,9 +201,45 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   // Parse timestamps and group by time period
   const parsedTimestamps = voteTimestamps.map(ts => new Date(ts)).filter(d => !isNaN(d.getTime()));
   
-  // Determine time granularity based on election duration
-  const electionDuration = end.getTime() - start.getTime();
-  const daysDuration = electionDuration / (1000 * 60 * 60 * 24);
+  // Calculate time window for realtime mode
+  const getTimeWindow = (scale: TimeScale): {windowStart: Date; windowEnd: Date} => {
+    let windowEnd = new Date(now);
+    let windowStart: Date;
+    
+    switch (scale) {
+      case '5min':
+        windowStart = new Date(windowEnd.getTime() - 5 * 60 * 1000);
+        break;
+      case '1hr':
+        windowStart = new Date(windowEnd.getTime() - 60 * 60 * 1000);
+        break;
+      case '1day':
+        windowStart = new Date(windowEnd.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case 'whole':
+      default:
+        windowStart = new Date(start);
+        windowEnd = new Date(end);
+        break;
+    }
+    
+    // Clamp to election bounds
+    if (windowStart < start) windowStart = new Date(start);
+    if (windowEnd > end) windowEnd = new Date(end);
+    
+    return {windowStart, windowEnd};
+  };
+  
+  // Filter timestamps based on mode and scale
+  const {windowStart, windowEnd} = mode === 'realtime' ? getTimeWindow(scale) : {windowStart: start, windowEnd: end};
+  const filteredTimestamps = parsedTimestamps.filter(ts => {
+    const tsTime = ts.getTime();
+    return tsTime >= windowStart.getTime() && tsTime <= windowEnd.getTime();
+  });
+  
+  // Determine time granularity based on selected window
+  const windowDuration = windowEnd.getTime() - windowStart.getTime();
+  const daysDuration = windowDuration / (1000 * 60 * 60 * 24);
   
   let timeUnit: 'minute' | 'hour' | 'day' = 'day';
   let unitMs = 1000 * 60 * 60 * 24; // days
@@ -160,23 +252,45 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
     unitMs = 1000 * 60 * 60; // hours
   }
   
-  // Group votes by time period
+  // For realtime mode with short scales, use finer granularity
+  if (mode === 'realtime') {
+    if (scale === '5min') {
+      timeUnit = 'minute';
+      unitMs = 1000 * 60;
+    } else if (scale === '1hr') {
+      timeUnit = 'minute';
+      unitMs = 1000 * 60;
+    } else if (scale === '1day') {
+      timeUnit = 'hour';
+      unitMs = 1000 * 60 * 60;
+    }
+  }
+  
+  // Group votes by time period (relative to window start)
   const voteGroups: Map<number, number> = new Map();
   let cumulative = 0;
   const cumulativeData: Array<{time: number; cumulative: number}> = [];
   
-  parsedTimestamps.forEach(timestamp => {
-    const timeFromStart = timestamp.getTime() - start.getTime();
-    const period = Math.floor(timeFromStart / unitMs);
+  // For cumulative, we need to count votes from election start, not window start
+  const votesBeforeWindow = parsedTimestamps.filter(ts => ts.getTime() < windowStart.getTime()).length;
+  cumulative = votesBeforeWindow;
+  
+  filteredTimestamps.forEach(timestamp => {
+    const timeFromWindowStart = timestamp.getTime() - windowStart.getTime();
+    const period = Math.floor(timeFromWindowStart / unitMs);
     voteGroups.set(period, (voteGroups.get(period) || 0) + 1);
     cumulative++;
-    cumulativeData.push({time: timeFromStart, cumulative});
+    // For cumulative line, use time from election start
+    const timeFromElectionStart = timestamp.getTime() - start.getTime();
+    cumulativeData.push({time: timeFromElectionStart, cumulative});
   });
   
   // Calculate max values for scaling
   const maxVolume = Math.max(...Array.from(voteGroups.values()), 1);
-  const maxCumulative = Math.max(totalVotes, 1);
-  const totalPeriods = Math.ceil(electionDuration / unitMs);
+  const maxCumulative = mode === 'realtime' && scale !== 'whole' 
+    ? Math.max(cumulative, 1) 
+    : Math.max(totalVotes, 1);
+  const totalPeriods = Math.ceil(windowDuration / unitMs);
   
   // Use nice round numbers for axis labels (calculate before using)
   const niceMaxVolume = Math.ceil(maxVolume / 5) * 5 || 5;
@@ -209,7 +323,8 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   const plotWidth = chartWidth - padding.left - padding.right;
   const plotHeight = chartHeight - padding.top - padding.bottom;
   
-  // Build cumulative line path with higher resolution
+  // Build cumulative line path (always relative to election start for consistency)
+  const electionDuration = end.getTime() - start.getTime();
   const cumulativePath = cumulativeData.length > 0
     ? cumulativeData.map((point, idx) => {
         const x = padding.left + (point.time / electionDuration) * plotWidth;
@@ -218,7 +333,7 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
       }).join(' ')
     : '';
   
-  // Build bar chart data with higher resolution
+  // Build bar chart data (relative to window start for realtime mode)
   const bars: Array<{x: number; width: number; height: number; count: number}> = [];
   for (let i = 0; i <= totalPeriods; i++) {
     const count = voteGroups.get(i) || 0;
@@ -247,7 +362,7 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   
   for (let i = 0; i <= numTicks; i++) {
     const period = Math.floor((i / numTicks) * totalPeriods);
-    const timeMs = start.getTime() + (period * unitMs);
+    const timeMs = windowStart.getTime() + (period * unitMs);
     const tickDate = new Date(timeMs);
     
     let label = '';
@@ -304,18 +419,59 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   
   return (
     <TimelineContainer>
-      <TimelineHeader onClick={() => setIsCollapsed(!isCollapsed)}>
-        <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+      <TimelineHeader>
+        <HeaderLeft onClick={() => setIsCollapsed(!isCollapsed)}>
           <CollapseButton>{isCollapsed ? '▶' : '▼'}</CollapseButton>
           <TimelineTitle>Vote Timeline</TimelineTitle>
-        </div>
-        <TimeRemaining>
-          {timeRemaining > 0 ? (
-            <>Time Remaining: {formatTimeRemaining()}</>
-          ) : (
-            <>Voting Closed</>
+        </HeaderLeft>
+        <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+          {!isCollapsed && (
+            <ModeToggle>
+              <ToggleButton
+                $active={mode === 'overview'}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMode('overview');
+                  setScale('whole');
+                }}
+              >
+                Overview
+              </ToggleButton>
+              <ToggleButton
+                $active={mode === 'realtime'}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMode('realtime');
+                  if (scale === 'whole') setScale('1hr');
+                }}
+              >
+                Real-time
+              </ToggleButton>
+              {mode === 'realtime' && (
+                <ScaleSelect
+                  value={scale}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    setScale(e.target.value as TimeScale);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <option value="5min">Last 5 min</option>
+                  <option value="1hr">Last hour</option>
+                  <option value="1day">Last day</option>
+                  <option value="whole">Whole election</option>
+                </ScaleSelect>
+              )}
+            </ModeToggle>
           )}
-        </TimeRemaining>
+          <TimeRemaining>
+            {timeRemaining > 0 ? (
+              <>Time Remaining: {formatTimeRemaining()}</>
+            ) : (
+              <>Voting Closed</>
+            )}
+          </TimeRemaining>
+        </div>
       </TimelineHeader>
       
       {!isCollapsed && (
@@ -348,7 +504,7 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
             
             {/* X-axis tickmarks with rotated labels */}
             {xAxisTicks.map((tick, idx) => {
-              const x = padding.left + (tick.time / Math.max(totalPeriods, 1)) * plotWidth;
+              const x = padding.left + (idx / Math.max(numTicks, 1)) * plotWidth;
               return (
                 <g key={idx}>
                   <line
@@ -406,8 +562,8 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
               />
             )}
             
-            {/* Cumulative line points for better visibility */}
-            {cumulativeData.map((point, idx) => {
+            {/* Cumulative line points for better visibility (only in overview mode) */}
+            {mode === 'overview' && cumulativeData.map((point, idx) => {
               const x = padding.left + (point.time / electionDuration) * plotWidth;
               const y = padding.top + plotHeight - (point.cumulative / niceMaxCumulative) * plotHeight;
               return (
@@ -438,7 +594,12 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
       {!isCollapsed && (
       <div style={{marginTop: '0.5rem', fontSize: '0.85rem', color: '#666', display: 'flex', justifyContent: 'space-between'}}>
         <span>Left: Votes per {timeUnit}</span>
-        <span>Right: Cumulative Total</span>
+        <span>Right: {mode === 'realtime' && scale !== 'whole' ? 'Cumulative (window)' : 'Cumulative Total'}</span>
+        {mode === 'realtime' && (
+          <span style={{fontStyle: 'italic'}}>
+            Showing: {filteredTimestamps.length} of {parsedTimestamps.length} votes
+          </span>
+        )}
       </div>
       )}
     </TimelineContainer>

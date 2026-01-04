@@ -16,6 +16,10 @@ defmodule Elections.Application do
       ElectionsWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:elections, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Elections.PubSub},
+      # Registry for VoteQueue name resolution
+      {Registry, keys: :unique, name: Elections.VoteQueueRegistry},
+      # Dynamic supervisor for VoteQueue processes
+      Elections.VoteQueueSupervisor,
       # Elections.Repo must be started for put_dynamic_repo to work
       # It uses a default database config, but individual election repos are created dynamically
       Elections.Repo,

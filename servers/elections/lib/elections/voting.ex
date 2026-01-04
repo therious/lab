@@ -7,7 +7,7 @@ defmodule Elections.Voting do
   import Ecto.Query
   alias Elections.RepoManager
   alias Elections.Elections, as: ElectionsContext
-  alias Elections.{Election, VoteToken, Vote}
+  alias Elections.{Election, VoteToken, Vote, VoteQueue}
 
   @dev_mode Application.compile_env(:elections, :dev_mode, false)
   @debug_logging Application.compile_env(:elections, :debug_logging, false)
@@ -22,43 +22,46 @@ defmodule Elections.Voting do
 
   @doc """
   Submit a vote for an election using election identifier.
+  Uses durable write-ahead log for zero vote loss guarantee.
   """
   def submit_vote(election_identifier, token, ballot_data) when is_binary(election_identifier) do
     # Debug: Log database path for vote submission
     db_path = RepoManager.db_path(election_identifier)
     debug_log(:info, "[DEBUG] submit_vote: election=#{election_identifier}, db_path=#{db_path}")
     
-    RepoManager.with_repo(election_identifier, fn repo ->
-      result = repo.transaction(fn ->
-        with {:ok, election} <- get_election(repo, election_identifier),
-             {:ok, vote_token} <- get_and_validate_token(repo, token, election.id),
-             :ok <- check_voting_window(election),
-             {:ok, _vote} <- create_vote(repo, election, vote_token, ballot_data) do
-          vote_token.view_token
-        else
-          {:error, _reason} = error -> 
-            # Pass the error tuple to rollback - Ecto will wrap it in {:error, ...}
-            repo.rollback(error)
-          error -> 
-            # Handle non-tuple errors (shouldn't happen, but be safe)
-            repo.rollback({:error, error})
-        end
-      end)
-      
-      # Unwrap transaction result - Ecto wraps rollback values in {:error, value}
-      case result do
-        {:ok, view_token} ->
-          # Request results calculation via GenServer queue (async, non-blocking)
-          # This will queue the calculation and process it sequentially,
-          # skipping intermediate calculations if new votes arrive
-          Elections.ResultsCalculator.calculate_results(election_identifier)
-          
-          {:ok, view_token}
-        {:error, {:error, reason}} -> {:error, reason}  # Unwrap double-wrapped error
-        {:error, error} -> error  # Single-wrapped error (shouldn't happen with our code)
-        other -> {:error, other}  # Fallback for unexpected transaction results
+    # Validate vote before queuing (must happen synchronously)
+    validation_result = RepoManager.with_repo(election_identifier, fn repo ->
+      with {:ok, election} <- get_election(repo, election_identifier),
+           {:ok, vote_token} <- get_and_validate_token(repo, token, election.id),
+           :ok <- check_voting_window(election) do
+        {:ok, election, vote_token}
+      else
+        error -> error
       end
     end)
+    
+    case validation_result do
+      {:ok, election, vote_token} ->
+        # Enqueue vote with durable logging (returns immediately after log write)
+        case VoteQueue.enqueue_vote(
+          election_identifier,
+          token,
+          ballot_data,
+          election.id,
+          vote_token.id
+        ) do
+          {:ok, _vote_id} ->
+            # Request results calculation (will happen after vote is committed)
+            Elections.ResultsCalculator.calculate_results(election_identifier)
+            {:ok, vote_token.view_token}
+          
+          {:error, reason} ->
+            {:error, reason}
+        end
+      
+      error ->
+        error
+    end
   end
 
   @doc """
@@ -234,43 +237,6 @@ defmodule Elections.Voting do
     end
   end
 
-  defp create_vote(repo, election, vote_token, ballot_data) do
-    changeset =
-      Vote.changeset(%Vote{}, %{
-        election_id: election.id,
-        vote_token_id: vote_token.id,
-        ballot_data: ballot_data
-      })
-
-    case repo.insert(changeset) do
-      {:ok, vote} ->
-        # Debug: Log successful vote creation and verify it's in DB
-        debug_log(:info, "[DEBUG] create_vote: vote_id=#{vote.id}, election_id=#{election.id}, election_identifier=#{election.identifier}")
-        
-        # Debug: Immediately query to see if vote is visible
-        vote_check = repo.get(Vote, vote.id)
-        debug_log(:info, "[DEBUG] create_vote: Immediate query for vote_id=#{vote.id} returned: #{if vote_check, do: "FOUND", else: "NOT FOUND"}")
-        
-        # Mark token as used (unless in dev mode)
-        unless @dev_mode do
-          vote_token
-          |> VoteToken.changeset(%{used: true, used_at: DateTime.utc_now()})
-          |> repo.update()
-        end
-
-        # Broadcast vote submission for real-time updates
-        Phoenix.PubSub.broadcast(
-          Elections.PubSub,
-          "dashboard:#{election.identifier}",
-          {:vote_submitted, election.identifier, %{vote_id: vote.id}}
-        )
-
-        {:ok, vote}
-
-      error ->
-        error
-    end
-  end
 
   def calculate_all_results(repo, election) do
     # Debug: Log database path and election info for results query
