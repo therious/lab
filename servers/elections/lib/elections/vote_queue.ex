@@ -221,41 +221,70 @@ defmodule Elections.VoteQueue do
     RepoManager.with_repo(election_identifier, fn repo ->
       repo.transaction(fn ->
         Enum.each(vote_entries, fn entry ->
-          # Create vote (use entry ID to ensure idempotency)
-          changeset = Vote.changeset(%Vote{}, %{
-            id: entry["id"],
-            election_id: entry["election_id"],
-            vote_token_id: entry["vote_token_id"],
-            ballot_data: entry["ballot_data"]
-          })
+          # Extract data from log entry (handle both string keys and atom keys)
+          # Entries from queue have atom keys, entries from log recovery have string keys
+          election_id = entry["election_id"] || entry[:election_id]
+          vote_token_id = entry["vote_token_id"] || entry[:vote_token_id]
+          ballot_data = entry["ballot_data"] || entry[:ballot_data]
+          vote_id = entry["id"] || entry[:id]
           
-          case repo.insert(changeset, on_conflict: :nothing) do
-            {:ok, vote} ->
-              # Mark token as used (unless already used)
-              case repo.get(VoteToken, entry["vote_token_id"]) do
-                nil ->
-                  Logger.warning("[VoteQueue] VoteToken not found: #{entry["vote_token_id"]}")
-                  repo.rollback({:error, :token_not_found})
-                
-                token when not token.used ->
-                  token
-                  |> VoteToken.changeset(%{used: true, used_at: DateTime.utc_now()})
-                  |> repo.update()
-                
-                _token ->
-                  # Token already used, skip update
-                  :ok
-              end
-              
-              # Broadcast vote submission
-              Phoenix.PubSub.broadcast(
-                Elections.PubSub,
-                "dashboard:#{election_identifier}",
-                {:vote_submitted, election_identifier, %{vote_id: vote.id}}
-              )
+          # Validate required fields
+          if is_nil(election_id) or is_nil(vote_token_id) or is_nil(ballot_data) do
+            Logger.error("[VoteQueue] Missing required fields in entry: #{inspect(entry)}")
+            Logger.error("[VoteQueue] Entry keys: #{inspect(Map.keys(entry))}")
+            repo.rollback({:error, :missing_fields})
+          else
+            # Ensure ballot_data is a map (it should be, but verify after JSON decode)
+            ballot_data = if is_map(ballot_data), do: ballot_data, else: %{}
             
-            {:error, _changeset} = error ->
-              repo.rollback(error)
+            # Create vote (use entry ID to ensure idempotency)
+            # Ecto changeset expects atom keys
+            attrs = %{
+              id: vote_id,
+              election_id: election_id,
+              vote_token_id: vote_token_id,
+              ballot_data: ballot_data
+            }
+            
+            changeset = Vote.changeset(%Vote{}, attrs)
+          
+            case repo.insert(changeset, on_conflict: :nothing) do
+              {:ok, vote} ->
+                # Mark token as used (unless already used)
+                case repo.get(VoteToken, vote_token_id) do
+                  nil ->
+                    Logger.warning("[VoteQueue] VoteToken not found: #{vote_token_id}")
+                    repo.rollback({:error, :token_not_found})
+                  
+                  token when not token.used ->
+                    token
+                    |> VoteToken.changeset(%{used: true, used_at: DateTime.utc_now()})
+                    |> repo.update()
+                  
+                  _token ->
+                    # Token already used, skip update
+                    :ok
+                end
+                
+                # Broadcast vote submission with current vote count (lightweight update)
+                # Get current vote count without full results calculation
+                vote_count = repo.aggregate(
+                  from(v in Vote, where: v.election_id == ^election_id),
+                  :count
+                )
+                
+                Phoenix.PubSub.broadcast(
+                  Elections.PubSub,
+                  "dashboard:#{election_identifier}",
+                  {:vote_submitted, election_identifier, %{vote_id: vote.id, vote_count: vote_count}}
+                )
+              
+              {:error, changeset} = error ->
+                Logger.error("[VoteQueue] Changeset errors: #{inspect(changeset.errors)}")
+                Logger.error("[VoteQueue] Changeset changes: #{inspect(changeset.changes)}")
+                Logger.error("[VoteQueue] Attrs passed: #{inspect(attrs)}")
+                repo.rollback(error)
+            end
           end
         end)
       end)
