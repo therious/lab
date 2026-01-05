@@ -1,0 +1,26 @@
+identifier: "tennessee-capital-referendum-2026"
+title: "Tennessee Capital Referendum 2026"
+description: "Hypothetical referendum to determine the preferred capital of Tennessee. This classic voting theory example demonstrates how different voting methods can yield different results."
+voting_start: "2026-01-01T00:00:00Z"
+voting_end: "2026-12-31T23:59:59Z"
+service_start: "2026-01-01T00:00:00Z"
+service_end: "2027-01-31T23:59:59Z"
+
+support:
+  email: "elections@tennessee.gov"
+  phone: "(615) 555-0100"
+  message: "For assistance with this referendum, please contact the Tennessee Election Commission."
+
+ballots:
+  - title: "Preferred Capital of Tennessee"
+    description: "Select your preferred city to serve as the capital of Tennessee. Rank or score each city based on your preference."
+    number_of_winners: 1
+    candidates:
+      - name: "Memphis"
+        affiliation: "West Tennessee"
+      - name: "Nashville"
+        affiliation: "Middle Tennessee"
+      - name: "Chattanooga"
+        affiliation: "Southeast Tennessee"
+      - name: "Knoxville"
+        affiliation: "East Tennessee"
