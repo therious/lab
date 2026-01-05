@@ -478,7 +478,14 @@ defmodule Elections.Voting do
         # If anything fails in ballot processing, return minimal structure with error info
         # Use the ballot_title that was extracted earlier - don't try to extract it again
         require Logger
-        Logger.error("Critical error processing ballot '#{ballot_title}' in election #{election.identifier || "unknown"}: #{inspect(e)}")
+        error_message = Exception.message(e)
+        error_type = if Kernel.is_exception(e) do
+          e.__struct__ |> Module.split() |> List.last()
+        else
+          "UnknownError"
+        end
+        Logger.error("Critical error processing ballot '#{ballot_title}' in election #{election.identifier || "unknown"}: #{error_type}: #{error_message}")
+        Logger.error("Stacktrace: #{Exception.format_stacktrace(__STACKTRACE__)}")
         
         # Extract what we can safely (but preserve the already-extracted ballot_title)
         ballot = if is_map(ballot), do: ballot, else: %{}
@@ -487,7 +494,20 @@ defmodule Elections.Voting do
           _ -> []
         end
         
-        # Return minimal structure with error status
+        # Try to identify which algorithm/system caused the error by checking the stacktrace
+        failed_algorithm = case __STACKTRACE__ do
+          stacktrace ->
+            # Look for algorithm module names in stacktrace
+            algorithm_modules = ["RankedPairs", "Schulze", "Score", "Approval", "IRVSTV", "Coombs"]
+            found = Enum.find(algorithm_modules, fn mod ->
+              Enum.any?(stacktrace, fn {module, _, _, _} ->
+                module |> Module.split() |> List.last() == mod
+              end)
+            end)
+            found || "unknown"
+        end
+        
+        # Return structure with error status, preserving title and including error details
         %{
           ballot_title: ballot_title,
           candidates: candidates,
@@ -498,7 +518,10 @@ defmodule Elections.Voting do
           result_status: "error",
           is_referendum: Map.get(ballot, "yesNoReferendum", false),
           results: build_empty_results(candidates),
-          error: "Error processing ballot: #{Exception.message(e)}"
+          error: "Error processing ballot: #{error_message}",
+          error_type: error_type,
+          failed_algorithm: failed_algorithm,
+          error_timestamp: DateTime.utc_now() |> DateTime.to_iso8601()
         }
     end
   end
@@ -526,7 +549,8 @@ defmodule Elections.Voting do
       result_status: "error",
       is_referendum: Map.get(ballot, "yesNoReferendum", false),
       results: build_empty_results(candidates),
-      error: "Error processing ballot"
+      error: "Error processing ballot",
+      error_timestamp: DateTime.utc_now() |> DateTime.to_iso8601()
     }
   end
 
@@ -541,20 +565,21 @@ defmodule Elections.Voting do
         # Convert tuple keys to JSON-serializable format (strings or lists)
         sanitize_for_json(result)
       else
-        # Invalid result format - fail silently, no warning
-        %{method: method_name, winners: [], status: "error", error: "Invalid result format"}
+        # Invalid result format - include method name in error
+        %{method: method_name, winners: [], status: "error", error: "Invalid result format from #{method_name}"}
       end
     rescue
-      _e ->
-        # Algorithm failure is expected and acceptable - fail silently
-        # No warning needed as algorithm failures are a normal part of operation
-        %{method: method_name, winners: [], status: "error", error: "Calculation failed"}
+      e ->
+        # Include specific error details with method name
+        require Logger
+        Logger.warning("Algorithm #{method_name} failed for election #{election_identifier}, ballot #{ballot_title}: #{Exception.message(e)}")
+        %{method: method_name, winners: [], status: "error", error: "#{method_name} calculation failed: #{Exception.message(e)}"}
     catch
       kind, reason ->
         # Only log unexpected throws (not normal exceptions) with context
         require Logger
         Logger.warning("Algorithm #{method_name} threw #{kind} for election #{election_identifier}, ballot #{ballot_title}: #{inspect(reason)}")
-        %{method: method_name, winners: [], status: "error", error: "Algorithm threw #{kind}"}
+        %{method: method_name, winners: [], status: "error", error: "#{method_name} threw #{kind}: #{inspect(reason)}"}
     end
   end
 
