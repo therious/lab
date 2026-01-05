@@ -277,9 +277,34 @@ defmodule Elections.Voting do
     results = if Enum.empty?(ballots) do
       []
     else
+      # Wrap ballots with their data to preserve in error cases
       ballots
+      |> Enum.with_index()
       |> Task.async_stream(
-        fn ballot -> process_ballot(ballot, votes, election) end,
+        fn {ballot, _idx} -> 
+          try do
+            process_ballot(ballot, votes, election)
+          rescue
+            e ->
+              # Preserve ballot data even on error
+              require Logger
+              Logger.error("Error in process_ballot for ballot '#{Map.get(ballot, "title", "unknown")}': #{inspect(e)}")
+              # Return error result with preserved ballot
+              ballot_title = Map.get(ballot, "title", "Untitled Ballot")
+              %{
+                ballot_title: ballot_title,
+                candidates: Map.get(ballot, "candidates", []),
+                number_of_winners: Map.get(ballot, "number_of_winners", 1),
+                vote_count: 0,
+                quorum: nil,
+                quorum_status: nil,
+                result_status: "error",
+                is_referendum: Map.get(ballot, "yesNoReferendum", false),
+                results: %{},
+                error: "Error processing ballot: #{Exception.message(e)}"
+              }
+          end
+        end,
         max_concurrency: System.schedulers_online(),
         timeout: 30_000,
         on_timeout: :kill_task
@@ -288,7 +313,7 @@ defmodule Elections.Voting do
         {:ok, result} -> result
         {:exit, :timeout} -> 
           require Logger
-          Logger.error("Ballot processing timed out")
+          Logger.error("Ballot processing timed out - ballot data lost")
           build_error_ballot_result(%{})
         {:exit, reason} ->
           require Logger
