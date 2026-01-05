@@ -443,18 +443,27 @@ defmodule Elections.Voting do
       # Even if ALL algorithms fail, we still return basic stats
       # Algorithm failures are expected and acceptable - no warnings needed
       # Ordered by method family: Condorcet, Rating, Runoff
+      # Calculate incrementally to preserve partial results if error occurs
       algorithm_results = if vote_count > 0 do
         election_id = election.identifier || "unknown"
+        # Calculate each algorithm individually and preserve results as we go
+        ranked_pairs_result = safe_calculate_algorithm(fn -> Elections.Algorithms.RankedPairs.calculate(ballot_for_algorithms, ballot_votes) end, "ranked_pairs", election_id, ballot_title)
+        schulze_result = safe_calculate_algorithm(fn -> Elections.Algorithms.Schulze.calculate(ballot_for_algorithms, ballot_votes) end, "schulze", election_id, ballot_title)
+        score_result = safe_calculate_algorithm(fn -> Elections.Algorithms.Score.calculate(ballot_for_algorithms, ballot_votes) end, "score", election_id, ballot_title)
+        approval_result = safe_calculate_algorithm(fn -> Elections.Algorithms.Approval.calculate(ballot_for_algorithms, ballot_votes) end, "approval", election_id, ballot_title)
+        irv_stv_result = safe_calculate_algorithm(fn -> Elections.Algorithms.IRVSTV.calculate(ballot_for_algorithms, ballot_votes) end, "irv_stv", election_id, ballot_title)
+        coombs_result = safe_calculate_algorithm(fn -> Elections.Algorithms.Coombs.calculate(ballot_for_algorithms, ballot_votes) end, "coombs", election_id, ballot_title)
+        
         %{
           # Condorcet Methods
-          ranked_pairs: safe_calculate_algorithm(fn -> Elections.Algorithms.RankedPairs.calculate(ballot_for_algorithms, ballot_votes) end, "ranked_pairs", election_id, ballot_title),
-          schulze: safe_calculate_algorithm(fn -> Elections.Algorithms.Schulze.calculate(ballot_for_algorithms, ballot_votes) end, "schulze", election_id, ballot_title),
+          ranked_pairs: ranked_pairs_result,
+          schulze: schulze_result,
           # Rating Methods
-          score: safe_calculate_algorithm(fn -> Elections.Algorithms.Score.calculate(ballot_for_algorithms, ballot_votes) end, "score", election_id, ballot_title),
-          approval: safe_calculate_algorithm(fn -> Elections.Algorithms.Approval.calculate(ballot_for_algorithms, ballot_votes) end, "approval", election_id, ballot_title),
+          score: score_result,
+          approval: approval_result,
           # Runoff Methods
-          irv_stv: safe_calculate_algorithm(fn -> Elections.Algorithms.IRVSTV.calculate(ballot_for_algorithms, ballot_votes) end, "irv_stv", election_id, ballot_title),
-          coombs: safe_calculate_algorithm(fn -> Elections.Algorithms.Coombs.calculate(ballot_for_algorithms, ballot_votes) end, "coombs", election_id, ballot_title)
+          irv_stv: irv_stv_result,
+          coombs: coombs_result
         }
       else
         # No votes for this ballot - return empty results structure
@@ -462,6 +471,7 @@ defmodule Elections.Voting do
       end
       
       # Always return basic stats, even if algorithms failed
+      # Include timestamp for when results were calculated
       %{
         ballot_title: ballot_title,
         candidates: candidates,
@@ -471,7 +481,8 @@ defmodule Elections.Voting do
         quorum_status: quorum_status,
         result_status: result_status,
         is_referendum: Map.get(ballot, "yesNoReferendum", false),
-        results: algorithm_results
+        results: algorithm_results,
+        last_calculated_at: DateTime.utc_now() |> DateTime.to_iso8601()
       }
     rescue
       e ->
@@ -521,7 +532,8 @@ defmodule Elections.Voting do
           error: "Error processing ballot: #{error_message}",
           error_type: error_type,
           failed_algorithm: failed_algorithm,
-          error_timestamp: DateTime.utc_now() |> DateTime.to_iso8601()
+          error_timestamp: DateTime.utc_now() |> DateTime.to_iso8601(),
+          last_calculated_at: nil  # No successful calculation before error
         }
     end
   end
