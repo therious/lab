@@ -35,3 +35,6 @@ elections-*.tar
 npm-debug.log
 /assets/node_modules/
 
+
+/priv/repo/votes.log
+/lib/elections/build_info.json
