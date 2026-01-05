@@ -92,6 +92,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
   const resultsRef = React.useRef<any>(null);
   const [currentTime, setCurrentTime] = useState(new Date()); // For periodic relative time updates
+  const voteTimestampsRef = React.useRef<Date[]>([]); // Track vote timestamps for sliding window calculation
   
   // Use refs to avoid stale closures in polling interval
   React.useEffect(() => {
@@ -105,15 +106,18 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
   // Polling configuration (from POLLING_CONFIG)
   const POLL_ENABLED = POLLING_CONFIG.enabled;
   const POLL_INTERVAL_MS = POLLING_CONFIG.intervalMs;
-  
   // Update current time every second to refresh relative time display
+  // Also clean up old vote timestamps outside the window
   React.useEffect(() => {
     const timeInterval = setInterval(() => {
-      setCurrentTime(new Date());
+      const now = new Date();
+      setCurrentTime(now);
+      // Clean up timestamps older than 10 seconds
+      const tenSecondsAgo = new Date(now.getTime() - 10000);
+      voteTimestampsRef.current = voteTimestampsRef.current.filter(ts => ts > tenSecondsAgo);
     }, 1000);
     
     return () => clearInterval(timeInterval);
-  }, []);
   
   // Load initial results and set up websocket connection
   // Use election identifier instead of the whole object to avoid re-running on object reference changes
@@ -174,6 +178,17 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
       }
       
       debugLog('[DEBUG] Final processed - ballots:', ballots.length, 'metadata.total_votes:', metadata?.total_votes);
+      
+      // Track vote timestamps from metadata for sliding window calculation
+      if (metadata?.vote_timestamps && Array.isArray(metadata.vote_timestamps)) {
+        const now = new Date();
+        const tenSecondsAgo = new Date(now.getTime() - 10000);
+        // Convert ISO strings to Date objects and filter to last 10 seconds
+        const recentTimestamps = metadata.vote_timestamps
+          .map((ts: string) => new Date(ts))
+          .filter((ts: Date) => !isNaN(ts.getTime()) && ts > tenSecondsAgo);
+        voteTimestampsRef.current = recentTimestamps;
+      }
       
       // Only update if we have valid data
       if (metadata !== null || ballots.length > 0) {
@@ -322,6 +337,19 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
           // Check if metadata exists and has valid total_votes
           const newTotalVotes = payload.results.metadata?.total_votes;
           const currentTotalVotes = results?.metadata?.total_votes;
+          
+          // Track new votes for sliding window calculation
+          if (newTotalVotes && newTotalVotes > (currentTotalVotes || 0)) {
+            const votesAdded = newTotalVotes - (currentTotalVotes || 0);
+            // Add current timestamp for each new vote
+            const now = new Date();
+            for (let i = 0; i < votesAdded; i++) {
+              voteTimestampsRef.current.push(now);
+            }
+            // Keep only timestamps from last 10 seconds
+            const tenSecondsAgo = new Date(now.getTime() - 10000);
+            voteTimestampsRef.current = voteTimestampsRef.current.filter(ts => ts > tenSecondsAgo);
+          }
           
           // Reject zero vote updates if:
           // 1. We already have results with votes > 0, OR
@@ -556,7 +584,22 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
         {metadata && (
           <>
             <div style={{marginTop: '1rem', padding: '1rem', background: '#f5f5f5', borderRadius: '4px'}}>
-              <p><strong>Total Ballots Cast:</strong> {formatVoteCount(metadata.total_votes)}</p>
+              <p>
+                <strong>Total Ballots Cast:</strong> {formatVoteCount(metadata.total_votes)}
+                {(() => {
+                  // Calculate votes per second using sliding window (last 10 seconds)
+                  const now = new Date();
+                  const windowSeconds = 10;
+                  const windowStart = new Date(now.getTime() - windowSeconds * 1000);
+                  const recentVotes = voteTimestampsRef.current.filter(ts => ts > windowStart);
+                  
+                  if (recentVotes.length > 0) {
+                    const votesPerSecond = recentVotes.length / windowSeconds;
+                    return ` (${votesPerSecond.toFixed(2)} votes/sec)`;
+                  }
+                  return '';
+                })()}
+              </p>
               {metadata.voting_end && (
                 <p><strong>Voting Ends:</strong> {new Date(metadata.voting_end).toLocaleString()}</p>
               )}
@@ -597,7 +640,22 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
           <div style={{marginBottom: '1rem', padding: '1rem', background: '#e8f4f8', borderRadius: '8px', border: '1px solid #ccc'}}>
             <p style={{display: 'flex', margin: '0.5rem 0'}}>
               <strong style={{minWidth: '140px', textAlign: 'right', marginRight: '1rem'}}>Total Ballots Cast:</strong>
-              <span>{metadata.total_votes != null ? formatVoteCount(metadata.total_votes) : '—'}</span>
+              <span>
+                {metadata.total_votes != null ? formatVoteCount(metadata.total_votes) : '—'}
+                {(() => {
+                  // Calculate votes per second using sliding window (last 10 seconds)
+                  const now = new Date();
+                  const windowSeconds = 10;
+                  const windowStart = new Date(now.getTime() - windowSeconds * 1000);
+                  const recentVotes = voteTimestampsRef.current.filter(ts => ts > windowStart);
+                  
+                  if (recentVotes.length > 0) {
+                    const votesPerSecond = recentVotes.length / windowSeconds;
+                    return ` (${votesPerSecond.toFixed(2)} votes/sec)`;
+                  }
+                  return '';
+                })()}
+              </span>
             </p>
             {votingStart && (
               <p style={{display: 'flex', margin: '0.5rem 0'}}>
