@@ -1,6 +1,6 @@
 import React from 'react';
 import styled, {css} from 'styled-components';
-// import {DagViewer} from "./DagViewer";
+import {DagViewer} from "./DagViewer";
 
 const solidBorder =css`
   border: 1px solid black;
@@ -149,7 +149,7 @@ export const  StateForm = ({expanded, stConfig, diagram}) => {
     <FsmTag style={{height}}>
       <MachineName>{machineName}</MachineName>
       <textarea readOnly={true} value={diagram}/>
-      {/*<DagViewer dot={diagram} width={600} height={600}/>*/}
+      <DagViewer dot={diagram} width={600} height={600}/>
       <hr/>
       <PaddedDiv>
         <SectionLabel>States</SectionLabel>

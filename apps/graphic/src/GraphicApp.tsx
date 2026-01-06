@@ -2,6 +2,7 @@ import React,  {useState, useCallback, useRef, useEffect} from 'react';
 import './App.css';
 import {instance} from "@viz-js/viz";
 import {stateForms} from "./InjectedStateForms";
+import {DagViewer} from "./DagViewer";
 
 import {
   QueryClient,
@@ -81,10 +82,10 @@ function Example()
       }}>
         {stateForms()}
 
-        {/*{isPending ? <span>Loading...</span> : isError ? <span>Error: {error.message}</span> :*/}
-        {/*  <DagViewer dot={data} height={"100vh"} width={"100vw"}/>*/}
-        {/*  // <AdaptSvgSvg svgsvg={data}/>*/}
-        {/*}*/}
+        {isPending ? <span>Loading...</span> : isError ? <span>Error: {error.message}</span> :
+          <DagViewer dot={data} height={"100vh"} width={"100vw"}/>
+          // <AdaptSvgSvg svgsvg={data}/>
+        }
       </div>
     </div>
   );
