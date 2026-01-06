@@ -79,12 +79,23 @@ function Example()
         width: 'fit-content',
         height: 'fit-content',
         border: '5px dotted red',
+        marginBottom: '20px',
       }}>
         {stateForms()}
+      </div>
 
-        {isPending ? <span>Loading...</span> : isError ? <span>Error: {error.message}</span> :
-          <DagViewer dot={data} height={"100vh"} width={"100vw"}/>
-          // <AdaptSvgSvg svgsvg={data}/>
+      <div style={{
+        width: '100%',
+        height: '70vh',
+        minHeight: '500px',
+        border: '2px solid blue',
+        margin: '20px 0',
+        padding: '10px',
+        boxSizing: 'border-box',
+      }}>
+        {isPending ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><span>Loading...</span></div> : 
+         isError ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'red' }}><span>Error: {error.message}</span></div> :
+          <DagViewer dot={data} height={"100%"} width={"100%"}/>
         }
       </div>
     </div>

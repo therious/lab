@@ -84,9 +84,9 @@ export function DagViewer({ dot, width = '100%', height = '100%' }: DagViewerPro
         width,
         height,
         overflow: 'auto',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
+        display: 'block',
+        minHeight: typeof height === 'number' ? `${height}px` : height === '100%' ? '100%' : '400px',
+        minWidth: typeof width === 'number' ? `${width}px` : width === '100%' ? '100%' : '400px',
       }}
     />
   );
