@@ -44,7 +44,6 @@ const MachineName = styled.div`
   padding:          10px;
   font-size:        16px;
   font-weight:      bold;
-  ::before {content: "Machine: "}
 `;
 
 
@@ -162,7 +161,7 @@ export const  StateForm = ({expanded, stConfig, diagram}) => {
   return(
     <FsmTag style={{height}}>
       <FsmFormSection>
-        <MachineName>{machineName}</MachineName>
+        <MachineName style={{textAlign: 'left'}}>{machineName}</MachineName>
         <textarea readOnly={true} value={diagram} style={{width: '100%', minHeight: '100px', marginBottom: '10px'}}/>
         <hr/>
         <PaddedDiv>
