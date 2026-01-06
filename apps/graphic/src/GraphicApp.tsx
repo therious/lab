@@ -85,36 +85,45 @@ function Example()
       </div>
 
       <div style={{
+        display: 'flex',
+        gap: '20px',
         width: '100%',
         height: '70vh',
         minHeight: '500px',
-        border: '2px solid blue',
         margin: '20px 0',
-        padding: '10px',
-        boxSizing: 'border-box',
       }}>
-        <h3>Physics Diagram (from /dot/physics.dot)</h3>
-        {isPending ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><span>Loading...</span></div> : 
-         isError ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'red' }}><span>Error: {error.message}</span></div> :
-          data ? <DagViewer dot={data} height={"calc(100% - 40px)"} width={"100%"}/> :
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'orange' }}>
-            <span>No data available</span>
+        <div style={{
+          flex: '1',
+          border: '2px solid blue',
+          padding: '10px',
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          <h3>Physics Diagram (from /dot/physics.dot)</h3>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            {isPending ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><span>Loading...</span></div> : 
+             isError ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'red' }}><span>Error: {error.message}</span></div> :
+              data ? <DagViewer dot={data} height={"100%"} width={"100%"}/> :
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'orange' }}>
+                <span>No data available</span>
+              </div>
+            }
           </div>
-        }
-      </div>
-      
-      <div style={{
-        width: '100%',
-        height: '70vh',
-        minHeight: '500px',
-        border: '2px solid green',
-        margin: '20px 0',
-        padding: '10px',
-        boxSizing: 'border-box',
-      }}>
-        <h3>Test Diagram (hardcoded)</h3>
-        <DagViewer 
-          dot={`digraph {
+        </div>
+        
+        <div style={{
+          flex: '1',
+          border: '2px solid green',
+          padding: '10px',
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          <h3>Test Diagram (hardcoded)</h3>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <DagViewer 
+              dot={`digraph {
   rankdir=LR;
   node [shape=circle style=filled];
   A [fillcolor=lightblue];
@@ -124,9 +133,11 @@ function Example()
   B -> C [label="step 2"];
   C -> A [label="step 3"];
 }`} 
-          height={"calc(100% - 40px)"} 
-          width={"100%"}
-        />
+              height={"100%"} 
+              width={"100%"}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
