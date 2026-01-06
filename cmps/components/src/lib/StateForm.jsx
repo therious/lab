@@ -154,6 +154,7 @@ export const  StateForm = ({expanded, stConfig, diagram}) => {
   const {id:machineName,states={},context={} } = stConfig;
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [formWidth, setFormWidth] = useState(800);
+  const [showDiagram, setShowDiagram] = useState(true);
 
   const stateList = Object.keys(states);
   const evtTokens = extractEventTokens(stConfig);
@@ -219,7 +220,6 @@ export const  StateForm = ({expanded, stConfig, diagram}) => {
         <>
           <FsmFormSection>
             <MachineName style={{textAlign: 'left', marginTop: '30px'}}>{machineName}</MachineName>
-            <textarea readOnly={true} value={diagram} style={{width: '100%', minHeight: '100px', marginBottom: '10px'}}/>
             <hr/>
             <PaddedDiv>
               <SectionLabel>States</SectionLabel>
@@ -234,8 +234,40 @@ export const  StateForm = ({expanded, stConfig, diagram}) => {
             </PaddedDiv>
           </FsmFormSection>
           <FsmDiagramSection>
-            <h4 style={{margin: '30px 0 10px 0', fontSize: '14px'}}>Diagram</h4>
-            <DagViewer dot={diagram} width={"100%"} height={"500px"}/>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '30px', marginBottom: '10px'}}>
+              <h4 style={{margin: 0, fontSize: '14px'}}>{showDiagram ? 'Diagram' : 'Dot Source'}</h4>
+              <button
+                onClick={() => setShowDiagram(!showDiagram)}
+                style={{
+                  padding: '2px 8px',
+                  fontSize: '11px',
+                  border: '1px solid #888',
+                  backgroundColor: '#fff',
+                  cursor: 'pointer',
+                }}
+                title={showDiagram ? 'Show dot source' : 'Show diagram'}
+              >
+                {showDiagram ? '📄' : '📊'}
+              </button>
+            </div>
+            {showDiagram ? (
+              <DagViewer dot={diagram} width={"100%"} height={"500px"}/>
+            ) : (
+              <textarea 
+                readOnly={true} 
+                value={diagram} 
+                style={{
+                  width: '100%', 
+                  height: '500px', 
+                  fontFamily: 'monospace',
+                  fontSize: '12px',
+                  padding: '10px',
+                  border: '1px solid #ccc',
+                  backgroundColor: '#f9f9f9',
+                  resize: 'none',
+                }}
+              />
+            )}
           </FsmDiagramSection>
         </>
       )}
