@@ -93,10 +93,40 @@ function Example()
         padding: '10px',
         boxSizing: 'border-box',
       }}>
+        <h3>Physics Diagram (from /dot/physics.dot)</h3>
         {isPending ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><span>Loading...</span></div> : 
          isError ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'red' }}><span>Error: {error.message}</span></div> :
-          <DagViewer dot={data} height={"100%"} width={"100%"}/>
+          data ? <DagViewer dot={data} height={"calc(100% - 40px)"} width={"100%"}/> :
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'orange' }}>
+            <span>No data available</span>
+          </div>
         }
+      </div>
+      
+      <div style={{
+        width: '100%',
+        height: '70vh',
+        minHeight: '500px',
+        border: '2px solid green',
+        margin: '20px 0',
+        padding: '10px',
+        boxSizing: 'border-box',
+      }}>
+        <h3>Test Diagram (hardcoded)</h3>
+        <DagViewer 
+          dot={`digraph {
+  rankdir=LR;
+  node [shape=circle style=filled];
+  A [fillcolor=lightblue];
+  B [fillcolor=lightgreen];
+  C [fillcolor=lightyellow];
+  A -> B [label="step 1"];
+  B -> C [label="step 2"];
+  C -> A [label="step 3"];
+}`} 
+          height={"calc(100% - 40px)"} 
+          width={"100%"}
+        />
       </div>
     </div>
   );
