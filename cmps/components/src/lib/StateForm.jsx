@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import styled, {css} from 'styled-components';
 import {DagViewer} from "./DagViewer";
 
@@ -20,12 +20,13 @@ const containerPadding =css`
 const FsmTag = styled.div`
   overflow-y: hidden;
   background-color: #fefefe;
-  margin:           10px auto; /* 15% from the top and centered */
+  margin:           10px;
   padding:          10px;
   border:           1px solid #888;
-  width:            95%;
+  position:         relative;
   display:          flex;
   gap:              20px;
+  transition:       width 0.3s ease, height 0.3s ease;
 `;
 
 const FsmFormSection = styled.div`
@@ -151,35 +152,72 @@ const extractEventTokens = (stConfig) => {
 export const  StateForm = ({expanded, stConfig, diagram}) => {
 
   const {id:machineName,states={},context={} } = stConfig;
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const stateList = Object.keys(states);
   const evtTokens = extractEventTokens(stConfig);
 
   console.info(`Stateform ${stConfig.id} - `, stConfig);
 
-  const height = expanded? 'auto': '50px';
+  const toggleCollapse = () => setIsCollapsed(!isCollapsed);
+
   return(
-    <FsmTag style={{height}}>
-      <FsmFormSection>
-        <MachineName style={{textAlign: 'left'}}>{machineName}</MachineName>
-        <textarea readOnly={true} value={diagram} style={{width: '100%', minHeight: '100px', marginBottom: '10px'}}/>
-        <hr/>
-        <PaddedDiv>
-          <SectionLabel>States</SectionLabel>
-          {stateList.map((stName, i) => (<StTag key={i}>{stName}</StTag>))}
-        </PaddedDiv>
-        <hr/>
-        <Context context={context}/>
-        <hr/>
-        <PaddedDiv>
-          <SectionLabel>Events</SectionLabel>
-          {evtTokens.map((evtName, i) => (<EvtTag key={i}>{evtName}</EvtTag>))}
-        </PaddedDiv>
-      </FsmFormSection>
-      <FsmDiagramSection>
-        <h4 style={{margin: '0 0 10px 0', fontSize: '14px'}}>Diagram</h4>
-        <DagViewer dot={diagram} width={"100%"} height={"500px"}/>
-      </FsmDiagramSection>
+    <FsmTag style={{
+      width: isCollapsed ? '250px' : '800px',
+      height: isCollapsed ? '60px' : 'auto',
+      minHeight: isCollapsed ? '60px' : '500px',
+    }}>
+      <button
+        onClick={toggleCollapse}
+        style={{
+          position: 'absolute',
+          top: '5px',
+          left: '5px',
+          width: '24px',
+          height: '24px',
+          padding: 0,
+          border: '1px solid #888',
+          backgroundColor: '#fff',
+          cursor: 'pointer',
+          fontSize: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10,
+        }}
+        title={isCollapsed ? 'Expand' : 'Collapse'}
+      >
+        {isCollapsed ? '▶' : '▼'}
+      </button>
+      
+      {isCollapsed ? (
+        <MachineName style={{textAlign: 'left', marginLeft: '30px', marginTop: '5px'}}>
+          {machineName}
+        </MachineName>
+      ) : (
+        <>
+          <FsmFormSection>
+            <MachineName style={{textAlign: 'left', marginTop: '30px'}}>{machineName}</MachineName>
+            <textarea readOnly={true} value={diagram} style={{width: '100%', minHeight: '100px', marginBottom: '10px'}}/>
+            <hr/>
+            <PaddedDiv>
+              <SectionLabel>States</SectionLabel>
+              {stateList.map((stName, i) => (<StTag key={i}>{stName}</StTag>))}
+            </PaddedDiv>
+            <hr/>
+            <Context context={context}/>
+            <hr/>
+            <PaddedDiv>
+              <SectionLabel>Events</SectionLabel>
+              {evtTokens.map((evtName, i) => (<EvtTag key={i}>{evtName}</EvtTag>))}
+            </PaddedDiv>
+          </FsmFormSection>
+          <FsmDiagramSection>
+            <h4 style={{margin: '30px 0 10px 0', fontSize: '14px'}}>Diagram</h4>
+            <DagViewer dot={diagram} width={"100%"} height={"500px"}/>
+          </FsmDiagramSection>
+        </>
+      )}
     </FsmTag>
   )
 }
