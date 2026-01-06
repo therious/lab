@@ -259,12 +259,11 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
 
   const handleContextChange = useCallback((key, value) => {
     if (fsmInstanceRef.current) {
-      const newContext = { ...currentContext, [key]: value };
-      setCurrentContext(newContext);
-      // Send update event if the machine supports it
-      fsmInstanceRef.current.send({ type: 'update', ...newContext });
+      // Send update event with the changed value
+      // The machine will update its context and notify us via subscription
+      fsmInstanceRef.current.send({ type: 'update', [key]: value });
     }
-  }, [currentContext]);
+  }, []);
 
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
   
