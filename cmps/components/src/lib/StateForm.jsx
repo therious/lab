@@ -199,6 +199,23 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
         const fsmInst = FsmControl.instantiate(fsmDef, true);
         fsmInstanceRef.current = fsmInst;
 
+        // Helper function to highlight only the current state in diagram
+        const highlightCurrentState = (diagram, currentStateValue) => {
+          // First, remove ALL fillcolor attributes from all states
+          let cleanedDiagram = diagram.replace(/fillcolor=[^\s\]]*/g, '');
+          // Clean up any double spaces that might result
+          cleanedDiagram = cleanedDiagram.replace(/\s+/g, ' ');
+          // Now add fillcolor only to the current state
+          return cleanedDiagram.replace(
+            new RegExp(`"${currentStateValue}" \\[([^\\]]*)\\]`, 'g'),
+            (match, attrs) => {
+              // Ensure we have a clean attributes string and add fillcolor
+              const cleanAttrs = attrs.trim().replace(/\s+/g, ' ');
+              return `"${currentStateValue}" [${cleanAttrs} fillcolor=palegreen]`;
+            }
+          );
+        };
+
         // Subscribe to state changes
         fsmInst.subscribe((state) => {
           const stateValue = typeof state.value === 'string' ? state.value : Object.keys(state.value)[0];
@@ -207,15 +224,7 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
           // Regenerate diagram with current state highlighted
           if (fsmConfigRef.current) {
             const updatedDiagram = fsmConfigToDot(fsmConfigRef.current, {});
-            // Update diagram to highlight current state - replace the node definition
-            const highlightedDiagram = updatedDiagram.replace(
-              new RegExp(`"${stateValue}" \\[([^\\]]*)\\]`, 'g'),
-              (match, attrs) => {
-                // Remove existing fillcolor if present, then add new one
-                const cleanAttrs = attrs.replace(/fillcolor=[^\\s]*/g, '').trim();
-                return `"${stateValue}" [${cleanAttrs} fillcolor=palegreen]`;
-              }
-            );
+            const highlightedDiagram = highlightCurrentState(updatedDiagram, stateValue);
             setCurrentDiagram(highlightedDiagram);
           }
         });
@@ -228,13 +237,7 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
         // Update initial diagram
         if (fsmConfigRef.current) {
           const updatedDiagram = fsmConfigToDot(fsmConfigRef.current, {});
-          const highlightedDiagram = updatedDiagram.replace(
-            new RegExp(`"${initialValue}" \\[([^\\]]*)\\]`, 'g'),
-            (match, attrs) => {
-              const cleanAttrs = attrs.replace(/fillcolor=[^\\s]*/g, '').trim();
-              return `"${initialValue}" [${cleanAttrs} fillcolor=palegreen]`;
-            }
-          );
+          const highlightedDiagram = highlightCurrentState(updatedDiagram, initialValue);
           setCurrentDiagram(highlightedDiagram);
         }
       } catch (err) {
