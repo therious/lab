@@ -1,6 +1,7 @@
-import React, {useState} from 'react';
+import React, {useState, useRef, useEffect, useCallback} from 'react';
 import styled, {css} from 'styled-components';
 import {DagViewer} from "./DagViewer";
+import {FsmControl} from '@therious/fsm';
 
 const solidBorder =css`
   border: 1px solid black;
@@ -106,7 +107,7 @@ const ContextVarName = styled.span`
   ::after { content: ":"};
 `;
 
-const ContextVarValue = styled.span`
+const ContextVarValue = styled.input`
   ${solidBorder};
   ${elementText};
 
@@ -116,6 +117,8 @@ const ContextVarValue = styled.span`
   width: auto;
   /* adjust the width; make sure the total of both is 100% */
   background: white;
+  border: 1px solid #ccc;
+  padding: 2px 4px;
 `;
 
 const SectionLabel = styled.span`
@@ -132,14 +135,23 @@ const PaddedDiv = styled.div`
 `;
 
 
-const Context = ({context}) =>
+const Context = ({context, onContextChange}) =>
   <ContextTag>
     <SectionLabel>Context</SectionLabel>
     {
       Object.entries(context).map(([k,v],i)=>
       <ContextPair key={i}>
         <ContextVarName>{k}</ContextVarName>
-        <ContextVarValue>{v?.toString()||v}</ContextVarValue></ContextPair>)
+        <ContextVarValue 
+          value={v?.toString()||v||''} 
+          onChange={(e) => {
+            const newValue = e.target.value;
+            // Try to parse as number if original was a number
+            const parsedValue = typeof v === 'number' ? parseFloat(newValue) || 0 : newValue;
+            onContextChange(k, parsedValue);
+          }}
+        />
+      </ContextPair>)
     }
   </ContextTag>;
 
@@ -153,18 +165,99 @@ const extractEventTokens = (stConfig) => {
   })
   return [...tokenSet];
 }
-export const  StateForm = ({expanded, stConfig, diagram}) => {
+export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
 
-  const {id:machineName,states={},context={} } = stConfig;
+  const {id:machineName,states={},context:initialContext={} } = stConfig;
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [formWidth, setFormWidth] = useState(800);
   const [formHeight, setFormHeight] = useState(500);
   const [showDiagram, setShowDiagram] = useState(true);
+  const [currentState, setCurrentState] = useState(null);
+  const [currentContext, setCurrentContext] = useState(initialContext);
+  const [currentDiagram, setCurrentDiagram] = useState(diagram);
+  
+  const fsmInstanceRef = useRef(null);
+  const fsmConfigRef = useRef(fsmConfig || null);
 
   const stateList = Object.keys(states);
   const evtTokens = extractEventTokens(stConfig);
 
   console.info(`Stateform ${stConfig.id} - `, stConfig);
+
+  // Instantiate state machine if not already done
+  useEffect(() => {
+    if (!fsmConfigRef.current) {
+      console.warn('No FsmConfig provided to StateForm');
+      return;
+    }
+
+    if (!fsmInstanceRef.current) {
+      try {
+        const behavior = {};
+        const options = {};
+        const fsmDef = FsmControl.define(fsmConfigRef.current, behavior, options);
+        const fsmInst = FsmControl.instantiate(fsmDef, true);
+        fsmInstanceRef.current = fsmInst;
+
+        // Subscribe to state changes
+        fsmInst.subscribe((state) => {
+          setCurrentState(state.value);
+          setCurrentContext(state.context);
+          // Regenerate diagram with current state highlighted
+          if (fsmConfigRef.current) {
+            const {fsmConfigToDot} = require('@therious/fsm');
+            const updatedDiagram = fsmConfigToDot(fsmConfigRef.current, {});
+            // Update diagram to highlight current state
+            const highlightedDiagram = updatedDiagram.replace(
+              new RegExp(`"${state.value}" \\[([^\\]]+)\\]`, 'g'),
+              `"${state.value}" [$1 fillcolor=palegreen]`
+            );
+            setCurrentDiagram(highlightedDiagram);
+          }
+        });
+
+        // Set initial state
+        const initialState = fsmInst.state;
+        setCurrentState(initialState.value);
+        setCurrentContext(initialState.context);
+        // Update initial diagram
+        if (fsmConfigRef.current) {
+          const {fsmConfigToDot} = require('@therious/fsm');
+          const updatedDiagram = fsmConfigToDot(fsmConfigRef.current, {});
+          const highlightedDiagram = updatedDiagram.replace(
+            new RegExp(`"${initialState.value}" \\[([^\\]]+)\\]`, 'g'),
+            `"${initialState.value}" [$1 fillcolor=palegreen]`
+          );
+          setCurrentDiagram(highlightedDiagram);
+        }
+      } catch (err) {
+        console.error('Failed to instantiate state machine:', err);
+      }
+    }
+
+    return () => {
+      // Cleanup: stop the interpreter if component unmounts
+      if (fsmInstanceRef.current) {
+        fsmInstanceRef.current.stop();
+        fsmInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleEvent = useCallback((eventName) => {
+    if (fsmInstanceRef.current) {
+      fsmInstanceRef.current.send({ type: eventName });
+    }
+  }, []);
+
+  const handleContextChange = useCallback((key, value) => {
+    if (fsmInstanceRef.current) {
+      const newContext = { ...currentContext, [key]: value };
+      setCurrentContext(newContext);
+      // Send update event if the machine supports it
+      fsmInstanceRef.current.send({ type: 'update', ...newContext });
+    }
+  }, [currentContext]);
 
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
   
@@ -233,14 +326,31 @@ export const  StateForm = ({expanded, stConfig, diagram}) => {
             <hr/>
             <PaddedDiv>
               <SectionLabel>States</SectionLabel>
-              {stateList.map((stName, i) => (<StTag key={i}>{stName}</StTag>))}
+              {stateList.map((stName, i) => (
+                <StTag 
+                  key={i}
+                  style={{
+                    backgroundColor: currentState === stName ? '#90EE90' : 'white',
+                    fontWeight: currentState === stName ? 'bold' : 'normal',
+                  }}
+                >
+                  {stName}
+                </StTag>
+              ))}
             </PaddedDiv>
             <hr/>
-            <Context context={context}/>
+            <Context context={currentContext} onContextChange={handleContextChange}/>
             <hr/>
             <PaddedDiv>
               <SectionLabel>Events</SectionLabel>
-              {evtTokens.map((evtName, i) => (<EvtTag key={i}>{evtName}</EvtTag>))}
+              {evtTokens.map((evtName, i) => (
+                <EvtTag 
+                  key={i} 
+                  onClick={() => handleEvent(evtName)}
+                >
+                  {evtName}
+                </EvtTag>
+              ))}
             </PaddedDiv>
           </FsmFormSection>
           <FsmDiagramSection>
@@ -261,11 +371,11 @@ export const  StateForm = ({expanded, stConfig, diagram}) => {
               </button>
             </div>
             {showDiagram ? (
-              <DagViewer dot={diagram} width={"100%"} height={"calc(100% - 40px)"}/>
+              <DagViewer dot={currentDiagram} width={"100%"} height={"calc(100% - 40px)"}/>
             ) : (
               <textarea 
                 readOnly={true} 
-                value={diagram} 
+                value={currentDiagram} 
                 style={{
                   width: '100%', 
                   height: 'calc(100% - 40px)', 

@@ -25,7 +25,7 @@ export class InjectedStateForms
       const options       = {};
       const xstateConfig  = createXStateConfiguration(fsmConfig, behavior, options);
       const diagram       = fsmConfigToDot(fsmConfig, behavior);
-     return <StateForm key={xstateConfig.id} expanded={true} stConfig={xstateConfig} diagram={diagram}/>
+     return <StateForm key={xstateConfig.id} expanded={true} stConfig={xstateConfig} diagram={diagram} fsmConfig={fsmConfig}/>
     });
     return (
       <div style={{
