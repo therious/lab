@@ -338,6 +338,8 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
                   style={{
                     backgroundColor: currentState === stName ? '#90EE90' : 'white',
                     fontWeight: currentState === stName ? 'bold' : 'normal',
+                    borderColor: currentState === stName ? '#228B22' : '#333',
+                    borderWidth: currentState === stName ? '2px' : '1px',
                   }}
                 >
                   {stName}
