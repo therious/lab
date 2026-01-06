@@ -30,12 +30,13 @@ const FsmTag = styled.div`
 `;
 
 const FsmFormSection = styled.div`
-  flex: 1;
+  flex: 0 0 auto;
   min-width: 0;
+  max-width: 400px;
 `;
 
 const FsmDiagramSection = styled.div`
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 400px;
   display: flex;
   flex-direction: column;
