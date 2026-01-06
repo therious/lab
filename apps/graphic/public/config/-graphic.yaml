@@ -9,6 +9,7 @@ sequence:
 tokens:
   - stateMachines.securityLight
   - testEvents.securityLight
+  - stateMachines.vendingMachine
 
 # this is just a convenient set of definitions for repeated events in a test
 eventDefinitions:
@@ -72,6 +73,30 @@ stateMachines:
       {from: [Night, On], to: Day,    cond: (c)=>c.ambientLight > 0.5  },
       {from: [Night, On], to: On,      evt: motion    }, # transition on receiving event tokens
       {from: On,         to: Night,  after: 5000      } # fizbin generates timer based events
+    ]
+
+  vendingMachine:
+    name: Vending Machine
+    start: Idle
+    states:
+      - Idle
+      - Collecting
+      - Dispensing
+      - OutOfStock
+    context:
+      type:
+      balance: 0
+      itemPrice: 1.50
+      stock: 10
+    updates:
+      update: (c,e)=>({...c, ...e})
+    transitions: [
+      {from: Idle,        to: Collecting, evt: insertCoin    }, # user inserts coin
+      {from: Collecting,  to: Idle,        cond: (c)=>c.balance < c.itemPrice && c.balance > 0 }, # not enough, return to idle
+      {from: Collecting,  to: Dispensing,  cond: (c)=>c.balance >= c.itemPrice && c.stock > 0 }, # enough money and in stock
+      {from: Collecting,  to: OutOfStock,  cond: (c)=>c.balance >= c.itemPrice && c.stock <= 0 }, # enough money but out of stock
+      {from: Dispensing,  to: Idle,        evt: itemDispensed }, # item dispensed, reset
+      {from: OutOfStock,  to: Idle,        evt: refund        }, # refund and return to idle
     ]
 
 
