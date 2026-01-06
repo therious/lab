@@ -205,35 +205,32 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
           const stateNames = fsmConfigRef.current?.states || [];
           const defaultFillColor = 'cornsilk'; // Default from fsm-visualization-dot.ts
           
-          // Remove fillcolor only from state node definitions (not from transitions)
-          // State nodes have pattern: "StateName" [attributes]
-          // Transitions have pattern: "FromState"->"ToState" [attributes]
-          // We only want to match state nodes, not transitions
-          stateNames.forEach(stateName => {
-            // Match only state node definitions (not transitions which have ->)
-            const stateNodePattern = new RegExp(`"${stateName}" \\[([^\\]]*)\\]`, 'g');
-            cleanedDiagram = cleanedDiagram.replace(stateNodePattern, (match, attrs) => {
-              // Remove existing fillcolor from this state node only
-              const cleanAttrs = attrs.replace(/fillcolor=[^\s\]]*/g, '').trim().replace(/\s+/g, ' ');
-              return match; // Keep original for now, we'll replace all at once
-            });
-          });
+          let cleanedDiagram = diagram;
           
-          // Now add fillcolor to all state nodes: palegreen for current, cornsilk for others
-          // Only match state nodes (not transitions which contain ->)
+          // Process each state node definition
+          // State nodes: "StateName" [attributes] (no -> in the line)
+          // Transitions: "FromState"->"ToState" [attributes] (has -> in the line)
           stateNames.forEach(stateName => {
             const fillColor = stateName === currentStateValue ? 'palegreen' : defaultFillColor;
-            // Match state nodes only - they don't contain -> in the pattern
-            const stateNodePattern = new RegExp(`"${stateName}" \\[([^\\]]*)\\]`, 'g');
-            cleanedDiagram = cleanedDiagram.replace(stateNodePattern, (match, attrs) => {
-              // Only process if this is a state node (check that match doesn't contain ->)
-              if (match.includes('->')) {
-                return match; // This is a transition, skip it
+            
+            // Match state node definitions only (lines that don't contain ->)
+            // We need to match the entire line to check for ->
+            const lines = cleanedDiagram.split('\n');
+            const processedLines = lines.map(line => {
+              // Check if this line is a state node definition (contains state name but no ->)
+              const stateNodePattern = new RegExp(`"${stateName}" \\[([^\\]]*)\\]`, 'g');
+              if (line.includes(`"${stateName}"`) && !line.includes('->')) {
+                // This is a state node definition, process it
+                return line.replace(stateNodePattern, (match, attrs) => {
+                  // Remove any existing fillcolor and add the correct one
+                  const cleanAttrs = attrs.replace(/fillcolor=[^\s\]]*/g, '').trim().replace(/\s+/g, ' ');
+                  return `"${stateName}" [${cleanAttrs} fillcolor=${fillColor}]`;
+                });
               }
-              // Remove any existing fillcolor and add the correct one
-              const cleanAttrs = attrs.replace(/fillcolor=[^\s\]]*/g, '').trim().replace(/\s+/g, ' ');
-              return `"${stateName}" [${cleanAttrs} fillcolor=${fillColor}]`;
+              // This is a transition or other line, leave it unchanged
+              return line;
             });
+            cleanedDiagram = processedLines.join('\n');
           });
           
           return cleanedDiagram;
