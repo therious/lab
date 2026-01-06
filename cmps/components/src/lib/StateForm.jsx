@@ -201,19 +201,29 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
 
         // Helper function to highlight only the current state in diagram
         const highlightCurrentState = (diagram, currentStateValue) => {
-          // First, remove ALL fillcolor attributes from all states
+          // Get all state names from the diagram
+          const stateNames = fsmConfigRef.current?.states || [];
+          const defaultFillColor = 'cornsilk'; // Default from fsm-visualization-dot.ts
+          
+          // First, remove ALL fillcolor attributes from all state nodes
           let cleanedDiagram = diagram.replace(/fillcolor=[^\s\]]*/g, '');
           // Clean up any double spaces that might result
           cleanedDiagram = cleanedDiagram.replace(/\s+/g, ' ');
-          // Now add fillcolor only to the current state
-          return cleanedDiagram.replace(
-            new RegExp(`"${currentStateValue}" \\[([^\\]]*)\\]`, 'g'),
-            (match, attrs) => {
-              // Ensure we have a clean attributes string and add fillcolor
-              const cleanAttrs = attrs.trim().replace(/\s+/g, ' ');
-              return `"${currentStateValue}" [${cleanAttrs} fillcolor=palegreen]`;
-            }
-          );
+          
+          // Now add fillcolor to all states: palegreen for current, cornsilk for others
+          stateNames.forEach(stateName => {
+            const fillColor = stateName === currentStateValue ? 'palegreen' : defaultFillColor;
+            cleanedDiagram = cleanedDiagram.replace(
+              new RegExp(`"${stateName}" \\[([^\\]]*)\\]`, 'g'),
+              (match, attrs) => {
+                // Ensure we have a clean attributes string and add fillcolor
+                const cleanAttrs = attrs.trim().replace(/\s+/g, ' ');
+                return `"${stateName}" [${cleanAttrs} fillcolor=${fillColor}]`;
+              }
+            );
+          });
+          
+          return cleanedDiagram;
         };
 
         // Subscribe to state changes
