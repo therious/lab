@@ -1,7 +1,7 @@
 import React, {useState, useRef, useEffect, useCallback} from 'react';
 import styled, {css} from 'styled-components';
 import {DagViewer} from "./DagViewer";
-import {FsmControl} from '@therious/fsm';
+import {FsmControl, fsmConfigToDot} from '@therious/fsm';
 
 const solidBorder =css`
   border: 1px solid black;
@@ -201,16 +201,20 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
 
         // Subscribe to state changes
         fsmInst.subscribe((state) => {
-          setCurrentState(state.value);
+          const stateValue = typeof state.value === 'string' ? state.value : Object.keys(state.value)[0];
+          setCurrentState(stateValue);
           setCurrentContext(state.context);
           // Regenerate diagram with current state highlighted
           if (fsmConfigRef.current) {
-            const {fsmConfigToDot} = require('@therious/fsm');
             const updatedDiagram = fsmConfigToDot(fsmConfigRef.current, {});
-            // Update diagram to highlight current state
+            // Update diagram to highlight current state - replace the node definition
             const highlightedDiagram = updatedDiagram.replace(
-              new RegExp(`"${state.value}" \\[([^\\]]+)\\]`, 'g'),
-              `"${state.value}" [$1 fillcolor=palegreen]`
+              new RegExp(`"${stateValue}" \\[([^\\]]*)\\]`, 'g'),
+              (match, attrs) => {
+                // Remove existing fillcolor if present, then add new one
+                const cleanAttrs = attrs.replace(/fillcolor=[^\\s]*/g, '').trim();
+                return `"${stateValue}" [${cleanAttrs} fillcolor=palegreen]`;
+              }
             );
             setCurrentDiagram(highlightedDiagram);
           }
@@ -218,15 +222,18 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
 
         // Set initial state
         const initialState = fsmInst.state;
-        setCurrentState(initialState.value);
+        const initialValue = typeof initialState.value === 'string' ? initialState.value : Object.keys(initialState.value)[0];
+        setCurrentState(initialValue);
         setCurrentContext(initialState.context);
         // Update initial diagram
         if (fsmConfigRef.current) {
-          const {fsmConfigToDot} = require('@therious/fsm');
           const updatedDiagram = fsmConfigToDot(fsmConfigRef.current, {});
           const highlightedDiagram = updatedDiagram.replace(
-            new RegExp(`"${initialState.value}" \\[([^\\]]+)\\]`, 'g'),
-            `"${initialState.value}" [$1 fillcolor=palegreen]`
+            new RegExp(`"${initialValue}" \\[([^\\]]*)\\]`, 'g'),
+            (match, attrs) => {
+              const cleanAttrs = attrs.replace(/fillcolor=[^\\s]*/g, '').trim();
+              return `"${initialValue}" [${cleanAttrs} fillcolor=palegreen]`;
+            }
           );
           setCurrentDiagram(highlightedDiagram);
         }
