@@ -1,42 +1,17 @@
-import React,  {useState, useCallback, useRef, useEffect, useMemo} from 'react';
+import React,  {useState, useCallback, useRef, useEffect} from 'react';
 import './App.css';
 import {instance} from "@viz-js/viz";
-import {stateForms, InjectedStateForms} from "./InjectedStateForms";
-import {DagViewer} from "./DagViewer";
+import {stateForms} from "./InjectedStateForms";
 
 import {
   QueryClient,
   QueryClientProvider,
-  useQuery,
 } from '@tanstack/react-query'
 import {NeueModal} from '@therious/components';
 
 const queryClient = new QueryClient();
 
 
-// react-query compliant fetch function generator
-const fetcherSvg = (url:string)=>async()=>{
-  const viz = await instance();
-
-  const response = await fetch(url);
-  const exampleDoc = `digraph { could -> not -> find => "${url}" }`;
-
-  const dotDocument:string = await response.text() ?? exampleDoc;
-  const svg = viz.renderSVGElement(dotDocument,{graphAttributes: {ImageSize: {html: "width:100px, height:100px"}}});
-  return svg;
-}
-
-const fetcherString =  (url:string)=>async()=>{
-  const viz = await instance();
-
-  const response = await fetch(url);
-  const exampleDoc = `digraph { could -> not -> find => "${url}" }`;
-
-  const dotDocument:string = await response.text() ?? exampleDoc;
-  return dotDocument;
-}
-
-const diagramFetcher = fetcherString('/dot/physics.dot');
 
 type AdapstSvgSvgProps = {svgsvg:SVGSVGElement}
 function AdaptSvgSvg({svgsvg}:AdapstSvgSvgProps)
@@ -53,27 +28,8 @@ function AdaptSvgSvg({svgsvg}:AdapstSvgSvgProps)
 function Example()
 {
   const [modal, setModal] = useState<boolean>(false);
-  const [physicsDiagramCollapsed, setPhysicsDiagramCollapsed] = useState<boolean>(false);
   const closeModal = useCallback(()=>setModal(false),[]);
   const openModal = useCallback(()=>setModal(true),[]);
-  const togglePhysicsDiagram = useCallback(()=>setPhysicsDiagramCollapsed(prev => !prev),[]);
-
-  const { isPending, isError, data, error }  = useQuery({
-    queryKey: ['diagram1'],
-    queryFn: diagramFetcher
-  });
-  if(!isPending && !isError)
-    console.log(`svg data received = `, data);
-
-  // Get state machine diagrams
-  const stateMachineDiagrams = useMemo(() => {
-    try {
-      return InjectedStateForms.singleton()?.getDiagrams() || [];
-    } catch (e) {
-      console.warn('Could not get state machine diagrams:', e);
-      return [];
-    }
-  }, []);
 
   const contextMenu = useCallback((e:any) => {  // todo fix  type of event
     e.preventDefault(); // prevent the default behaviour when right clicked
@@ -95,53 +51,6 @@ function Example()
       }}>
         {stateForms()}
       </div>
-
-      {!physicsDiagramCollapsed && (
-        <div style={{
-          width: '100%',
-          height: '70vh',
-          minHeight: '500px',
-          border: '2px solid blue',
-          padding: '10px',
-          boxSizing: 'border-box',
-          display: 'flex',
-          flexDirection: 'column',
-          margin: '20px 0',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <h3 style={{ margin: 0 }}>Physics Diagram (from /dot/physics.dot)</h3>
-            <button onClick={togglePhysicsDiagram} style={{ padding: '5px 10px', cursor: 'pointer' }}>
-              Collapse
-            </button>
-          </div>
-          <div style={{ flex: 1, minHeight: 0 }}>
-            {isPending ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><span>Loading...</span></div> : 
-             isError ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'red' }}><span>Error: {error.message}</span></div> :
-              data ? <DagViewer dot={data} height={"100%"} width={"100%"}/> :
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'orange' }}>
-                <span>No data available</span>
-              </div>
-            }
-          </div>
-        </div>
-      )}
-      
-      {physicsDiagramCollapsed && (
-        <div style={{
-          width: '100%',
-          border: '2px solid blue',
-          padding: '10px',
-          boxSizing: 'border-box',
-          margin: '20px 0',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0 }}>Physics Diagram (from /dot/physics.dot)</h3>
-            <button onClick={togglePhysicsDiagram} style={{ padding: '5px 10px', cursor: 'pointer' }}>
-              Expand
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 
