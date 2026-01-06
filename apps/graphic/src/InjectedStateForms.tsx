@@ -50,7 +50,24 @@ export class InjectedStateForms
 
 export function stateForms()
 {
-  return InjectedStateForms.singleton().rendering();
+  // Try to get from singleton first, then try container
+  let instance = InjectedStateForms.singleton();
+  if (!instance) {
+    try {
+      instance = container.resolve<InjectedStateForms>(TokenInjectedStateForms);
+      if (instance) {
+        InjectedStateForms.single = instance;
+      }
+    } catch (e) {
+      // Container might not have it yet
+    }
+  }
+  
+  if (!instance) {
+    console.warn('InjectedStateForms not yet initialized');
+    return <div style={{ padding: '20px', color: '#666' }}>Loading state machines...</div>;
+  }
+  return instance.rendering();
 }
 
 export const TokenInjectedStateForms = 'InjectedStateForms';
