@@ -49,13 +49,16 @@ export function DagViewer({ dot, width = '100%', height = '100%' }: DagViewerPro
           return;
         }
         
-        const svgElement = viz.renderSVGElement(dot, {
-          graphAttributes: {
-            ImageSize: {
-              html: `width:${width}, height:${height}`
-            }
-          }
-        });
+        const svgElement = viz.renderSVGElement(dot);
+        
+        // Scale SVG to fit container
+        if (svgElement && svgElement instanceof SVGSVGElement) {
+          svgElement.setAttribute('width', '100%');
+          svgElement.setAttribute('height', '100%');
+          svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+          svgElement.style.maxWidth = '100%';
+          svgElement.style.maxHeight = '100%';
+        }
 
         console.log('DagViewer: SVG element rendered:', svgElement);
 
@@ -120,7 +123,10 @@ export function DagViewer({ dot, width = '100%', height = '100%' }: DagViewerPro
         style={{
           width: '100%',
           height: '100%',
-          display: isLoading || error ? 'none' : 'block',
+          display: isLoading || error ? 'none' : 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'auto',
         }}
       />
       
