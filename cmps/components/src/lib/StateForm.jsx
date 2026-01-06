@@ -23,7 +23,21 @@ const FsmTag = styled.div`
   margin:           10px auto; /* 15% from the top and centered */
   padding:          10px;
   border:           1px solid #888;
-  width:            80%;
+  width:            95%;
+  display:          flex;
+  gap:              20px;
+`;
+
+const FsmFormSection = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const FsmDiagramSection = styled.div`
+  flex: 1;
+  min-width: 400px;
+  display: flex;
+  flex-direction: column;
 `;
 
 const MachineName = styled.div`
@@ -147,21 +161,26 @@ export const  StateForm = ({expanded, stConfig, diagram}) => {
   const height = expanded? 'auto': '50px';
   return(
     <FsmTag style={{height}}>
-      <MachineName>{machineName}</MachineName>
-      <textarea readOnly={true} value={diagram}/>
-      <DagViewer dot={diagram} width={600} height={600}/>
-      <hr/>
-      <PaddedDiv>
-        <SectionLabel>States</SectionLabel>
-        {stateList.map((stName, i) => (<StTag key={i}>{stName}</StTag>))}
-      </PaddedDiv>
-      <hr/>
-      <Context context={context}/>
-      <hr/>
-      <PaddedDiv>
-        <SectionLabel>Events</SectionLabel>
-        {evtTokens.map((evtName, i) => (<EvtTag key={i}>{evtName}</EvtTag>))}
-      </PaddedDiv>
+      <FsmFormSection>
+        <MachineName>{machineName}</MachineName>
+        <textarea readOnly={true} value={diagram} style={{width: '100%', minHeight: '100px', marginBottom: '10px'}}/>
+        <hr/>
+        <PaddedDiv>
+          <SectionLabel>States</SectionLabel>
+          {stateList.map((stName, i) => (<StTag key={i}>{stName}</StTag>))}
+        </PaddedDiv>
+        <hr/>
+        <Context context={context}/>
+        <hr/>
+        <PaddedDiv>
+          <SectionLabel>Events</SectionLabel>
+          {evtTokens.map((evtName, i) => (<EvtTag key={i}>{evtName}</EvtTag>))}
+        </PaddedDiv>
+      </FsmFormSection>
+      <FsmDiagramSection>
+        <h4 style={{margin: '0 0 10px 0', fontSize: '14px'}}>Diagram</h4>
+        <DagViewer dot={diagram} width={"100%"} height={"500px"}/>
+      </FsmDiagramSection>
     </FsmTag>
   )
 }

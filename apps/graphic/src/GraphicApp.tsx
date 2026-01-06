@@ -53,8 +53,10 @@ function AdaptSvgSvg({svgsvg}:AdapstSvgSvgProps)
 function Example()
 {
   const [modal, setModal] = useState<boolean>(false);
+  const [physicsDiagramCollapsed, setPhysicsDiagramCollapsed] = useState<boolean>(false);
   const closeModal = useCallback(()=>setModal(false),[]);
   const openModal = useCallback(()=>setModal(true),[]);
+  const togglePhysicsDiagram = useCallback(()=>setPhysicsDiagramCollapsed(prev => !prev),[]);
 
   const { isPending, isError, data, error }  = useQuery({
     queryKey: ['diagram1'],
@@ -94,23 +96,24 @@ function Example()
         {stateForms()}
       </div>
 
-      <div style={{
-        display: 'flex',
-        gap: '20px',
-        width: '100%',
-        height: '70vh',
-        minHeight: '500px',
-        margin: '20px 0',
-      }}>
+      {!physicsDiagramCollapsed && (
         <div style={{
-          flex: '1',
+          width: '100%',
+          height: '70vh',
+          minHeight: '500px',
           border: '2px solid blue',
           padding: '10px',
           boxSizing: 'border-box',
           display: 'flex',
           flexDirection: 'column',
+          margin: '20px 0',
         }}>
-          <h3>Physics Diagram (from /dot/physics.dot)</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <h3 style={{ margin: 0 }}>Physics Diagram (from /dot/physics.dot)</h3>
+            <button onClick={togglePhysicsDiagram} style={{ padding: '5px 10px', cursor: 'pointer' }}>
+              Collapse
+            </button>
+          </div>
           <div style={{ flex: 1, minHeight: 0 }}>
             {isPending ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><span>Loading...</span></div> : 
              isError ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'red' }}><span>Error: {error.message}</span></div> :
@@ -121,62 +124,22 @@ function Example()
             }
           </div>
         </div>
-        
+      )}
+      
+      {physicsDiagramCollapsed && (
         <div style={{
-          flex: '1',
-          border: '2px solid green',
+          width: '100%',
+          border: '2px solid blue',
           padding: '10px',
           boxSizing: 'border-box',
-          display: 'flex',
-          flexDirection: 'column',
-        }}>
-          <h3>
-            {stateMachineDiagrams.length > 0 
-              ? `State Machine: ${stateMachineDiagrams[0].name}` 
-              : 'State Machine Diagram'}
-          </h3>
-          <div style={{ flex: 1, minHeight: 0 }}>
-            {stateMachineDiagrams.length > 0 ? (
-              <DagViewer 
-                dot={stateMachineDiagrams[0].diagram} 
-                height={"100%"} 
-                width={"100%"}
-              />
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'orange' }}>
-                <span>No state machine diagrams available</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      
-      {stateMachineDiagrams.length > 1 && (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '20px',
-          width: '100%',
           margin: '20px 0',
         }}>
-          <h2>Additional State Machines</h2>
-          {stateMachineDiagrams.slice(1).map(({name, diagram}, index) => (
-            <div key={index} style={{
-              width: '100%',
-              height: '70vh',
-              minHeight: '500px',
-              border: '2px solid purple',
-              padding: '10px',
-              boxSizing: 'border-box',
-              display: 'flex',
-              flexDirection: 'column',
-            }}>
-              <h3>State Machine: {name}</h3>
-              <div style={{ flex: 1, minHeight: 0 }}>
-                <DagViewer dot={diagram} height={"100%"} width={"100%"}/>
-              </div>
-            </div>
-          ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ margin: 0 }}>Physics Diagram (from /dot/physics.dot)</h3>
+            <button onClick={togglePhysicsDiagram} style={{ padding: '5px 10px', cursor: 'pointer' }}>
+              Expand
+            </button>
+          </div>
         </div>
       )}
     </div>
