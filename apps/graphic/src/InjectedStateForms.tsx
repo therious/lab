@@ -27,7 +27,17 @@ export class InjectedStateForms
       const diagram       = fsmConfigToDot(fsmConfig, behavior);
      return <StateForm key={xstateConfig.id} expanded={true} stConfig={xstateConfig} diagram={diagram}/>
     });
-    return <>{convertedMachines}</>
+    return (
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '20px',
+        justifyContent: 'flex-start',
+        alignItems: 'flex-start',
+      }}>
+        {convertedMachines}
+      </div>
+    );
   }
 
   getDiagrams(): Array<{name: string, diagram: string}>
