@@ -205,22 +205,35 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
           const stateNames = fsmConfigRef.current?.states || [];
           const defaultFillColor = 'cornsilk'; // Default from fsm-visualization-dot.ts
           
-          // First, remove ALL fillcolor attributes from all state nodes
-          let cleanedDiagram = diagram.replace(/fillcolor=[^\s\]]*/g, '');
-          // Clean up any double spaces that might result
-          cleanedDiagram = cleanedDiagram.replace(/\s+/g, ' ');
+          // Remove fillcolor only from state node definitions (not from transitions)
+          // State nodes have pattern: "StateName" [attributes]
+          // Transitions have pattern: "FromState"->"ToState" [attributes]
+          // We only want to match state nodes, not transitions
+          stateNames.forEach(stateName => {
+            // Match only state node definitions (not transitions which have ->)
+            const stateNodePattern = new RegExp(`"${stateName}" \\[([^\\]]*)\\]`, 'g');
+            cleanedDiagram = cleanedDiagram.replace(stateNodePattern, (match, attrs) => {
+              // Remove existing fillcolor from this state node only
+              const cleanAttrs = attrs.replace(/fillcolor=[^\s\]]*/g, '').trim().replace(/\s+/g, ' ');
+              return match; // Keep original for now, we'll replace all at once
+            });
+          });
           
-          // Now add fillcolor to all states: palegreen for current, cornsilk for others
+          // Now add fillcolor to all state nodes: palegreen for current, cornsilk for others
+          // Only match state nodes (not transitions which contain ->)
           stateNames.forEach(stateName => {
             const fillColor = stateName === currentStateValue ? 'palegreen' : defaultFillColor;
-            cleanedDiagram = cleanedDiagram.replace(
-              new RegExp(`"${stateName}" \\[([^\\]]*)\\]`, 'g'),
-              (match, attrs) => {
-                // Ensure we have a clean attributes string and add fillcolor
-                const cleanAttrs = attrs.trim().replace(/\s+/g, ' ');
-                return `"${stateName}" [${cleanAttrs} fillcolor=${fillColor}]`;
+            // Match state nodes only - they don't contain -> in the pattern
+            const stateNodePattern = new RegExp(`"${stateName}" \\[([^\\]]*)\\]`, 'g');
+            cleanedDiagram = cleanedDiagram.replace(stateNodePattern, (match, attrs) => {
+              // Only process if this is a state node (check that match doesn't contain ->)
+              if (match.includes('->')) {
+                return match; // This is a transition, skip it
               }
-            );
+              // Remove any existing fillcolor and add the correct one
+              const cleanAttrs = attrs.replace(/fillcolor=[^\s\]]*/g, '').trim().replace(/\s+/g, ' ');
+              return `"${stateName}" [${cleanAttrs} fillcolor=${fillColor}]`;
+            });
           });
           
           return cleanedDiagram;
