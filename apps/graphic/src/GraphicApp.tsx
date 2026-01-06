@@ -42,13 +42,7 @@ function Example()
       <NeueModal openIt={modal} close={closeModal}><h1>Wow</h1><p>Hello this is an extensive message</p><button onClick={closeModal}>Close me</button></NeueModal>
 
       <hr/>
-      <div style={{
-        display: 'block',
-        width: 'fit-content',
-        height: 'fit-content',
-        border: '5px dotted red',
-        marginBottom: '20px',
-      }}>
+      <div>
         {stateForms()}
       </div>
     </div>
