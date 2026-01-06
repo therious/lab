@@ -22,7 +22,9 @@ const FsmTag = styled.div`
   background-color: #fefefe;
   margin:           10px;
   padding:          10px;
-  border:           1px solid #888;
+  border:           1px solid #d0d0d0;
+  border-radius:    8px;
+  box-shadow:        0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
   position:         relative;
   display:          flex;
   gap:              20px;
@@ -40,6 +42,7 @@ const FsmDiagramSection = styled.div`
   min-width: 400px;
   display: flex;
   flex-direction: column;
+  height: 100%;
 `;
 
 const MachineName = styled.div`
@@ -155,6 +158,7 @@ export const  StateForm = ({expanded, stConfig, diagram}) => {
   const {id:machineName,states={},context={} } = stConfig;
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [formWidth, setFormWidth] = useState(800);
+  const [formHeight, setFormHeight] = useState(500);
   const [showDiagram, setShowDiagram] = useState(true);
 
   const stateList = Object.keys(states);
@@ -167,12 +171,17 @@ export const  StateForm = ({expanded, stConfig, diagram}) => {
   const handleResize = (e) => {
     e.preventDefault();
     const startX = e.clientX;
+    const startY = e.clientY;
     const startWidth = formWidth;
+    const startHeight = formHeight;
     
     const handleMouseMove = (moveEvent) => {
-      const diff = moveEvent.clientX - startX;
-      const newWidth = Math.max(400, Math.min(1200, startWidth + diff));
+      const diffX = moveEvent.clientX - startX;
+      const diffY = moveEvent.clientY - startY;
+      const newWidth = Math.max(400, Math.min(1200, startWidth + diffX));
+      const newHeight = Math.max(400, Math.min(1000, startHeight + diffY));
       setFormWidth(newWidth);
+      setFormHeight(newHeight);
     };
     
     const handleMouseUp = () => {
@@ -187,8 +196,8 @@ export const  StateForm = ({expanded, stConfig, diagram}) => {
   return(
     <FsmTag style={{
       width: isCollapsed ? '250px' : `${formWidth}px`,
-      height: isCollapsed ? '60px' : 'auto',
-      minHeight: isCollapsed ? '60px' : '500px',
+      height: isCollapsed ? '60px' : `${formHeight}px`,
+      minHeight: isCollapsed ? '60px' : '400px',
     }}>
       <button
         onClick={toggleCollapse}
@@ -252,14 +261,14 @@ export const  StateForm = ({expanded, stConfig, diagram}) => {
               </button>
             </div>
             {showDiagram ? (
-              <DagViewer dot={diagram} width={"100%"} height={"500px"}/>
+              <DagViewer dot={diagram} width={"100%"} height={"calc(100% - 40px)"}/>
             ) : (
               <textarea 
                 readOnly={true} 
                 value={diagram} 
                 style={{
                   width: '100%', 
-                  height: '500px', 
+                  height: 'calc(100% - 40px)', 
                   fontFamily: 'monospace',
                   fontSize: '12px',
                   padding: '10px',
