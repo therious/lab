@@ -30,6 +30,18 @@ export class InjectedStateForms
     return <>{convertedMachines}</>
   }
 
+  getDiagrams(): Array<{name: string, diagram: string}>
+  {
+    return Object
+    .values(this.fsmConfigs)
+    .map(fsmConfig=>
+    {
+      const behavior = {};
+      const diagram = fsmConfigToDot(fsmConfig, behavior);
+      return {name: fsmConfig.name || 'unnamed', diagram};
+    });
+  }
+
    static singleton()
    {
      return this.single;

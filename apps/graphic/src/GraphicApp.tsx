@@ -1,7 +1,7 @@
-import React,  {useState, useCallback, useRef, useEffect} from 'react';
+import React,  {useState, useCallback, useRef, useEffect, useMemo} from 'react';
 import './App.css';
 import {instance} from "@viz-js/viz";
-import {stateForms} from "./InjectedStateForms";
+import {stateForms, InjectedStateForms} from "./InjectedStateForms";
 import {DagViewer} from "./DagViewer";
 
 import {
@@ -63,6 +63,16 @@ function Example()
   if(!isPending && !isError)
     console.log(`svg data received = `, data);
 
+  // Get state machine diagrams
+  const stateMachineDiagrams = useMemo(() => {
+    try {
+      return InjectedStateForms.singleton()?.getDiagrams() || [];
+    } catch (e) {
+      console.warn('Could not get state machine diagrams:', e);
+      return [];
+    }
+  }, []);
+
   const contextMenu = useCallback((e:any) => {  // todo fix  type of event
     e.preventDefault(); // prevent the default behaviour when right clicked
     console.log("Right Click");
@@ -120,25 +130,55 @@ function Example()
           display: 'flex',
           flexDirection: 'column',
         }}>
-          <h3>Test Diagram (hardcoded)</h3>
+          <h3>
+            {stateMachineDiagrams.length > 0 
+              ? `State Machine: ${stateMachineDiagrams[0].name}` 
+              : 'State Machine Diagram'}
+          </h3>
           <div style={{ flex: 1, minHeight: 0 }}>
-            <DagViewer 
-              dot={`digraph {
-  rankdir=LR;
-  node [shape=circle style=filled];
-  A [fillcolor=lightblue];
-  B [fillcolor=lightgreen];
-  C [fillcolor=lightyellow];
-  A -> B [label="step 1"];
-  B -> C [label="step 2"];
-  C -> A [label="step 3"];
-}`} 
-              height={"100%"} 
-              width={"100%"}
-            />
+            {stateMachineDiagrams.length > 0 ? (
+              <DagViewer 
+                dot={stateMachineDiagrams[0].diagram} 
+                height={"100%"} 
+                width={"100%"}
+              />
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'orange' }}>
+                <span>No state machine diagrams available</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
+      
+      {stateMachineDiagrams.length > 1 && (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+          width: '100%',
+          margin: '20px 0',
+        }}>
+          <h2>Additional State Machines</h2>
+          {stateMachineDiagrams.slice(1).map(({name, diagram}, index) => (
+            <div key={index} style={{
+              width: '100%',
+              height: '70vh',
+              minHeight: '500px',
+              border: '2px solid purple',
+              padding: '10px',
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'column',
+            }}>
+              <h3>State Machine: {name}</h3>
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <DagViewer dot={diagram} height={"100%"} width={"100%"}/>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 
