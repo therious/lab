@@ -53,18 +53,18 @@ const ENABLE_GRAPH = (() => {
 const POLLING_CONFIG = (() => {
   if (typeof window !== 'undefined') {
     const urlParams = new URLSearchParams(window.location.search);
-    
+
     // Check if polling is enabled
-    const pollEnabled = urlParams.get('poll') === 'true' || 
+    const pollEnabled = urlParams.get('poll') === 'true' ||
                         localStorage.getItem('elections:poll') === 'true';
-    
+
     // Get polling interval (default: 1000ms if enabled, but won't be used if disabled)
     const pollIntervalParam = urlParams.get('pollInterval');
     const pollIntervalStorage = localStorage.getItem('elections:pollInterval');
-    const pollInterval = pollIntervalParam 
-      ? parseInt(pollIntervalParam, 10) 
+    const pollInterval = pollIntervalParam
+      ? parseInt(pollIntervalParam, 10)
       : (pollIntervalStorage ? parseInt(pollIntervalStorage, 10) : 1000);
-    
+
     return {
       enabled: pollEnabled,
       intervalMs: pollInterval > 0 ? pollInterval : 1000
@@ -93,7 +93,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
   const resultsRef = React.useRef<any>(null);
   const [currentTime, setCurrentTime] = useState(new Date()); // For periodic relative time updates
   const voteTimestampsRef = React.useRef<Date[]>([]); // Track vote timestamps for sliding window calculation
-  
+
   // Use refs to avoid stale closures in polling interval
   React.useEffect(() => {
     resultsRef.current = results;
@@ -116,21 +116,22 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
       const tenSecondsAgo = new Date(now.getTime() - 10000);
       voteTimestampsRef.current = voteTimestampsRef.current.filter(ts => ts > tenSecondsAgo);
     }, 1000);
-    
-    return () => clearInterval(timeInterval);
-  
+
+    return () => clearInterval(timeInterval)
+    }, []);
+
   // Load initial results and set up websocket connection
   // Use election identifier instead of the whole object to avoid re-running on object reference changes
   const electionId = currentElection?.identifier;
   React.useEffect(() => {
     if (!currentElection) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     // Set up polling as fallback for regular updates
     let pollInterval: NodeJS.Timeout | null = null;
-    
+
     // Helper to process and set results
     const processResults = (data: any) => {
       debugLog('[DEBUG] Raw data received:', data);
@@ -145,20 +146,20 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
           hasTimestamps: !!data.results.metadata.vote_timestamps
         } : 'none'
       });
-      
+
       // API returns: {election_identifier: "...", results: {results: [...], metadata: {...}}}
       // WebSocket returns: {election_id: "...", results: {results: [...], metadata: {...}}}
       // Extract the nested results structure
       let ballots: any[] = [];
       let metadata: any = null;
-      
+
       if (data.results) {
         // Check if results is the nested object with results and metadata
         if (data.results.results && Array.isArray(data.results.results)) {
           ballots = data.results.results;
           metadata = data.results.metadata || null;
           debugLog('[DEBUG] Using nested structure - ballots:', ballots.length, 'metadata.total_votes:', metadata?.total_votes);
-        } 
+        }
         // Check if results is directly an array (old format)
         else if (Array.isArray(data.results)) {
           ballots = data.results;
@@ -176,20 +177,20 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
       } else {
         debugWarn('[DEBUG] No results in data:', data);
       }
-      
+
       debugLog('[DEBUG] Final processed - ballots:', ballots.length, 'metadata.total_votes:', metadata?.total_votes);
-      
+
       // Track vote timestamps from metadata for sliding window calculation
-      if (metadata?.vote_timestamps && Array.isArray(metadata.vote_timestamps)) {
+      if (metadata?.vote_timestamps && Array.isArray(metadata?.vote_timestamps)) {
         const now = new Date();
         const tenSecondsAgo = new Date(now.getTime() - 10000);
         // Convert ISO strings to Date objects and filter to last 10 seconds
         const recentTimestamps = metadata.vote_timestamps
-          .map((ts: string) => new Date(ts))
+          ?.map((ts: string) => new Date(ts))
           .filter((ts: Date) => !isNaN(ts.getTime()) && ts > tenSecondsAgo);
         voteTimestampsRef.current = recentTimestamps;
       }
-      
+
       // Only update if we have valid data
       if (metadata !== null || ballots.length > 0) {
         setResults({ballots, metadata});
@@ -199,7 +200,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
       }
       setLoading(false);
     };
-    
+
     // Helper to fetch results
     const fetchResults = async () => {
       return fetch(`/api/dashboard/${currentElection.identifier}`, {
@@ -214,16 +215,16 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
           const errorTitle = titleMatch ? titleMatch[1] : 'Server Error';
           throw new Error(`Server returned HTML instead of JSON: ${errorTitle}`);
         }
-        
+
         const data = await res.json();
         debugLog('[ResultsView] API response status:', res.status);
         debugLog('[ResultsView] Total votes in response:', data.results?.metadata?.total_votes || 'unknown');
-        
+
         // Extract server build info (commit hash) if present
         if (data.buildInfo?.commitHash) {
           setServerCommitHash?.(data.buildInfo.commitHash);
         }
-        
+
         if (!res.ok) {
           // If we have results despite error status, still try to process them
           if (data.results || data.results?.results) {
@@ -235,8 +236,8 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
           const errorCode = data.error_code || 'unknown_error';
           console.error('[DEBUG] API error:', {errorMsg, errorCode, status: res.status});
           // Only include error code if it provides useful information
-          const finalMsg = (errorCode === 'server_error' || errorCode === 'unknown_error') 
-            ? errorMsg 
+          const finalMsg = (errorCode === 'server_error' || errorCode === 'unknown_error')
+            ? errorMsg
             : `${errorMsg} (${errorCode})`;
           throw new Error(finalMsg);
         }
@@ -260,11 +261,11 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
         setLoading(false);
       });
     };
-    
+
     // Load initial results via REST API
     debugLog('[ResultsView] Loading results for election:', currentElection.identifier);
     fetchResults();
-    
+
     // Set up polling for regular updates (only if enabled)
     // By default, polling is disabled - use websocket-only mode
     // Enable with ?poll=true or localStorage.setItem('elections:poll', 'true')
@@ -283,20 +284,20 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
     } else {
       debugLog('[ResultsView] Polling disabled - using websocket-only mode');
     }
-    
+
     // Set up websocket connection for real-time updates
     let socket: any = null;
     let channel: any = null;
-    
+
     // Dynamically import Phoenix Socket (may not be available in all environments)
     // @ts-ignore - Phoenix doesn't have TypeScript declarations
     import('phoenix').then((phoenix: any) => {
       const Socket = phoenix.Socket;
       socket = new Socket('/socket', {});
       socket.connect();
-      
+
       channel = socket.channel(`dashboard:${currentElection.identifier}`, {});
-      
+
       channel.on('results_updated', (payload: any) => {
         debugLog('[WebSocket] Received results_updated event:', payload);
         debugLog('[WebSocket] Payload structure:', {
@@ -311,7 +312,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
             hasTimestamps: !!payload.results.metadata.vote_timestamps
           } : 'none'
         });
-        
+
         // Update results when server broadcasts new results
         // Backend broadcasts: {:results_updated, election_id, results}
         // Channel pushes: %{election_id: "...", results: {results: [...], metadata: {...}}}
@@ -321,23 +322,23 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
           const currentTotal = results?.metadata?.total_votes;
           const newTotal = payload.results?.metadata?.total_votes;
           debugLog('[WebSocket] Vote count change:', currentTotal, '→', newTotal);
-          
+
           // Extract server build info if present in WebSocket payload
           if (payload.buildInfo?.commitHash) {
             setServerCommitHash?.(payload.buildInfo.commitHash);
           }
-          
+
           // Verify payload structure before processing
           if (!payload.results || typeof payload.results !== 'object') {
             debugWarn('[WebSocket] Invalid payload.results:', payload.results);
             debugWarn('[WebSocket] Skipping update - keeping existing results');
             return;
           }
-          
+
           // Check if metadata exists and has valid total_votes
           const newTotalVotes = payload.results.metadata?.total_votes;
           const currentTotalVotes = results?.metadata?.total_votes;
-          
+
           // Track new votes for sliding window calculation
           if (newTotalVotes && newTotalVotes > (currentTotalVotes || 0)) {
             const votesAdded = newTotalVotes - (currentTotalVotes || 0);
@@ -350,7 +351,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
             const tenSecondsAgo = new Date(now.getTime() - 10000);
             voteTimestampsRef.current = voteTimestampsRef.current.filter(ts => ts > tenSecondsAgo);
           }
-          
+
           // Reject zero vote updates if:
           // 1. We already have results with votes > 0, OR
           // 2. We have any results loaded (even if metadata is null, ballots exist means we had data)
@@ -360,19 +361,19 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
             debugWarn('[WebSocket] This might be a calculation error - skipping update');
             return;
           }
-          
+
           if (!Array.isArray(payload.results.results)) {
             debugWarn('[WebSocket] payload.results.results is not an array:', payload.results.results);
             debugWarn('[WebSocket] Skipping update - keeping existing results');
             return;
           }
-          
+
           if (!payload.results.metadata || typeof payload.results.metadata !== 'object') {
             debugWarn('[WebSocket] Invalid payload.results.metadata:', payload.results.metadata);
             debugWarn('[WebSocket] Skipping update - keeping existing results');
             return;
           }
-          
+
           // WebSocket sends: {election_id: "...", results: {results: [...], metadata: {...}}}
           // processResults expects: {results: {results: [...], metadata: {...}}}
           debugLog('[WebSocket] Processing update - vote count:', currentTotalVotes, '→', newTotalVotes);
@@ -381,20 +382,20 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
           debugWarn('[WebSocket] Payload missing results:', payload);
         }
       });
-      
+
       channel.on('vote_submitted', (payload: any) => {
         debugLog('[WebSocket] Vote submitted:', payload);
-        
+
         // Update vote count immediately without waiting for full results calculation
         // Use resultsRef to avoid stale closure issues
         const currentResults = resultsRef.current;
         if (payload.vote_count !== undefined && payload.vote_count !== null) {
           const currentTotal = currentResults?.metadata?.total_votes || 0;
           const newTotal = payload.vote_count;
-          
+
           if (newTotal > currentTotal) {
             debugLog('[WebSocket] Updating vote count:', currentTotal, '→', newTotal);
-            
+
             // Update metadata vote count immediately for responsive UI
             if (currentResults && currentResults.metadata) {
               setResults({
@@ -435,7 +436,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
           }
         }
       });
-      
+
       channel.join()
         .receive('ok', () => {
           debugLog('[WebSocket] ✅ Joined dashboard channel for', currentElection.identifier);
@@ -452,7 +453,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
       // Always log errors, even if debug is off
       console.warn('Phoenix Socket not available, using REST API only:', err);
     });
-    
+
     // Cleanup: leave channel, disconnect socket, and clear polling
     return () => {
       if (pollInterval) {
@@ -592,7 +593,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
                   const windowSeconds = 10;
                   const windowStart = new Date(now.getTime() - windowSeconds * 1000);
                   const recentVotes = voteTimestampsRef.current.filter(ts => ts > windowStart);
-                  
+
                   if (recentVotes.length > 0) {
                     const votesPerSecond = recentVotes.length / windowSeconds;
                     return ` (${votesPerSecond.toFixed(2)} votes/sec)`;
@@ -626,7 +627,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
   const votingStartForStatus = metadataVotingStart || votingStart;
   const isClosed = votingEndForStatus && now > votingEndForStatus;
   const isOpen = votingStartForStatus && votingEndForStatus && now >= votingStartForStatus && now <= votingEndForStatus;
-  
+
   return (
     <div style={{padding: '2rem'}}>
       <h1 style={{marginBottom: '1.3125rem'}}>Election Results: {currentElection.title}</h1>
@@ -648,7 +649,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
                   const windowSeconds = 10;
                   const windowStart = new Date(now.getTime() - windowSeconds * 1000);
                   const recentVotes = voteTimestampsRef.current.filter(ts => ts > windowStart);
-                  
+
                   if (recentVotes.length > 0) {
                     const votesPerSecond = recentVotes.length / windowSeconds;
                     return ` (${votesPerSecond.toFixed(2)} votes/sec)`;
@@ -705,7 +706,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
         .map((ballotResult: any, idx: number) => {
         const voteCount = ballotResult.vote_count || 0;
         const hasVotes = voteCount > 0;
-        
+
         return (
           <MuuriItem key={idx}>
           <div style={{border: '1px solid #ccc', padding: '1rem', borderRadius: '8px', width: 'max-content', minWidth: '300px'}}>
@@ -732,7 +733,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
                 <span style={{
                   marginLeft: '0.5rem',
                   fontWeight: 'bold',
-                  color: ballotResult.result_status === 'in_progress' ? '#ff9800' : 
+                  color: ballotResult.result_status === 'in_progress' ? '#ff9800' :
                          ballotResult.result_status === 'no_quorum' ? '#d32f2f' : '#666'
                 }}>
                   {ballotResult.result_status === 'in_progress' ? 'In Progress (Quorum Not Met)' :
@@ -741,7 +742,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
                 </span>
               </p>
             )}
-            
+
             {hasVotes ? (
               <div style={{marginTop: '1rem'}}>
                 {metadata && metadata.total_votes !== undefined && results && (() => {
@@ -751,7 +752,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
                   }, 0);
                   const totalVotes = metadata.total_votes || 0;
                   const pendingVotes = totalVotes - processedVotes;
-                  
+
                   // Format last update timestamp with relative time
                   // Use currentTime state so it updates every second
                   const formatTimestamp = (date: Date | null) => {
@@ -762,7 +763,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
                     const diffMinutes = Math.floor(diffSeconds / 60);
                     const diffHours = Math.floor(diffMinutes / 60);
                     const diffDays = Math.floor(diffHours / 24);
-                    
+
                     let relativeTime = '';
                     if (diffSeconds < 10) {
                       relativeTime = 'just now';
@@ -775,17 +776,17 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
                     } else {
                       relativeTime = `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
                     }
-                    
+
                     const timeString = date.toLocaleTimeString('en-US', {
                       hour: '2-digit',
                       minute: '2-digit',
                       second: '2-digit',
                       hour12: false
                     });
-                    
+
                     return `${timeString} (${relativeTime})`;
                   };
-                  
+
                   return (
                     <div style={{marginBottom: '0.5rem', fontSize: '0.85rem', color: '#666'}}>
                       {lastUpdateTime && (
@@ -817,7 +818,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
                       ))}
                   </div>
                 )}
-                
+
                 <h3 style={{marginTop: '1rem'}}>Results by Method:</h3>
                 {METHOD_FAMILIES.map((family, familyIdx) => {
                   const familyMethods: Array<[string, any]> = family.methods
@@ -832,7 +833,7 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
                       {familyMethods.map(([method, methodResult]: [string, any]) => {
                         const status = methodResult.status || 'unknown';
                         const {color: statusColor, label: statusLabel} = getStatusColorAndLabel(status, !!isClosed);
-                        
+
                         return (
                           <div key={method} style={{marginTop: '0.5rem', padding: '0.5rem', background: '#f5f5f5', borderRadius: '4px', borderLeft: `3px solid ${statusColor}`}}>
                             <strong>{formatMethodName(method)}:</strong>
