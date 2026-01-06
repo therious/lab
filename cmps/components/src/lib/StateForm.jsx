@@ -153,6 +153,7 @@ export const  StateForm = ({expanded, stConfig, diagram}) => {
 
   const {id:machineName,states={},context={} } = stConfig;
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [formWidth, setFormWidth] = useState(800);
 
   const stateList = Object.keys(states);
   const evtTokens = extractEventTokens(stConfig);
@@ -160,10 +161,30 @@ export const  StateForm = ({expanded, stConfig, diagram}) => {
   console.info(`Stateform ${stConfig.id} - `, stConfig);
 
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
+  
+  const handleResize = (e) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = formWidth;
+    
+    const handleMouseMove = (moveEvent) => {
+      const diff = moveEvent.clientX - startX;
+      const newWidth = Math.max(400, Math.min(1200, startWidth + diff));
+      setFormWidth(newWidth);
+    };
+    
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
 
   return(
     <FsmTag style={{
-      width: isCollapsed ? '250px' : '800px',
+      width: isCollapsed ? '250px' : `${formWidth}px`,
       height: isCollapsed ? '60px' : 'auto',
       minHeight: isCollapsed ? '60px' : '500px',
     }}>
@@ -217,6 +238,37 @@ export const  StateForm = ({expanded, stConfig, diagram}) => {
             <DagViewer dot={diagram} width={"100%"} height={"500px"}/>
           </FsmDiagramSection>
         </>
+      )}
+      
+      {!isCollapsed && (
+        <div
+          onMouseDown={handleResize}
+          style={{
+            position: 'absolute',
+            bottom: '0',
+            right: '0',
+            width: '20px',
+            height: '20px',
+            cursor: 'nwse-resize',
+            backgroundColor: '#888',
+            border: '1px solid #555',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10,
+          }}
+          title="Resize form"
+        >
+          <div style={{
+            width: '0',
+            height: '0',
+            borderLeft: '6px solid transparent',
+            borderRight: '6px solid transparent',
+            borderTop: '6px solid #fff',
+            borderBottom: '6px solid #fff',
+            transform: 'rotate(45deg)',
+          }} />
+        </div>
       )}
     </FsmTag>
   )
