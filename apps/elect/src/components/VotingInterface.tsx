@@ -237,6 +237,13 @@ export function VotingInterface({ballotTitle}: VotingInterfaceProps) {
   const vote = useSelector((s: TotalState) => s.election.votes[ballotTitle]);
   const ballot = ballots.find((b: {title: string}) => b.title === ballotTitle);
   
+  // All hooks must be called before any early returns
+  const leftPanelRef = useRef<HTMLDivElement>(null);
+  const bandsContainerRef = useRef<HTMLDivElement>(null);
+  const unrankedSectionRef = useRef<HTMLDivElement>(null);
+  const [justMovedCandidate, setJustMovedCandidate] = useState<string | null>(null);
+  const [isUnrankedOver, setIsUnrankedOver] = useState(false);
+  
   // Create lookup map from candidate name to candidate object (for affiliation)
   const candidateLookup = React.useMemo(() => {
     if (!ballot) return {};
@@ -246,40 +253,18 @@ export function VotingInterface({ballotTitle}: VotingInterfaceProps) {
     });
     return lookup;
   }, [ballot]);
-  const leftPanelRef = useRef<HTMLDivElement>(null);
-  const bandsContainerRef = useRef<HTMLDivElement>(null);
-  const unrankedSectionRef = useRef<HTMLDivElement>(null);
-  const [justMovedCandidate, setJustMovedCandidate] = useState<string | null>(null);
-  const [isUnrankedOver, setIsUnrankedOver] = useState(false);
-
-  if (!ballot || !vote) {
-    return <div>Ballot not found</div>;
-  }
-
-  // Calculate total candidates and bands for spacing
-  const totalCandidates = Object.keys(vote)
-    .filter(key => key !== 'unranked')
-    .reduce((sum, key) => sum + (vote[key]?.length || 0), 0);
+  
+  // Calculate total candidates and bands for spacing - must be before early return
+  const totalCandidates = ballot && vote 
+    ? Object.keys(vote)
+        .filter(key => key !== 'unranked')
+        .reduce((sum, key) => sum + (vote[key]?.length || 0), 0)
+    : 0;
   const totalBands = 6; // 5 approve bands + 1 reject band
 
   const spacing = useResponsiveSpacing(leftPanelRef, bandsContainerRef, totalCandidates, totalBands);
-
-  const handleReset = () => {
-    actions.election.resetBallot(ballotTitle);
-    setJustMovedCandidate(null);
-  };
-
-  const handleDrop = (candidateName: string, fromScore: string, toScore: string, toIndex: number) => {
-    actions.election.moveCandidate(ballotTitle, candidateName, fromScore, toScore, toIndex);
-    // Mark this candidate as just moved
-    setJustMovedCandidate(candidateName);
-  };
-
-  const handleJustMovedEnd = () => {
-    setJustMovedCandidate(null);
-  };
-
-  // Set up drop target for unranked section
+  
+  // Set up drop target for unranked section - must be before early return
   useEffect(() => {
     const element = unrankedSectionRef.current;
     if (!element) return;
@@ -305,19 +290,49 @@ export function VotingInterface({ballotTitle}: VotingInterfaceProps) {
       },
     });
   }, [ballotTitle]);
-
-  const handleReorder = (score: string, fromIndex: number, toIndex: number) => {
-    actions.election.reorderCandidate(ballotTitle, score, fromIndex, toIndex);
-  };
-
-  // Calculate ranks for all candidates across bands 0-5
+  
+  // Calculate ranks for all candidates across bands 0-5 - must be before early return
   // Rank 1 = most preferred (top of band 5), increasing down to least preferred (bottom of band 0)
   const candidateRanks = React.useMemo(() => {
+    if (!vote) return {};
     const ranks: Record<string, number> = {};
     let currentRank = 1;
     
     // Iterate through bands from 5 (best) down to 0 (worst)
     for (let score = 5; score >= 0; score--) {
+      const scoreKey = String(score);
+      const candidates = vote[scoreKey] || [];
+      candidates.forEach((candidateName: string) => {
+        ranks[candidateName] = currentRank;
+        currentRank++;
+      });
+    }
+    
+    return ranks;
+  }, [vote]);
+
+  if (!ballot || !vote) {
+    return <div>Ballot not found</div>;
+  }
+
+  const handleReset = () => {
+    actions.election.resetBallot(ballotTitle);
+    setJustMovedCandidate(null);
+  };
+
+  const handleDrop = (candidateName: string, fromScore: string, toScore: string, toIndex: number) => {
+    actions.election.moveCandidate(ballotTitle, candidateName, fromScore, toScore, toIndex);
+    // Mark this candidate as just moved
+    setJustMovedCandidate(candidateName);
+  };
+
+  const handleJustMovedEnd = () => {
+    setJustMovedCandidate(null);
+  };
+
+  const handleReorder = (score: string, fromIndex: number, toIndex: number) => {
+    actions.election.reorderCandidate(ballotTitle, score, fromIndex, toIndex);
+  };
       const bandCandidates = vote[score.toString()] || [];
       // Within each band, first candidate is most preferred, last is least preferred
       bandCandidates.forEach(candidateName => {

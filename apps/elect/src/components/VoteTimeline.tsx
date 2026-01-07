@@ -166,6 +166,29 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
     }
   }, [mode, isCollapsed]);
   
+  // Parse timestamps and group by time period - must be before any early returns
+  const parsedTimestamps = useMemo(() => voteTimestamps.map(ts => new Date(ts)).filter(d => !isNaN(d.getTime())), [voteTimestamps]);
+  
+  // Get actual chart dimensions from container - must be before any early returns
+  const chartAreaRef = React.useRef<HTMLDivElement>(null);
+  const [chartDimensions, setChartDimensions] = React.useState({width: 800, height: 250});
+  
+  React.useEffect(() => {
+    const updateDimensions = () => {
+      if (chartAreaRef.current) {
+        const rect = chartAreaRef.current.getBoundingClientRect();
+        setChartDimensions({
+          width: Math.max(rect.width - 20, 400), // Account for padding
+          height: Math.max(rect.height - 20, 200)
+        });
+      }
+    };
+    
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, [isCollapsed]);
+  
   const now = currentTime;
   const start = new Date(votingStart);
   const end = new Date(votingEnd);
@@ -218,9 +241,6 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
       </TimelineContainer>
     );
   }
-  
-  // Parse timestamps and group by time period
-  const parsedTimestamps = useMemo(() => voteTimestamps.map(ts => new Date(ts)).filter(d => !isNaN(d.getTime())), [voteTimestamps]);
   
   // Calculate time window for realtime mode
   const getTimeWindow = (scale: TimeScale): {windowStart: Date; windowEnd: Date} => {
@@ -322,26 +342,6 @@ export function VoteTimeline({voteTimestamps, votingStart, votingEnd, totalVotes
   // Use nice round numbers for axis labels (calculate before using)
   const niceMaxVolume = Math.ceil(maxVolume / 5) * 5 || 5;
   const niceMaxCumulative = Math.ceil(maxCumulative / 5) * 5 || 5;
-  
-  // Get actual chart dimensions from container
-  const chartAreaRef = React.useRef<HTMLDivElement>(null);
-  const [chartDimensions, setChartDimensions] = React.useState({width: 800, height: 250});
-  
-  React.useEffect(() => {
-    const updateDimensions = () => {
-      if (chartAreaRef.current) {
-        const rect = chartAreaRef.current.getBoundingClientRect();
-        setChartDimensions({
-          width: Math.max(rect.width - 20, 400), // Account for padding
-          height: Math.max(rect.height - 20, 200)
-        });
-      }
-    };
-    
-    updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
-  }, [isCollapsed]);
   
   // Chart dimensions - use actual pixel dimensions for higher resolution
   const chartWidth = chartDimensions.width;
