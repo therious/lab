@@ -18,7 +18,7 @@ const BASE_URL = process.env.ELECTIONS_URL || 'http://localhost:4000';
 const ELECTION_IDENTIFIER = process.env.ELECTION_ID || '2026-general-election';
 const NUM_VOTES = parseInt(process.env.NUM_VOTES || '0', 10); // 0 = run indefinitely
 // Delay between votes in milliseconds (default: 3.33ms = ~300 votes/second)
-const VOTE_DELAY_MS = parseFloat(process.env.VOTE_DELAY_MS || '3.33', 10);
+const VOTE_DELAY_MS = parseFloat(process.env.VOTE_DELAY_MS || '20', 10);
 // Duration to run in seconds (0 = run indefinitely until cancelled)
 const RUN_DURATION_SEC = parseInt(process.env.RUN_DURATION_SEC || '0', 10);
 
@@ -145,21 +145,35 @@ async function submitVote(
 
 /**
  * Generate random vote with cycling bias for presidential ballot
- * Bias cycles: Alice Johnson (10 min) -> Bob Smith (10 min) -> Alice Johnson (10 min) -> ...
+ * Bias cycles: Bob Smith (5 min) -> Alice Johnson (5 min) -> Bob Smith (5 min) -> ...
  */
 function generateRandomVote(election: ElectionData, elapsedSeconds: number): Record<string, any> {
   const ballotData: Record<string, any> = {};
 
   // Calculate cycling bias for presidential ballot
-  // Cycle: 20 minutes total (10 min Alice -> 10 min Bob -> repeat)
-  const cycleDuration = 20 * 60; // 20 minutes in seconds
+  // Cycle: 15 minutes total (5 min Bob -> 5 min Alice -> 5 min Bob -> repeat)
+  const cycleDuration = 15 * 60; // 15 minutes in seconds
   const cyclePosition = (elapsedSeconds % cycleDuration) / cycleDuration; // 0.0 to 1.0 within cycle
-  // First half (0.0-0.5): shift from Alice to Bob
-  // Second half (0.5-1.0): shift from Bob back to Alice
-  const aliceBias = cyclePosition < 0.5 
-    ? 1.0 - (cyclePosition * 2)  // 1.0 -> 0.0 over first 10 min
-    : (cyclePosition - 0.5) * 2;  // 0.0 -> 1.0 over second 10 min
-  const bobBias = 1.0 - aliceBias;
+  // First third (0.0-0.333): Bob favor (1.0 -> 0.0)
+  // Second third (0.333-0.667): Alice favor (0.0 -> 1.0)
+  // Last third (0.667-1.0): Bob favor again (1.0 -> 0.0)
+  let bobBias: number;
+  let aliceBias: number;
+  if (cyclePosition < 0.333) {
+    // First 5 minutes: Bob favor (1.0 -> 0.0)
+    bobBias = 1.0 - (cyclePosition * 3);
+    aliceBias = 1.0 - bobBias;
+  } else if (cyclePosition < 0.667) {
+    // Second 5 minutes: Alice favor (0.0 -> 1.0)
+    const pos = (cyclePosition - 0.333) * 3; // 0.0 to 1.0 within this third
+    aliceBias = pos;
+    bobBias = 1.0 - aliceBias;
+  } else {
+    // Last 5 minutes: Bob favor again (1.0 -> 0.0)
+    const pos = (cyclePosition - 0.667) * 3; // 0.0 to 1.0 within this third
+    bobBias = 1.0 - pos;
+    aliceBias = 1.0 - bobBias;
+  }
 
   for (const ballot of election.ballots) {
     const candidates = ballot.candidates;
@@ -190,27 +204,27 @@ function generateRandomVote(election: ElectionData, elapsedSeconds: number): Rec
       
       if (isGeneralElection && isPresidentialBallot) {
         // Presidential ballot: cycling bias between Alice and Bob
-        if (isAlice) {
-          // Alice: bias based on aliceBias (1.0 = strong favor, 0.0 = neutral)
+        if (isBob) {
+          // Bob: bias based on bobBias (1.0 = strong favor, 0.0 = neutral)
           const rand = Math.random();
-          if (rand < aliceBias * 0.7) {
-            // Strong bias: 70% chance of high score when aliceBias is high
-            score = Math.random() < 0.8 ? 5 : 4;
-          } else if (rand < aliceBias * 0.7 + 0.2) {
-            // Medium bias: 20% chance of medium score
+          if (rand < bobBias * 0.75) {
+            // Strong bias: 75% chance of high score when bobBias is high
+            score = Math.random() < 0.85 ? 5 : 4;
+          } else if (rand < bobBias * 0.75 + 0.15) {
+            // Medium bias: 15% chance of medium score
             score = 3;
           } else {
             // Low bias: lower scores
             score = Math.floor(Math.random() * 3); // 0, 1, or 2
           }
-        } else if (isBob) {
-          // Bob: bias based on bobBias (1.0 = strong favor, 0.0 = neutral)
+        } else if (isAlice) {
+          // Alice: bias based on aliceBias (1.0 = strong favor, 0.0 = neutral)
           const rand = Math.random();
-          if (rand < bobBias * 0.7) {
-            // Strong bias: 70% chance of high score when bobBias is high
-            score = Math.random() < 0.8 ? 5 : 4;
-          } else if (rand < bobBias * 0.7 + 0.2) {
-            // Medium bias: 20% chance of medium score
+          if (rand < aliceBias * 0.75) {
+            // Strong bias: 75% chance of high score when aliceBias is high
+            score = Math.random() < 0.85 ? 5 : 4;
+          } else if (rand < aliceBias * 0.75 + 0.15) {
+            // Medium bias: 15% chance of medium score
             score = 3;
           } else {
             // Low bias: lower scores
@@ -296,6 +310,8 @@ function setupFileWatcher(workspaceRoot: string): () => void {
  */
 async function main() {
   // Set up file watcher to stop when code changes
+  const __filename = new URL(import.meta.url).pathname;
+  const __dirname = path.dirname(__filename);
   const workspaceRoot = path.resolve(__dirname, '../../..');
   const cleanupWatcher = setupFileWatcher(workspaceRoot);
   
@@ -352,7 +368,7 @@ async function main() {
     console.log(`Generating votes indefinitely (press Ctrl+C to stop)...`);
   }
   console.log(`Rate: ~${(1000 / VOTE_DELAY_MS).toFixed(0)} votes/second (${VOTE_DELAY_MS}ms delay)`);
-  console.log(`Bias: Presidential ballot cycles Alice → Bob → Alice (20 min cycles)\n`);
+  console.log(`Bias: Presidential ballot cycles Bob → Alice → Bob (5 min cycles)\n`);
   
   let successCount = 0;
   let failCount = 0;
@@ -415,9 +431,19 @@ async function main() {
               : RUN_DURATION_SEC > 0 && endTime
                 ? `${((endTime - Date.now()) / 1000).toFixed(0)}s remaining`
                 : 'running...';
-            const cyclePos = ((elapsedSeconds % (20 * 60)) / (20 * 60)) * 100;
-            const biasTarget = cyclePos < 50 ? 'Bob' : 'Alice';
-            const biasPercent = cyclePos < 50 ? (50 - cyclePos) * 2 : (cyclePos - 50) * 2;
+            const cyclePos = ((elapsedSeconds % (15 * 60)) / (15 * 60)) * 100;
+            let biasTarget: string;
+            let biasPercent: number;
+            if (cyclePos < 33.33) {
+              biasTarget = 'Bob';
+              biasPercent = 100 - (cyclePos / 33.33) * 100;
+            } else if (cyclePos < 66.67) {
+              biasTarget = 'Alice';
+              biasPercent = ((cyclePos - 33.33) / 33.33) * 100;
+            } else {
+              biasTarget = 'Bob';
+              biasPercent = 100 - ((cyclePos - 66.67) / 33.33) * 100;
+            }
             console.log(`  Progress: ${successCount} votes (${rate} votes/sec, ${remaining}, bias: ${biasTarget} ${biasPercent.toFixed(0)}%)`);
           }
         } else {
