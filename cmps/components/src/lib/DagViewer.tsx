@@ -151,11 +151,15 @@ export function DagViewer({
     const map = new Map<string, SVGGElement>();
     
     // Find all node groups (states)
+    // Graphviz creates nodes with class "node" and title elements containing the state name
     const nodeGroups = svg.querySelectorAll('g.node');
     nodeGroups.forEach((group) => {
       const title = group.querySelector('title');
       if (title) {
-        const stateName = title.textContent?.trim();
+        // Title text is the state name, but may be quoted
+        let stateName = title.textContent?.trim() || '';
+        // Remove quotes if present
+        stateName = stateName.replace(/^["']|["']$/g, '');
         if (stateName) {
           map.set(stateName, group as SVGGElement);
         }
@@ -163,7 +167,7 @@ export function DagViewer({
     });
     
     elementMapRef.current = map;
-    console.log('DagViewer: Element map built with', map.size, 'states');
+    console.log('DagViewer: Element map built with', map.size, 'states:', Array.from(map.keys()));
   }
 
   // Setup CSS transitions
@@ -217,15 +221,24 @@ export function DagViewer({
       const title = edge.querySelector('title');
       if (title) {
         const titleText = title.textContent || '';
+        // Graphviz title format: "fromState" -> "toState"
         // Check if this edge connects fromState to toState
-        if (titleText.includes(fromState) && titleText.includes(toState)) {
+        const fromMatch = titleText.includes(`"${fromState}"`) || titleText.includes(`'${fromState}'`);
+        const toMatch = titleText.includes(`"${toState}"`) || titleText.includes(`'${toState}'`);
+        
+        if (fromMatch && toMatch) {
           // If eventName provided, check if label matches
           if (eventName) {
             const label = edge.querySelector('text');
-            if (label && label.textContent?.includes(eventName)) {
-              return edge as SVGGElement;
+            if (label) {
+              const labelText = label.textContent || '';
+              // Check if label contains the event name
+              if (labelText.includes(eventName)) {
+                return edge as SVGGElement;
+              }
             }
           } else {
+            // Return first matching edge if no event name specified
             return edge as SVGGElement;
           }
         }
