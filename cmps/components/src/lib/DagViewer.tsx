@@ -268,35 +268,36 @@ export function DagViewer({
         console.log('DagViewer: Checking edge with title:', titleText);
         
         // Graphviz title format can be: "fromState" -> "toState" or fromState->toState
-        // Check if this edge connects fromState to toState
+        // Trim whitespace and normalize
+        const normalizedTitle = titleText.trim();
+        
         // More specific check first: the edge should be fromState->toState
-        const exactMatch = titleText === `${fromState}->${toState}` || 
-                          titleText === `"${fromState}"->"${toState}"` ||
-                          titleText === `'${fromState}'->'${toState}'`;
+        const exactMatch = normalizedTitle === `${fromState}->${toState}` || 
+                          normalizedTitle === `"${fromState}"->"${toState}"` ||
+                          normalizedTitle === `'${fromState}'->'${toState}'`;
         
         // Pattern matching for unquoted format: fromState->toState
-        const unquotedMatch = titleText.startsWith(`${fromState}->`) && titleText.endsWith(`->${toState}`);
+        // Check if it starts with fromState-> and contains ->toState (not necessarily at end due to potential whitespace)
+        const unquotedMatch = normalizedTitle.startsWith(`${fromState}->`) && 
+                             (normalizedTitle.endsWith(`->${toState}`) || normalizedTitle.includes(`->${toState}`));
         
         // Pattern matching for quoted format: "fromState"->"toState"
-        const quotedMatch = (titleText.includes(`"${fromState}"`) || titleText.includes(`'${fromState}'`)) &&
-                           (titleText.includes(`"${toState}"`) || titleText.includes(`'${toState}'`)) &&
-                           titleText.includes('->');
+        const quotedMatch = (normalizedTitle.includes(`"${fromState}"`) || normalizedTitle.includes(`'${fromState}'`)) &&
+                           (normalizedTitle.includes(`"${toState}"`) || normalizedTitle.includes(`'${toState}'`)) &&
+                           normalizedTitle.includes('->');
         
-        // Check if this edge connects fromState to toState
-        const fromMatch = titleText.includes(`"${fromState}"`) || 
-                         titleText.includes(`'${fromState}'`) ||
-                         titleText.startsWith(`${fromState}->`);
-        const toMatch = titleText.includes(`"${toState}"`) || 
-                       titleText.includes(`'${toState}'`) ||
-                       titleText.endsWith(`->${toState}`) ||
-                       (titleText.includes(`->${toState}`) && !titleText.includes(`->${toState}->`));
+        // Regex-based matching for more flexibility
+        const unquotedPattern = new RegExp(`^${fromState}->${toState}(?:\\s|$)`);
+        const quotedPattern = new RegExp(`["']${fromState}["']\\s*->\\s*["']${toState}["']`);
+        const regexMatch = unquotedPattern.test(normalizedTitle) || quotedPattern.test(normalizedTitle);
         
-        console.log('DagViewer: Edge match check - title:', titleText, 'fromState:', fromState, 'toState:', toState);
-        console.log('DagViewer: Match results - exactMatch:', exactMatch, 'unquotedMatch:', unquotedMatch, 'quotedMatch:', quotedMatch, 'fromMatch:', fromMatch, 'toMatch:', toMatch);
+        console.log('DagViewer: Edge match check - title:', normalizedTitle, 'fromState:', fromState, 'toState:', toState);
+        console.log('DagViewer: Match results - exactMatch:', exactMatch, 'unquotedMatch:', unquotedMatch, 'quotedMatch:', quotedMatch, 'regexMatch:', regexMatch);
         
         // Check for exact match first (most reliable)
-        if (exactMatch || unquotedMatch || quotedMatch) {
-          console.log('DagViewer: Found matching edge for', fromState, '->', toState, 'type:', exactMatch ? 'exact' : unquotedMatch ? 'unquoted' : 'quoted');
+        if (exactMatch || unquotedMatch || quotedMatch || regexMatch) {
+          const matchType = exactMatch ? 'exact' : unquotedMatch ? 'unquoted' : quotedMatch ? 'quoted' : 'regex';
+          console.log('DagViewer: Found matching edge for', fromState, '->', toState, 'type:', matchType);
           
           // If eventName provided, check if label matches
           if (eventName) {
