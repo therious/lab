@@ -463,19 +463,27 @@ export function DagViewer({
     const originalStyles = edgeStylesRef.current.get(edge);
     
     if (!originalStyles) {
-      console.error('DagViewer: CRITICAL - No stored styles for edge:', edgeId);
-      // Read current state and restore to defaults
+      console.error('DagViewer: CRITICAL - No stored styles for edge:', edgeId, 'Map size:', edgeStylesRef.current.size);
+      // Edge was already restored or never highlighted - just clean our modifications
       const path = edge.querySelector('path') as SVGPathElement;
       const label = edge.querySelector('text') as SVGTextElement;
       
       if (path) {
-        // Remove our modifications
-        path.removeAttribute('stroke');
-        path.removeAttribute('stroke-width');
-        // Don't remove style entirely - might have other important styles
+        // Only remove our highlight modifications, don't touch original attributes
+        const currentStroke = path.getAttribute('stroke');
+        const currentStrokeWidth = path.getAttribute('stroke-width');
+        
+        // If we added cyan/3, remove them
+        if (currentStroke === 'cyan') {
+          path.removeAttribute('stroke');
+        }
+        if (currentStrokeWidth === '3' || currentStrokeWidth === '3px') {
+          path.removeAttribute('stroke-width');
+        }
+        
+        // Clean style attribute of our additions only
         const currentStyle = path.getAttribute('style') || '';
         if (currentStyle.includes('stroke: cyan') || currentStyle.includes('stroke-width: 3')) {
-          // Remove our additions from style
           const cleanedStyle = currentStyle
             .replace(/stroke:\s*cyan[;\s]*/gi, '')
             .replace(/stroke-width:\s*3[px\s]*[;\s]*/gi, '')
@@ -489,11 +497,14 @@ export function DagViewer({
         path.classList.remove('dag-viewer-edge');
       }
       if (label) {
-        label.removeAttribute('fill');
+        const currentFill = label.getAttribute('fill');
+        if (currentFill === 'orange') {
+          label.removeAttribute('fill');
+        }
         label.style.fontWeight = '';
         label.classList.remove('dag-viewer-edge-label');
       }
-      console.log('DagViewer: Restored edge using fallback method');
+      console.log('DagViewer: Cleaned edge modifications (no stored styles)');
       return;
     }
     
@@ -552,9 +563,17 @@ export function DagViewer({
       console.log('DagViewer: Directly restored label - fill:', label.getAttribute('fill') || 'removed');
     }
     
-    // Remove from stored styles map AFTER successful restoration
+    // DON'T delete from map yet - keep it for verification
+    // Only delete after we're sure restoration worked
+    console.log('DagViewer: Direct edge restoration complete for', edgeId, '(styles kept in map for verification)');
+  }
+  
+  // Clean up edge from map after verification
+  function cleanupEdgeFromMap(edge: SVGGElement) {
     edgeStylesRef.current.delete(edge);
-    console.log('DagViewer: Direct edge restoration complete for', edgeId);
+    const title = edge.querySelector('title');
+    const edgeId = title?.textContent?.trim() || 'unknown';
+    console.log('DagViewer: Cleaned up edge from map:', edgeId);
   }
 
   // Reset transition edge highlighting - MUST restore to original state
@@ -649,8 +668,8 @@ export function DagViewer({
       console.log('DagViewer: Restored label - fill:', originalStyles.label.fill || 'removed');
     }
     
-    // Remove from stored styles map AFTER restoration
-    edgeStylesRef.current.delete(edge);
+    // DON'T delete from map here - let the caller cleanup after verification
+    // This ensures we can restore again if needed
     
     console.log('DagViewer: Edge highlighting RESET COMPLETE for', fromState, '->', toState);
   }
@@ -746,30 +765,35 @@ export function DagViewer({
         await new Promise(resolve => setTimeout(resolve, duration * 0.8));
         console.log('DagViewer: Resetting self-transition edge - MUST restore');
         
-        // CRITICAL: Restore using direct edge reference first, then fallback to lookup
+        // CRITICAL: Restore using direct edge reference
         if (edgeToRestore) {
           restoreEdgeDirectly(edgeToRestore);
+          
+          // Verify restoration worked
+          const path = edgeToRestore.querySelector('path') as SVGPathElement;
+          if (path) {
+            const stroke = path.getAttribute('stroke');
+            const strokeWidth = path.getAttribute('stroke-width');
+            if (stroke === 'cyan' || strokeWidth === '3' || strokeWidth === '3px') {
+              console.error('DagViewer: CRITICAL - Edge not properly restored! Attempting restoration again...');
+              // Try one more time - styles should still be in map
+              restoreEdgeDirectly(edgeToRestore);
+            } else {
+              console.log('DagViewer: Edge restoration verified - stroke:', stroke || 'none', 'strokeWidth:', strokeWidth || 'none');
+            }
+          }
+          
+          // Only cleanup from map after successful verification
+          cleanupEdgeFromMap(edgeToRestore);
         } else {
           resetTransitionEdge(fromState, toState, eventName);
-        }
-        
-        // Double-check restoration by verifying edge is restored
-        const path = edgeToRestore?.querySelector('path') as SVGPathElement;
-        if (path) {
-          const stroke = path.getAttribute('stroke');
-          const strokeWidth = path.getAttribute('stroke-width');
-          if (stroke === 'cyan' || strokeWidth === '3') {
-            console.error('DagViewer: CRITICAL - Edge not properly restored! Forcing direct restoration...');
-            restoreEdgeDirectly(edgeToRestore);
-          } else {
-            console.log('DagViewer: Edge restoration verified - stroke:', stroke || 'none', 'strokeWidth:', strokeWidth || 'none');
-          }
         }
       } catch (error) {
         console.error('DagViewer: Error during self-transition animation, ensuring edge is restored:', error);
         // CRITICAL: Always restore edge even if there's an error
         if (edgeToRestore) {
           restoreEdgeDirectly(edgeToRestore);
+          cleanupEdgeFromMap(edgeToRestore);
         } else {
           resetTransitionEdge(fromState, toState, eventName);
         }
