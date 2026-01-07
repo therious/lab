@@ -27,6 +27,8 @@ export function DagViewer({
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const svgElementRef = useRef<SVGSVGElement | null>(null);
   const elementMapRef = useRef<Map<string, SVGGElement>>(new Map());
+  // Store edge map in a separate ref for reliable persistence
+  const edgeMapRef = useRef<Map<string, SVGGElement>>(new Map());
   // Use edge identifier (title) as key instead of DOM element for reliable lookup
   const edgeStylesRef = useRef<Map<string, {path?: {stroke?: string, strokeWidth?: string, style?: string}, label?: {fill?: string, fontWeight?: string}, edge?: SVGGElement}>>(new Map());
   const [error, setError] = useState<string | null>(null);
@@ -184,8 +186,8 @@ export function DagViewer({
     });
     
     elementMapRef.current = map;
-    // Store edge map in a ref for easy lookup
-    (elementMapRef as any).edgeMap = edgeMap;
+    // Store edge map in a dedicated ref for reliable persistence
+    edgeMapRef.current = edgeMap;
   }
 
   // Setup CSS transitions
@@ -245,9 +247,9 @@ export function DagViewer({
   function findTransitionEdge(fromState: string, toState: string, eventName?: string): SVGGElement | null {
     if (!svgElementRef.current) return null;
     
-    // Try direct lookup from edge map first
-    const edgeMap = (elementMapRef as any).edgeMap as Map<string, SVGGElement>;
-    if (edgeMap) {
+    // Try direct lookup from edge map first (persistent ref)
+    const edgeMap = edgeMapRef.current;
+    if (edgeMap && edgeMap.size > 0) {
       // Try unquoted format first (most common)
       let edgeKey = `${fromState}->${toState}`;
       let edge = edgeMap.get(edgeKey);
@@ -301,15 +303,32 @@ export function DagViewer({
   // Highlight transition edge
   function highlightTransitionEdge(fromState: string, toState: string, eventName?: string) {
     const edge = findTransitionEdge(fromState, toState, eventName);
-    if (!edge) return false;
+    if (!edge) {
+      console.warn('DagViewer: Edge not found for highlighting:', fromState, '->', toState, 'event:', eventName);
+      return false;
+    }
     
     // Get edge identifier (title) for tracking - use this as the key
     const title = edge.querySelector('title');
     const edgeId = title?.textContent?.trim() || `${fromState}->${toState}`;
     
-    // Check if edge is already highlighted - if so, don't modify again
-    if (edgeStylesRef.current.has(edgeId))
-      return true; // Already highlighted, consider it success
+    // Check if edge is currently highlighted (has highlight styles applied)
+    // If it's in edgeStylesRef, it means we have stored original styles, so it's either:
+    // 1. Currently highlighted (styles not yet restored), OR
+    // 2. Already restored (should be removed from map, but check actual state)
+    const storedData = edgeStylesRef.current.get(edgeId);
+    if (storedData) {
+      // Check if actually still highlighted by examining the edge
+      const path = edge.querySelector('path') as SVGPathElement;
+      const currentStroke = path?.getAttribute('stroke');
+      const currentStrokeWidth = path?.getAttribute('stroke-width');
+      // If still highlighted (cyan/3), return early
+      if (currentStroke === 'cyan' && (currentStrokeWidth === '3' || currentStrokeWidth === '3px')) {
+        return true; // Already highlighted, consider it success
+      }
+      // Otherwise, it was restored but not cleaned up - remove from map and continue
+      edgeStylesRef.current.delete(edgeId);
+    }
     
     const path = edge.querySelector('path') as SVGPathElement;
     const label = edge.querySelector('text') as SVGTextElement;
