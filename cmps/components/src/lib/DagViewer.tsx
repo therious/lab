@@ -389,11 +389,6 @@ export function DagViewer({
         originalStyles.path.style = styleAttr;
       }
       
-      // Store original classList if any
-      if (path.classList.length > 0) {
-        originalStyles.path.classList = Array.from(path.classList);
-      }
-      
       path.classList.add('dag-viewer-edge');
       path.setAttribute('stroke', 'cyan');
       path.setAttribute('stroke-width', '3');
@@ -475,20 +470,20 @@ export function DagViewer({
     const path = edge.querySelector('path') as SVGPathElement;
     const label = edge.querySelector('text') as SVGTextElement;
     
-    if (path) {
+    if (path && originalStyles.path) {
       // ALWAYS restore original values
-      if (originalStyles.path?.stroke) {
+      if (originalStyles.path.stroke) {
         path.setAttribute('stroke', originalStyles.path.stroke);
       } else {
         path.removeAttribute('stroke');
       }
-      if (originalStyles.path?.strokeWidth) {
+      if (originalStyles.path.strokeWidth) {
         path.setAttribute('stroke-width', originalStyles.path.strokeWidth);
       } else {
         path.removeAttribute('stroke-width');
       }
       // Restore style attribute if it was stored (for dotted edges)
-      if (originalStyles.path?.style) {
+      if (originalStyles.path.style) {
         path.setAttribute('style', originalStyles.path.style);
       } else {
         path.removeAttribute('style');
@@ -498,14 +493,14 @@ export function DagViewer({
       console.log('DagViewer: Restored path - stroke:', originalStyles.path.stroke || 'removed', 'strokeWidth:', originalStyles.path.strokeWidth || 'removed');
     }
     
-    if (label) {
+    if (label && originalStyles.label) {
       // ALWAYS restore original values
-      if (originalStyles.label?.fill) {
+      if (originalStyles.label.fill) {
         label.setAttribute('fill', originalStyles.label.fill);
       } else {
         label.removeAttribute('fill');
       }
-      if (originalStyles.label?.fontWeight) {
+      if (originalStyles.label.fontWeight) {
         label.style.fontWeight = originalStyles.label.fontWeight;
       } else {
         label.style.fontWeight = '';
