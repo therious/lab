@@ -33,10 +33,7 @@ export function DagViewer({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('DagViewer effect triggered, dot:', dot ? `${dot.substring(0, 100)}...` : 'undefined/empty');
-
     if (!dot) {
-      console.warn('DagViewer: No dot string provided');
       setIsLoading(false);
       setError('No dot graph string provided');
       return;
@@ -48,20 +45,14 @@ export function DagViewer({
       try {
         setIsLoading(true);
         setError(null);
-        console.log('DagViewer: Starting render, dot length:', dot.length);
 
         const viz = await instance();
-        console.log('DagViewer: Viz instance obtained');
 
         // Check if still mounted after async operation
-        if (!isMounted) {
-          console.warn('DagViewer: Component unmounted during async operation');
-          return;
-        }
+        if (!isMounted) return;
 
         // Check container ref
         if (!svgContainerRef.current) {
-          console.warn('DagViewer: SVG container ref not available');
           if (isMounted) {
             setIsLoading(false);
             setError('Container not available');
@@ -81,13 +72,8 @@ export function DagViewer({
           svgElement.style.maxHeight = '100%';
         }
 
-        console.log('DagViewer: SVG element rendered:', svgElement);
-
         // Final check before DOM manipulation
-        if (!isMounted || !svgContainerRef.current) {
-          console.warn('DagViewer: Component unmounted or container lost before appending');
-          return;
-        }
+        if (!isMounted || !svgContainerRef.current) return;
 
         // Clear previous SVG content
         svgContainerRef.current.innerHTML = '';
@@ -95,19 +81,16 @@ export function DagViewer({
         // Append the SVG element
         svgContainerRef.current.appendChild(svgElement);
         svgElementRef.current = svgElement;
-        console.log('DagViewer: SVG appended to container successfully');
         
         // Build element mapping for direct manipulation
         buildElementMap(svgElement);
         
         // Setup CSS transitions for animations
-        if (animationEnabled) {
+        if (animationEnabled)
           setupSvgAnimations(transitionTime);
-        }
         
-        if (isMounted) {
+        if (isMounted)
           setIsLoading(false);
-        }
       } catch (err) {
         console.error('DagViewer render error:', err);
         if (isMounted) {
@@ -131,30 +114,13 @@ export function DagViewer({
 
   // Effect for state changes and animations
   useEffect(() => {
-    console.log('DagViewer: State change effect triggered', {
-      hasSvg: !!svgElementRef.current,
-      currentState,
-      previousState,
-      isLoading,
-      elementMapSize: elementMapRef.current.size,
-      animationEnabled,
-      transitionEvent
-    });
-    
-    if (!svgElementRef.current || !currentState || isLoading) {
-      console.log('DagViewer: Early return - svg:', !!svgElementRef.current, 'state:', currentState, 'loading:', isLoading);
-      return;
-    }
+    if (!svgElementRef.current || !currentState || isLoading) return;
     
     // Wait for element map to be built
-    if (elementMapRef.current.size === 0) {
-      console.log('DagViewer: Element map not ready yet, waiting...');
-      return;
-    }
+    if (elementMapRef.current.size === 0) return;
     
     // Initial state highlighting (no previous state)
     if (!previousState) {
-      console.log('DagViewer: Initial state highlighting for', currentState);
       clearAllStateColors();
       updateStateColor(currentState, true);
       return;
@@ -163,21 +129,17 @@ export function DagViewer({
     if (animationEnabled) {
       // Animate both regular transitions and self-transitions
       // Always animate if there's a transitionEvent, even for self-transitions
-      if (transitionEvent) {
-        console.log('DagViewer: Transition with event, animating', previousState, '->', currentState);
+      if (transitionEvent)
         animateStateTransition(previousState, currentState, transitionEvent, transitionTime, onAnimationComplete);
-      } else if (previousState !== currentState) {
-        console.log('DagViewer: State change without event, animating');
+      else if (previousState !== currentState)
         animateStateTransition(previousState, currentState, transitionEvent, transitionTime, onAnimationComplete);
-      } else {
+      else {
         // No event and no state change - just update
-        console.log('DagViewer: No state change and no event, direct update');
         clearAllStateColors();
         updateStateColor(currentState, true);
       }
     } else {
       // Direct update without animation
-      console.log('DagViewer: Direct update from', previousState, 'to', currentState, 'animationEnabled:', animationEnabled);
       clearAllStateColors();
       updateStateColor(currentState, true);
     }
@@ -220,14 +182,12 @@ export function DagViewer({
     elementMapRef.current = map;
     // Store edge map in a ref for easy lookup
     (elementMapRef as any).edgeMap = edgeMap;
-    console.log('DagViewer: Element map built with', map.size, 'states:', Array.from(map.keys()));
-    console.log('DagViewer: Edge map built with', edgeMap.size, 'edges:', Array.from(edgeMap.keys()));
   }
 
   // Setup CSS transitions
   function setupSvgAnimations(duration: number) {
     const styleId = 'dag-viewer-animations';
-    if (document.getElementById(styleId)) return; // Already added
+    if (document.getElementById(styleId)) return;
     
     const style = document.createElement('style');
     style.id = styleId;
@@ -274,20 +234,12 @@ export function DagViewer({
     if (shape) {
       shape.classList.add('dag-viewer-state');
       shape.setAttribute('fill', isCurrent ? 'palegreen' : 'cornsilk');
-      console.log('DagViewer: Updated state', stateName, 'to', isCurrent ? 'palegreen' : 'cornsilk');
-    } else {
-      console.warn('DagViewer: Shape element not found for state:', stateName);
     }
   }
 
   // Find edge connecting two states - use simple title lookup
   function findTransitionEdge(fromState: string, toState: string, eventName?: string): SVGGElement | null {
-    console.log('DagViewer: findTransitionEdge called:', fromState, '->', toState, 'event:', eventName);
-    
-    if (!svgElementRef.current) {
-      console.warn('DagViewer: svgElementRef.current is null');
-      return null;
-    }
+    if (!svgElementRef.current) return null;
     
     // Try direct lookup from edge map first
     const edgeMap = (elementMapRef as any).edgeMap as Map<string, SVGGElement>;
@@ -307,22 +259,16 @@ export function DagViewer({
       }
       
       if (edge) {
-        console.log('DagViewer: Found edge via map lookup:', edgeKey);
-        
         // If eventName provided, try to match label, but if no match, still return the edge
         // (for conditional transitions, the label is the condition, not the event)
         if (eventName) {
           const label = edge.querySelector('text');
           if (label) {
             const labelText = label.textContent || '';
-            if (labelText.includes(eventName)) {
-              console.log('DagViewer: Label matches event');
+            if (labelText.includes(eventName))
               return edge;
-            } else {
-              console.log('DagViewer: Label does not match event (may be conditional transition):', labelText, 'vs', eventName);
-              // Still return the edge - it might be a conditional transition triggered by the event
-              return edge;
-            }
+            // Still return the edge - it might be a conditional transition triggered by the event
+            return edge;
           }
         }
         // Return edge if found, regardless of event name matching
@@ -339,49 +285,30 @@ export function DagViewer({
         // Simple check: does title contain fromState->toState pattern?
         if (titleText.includes(`${fromState}->${toState}`) || 
             titleText.includes(`"${fromState}"->"${toState}"`) ||
-            titleText.includes(`'${fromState}'->'${toState}'`)) {
-          
-          console.log('DagViewer: Found edge via fallback search:', titleText);
+            titleText.includes(`'${fromState}'->'${toState}'`))
           // Return the edge - for conditional transitions, we don't need to match the event name
           return edge as SVGGElement;
-        }
       }
     }
     
-    console.warn('DagViewer: No matching edge found for', fromState, '->', toState);
     return null;
   }
 
   // Highlight transition edge
   function highlightTransitionEdge(fromState: string, toState: string, eventName?: string) {
     const edge = findTransitionEdge(fromState, toState, eventName);
-    if (!edge) {
-      console.warn('DagViewer: Transition edge not found:', fromState, '->', toState, 'event:', eventName);
-      // Log all available edges for debugging
-      if (svgElementRef.current) {
-        const allEdges = svgElementRef.current.querySelectorAll('g.edge');
-        console.log('DagViewer: Available edges:', Array.from(allEdges).map(e => {
-          const title = e.querySelector('title');
-          return title?.textContent || 'no title';
-        }));
-      }
-      return false; // Return false to indicate failure
-    }
+    if (!edge) return false;
     
     // Get edge identifier (title) for tracking - use this as the key
     const title = edge.querySelector('title');
     const edgeId = title?.textContent?.trim() || `${fromState}->${toState}`;
     
     // Check if edge is already highlighted - if so, don't modify again
-    if (edgeStylesRef.current.has(edgeId)) {
-      console.warn('DagViewer: Edge already highlighted, skipping:', edgeId);
+    if (edgeStylesRef.current.has(edgeId))
       return true; // Already highlighted, consider it success
-    }
     
     const path = edge.querySelector('path') as SVGPathElement;
     const label = edge.querySelector('text') as SVGTextElement;
-    
-    console.log('DagViewer: Highlighting edge from', fromState, 'to', toState, 'id:', edgeId);
     
     // Store original styles BEFORE any modifications - CRITICAL
     const originalStyles: {path?: {stroke?: string, strokeWidth?: string, style?: string}, label?: {fill?: string, fontWeight?: string}} = {};
@@ -393,7 +320,6 @@ export function DagViewer({
       
       // If already highlighted (cyan/3), we need to get the REAL original from storage
       if (currentStroke === 'cyan' && currentStrokeWidth === '3') {
-        console.warn('DagViewer: Edge already highlighted! Reading from previous storage or computed style');
         const computedStyle = window.getComputedStyle(path);
         // Try to get the actual original from computed style (before our modifications)
         originalStyles.path = {
@@ -410,16 +336,12 @@ export function DagViewer({
       
       // Also store style attribute if present (for dotted edges)
       const styleAttr = path.getAttribute('style') || '';
-      if (styleAttr && !styleAttr.includes('stroke: cyan')) {
+      if (styleAttr && !styleAttr.includes('stroke: cyan'))
         originalStyles.path.style = styleAttr;
-      }
       
       path.classList.add('dag-viewer-edge');
       path.setAttribute('stroke', 'cyan');
       path.setAttribute('stroke-width', '3');
-      console.log('DagViewer: Edge path highlighted, stored original stroke:', originalStyles.path.stroke || 'none', 'strokeWidth:', originalStyles.path.strokeWidth || 'none', 'style:', originalStyles.path.style || 'none');
-    } else {
-      console.warn('DagViewer: Path element not found in edge');
     }
     
     if (label) {
@@ -428,7 +350,6 @@ export function DagViewer({
       
       // If already highlighted (orange), get real original
       if (currentFill === 'orange') {
-        console.warn('DagViewer: Label already highlighted! Reading from computed style');
         const computedStyle = window.getComputedStyle(label);
         originalStyles.label = {
           fill: computedStyle.fill === 'rgb(255, 165, 0)' ? '' : computedStyle.fill || '',
@@ -444,9 +365,6 @@ export function DagViewer({
       label.classList.add('dag-viewer-edge-label');
       label.setAttribute('fill', 'orange');
       label.style.fontWeight = 'bold';
-      console.log('DagViewer: Edge label highlighted:', label.textContent, 'stored original fill:', originalStyles.label.fill || 'none');
-    } else {
-      console.warn('DagViewer: Label element not found in edge');
     }
     
     // Store original styles for this edge using edgeId as key - MUST store for restoration
@@ -455,7 +373,6 @@ export function DagViewer({
       ...originalStyles,
       edge: edge
     });
-    console.log('DagViewer: Stored original styles for edge restoration, edgeId:', edgeId);
     return true; // Return true to indicate success
   }
 
@@ -463,7 +380,6 @@ export function DagViewer({
   function restoreEdgeDirectly(edge: SVGGElement) {
     const title = edge.querySelector('title');
     const edgeId = title?.textContent?.trim() || 'unknown';
-    console.log('DagViewer: Restoring edge directly from stored reference, edgeId:', edgeId);
     
     // Look up by edgeId instead of DOM element
     const storedData = edgeStylesRef.current.get(edgeId);
@@ -473,7 +389,6 @@ export function DagViewer({
     } : undefined;
     
     if (!originalStyles) {
-      console.error('DagViewer: CRITICAL - No stored styles for edge:', edgeId, 'Map size:', edgeStylesRef.current.size);
       // Edge was already restored or never highlighted - DON'T remove attributes!
       // Just remove our highlight classes and check if we need to clean style
       const path = edge.querySelector('path') as SVGPathElement;
@@ -485,12 +400,10 @@ export function DagViewer({
         const currentStrokeWidth = path.getAttribute('stroke-width');
         
         // If we added cyan/3, remove ONLY those
-        if (currentStroke === 'cyan') {
+        if (currentStroke === 'cyan')
           path.removeAttribute('stroke');
-        }
-        if (currentStrokeWidth === '3' || currentStrokeWidth === '3px') {
+        if (currentStrokeWidth === '3' || currentStrokeWidth === '3px')
           path.removeAttribute('stroke-width');
-        }
         
         // Clean style attribute of our additions only, preserve everything else
         const currentStyle = path.getAttribute('style') || '';
@@ -499,29 +412,25 @@ export function DagViewer({
             .replace(/stroke:\s*cyan[;\s]*/gi, '')
             .replace(/stroke-width:\s*3[px\s]*[;\s]*/gi, '')
             .trim();
-          if (cleanedStyle) {
+          if (cleanedStyle)
             path.setAttribute('style', cleanedStyle);
-          } else if (currentStyle) {
+          else if (currentStyle)
             // Only remove style if it was empty after cleaning AND it was our addition
             // Don't remove if it had other styles originally
             path.removeAttribute('style');
-          }
         }
         path.classList.remove('dag-viewer-edge');
       }
       if (label) {
         const currentFill = label.getAttribute('fill');
         // Only remove orange if we added it
-        if (currentFill === 'orange') {
+        if (currentFill === 'orange')
           label.removeAttribute('fill');
-        }
         // Only clear fontWeight if we set it to bold
-        if (label.style.fontWeight === 'bold') {
+        if (label.style.fontWeight === 'bold')
           label.style.fontWeight = '';
-        }
         label.classList.remove('dag-viewer-edge-label');
       }
-      console.log('DagViewer: Cleaned edge modifications (no stored styles) - preserved original attributes');
       return;
     }
     
@@ -530,21 +439,19 @@ export function DagViewer({
     
     if (path && originalStyles.path) {
       // Restore stroke
-      if (originalStyles.path.stroke && originalStyles.path.stroke !== 'cyan') {
+      if (originalStyles.path.stroke && originalStyles.path.stroke !== 'cyan')
         path.setAttribute('stroke', originalStyles.path.stroke);
-      } else {
+      else
         path.removeAttribute('stroke');
-      }
       // Restore strokeWidth
-      if (originalStyles.path.strokeWidth && originalStyles.path.strokeWidth !== '3' && originalStyles.path.strokeWidth !== '3px') {
+      if (originalStyles.path.strokeWidth && originalStyles.path.strokeWidth !== '3' && originalStyles.path.strokeWidth !== '3px')
         path.setAttribute('stroke-width', originalStyles.path.strokeWidth);
-      } else {
+      else
         path.removeAttribute('stroke-width');
-      }
       // Restore style attribute
-      if (originalStyles.path.style) {
+      if (originalStyles.path.style)
         path.setAttribute('style', originalStyles.path.style);
-      } else {
+      else {
         // Clean our modifications from style if present
         const currentStyle = path.getAttribute('style') || '';
         if (currentStyle.includes('stroke: cyan') || currentStyle.includes('stroke-width: 3')) {
@@ -552,37 +459,31 @@ export function DagViewer({
             .replace(/stroke:\s*cyan[;\s]*/gi, '')
             .replace(/stroke-width:\s*3[px\s]*[;\s]*/gi, '')
             .trim();
-          if (cleanedStyle) {
+          if (cleanedStyle)
             path.setAttribute('style', cleanedStyle);
-          } else {
+          else
             path.removeAttribute('style');
-          }
         }
       }
       path.classList.remove('dag-viewer-edge');
-      console.log('DagViewer: Directly restored path - stroke:', path.getAttribute('stroke') || 'removed', 'strokeWidth:', path.getAttribute('stroke-width') || 'removed');
     }
     
     if (label && originalStyles.label) {
       // Restore fill
-      if (originalStyles.label.fill && originalStyles.label.fill !== 'orange') {
+      if (originalStyles.label.fill && originalStyles.label.fill !== 'orange')
         label.setAttribute('fill', originalStyles.label.fill);
-      } else {
+      else
         label.removeAttribute('fill');
-      }
       // Restore fontWeight
-      if (originalStyles.label.fontWeight) {
+      if (originalStyles.label.fontWeight)
         label.style.fontWeight = originalStyles.label.fontWeight;
-      } else {
+      else
         label.style.fontWeight = '';
-      }
       label.classList.remove('dag-viewer-edge-label');
-      console.log('DagViewer: Directly restored label - fill:', label.getAttribute('fill') || 'removed');
     }
     
     // DON'T delete from map yet - keep it for verification
     // Only delete after we're sure restoration worked
-    console.log('DagViewer: Direct edge restoration complete for', edgeId, '(styles kept in map for verification)');
   }
   
   // Clean up edge from map after verification
@@ -590,7 +491,6 @@ export function DagViewer({
     const title = edge.querySelector('title');
     const edgeId = title?.textContent?.trim() || 'unknown';
     edgeStylesRef.current.delete(edgeId);
-    console.log('DagViewer: Cleaned up edge from map:', edgeId);
   }
   
   // Get edge identifier for lookup
@@ -603,25 +503,18 @@ export function DagViewer({
   function resetTransitionEdge(fromState: string, toState: string, eventName?: string) {
     // Try to find edge with eventName first, then without
     let edge = findTransitionEdge(fromState, toState, eventName);
-    if (!edge && eventName) {
+    if (!edge && eventName)
       edge = findTransitionEdge(fromState, toState);
-    }
     
     if (!edge) {
-      console.error('DagViewer: Edge not found for reset:', fromState, '->', toState, 'event:', eventName);
       // Try to find ANY edge that was highlighted and restore it
       // This is a safety mechanism to ensure edges are always restored
       edgeStylesRef.current.forEach((storedData, storedEdgeId) => {
-        if (storedEdgeId.includes(`${fromState}->${toState}`) && storedData.edge) {
-          console.warn('DagViewer: Found stored edge for reset, restoring it:', storedEdgeId);
+        if (storedEdgeId.includes(`${fromState}->${toState}`) && storedData.edge)
           edge = storedData.edge;
-        }
       });
       
-      if (!edge) {
-        console.error('DagViewer: CRITICAL - Cannot find edge to restore!', fromState, '->', toState);
-        return;
-      }
+      if (!edge) return;
     }
     
     // Get stored original styles using edgeId
@@ -633,7 +526,6 @@ export function DagViewer({
     } : undefined;
     
     if (!originalStyles) {
-      console.error('DagViewer: CRITICAL - No stored styles for edge! Attempting fallback restoration');
       // Fallback: try to restore to default Graphviz styles
       const path = edge.querySelector('path') as SVGPathElement;
       const label = edge.querySelector('text') as SVGTextElement;
@@ -657,63 +549,48 @@ export function DagViewer({
     
     if (path && originalStyles.path) {
       // ALWAYS restore original values
-      if (originalStyles.path.stroke) {
+      if (originalStyles.path.stroke)
         path.setAttribute('stroke', originalStyles.path.stroke);
-      } else {
+      else
         path.removeAttribute('stroke');
-      }
-      if (originalStyles.path.strokeWidth) {
+      if (originalStyles.path.strokeWidth)
         path.setAttribute('stroke-width', originalStyles.path.strokeWidth);
-      } else {
+      else
         path.removeAttribute('stroke-width');
-      }
       // Restore style attribute if it was stored (for dotted edges)
-      if (originalStyles.path.style) {
+      if (originalStyles.path.style)
         path.setAttribute('style', originalStyles.path.style);
-      } else {
+      else
         path.removeAttribute('style');
-      }
       // Remove highlight class
       path.classList.remove('dag-viewer-edge');
-      console.log('DagViewer: Restored path - stroke:', originalStyles.path.stroke || 'removed', 'strokeWidth:', originalStyles.path.strokeWidth || 'removed');
     }
     
     if (label && originalStyles.label) {
       // ALWAYS restore original values
-      if (originalStyles.label.fill) {
+      if (originalStyles.label.fill)
         label.setAttribute('fill', originalStyles.label.fill);
-      } else {
+      else
         label.removeAttribute('fill');
-      }
-      if (originalStyles.label.fontWeight) {
+      if (originalStyles.label.fontWeight)
         label.style.fontWeight = originalStyles.label.fontWeight;
-      } else {
+      else
         label.style.fontWeight = '';
-      }
       // Remove highlight class
       label.classList.remove('dag-viewer-edge-label');
-      console.log('DagViewer: Restored label - fill:', originalStyles.label.fill || 'removed');
     }
     
     // DON'T delete from map here - let the caller cleanup after verification
     // This ensures we can restore again if needed
-    
-    console.log('DagViewer: Edge highlighting RESET COMPLETE for', fromState, '->', toState, 'edgeId:', edgeId);
   }
 
   // Pulse state color (for destination state in all transitions)
   function pulseStateColor(stateName: string, duration: number) {
     const nodeGroup = elementMapRef.current.get(stateName);
-    if (!nodeGroup) {
-      console.warn('DagViewer: State node not found for pulse:', stateName);
-      return;
-    }
+    if (!nodeGroup) return;
     
     const shape = nodeGroup.querySelector('ellipse, circle, polygon') as SVGElement;
-    if (!shape) {
-      console.warn('DagViewer: Shape element not found for pulse:', stateName);
-      return;
-    }
+    if (!shape) return;
     
     // Get target color (what it should be after transition)
     const targetColor = 'palegreen'; // Destination state is always current/active
@@ -727,12 +604,10 @@ export function DagViewer({
     
     // Pulse animation: bright -> target color
     shape.setAttribute('fill', brightColor);
-    console.log('DagViewer: Pulsing destination state', stateName, 'to bright color', brightColor);
     
     // Use longer pulse duration (80% of total) so it's more noticeable
     setTimeout(() => {
       shape.setAttribute('fill', targetColor);
-      console.log('DagViewer: Pulsed state', stateName, 'to target color', targetColor);
     }, duration * 0.8);
   }
 
@@ -744,23 +619,16 @@ export function DagViewer({
     duration: number,
     onComplete?: () => void
   ) {
-    console.log('DagViewer: Starting animation transition', fromState, '->', toState);
-    
     // Handle self-transitions (same state)
     if (fromState === toState) {
-      console.log('DagViewer: Self-transition detected, checking for self-loop edge');
       // Only animate if there's actually a self-transition edge
       const selfEdgeRef = findTransitionEdge(fromState, toState, eventName);
       if (!selfEdgeRef) {
-        console.log('DagViewer: No self-transition edge found, skipping animation');
         // No edge means no transition - just return without animating
-        if (onComplete) {
-          onComplete();
-        }
+        if (onComplete) onComplete();
         return;
       }
       
-      console.log('DagViewer: Self-transition edge found, using pulse animation');
       // Store the edge reference directly so we can always restore it
       const edgeToRestore = selfEdgeRef;
       let edgeHighlighted = false;
@@ -769,18 +637,11 @@ export function DagViewer({
         // Highlight the self-loop edge
         edgeHighlighted = highlightTransitionEdge(fromState, toState, eventName);
         if (!edgeHighlighted) {
-          console.error('DagViewer: CRITICAL - Failed to highlight self-transition edge, but edge exists!');
           // Try to restore immediately if highlighting failed
-          if (edgeToRestore) {
-            restoreEdgeDirectly(edgeToRestore);
-          }
-          if (onComplete) {
-            onComplete();
-          }
+          if (edgeToRestore) restoreEdgeDirectly(edgeToRestore);
+          if (onComplete) onComplete();
           return;
         }
-        
-        console.log('DagViewer: Self-transition edge highlighted successfully, styles stored');
         
         // Wait a moment to show the edge
         await new Promise(resolve => setTimeout(resolve, duration * 0.2));
@@ -790,7 +651,6 @@ export function DagViewer({
         
         // Wait for pulse to complete, then reset edge highlighting
         await new Promise(resolve => setTimeout(resolve, duration * 0.8));
-        console.log('DagViewer: Resetting self-transition edge - MUST restore');
         
         // CRITICAL: Restore using direct edge reference
         if (edgeToRestore) {
@@ -801,35 +661,25 @@ export function DagViewer({
           if (path) {
             const stroke = path.getAttribute('stroke');
             const strokeWidth = path.getAttribute('stroke-width');
-            if (stroke === 'cyan' || strokeWidth === '3' || strokeWidth === '3px') {
-              console.error('DagViewer: CRITICAL - Edge not properly restored! Attempting restoration again...');
+            if (stroke === 'cyan' || strokeWidth === '3' || strokeWidth === '3px')
               // Try one more time - styles should still be in map
               restoreEdgeDirectly(edgeToRestore);
-            } else {
-              console.log('DagViewer: Edge restoration verified - stroke:', stroke || 'none', 'strokeWidth:', strokeWidth || 'none');
-            }
           }
           
           // Only cleanup from map after successful verification
           cleanupEdgeFromMap(edgeToRestore);
-        } else {
+        } else
           resetTransitionEdge(fromState, toState, eventName);
-        }
       } catch (error) {
-        console.error('DagViewer: Error during self-transition animation, ensuring edge is restored:', error);
         // CRITICAL: Always restore edge even if there's an error
         if (edgeToRestore) {
           restoreEdgeDirectly(edgeToRestore);
           cleanupEdgeFromMap(edgeToRestore);
-        } else {
+        } else
           resetTransitionEdge(fromState, toState, eventName);
-        }
       }
       
-      console.log('DagViewer: Self-transition animation complete');
-      if (onComplete) {
-        onComplete();
-      }
+      if (onComplete) onComplete();
       return;
     }
     
@@ -841,9 +691,6 @@ export function DagViewer({
       
       // Step 2: Highlight transition path and label
       edgeHighlighted = highlightTransitionEdge(fromState, toState, eventName);
-      if (!edgeHighlighted) {
-        console.warn('DagViewer: No edge found to highlight, skipping edge animation');
-      }
       
       // Step 3: Wait a moment to show the path
       await new Promise(resolve => setTimeout(resolve, duration * 0.3));
@@ -861,21 +708,15 @@ export function DagViewer({
       
       // Step 6: Reset transition highlighting - ALWAYS restore
       await new Promise(resolve => setTimeout(resolve, duration * 0.5));
-      if (edgeHighlighted) {
+      if (edgeHighlighted)
         resetTransitionEdge(fromState, toState, eventName);
-      }
     } catch (error) {
-      console.error('DagViewer: Error during animation, ensuring edge is restored:', error);
       // CRITICAL: Always restore edge even if there's an error
-      if (edgeHighlighted) {
+      if (edgeHighlighted)
         resetTransitionEdge(fromState, toState, eventName);
-      }
     }
     
-    console.log('DagViewer: Animation complete');
-    if (onComplete) {
-      onComplete();
-    }
+    if (onComplete) onComplete();
   }
 
   // Always render the container div so ref is available
