@@ -333,16 +333,6 @@ export function VotingInterface({ballotTitle}: VotingInterfaceProps) {
   const handleReorder = (score: string, fromIndex: number, toIndex: number) => {
     actions.election.reorderCandidate(ballotTitle, score, fromIndex, toIndex);
   };
-      const bandCandidates = vote[score.toString()] || [];
-      // Within each band, first candidate is most preferred, last is least preferred
-      bandCandidates.forEach(candidateName => {
-        ranks[candidateName] = currentRank;
-        currentRank++;
-      });
-    }
-    
-    return ranks;
-  }, [vote]);
 
   return (
     <Container>
