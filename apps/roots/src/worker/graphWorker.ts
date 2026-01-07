@@ -67,6 +67,11 @@ interface GraphComputeResult {
         edgesTotal: number;
         nodesTotal?: number;
       };
+      removeFreeStage?: {
+        nodesRemoved: number;
+        nodesTotal: number;
+        edgesTotal: number;
+      };
     };
   };
 }
