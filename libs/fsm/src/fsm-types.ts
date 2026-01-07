@@ -34,3 +34,13 @@ export type FsmDefinition = StateMachine<FsmContext, FsmStateSchema, FsmEvent>;
 export type FsmInstance = Interpreter<FsmContext, FsmStateSchema, FsmEvent>;
 
 export interface ee { entry:any[]; exit:any[]}
+
+export interface FsmVisualizationOptions {
+  colors?: {
+    currentState?: string;      // Default: 'palegreen'
+    nonCurrentState?: string;   // Default: 'cornsilk'
+    transitionHighlight?: string; // For animation: 'yellow' or 'orange'
+    transitionPath?: string;     // For animation: 'blue' or 'cyan'
+  };
+  highlightCurrentState?: boolean; // Default: true
+}

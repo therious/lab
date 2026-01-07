@@ -1,5 +1,5 @@
 import {normalizeBehavior, splitTransitions} from "./fsm-convert";
-import {FsmConfig, FsmNormalizedTransition, ee} from './fsm-types';
+import {FsmConfig, FsmNormalizedTransition, ee, FsmVisualizationOptions} from './fsm-types';
 import {FsmControl} from './fsm-control';
 
 
@@ -70,10 +70,13 @@ function listTerminalStates({states, transitions}:FsmConfig): Set<string> {
 }
 
 
-function statesToDot(fsmConfig:FsmConfig):string[]
+function statesToDot(fsmConfig:FsmConfig, options: FsmVisualizationOptions = {}):string[]
 {
    // list of all nodes, but terminal nodes look different, and starting node must appear active
    const terminalStates = listTerminalStates(fsmConfig);
+   const highlightCurrent = options.highlightCurrentState !== false;
+   const currentStateColor = options.colors?.currentState || 'palegreen';
+   const nonCurrentStateColor = options.colors?.nonCurrentState || 'cornsilk';
 
    type NodeIntermediate = {
     name: string, id: string, label: string,
@@ -97,7 +100,11 @@ function statesToDot(fsmConfig:FsmConfig):string[]
    {
      const label =                   `label="${ni.label}"`;
      const shape =                   `shape="${ni.terminal?'doublecircle':'circle'}"`;
-     const color = `${ni.active? 'fillcolor=palegreen':''}`;
+     const color = highlightCurrent && ni.active 
+       ? `fillcolor=${currentStateColor}` 
+       : highlightCurrent 
+         ? `fillcolor=${nonCurrentStateColor}`
+         : '';
      return `"${ni.name}" [${label} ${shape} ${color}]`;
 
    });
@@ -105,18 +112,18 @@ function statesToDot(fsmConfig:FsmConfig):string[]
    // todo must find the starting node name and put in an edge
 
    return [
-   `node [shape=circle style=filled color=black fillcolor=cornsilk fixedsize=true width=1 height=1]`,
+   `node [shape=circle style=filled color=black fillcolor=${nonCurrentStateColor} fixedsize=true width=1 height=1]`,
    ...stateNodesAsDot ]
 }
 
-export function fsmConfigToDot(config:FsmConfig, behavior={})
+export function fsmConfigToDot(config:FsmConfig, behavior={}, options: FsmVisualizationOptions = {})
 {
   const {transitions,terminal} = splitTransitions(config);
 
 
   const transitionStrings = transitions.map(t=>transitionToString(t));
 
-  const stateNodes = statesToDot(config);
+  const stateNodes = statesToDot(config, options);
 
   const newline = '\n  ';
   return (
