@@ -131,17 +131,26 @@ export function DagViewer({
   useEffect(() => {
     if (!svgElementRef.current || !currentState || isLoading) return;
     
+    // Wait for element map to be built
+    if (elementMapRef.current.size === 0) {
+      console.log('DagViewer: Element map not ready yet, waiting...');
+      return;
+    }
+    
     // Initial state highlighting (no previous state)
     if (!previousState) {
+      clearAllStateColors();
       updateStateColor(currentState, true);
       return;
     }
     
     if (animationEnabled && previousState !== currentState) {
+      console.log('DagViewer: Starting animation from', previousState, 'to', currentState, 'event:', transitionEvent);
       animateStateTransition(previousState, currentState, transitionEvent, transitionTime, onAnimationComplete);
     } else {
       // Direct update without animation
-      updateStateColor(previousState, false);
+      console.log('DagViewer: Direct update from', previousState, 'to', currentState);
+      clearAllStateColors();
       updateStateColor(currentState, true);
     }
   }, [currentState, previousState, transitionEvent, animationEnabled, transitionTime, isLoading]);
@@ -195,13 +204,24 @@ export function DagViewer({
     document.head.appendChild(style);
   }
 
+  // Clear all state colors
+  function clearAllStateColors() {
+    elementMapRef.current.forEach((nodeGroup, stateName) => {
+      const shape = nodeGroup.querySelector('ellipse, circle, polygon') as SVGElement;
+      if (shape) {
+        shape.classList.add('dag-viewer-state');
+        shape.setAttribute('fill', 'cornsilk');
+      }
+    });
+  }
+
   // Update state color directly
   function updateStateColor(stateName: string | null | undefined, isCurrent: boolean) {
     if (!stateName) return;
     
     const nodeGroup = elementMapRef.current.get(stateName);
     if (!nodeGroup) {
-      console.warn('DagViewer: State node not found:', stateName);
+      console.warn('DagViewer: State node not found:', stateName, 'Available states:', Array.from(elementMapRef.current.keys()));
       return;
     }
     
@@ -209,6 +229,9 @@ export function DagViewer({
     if (shape) {
       shape.classList.add('dag-viewer-state');
       shape.setAttribute('fill', isCurrent ? 'palegreen' : 'cornsilk');
+      console.log('DagViewer: Updated state', stateName, 'to', isCurrent ? 'palegreen' : 'cornsilk');
+    } else {
+      console.warn('DagViewer: Shape element not found for state:', stateName);
     }
   }
 
@@ -251,7 +274,47 @@ export function DagViewer({
   function highlightTransitionEdge(fromState: string, toState: string, eventName?: string) {
     const edge = findTransitionEdge(fromState, toState, eventName);
     if (!edge) {
-      console.warn('DagViewer: Transition edge not found:', fromState, '->', toState);
+      console.warn('DagViewer: Transition edge not found:', fromState, '->', toState, 'event:', eventName);
+      // Log all available edges for debugging
+      if (svgElementRef.current) {
+        const allEdges = svgElementRef.current.querySelectorAll('g.edge');
+        console.log('DagViewer: Available edges:', Array.from(allEdges).map(e => {
+          const title = e.querySelector('title');
+          return title?.textContent || 'no title';
+        }));
+      }
+      return;
+    }
+    
+    const path = edge.querySelector('path') as SVGPathElement;
+    const label = edge.querySelector('text') as SVGTextElement;
+    
+    console.log('DagViewer: Highlighting edge from', fromState, 'to', toState);
+    
+    if (path) {
+      path.classList.add('dag-viewer-edge');
+      path.setAttribute('stroke', 'cyan');
+      path.setAttribute('stroke-width', '3');
+      console.log('DagViewer: Edge path highlighted');
+    } else {
+      console.warn('DagViewer: Path element not found in edge');
+    }
+    
+    if (label) {
+      label.classList.add('dag-viewer-edge-label');
+      label.setAttribute('fill', 'orange');
+      label.style.fontWeight = 'bold';
+      console.log('DagViewer: Edge label highlighted:', label.textContent);
+    } else {
+      console.warn('DagViewer: Label element not found in edge');
+    }
+  }
+
+  // Reset transition edge highlighting
+  function resetTransitionEdge(fromState: string, toState: string) {
+    const edge = findTransitionEdge(fromState, toState);
+    if (!edge) {
+      console.warn('DagViewer: Edge not found for reset:', fromState, '->', toState);
       return;
     }
     
@@ -259,35 +322,16 @@ export function DagViewer({
     const label = edge.querySelector('text') as SVGTextElement;
     
     if (path) {
-      path.classList.add('dag-viewer-edge');
-      path.style.stroke = 'cyan';
-      path.style.strokeWidth = '3px';
+      path.removeAttribute('stroke');
+      path.removeAttribute('stroke-width');
     }
     
     if (label) {
-      label.classList.add('dag-viewer-edge-label');
-      label.style.fill = 'orange';
-      label.style.fontWeight = 'bold';
-    }
-  }
-
-  // Reset transition edge highlighting
-  function resetTransitionEdge(fromState: string, toState: string) {
-    const edge = findTransitionEdge(fromState, toState);
-    if (!edge) return;
-    
-    const path = edge.querySelector('path') as SVGPathElement;
-    const label = edge.querySelector('text') as SVGTextElement;
-    
-    if (path) {
-      path.style.stroke = '';
-      path.style.strokeWidth = '';
-    }
-    
-    if (label) {
-      label.style.fill = '';
+      label.removeAttribute('fill');
       label.style.fontWeight = '';
     }
+    
+    console.log('DagViewer: Edge highlighting reset');
   }
 
   // Animate state transition
@@ -298,21 +342,28 @@ export function DagViewer({
     duration: number,
     onComplete?: () => void
   ) {
-    // Step 1: Highlight transition path and label
+    console.log('DagViewer: Starting animation transition');
+    
+    // Step 1: Clear all states first
+    clearAllStateColors();
+    
+    // Step 2: Highlight transition path and label
     highlightTransitionEdge(fromState, toState, eventName);
     
-    // Step 2: Wait a moment to show the path
+    // Step 3: Wait a moment to show the path
     await new Promise(resolve => setTimeout(resolve, duration * 0.3));
     
-    // Step 3: Animate state color change
+    // Step 4: Animate state color change
     updateStateColor(fromState, false);
     await new Promise(resolve => setTimeout(resolve, duration * 0.2));
+    clearAllStateColors();
     updateStateColor(toState, true);
     
-    // Step 4: Reset transition highlighting
+    // Step 5: Reset transition highlighting
     await new Promise(resolve => setTimeout(resolve, duration * 0.5));
     resetTransitionEdge(fromState, toState);
     
+    console.log('DagViewer: Animation complete');
     if (onComplete) {
       onComplete();
     }
