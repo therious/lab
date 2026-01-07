@@ -129,7 +129,19 @@ export function DagViewer({
 
   // Effect for state changes and animations
   useEffect(() => {
-    if (!svgElementRef.current || !currentState || isLoading) return;
+    console.log('DagViewer: State change effect triggered', {
+      hasSvg: !!svgElementRef.current,
+      currentState,
+      previousState,
+      isLoading,
+      elementMapSize: elementMapRef.current.size,
+      animationEnabled
+    });
+    
+    if (!svgElementRef.current || !currentState || isLoading) {
+      console.log('DagViewer: Early return - svg:', !!svgElementRef.current, 'state:', currentState, 'loading:', isLoading);
+      return;
+    }
     
     // Wait for element map to be built
     if (elementMapRef.current.size === 0) {
@@ -139,6 +151,7 @@ export function DagViewer({
     
     // Initial state highlighting (no previous state)
     if (!previousState) {
+      console.log('DagViewer: Initial state highlighting for', currentState);
       clearAllStateColors();
       updateStateColor(currentState, true);
       return;
@@ -149,7 +162,7 @@ export function DagViewer({
       animateStateTransition(previousState, currentState, transitionEvent, transitionTime, onAnimationComplete);
     } else {
       // Direct update without animation
-      console.log('DagViewer: Direct update from', previousState, 'to', currentState);
+      console.log('DagViewer: Direct update from', previousState, 'to', currentState, 'animationEnabled:', animationEnabled);
       clearAllStateColors();
       updateStateColor(currentState, true);
     }
@@ -237,36 +250,60 @@ export function DagViewer({
 
   // Find edge connecting two states
   function findTransitionEdge(fromState: string, toState: string, eventName?: string): SVGGElement | null {
-    if (!svgElementRef.current) return null;
+    console.log('DagViewer: findTransitionEdge called:', fromState, '->', toState, 'event:', eventName);
+    
+    if (!svgElementRef.current) {
+      console.warn('DagViewer: svgElementRef.current is null');
+      return null;
+    }
     
     const edges = svgElementRef.current.querySelectorAll('g.edge');
+    console.log('DagViewer: Found', edges.length, 'edges in SVG');
+    
     for (const edge of edges) {
       const title = edge.querySelector('title');
       if (title) {
         const titleText = title.textContent || '';
+        console.log('DagViewer: Checking edge with title:', titleText);
+        
         // Graphviz title format: "fromState" -> "toState"
         // Check if this edge connects fromState to toState
         const fromMatch = titleText.includes(`"${fromState}"`) || titleText.includes(`'${fromState}'`);
         const toMatch = titleText.includes(`"${toState}"`) || titleText.includes(`'${toState}'`);
         
+        console.log('DagViewer: Edge match check - fromMatch:', fromMatch, 'toMatch:', toMatch);
+        
         if (fromMatch && toMatch) {
+          console.log('DagViewer: Found matching edge for', fromState, '->', toState);
+          
           // If eventName provided, check if label matches
           if (eventName) {
             const label = edge.querySelector('text');
             if (label) {
               const labelText = label.textContent || '';
+              console.log('DagViewer: Checking label:', labelText, 'for event:', eventName);
               // Check if label contains the event name
               if (labelText.includes(eventName)) {
+                console.log('DagViewer: Label matches event, returning edge');
                 return edge as SVGGElement;
+              } else {
+                console.log('DagViewer: Label does not match event');
               }
+            } else {
+              console.log('DagViewer: No label element found in edge');
             }
           } else {
             // Return first matching edge if no event name specified
+            console.log('DagViewer: No event name specified, returning first matching edge');
             return edge as SVGGElement;
           }
         }
+      } else {
+        console.log('DagViewer: Edge has no title element');
       }
     }
+    
+    console.warn('DagViewer: No matching edge found for', fromState, '->', toState);
     return null;
   }
 
