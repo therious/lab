@@ -417,10 +417,10 @@ export function DagViewer({
   }
 
   // Reset transition edge highlighting
-  function resetTransitionEdge(fromState: string, toState: string) {
-    const edge = findTransitionEdge(fromState, toState);
+  function resetTransitionEdge(fromState: string, toState: string, eventName?: string) {
+    const edge = findTransitionEdge(fromState, toState, eventName);
     if (!edge) {
-      console.warn('DagViewer: Edge not found for reset:', fromState, '->', toState);
+      console.warn('DagViewer: Edge not found for reset:', fromState, '->', toState, 'event:', eventName);
       return;
     }
     
@@ -452,6 +452,7 @@ export function DagViewer({
         // Fallback: remove attributes if no stored styles
         path.removeAttribute('stroke');
         path.removeAttribute('stroke-width');
+        console.log('DagViewer: No stored styles, removed stroke attributes');
       }
     }
     
@@ -468,17 +469,19 @@ export function DagViewer({
         } else {
           label.style.fontWeight = '';
         }
+        console.log('DagViewer: Restored label fill:', originalStyles.label.fill);
       } else {
         // Fallback: remove attributes if no stored styles
         label.removeAttribute('fill');
         label.style.fontWeight = '';
+        console.log('DagViewer: No stored styles, removed label attributes');
       }
     }
     
     // Remove from stored styles map
     edgeStylesRef.current.delete(edge);
     
-    console.log('DagViewer: Edge highlighting reset');
+    console.log('DagViewer: Edge highlighting reset for', fromState, '->', toState);
   }
 
   // Pulse state color (for destination state in all transitions)
@@ -538,9 +541,10 @@ export function DagViewer({
       // Pulse the state color (bright then fade to target)
       pulseStateColor(toState, duration);
       
-      // Reset edge highlighting after pulse completes
+      // Wait for pulse to complete, then reset edge highlighting
       await new Promise(resolve => setTimeout(resolve, duration * 0.8));
-      resetTransitionEdge(fromState, toState);
+      console.log('DagViewer: Resetting self-transition edge');
+      resetTransitionEdge(fromState, toState, eventName);
       
       console.log('DagViewer: Self-transition animation complete');
       if (onComplete) {
@@ -572,7 +576,7 @@ export function DagViewer({
     
     // Step 6: Reset transition highlighting
     await new Promise(resolve => setTimeout(resolve, duration * 0.5));
-    resetTransitionEdge(fromState, toState);
+    resetTransitionEdge(fromState, toState, eventName);
     
     console.log('DagViewer: Animation complete');
     if (onComplete) {
