@@ -25,9 +25,9 @@ const initialState: GridState = {
 };
 
 const creators: GridCreators = {
-  setGridState: (filterModel, columnState) => ({ filterModel, columnState }),
-  clearGridState: () => ({ filterModel: null, columnState: null }),
-  setFilteredRootIds: (filteredRootIds: number[] | null) => ({ filteredRootIds }),
+  setGridState: (s, filterModel, columnState) => ({ filterModel, columnState }),
+  clearGridState: (s) => ({ filterModel: null, columnState: null }),
+  setFilteredRootIds: (s, filteredRootIds: number[] | null) => ({ filteredRootIds }),
 };
 
 const reducers: GridReducers = {

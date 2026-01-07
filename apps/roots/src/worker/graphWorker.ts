@@ -46,6 +46,27 @@ interface GraphComputeResult {
       y: number; // Total roots after all processing
       q: number; // Roots with no edges (for Remove Free)
       pruneRemoved: number; // Number of nodes removed by pruning (for Prune by grade tooltip)
+      afterMischalfim?: {
+        nodes: number;
+        edges: number;
+      };
+      meaningStage?: {
+        nodesAdded: number;
+        edgesAdded: number;
+        nodesTotal: number;
+        edgesTotal: number;
+      };
+      extraDegreesStage?: {
+        nodesAdded: number;
+        edgesAdded: number;
+        nodesTotal: number;
+        edgesTotal: number;
+      };
+      pruneStage?: {
+        edgesRemoved: number;
+        edgesTotal: number;
+        nodesTotal?: number;
+      };
     };
   };
 }
