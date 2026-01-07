@@ -199,12 +199,27 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
         const fsmInst = FsmControl.instantiate(fsmDef, true);
         fsmInstanceRef.current = fsmInst;
 
+        // Generate initial diagram
+        if (fsmConfigRef.current) {
+          const {fsmConfigToDot} = require('@therious/fsm');
+          const visualizationOptions = {
+            colors: {
+              currentState: 'palegreen',
+              nonCurrentState: 'cornsilk',
+            },
+            highlightCurrentState: false, // We'll handle via direct manipulation
+          };
+          const initialDiagram = fsmConfigToDot(fsmConfigRef.current, {}, visualizationOptions);
+          setCurrentDiagram(initialDiagram);
+        }
+
         // Subscribe to state changes
         fsmInst.subscribe((state) => {
           const stateValue = typeof state.value === 'string' ? state.value : Object.keys(state.value)[0];
+          const previousState = currentState;
           setCurrentState(stateValue);
           setCurrentContext(state.context);
-          // Diagram will be updated via direct DOM manipulation, no regeneration needed
+          // Diagram will be updated via direct DOM manipulation in DagViewer
         });
 
         // Set initial state
