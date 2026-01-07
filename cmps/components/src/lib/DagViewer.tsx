@@ -158,7 +158,8 @@ export function DagViewer({
       return;
     }
     
-    if (animationEnabled && previousState !== currentState) {
+    if (animationEnabled) {
+      // Animate both regular transitions and self-transitions
       console.log('DagViewer: Starting animation from', previousState, 'to', currentState, 'event:', transitionEvent);
       animateStateTransition(previousState, currentState, transitionEvent, transitionTime, onAnimationComplete);
     } else {
@@ -471,25 +472,34 @@ export function DagViewer({
   // Pulse state color (for self-transitions)
   function pulseStateColor(stateName: string, duration: number) {
     const nodeGroup = elementMapRef.current.get(stateName);
-    if (!nodeGroup) return;
+    if (!nodeGroup) {
+      console.warn('DagViewer: State node not found for pulse:', stateName);
+      return;
+    }
     
     const shape = nodeGroup.querySelector('ellipse, circle, polygon') as SVGElement;
-    if (!shape) return;
+    if (!shape) {
+      console.warn('DagViewer: Shape element not found for pulse:', stateName);
+      return;
+    }
     
     // Get current color
     const currentColor = shape.getAttribute('fill') || 'cornsilk';
     
-    // Convert palegreen to brighter version for pulse
+    // Convert palegreen to brighter/more saturated version for pulse
     const brightColor = currentColor === 'palegreen' ? '#7FFF7F' : '#FFFFE0'; // Brighter green or light yellow
+    
+    // Add transition class for smooth animation
+    shape.classList.add('dag-viewer-state');
     
     // Pulse animation: bright -> normal
     shape.setAttribute('fill', brightColor);
-    console.log('DagViewer: Pulsing state', stateName, 'to bright color');
+    console.log('DagViewer: Pulsing state', stateName, 'from', currentColor, 'to bright color', brightColor);
     
     setTimeout(() => {
       shape.setAttribute('fill', currentColor);
       console.log('DagViewer: Pulsed state', stateName, 'back to', currentColor);
-    }, duration * 0.5);
+    }, duration * 0.6);
   }
 
   // Animate state transition
