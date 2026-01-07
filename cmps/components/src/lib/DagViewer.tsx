@@ -565,8 +565,8 @@ export function DagViewer({
     if (fromState === toState) {
       console.log('DagViewer: Self-transition detected, checking for self-loop edge');
       // Only animate if there's actually a self-transition edge
-      const selfEdge = findTransitionEdge(fromState, toState, eventName);
-      if (!selfEdge) {
+      const selfEdgeRef = findTransitionEdge(fromState, toState, eventName);
+      if (!selfEdgeRef) {
         console.log('DagViewer: No self-transition edge found, skipping animation');
         // No edge means no transition - just return without animating
         if (onComplete) {
@@ -576,15 +576,6 @@ export function DagViewer({
       }
       
       console.log('DagViewer: Self-transition edge found, using pulse animation');
-      // Store edge reference BEFORE highlighting so we can always restore it
-      const selfEdge = findTransitionEdge(fromState, toState, eventName);
-      if (!selfEdge) {
-        console.error('DagViewer: CRITICAL - Self-transition edge lost!');
-        if (onComplete) {
-          onComplete();
-        }
-        return;
-      }
       
       let edgeHighlighted = false;
       try {
