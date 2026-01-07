@@ -161,13 +161,12 @@ export function DagViewer({
     
     if (animationEnabled) {
       // Animate both regular transitions and self-transitions
-      // For self-transitions, we need to check if there's a transition event to trigger animation
-      // Even if state doesn't change, if there's an event, we should animate
-      if (previousState === currentState && transitionEvent) {
-        console.log('DagViewer: Self-transition with event, animating');
+      // Always animate if there's a transitionEvent, even for self-transitions
+      if (transitionEvent) {
+        console.log('DagViewer: Transition with event, animating', previousState, '->', currentState);
         animateStateTransition(previousState, currentState, transitionEvent, transitionTime, onAnimationComplete);
       } else if (previousState !== currentState) {
-        console.log('DagViewer: State change transition, animating');
+        console.log('DagViewer: State change without event, animating');
         animateStateTransition(previousState, currentState, transitionEvent, transitionTime, onAnimationComplete);
       } else {
         // No event and no state change - just update
@@ -482,7 +481,7 @@ export function DagViewer({
     console.log('DagViewer: Edge highlighting reset');
   }
 
-  // Pulse state color (for self-transitions)
+  // Pulse state color (for destination state in all transitions)
   function pulseStateColor(stateName: string, duration: number) {
     const nodeGroup = elementMapRef.current.get(stateName);
     if (!nodeGroup) {
@@ -496,24 +495,24 @@ export function DagViewer({
       return;
     }
     
-    // Get current color
-    const currentColor = shape.getAttribute('fill') || 'cornsilk';
+    // Get target color (what it should be after transition)
+    const targetColor = 'palegreen'; // Destination state is always current/active
     
     // Convert to much brighter/more saturated version for pulse
     // Use more vibrant colors that are clearly noticeable
-    const brightColor = currentColor === 'palegreen' ? '#00FF00' : '#FFFF00'; // Bright green or bright yellow
+    const brightColor = '#00FF00'; // Bright green for destination state
     
     // Add transition class for smooth animation
     shape.classList.add('dag-viewer-state');
     
-    // Pulse animation: bright -> normal (longer duration for visibility)
+    // Pulse animation: bright -> target color
     shape.setAttribute('fill', brightColor);
-    console.log('DagViewer: Pulsing state', stateName, 'from', currentColor, 'to bright color', brightColor);
+    console.log('DagViewer: Pulsing destination state', stateName, 'to bright color', brightColor);
     
     // Use longer pulse duration (80% of total) so it's more noticeable
     setTimeout(() => {
-      shape.setAttribute('fill', currentColor);
-      console.log('DagViewer: Pulsed state', stateName, 'back to', currentColor);
+      shape.setAttribute('fill', targetColor);
+      console.log('DagViewer: Pulsed state', stateName, 'to target color', targetColor);
     }, duration * 0.8);
   }
 
@@ -536,10 +535,10 @@ export function DagViewer({
       // Wait a moment to show the edge
       await new Promise(resolve => setTimeout(resolve, duration * 0.2));
       
-      // Pulse the state color (bright then fade back)
+      // Pulse the state color (bright then fade to target)
       pulseStateColor(toState, duration);
       
-      // Reset edge highlighting
+      // Reset edge highlighting after pulse completes
       await new Promise(resolve => setTimeout(resolve, duration * 0.8));
       resetTransitionEdge(fromState, toState);
       
@@ -564,9 +563,14 @@ export function DagViewer({
     updateStateColor(fromState, false);
     await new Promise(resolve => setTimeout(resolve, duration * 0.2));
     clearAllStateColors();
+    
+    // Step 5: Pulse destination state (bright then fade to normal)
+    pulseStateColor(toState, duration);
+    await new Promise(resolve => setTimeout(resolve, duration * 0.3));
+    // After pulse, set to final state
     updateStateColor(toState, true);
     
-    // Step 5: Reset transition highlighting
+    // Step 6: Reset transition highlighting
     await new Promise(resolve => setTimeout(resolve, duration * 0.5));
     resetTransitionEdge(fromState, toState);
     

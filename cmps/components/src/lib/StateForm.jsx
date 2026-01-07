@@ -221,16 +221,18 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
           const stateValue = typeof state.value === 'string' ? state.value : Object.keys(state.value)[0];
           // Capture previous state from ref before updating
           const prevState = currentStateRef.current;
-          // Always set previousState, even for self-transitions (when state doesn't change)
-          // This allows self-transition animations to work
-          if (prevState !== null) {
+          
+          // Always update currentState, but only update previousState if it's different
+          // For self-transitions, we rely on lastEvent being set in handleEvent
+          if (prevState !== null && prevState !== stateValue) {
             setPreviousState(prevState);
-            if (prevState !== stateValue) {
-              console.log('StateForm: State change detected', prevState, '->', stateValue);
-            } else {
-              console.log('StateForm: Self-transition detected (state unchanged):', stateValue);
-            }
+            console.log('StateForm: State change detected', prevState, '->', stateValue);
+          } else if (prevState === stateValue && prevState !== null) {
+            // Self-transition: state didn't change, but we still want to animate
+            // Keep previousState as is (it was set in handleEvent)
+            console.log('StateForm: Self-transition detected (state unchanged):', stateValue);
           }
+          
           currentStateRef.current = stateValue;
           setCurrentState(stateValue);
           setCurrentContext(state.context);
@@ -261,12 +263,31 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
     if (fsmInstanceRef.current) {
       // Capture current state before sending event (subscription will update it)
       const prevState = currentStateRef.current;
+      // Always set previousState and lastEvent before sending
+      // This ensures self-transitions can animate even if state doesn't change
       if (prevState !== null) {
         setPreviousState(prevState);
       }
+      // Set event first, then send - this ensures the effect sees the event
       setLastEvent(eventName);
       console.log('StateForm: Sending event', eventName, 'from state', prevState);
+      
       fsmInstanceRef.current.send({ type: eventName });
+      
+      // For self-transitions, clear the event after a short delay to allow re-triggering
+      // This ensures subsequent self-transitions can animate
+      if (prevState !== null) {
+        setTimeout(() => {
+          // Only clear if state hasn't changed (self-transition)
+          if (currentStateRef.current === prevState) {
+            setLastEvent(null);
+            // Then immediately set it again to trigger animation
+            setTimeout(() => {
+              setLastEvent(eventName);
+            }, 10);
+          }
+        }, 100);
+      }
     }
   }, []);
 
