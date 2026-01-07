@@ -218,8 +218,13 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
         // Subscribe to state changes
         fsmInst.subscribe((state) => {
           const stateValue = typeof state.value === 'string' ? state.value : Object.keys(state.value)[0];
-          setPreviousState(currentState);
-          setCurrentState(stateValue);
+          // Use functional update to get the current state before setting new one
+          setCurrentState((prevState) => {
+            if (prevState !== null && prevState !== stateValue) {
+              setPreviousState(prevState);
+            }
+            return stateValue;
+          });
           setCurrentContext(state.context);
           // Diagram will be updated via direct DOM manipulation in DagViewer
         });
@@ -245,6 +250,13 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
 
   const handleEvent = useCallback((eventName) => {
     if (fsmInstanceRef.current) {
+      // Set previous state before sending event
+      setCurrentState((prevState) => {
+        if (prevState !== null) {
+          setPreviousState(prevState);
+        }
+        return prevState; // Don't change state here, let subscription handle it
+      });
       setLastEvent(eventName);
       fsmInstanceRef.current.send({ type: eventName });
     }
