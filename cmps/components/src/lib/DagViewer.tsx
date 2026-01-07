@@ -110,7 +110,7 @@ export function DagViewer({
       isMounted = false;
       clearTimeout(timeoutId);
     };
-  }, [dot, width, height]);
+  }, [dot, width, height, animationEnabled, transitionTime]);
 
   // Effect for state changes and animations
   useEffect(() => {
@@ -143,7 +143,11 @@ export function DagViewer({
       clearAllStateColors();
       updateStateColor(currentState, true);
     }
-  }, [currentState, previousState, transitionEvent, animationEnabled, transitionTime, isLoading]);
+    // animateStateTransition is a function defined in this component that uses refs and internal functions.
+    // It's called with current values (previousState, currentState, transitionEvent, transitionTime, onAnimationComplete)
+    // which are all in the dependency array, so the function identity changing doesn't affect behavior.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentState, previousState, transitionEvent, animationEnabled, transitionTime, isLoading, onAnimationComplete]);
 
   // Build element map from SVG DOM
   function buildElementMap(svg: SVGSVGElement) {

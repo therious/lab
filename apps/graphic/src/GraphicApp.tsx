@@ -17,7 +17,12 @@ type AdapstSvgSvgProps = {svgsvg:SVGSVGElement}
 function AdaptSvgSvg({svgsvg}:AdapstSvgSvgProps)
 {
   const svg = useRef<HTMLDivElement>(null);
-  useEffect(()=>{svg.current?.appendChild?.(svgsvg)},[svgsvg]);
+  useEffect(() => {
+    if (!svg.current) return;
+    // Clear previous content before appending
+    svg.current.innerHTML = '';
+    svg.current.appendChild(svgsvg);
+  }, [svgsvg]);
 
   return (
     <div style={{maxWidth:'fit-content', maxHeight:'fit-content'}} ref={svg}/>
