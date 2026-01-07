@@ -576,13 +576,31 @@ export function DagViewer({
       }
       
       console.log('DagViewer: Self-transition edge found, using pulse animation');
+      // Store edge reference BEFORE highlighting so we can always restore it
+      const selfEdge = findTransitionEdge(fromState, toState, eventName);
+      if (!selfEdge) {
+        console.error('DagViewer: CRITICAL - Self-transition edge lost!');
+        if (onComplete) {
+          onComplete();
+        }
+        return;
+      }
+      
       let edgeHighlighted = false;
       try {
         // Highlight the self-loop edge
         edgeHighlighted = highlightTransitionEdge(fromState, toState, eventName);
         if (!edgeHighlighted) {
-          console.warn('DagViewer: Failed to highlight self-transition edge');
+          console.error('DagViewer: CRITICAL - Failed to highlight self-transition edge, but edge exists!');
+          // Try to restore immediately if highlighting failed
+          resetTransitionEdge(fromState, toState, eventName);
+          if (onComplete) {
+            onComplete();
+          }
+          return;
         }
+        
+        console.log('DagViewer: Self-transition edge highlighted successfully, styles stored');
         
         // Wait a moment to show the edge
         await new Promise(resolve => setTimeout(resolve, duration * 0.2));
@@ -592,16 +610,31 @@ export function DagViewer({
         
         // Wait for pulse to complete, then reset edge highlighting
         await new Promise(resolve => setTimeout(resolve, duration * 0.8));
-        console.log('DagViewer: Resetting self-transition edge');
-        if (edgeHighlighted) {
-          resetTransitionEdge(fromState, toState, eventName);
+        console.log('DagViewer: Resetting self-transition edge - MUST restore');
+        
+        // CRITICAL: Always restore, use stored edge reference as fallback
+        resetTransitionEdge(fromState, toState, eventName);
+        
+        // Double-check restoration by verifying edge is restored
+        const restoredEdge = findTransitionEdge(fromState, toState, eventName);
+        if (restoredEdge) {
+          const path = restoredEdge.querySelector('path') as SVGPathElement;
+          if (path) {
+            const stroke = path.getAttribute('stroke');
+            const strokeWidth = path.getAttribute('stroke-width');
+            if (stroke === 'cyan' || strokeWidth === '3') {
+              console.error('DagViewer: CRITICAL - Edge not properly restored! Forcing restoration...');
+              // Force restoration
+              resetTransitionEdge(fromState, toState, eventName);
+            } else {
+              console.log('DagViewer: Edge restoration verified - stroke:', stroke, 'strokeWidth:', strokeWidth);
+            }
+          }
         }
       } catch (error) {
         console.error('DagViewer: Error during self-transition animation, ensuring edge is restored:', error);
         // CRITICAL: Always restore edge even if there's an error
-        if (edgeHighlighted) {
-          resetTransitionEdge(fromState, toState, eventName);
-        }
+        resetTransitionEdge(fromState, toState, eventName);
       }
       
       console.log('DagViewer: Self-transition animation complete');
