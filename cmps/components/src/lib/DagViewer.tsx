@@ -418,6 +418,73 @@ export function DagViewer({
     return true; // Return true to indicate success
   }
 
+  // Restore edge directly using stored edge reference
+  function restoreEdgeDirectly(edge: SVGGElement) {
+    console.log('DagViewer: Restoring edge directly from stored reference');
+    const originalStyles = edgeStylesRef.current.get(edge);
+    
+    if (!originalStyles) {
+      console.error('DagViewer: CRITICAL - No stored styles for direct restoration! Using fallback');
+      // Fallback restoration
+      const path = edge.querySelector('path') as SVGPathElement;
+      const label = edge.querySelector('text') as SVGTextElement;
+      
+      if (path) {
+        path.removeAttribute('stroke');
+        path.removeAttribute('stroke-width');
+        path.removeAttribute('style');
+        path.classList.remove('dag-viewer-edge');
+      }
+      if (label) {
+        label.removeAttribute('fill');
+        label.style.fontWeight = '';
+        label.classList.remove('dag-viewer-edge-label');
+      }
+      return;
+    }
+    
+    const path = edge.querySelector('path') as SVGPathElement;
+    const label = edge.querySelector('text') as SVGTextElement;
+    
+    if (path && originalStyles.path) {
+      if (originalStyles.path.stroke) {
+        path.setAttribute('stroke', originalStyles.path.stroke);
+      } else {
+        path.removeAttribute('stroke');
+      }
+      if (originalStyles.path.strokeWidth) {
+        path.setAttribute('stroke-width', originalStyles.path.strokeWidth);
+      } else {
+        path.removeAttribute('stroke-width');
+      }
+      if (originalStyles.path.style) {
+        path.setAttribute('style', originalStyles.path.style);
+      } else {
+        path.removeAttribute('style');
+      }
+      path.classList.remove('dag-viewer-edge');
+      console.log('DagViewer: Directly restored path');
+    }
+    
+    if (label && originalStyles.label) {
+      if (originalStyles.label.fill) {
+        label.setAttribute('fill', originalStyles.label.fill);
+      } else {
+        label.removeAttribute('fill');
+      }
+      if (originalStyles.label.fontWeight) {
+        label.style.fontWeight = originalStyles.label.fontWeight;
+      } else {
+        label.style.fontWeight = '';
+      }
+      label.classList.remove('dag-viewer-edge-label');
+      console.log('DagViewer: Directly restored label');
+    }
+    
+    edgeStylesRef.current.delete(edge);
+    console.log('DagViewer: Direct edge restoration complete');
+  }
+
   // Reset transition edge highlighting - MUST restore to original state
   function resetTransitionEdge(fromState: string, toState: string, eventName?: string) {
     // Try to find edge with eventName first, then without
