@@ -27,7 +27,7 @@ export function DagViewer({
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const svgElementRef = useRef<SVGSVGElement | null>(null);
   const elementMapRef = useRef<Map<string, SVGGElement>>(new Map());
-  const edgeStylesRef = useRef<Map<SVGGElement, {path?: {stroke?: string, strokeWidth?: string}, label?: {fill?: string, fontWeight?: string}}>>(new Map());
+  const edgeStylesRef = useRef<Map<SVGGElement, {path?: {stroke?: string, strokeWidth?: string, style?: string}, label?: {fill?: string, fontWeight?: string}}>>(new Map());
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -368,19 +368,26 @@ export function DagViewer({
     console.log('DagViewer: Highlighting edge from', fromState, 'to', toState);
     
     // Store original styles before modifying
-    const originalStyles: {path?: {stroke?: string, strokeWidth?: string}, label?: {fill?: string, fontWeight?: string}} = {};
+    const originalStyles: {path?: {stroke?: string, strokeWidth?: string, style?: string}, label?: {fill?: string, fontWeight?: string}} = {};
     
     if (path) {
-      // Store original values
+      // Store original values - check both attribute and computed style
+      const computedStyle = window.getComputedStyle(path);
       originalStyles.path = {
-        stroke: path.getAttribute('stroke') || '',
-        strokeWidth: path.getAttribute('stroke-width') || ''
+        stroke: path.getAttribute('stroke') || computedStyle.stroke || '',
+        strokeWidth: path.getAttribute('stroke-width') || computedStyle.strokeWidth || ''
       };
+      
+      // Also store style attribute if present (for dotted edges)
+      const styleAttr = path.getAttribute('style') || '';
+      if (styleAttr) {
+        originalStyles.path.style = styleAttr;
+      }
       
       path.classList.add('dag-viewer-edge');
       path.setAttribute('stroke', 'cyan');
       path.setAttribute('stroke-width', '3');
-      console.log('DagViewer: Edge path highlighted');
+      console.log('DagViewer: Edge path highlighted, original stroke:', originalStyles.path.stroke, 'strokeWidth:', originalStyles.path.strokeWidth);
     } else {
       console.warn('DagViewer: Path element not found in edge');
     }
@@ -431,6 +438,11 @@ export function DagViewer({
         } else {
           path.removeAttribute('stroke-width');
         }
+        // Restore style attribute if it was stored (for dotted edges)
+        if (originalStyles.path.style) {
+          path.setAttribute('style', originalStyles.path.style);
+        }
+        console.log('DagViewer: Restored path stroke:', originalStyles.path.stroke, 'strokeWidth:', originalStyles.path.strokeWidth);
       } else {
         // Fallback: remove attributes if no stored styles
         path.removeAttribute('stroke');
@@ -464,6 +476,30 @@ export function DagViewer({
     console.log('DagViewer: Edge highlighting reset');
   }
 
+  // Pulse state color (for self-transitions)
+  function pulseStateColor(stateName: string, duration: number) {
+    const nodeGroup = elementMapRef.current.get(stateName);
+    if (!nodeGroup) return;
+    
+    const shape = nodeGroup.querySelector('ellipse, circle, polygon') as SVGElement;
+    if (!shape) return;
+    
+    // Get current color
+    const currentColor = shape.getAttribute('fill') || 'cornsilk';
+    
+    // Convert palegreen to brighter version for pulse
+    const brightColor = currentColor === 'palegreen' ? '#7FFF7F' : '#FFFFE0'; // Brighter green or light yellow
+    
+    // Pulse animation: bright -> normal
+    shape.setAttribute('fill', brightColor);
+    console.log('DagViewer: Pulsing state', stateName, 'to bright color');
+    
+    setTimeout(() => {
+      shape.setAttribute('fill', currentColor);
+      console.log('DagViewer: Pulsed state', stateName, 'back to', currentColor);
+    }, duration * 0.5);
+  }
+
   // Animate state transition
   async function animateStateTransition(
     fromState: string,
@@ -472,8 +508,32 @@ export function DagViewer({
     duration: number,
     onComplete?: () => void
   ) {
-    console.log('DagViewer: Starting animation transition');
+    console.log('DagViewer: Starting animation transition', fromState, '->', toState);
     
+    // Handle self-transitions (same state)
+    if (fromState === toState) {
+      console.log('DagViewer: Self-transition detected, using pulse animation');
+      // Highlight the self-loop edge if it exists
+      highlightTransitionEdge(fromState, toState, eventName);
+      
+      // Wait a moment to show the edge
+      await new Promise(resolve => setTimeout(resolve, duration * 0.2));
+      
+      // Pulse the state color (bright then fade back)
+      pulseStateColor(toState, duration);
+      
+      // Reset edge highlighting
+      await new Promise(resolve => setTimeout(resolve, duration * 0.8));
+      resetTransitionEdge(fromState, toState);
+      
+      console.log('DagViewer: Self-transition animation complete');
+      if (onComplete) {
+        onComplete();
+      }
+      return;
+    }
+    
+    // Regular transition animation
     // Step 1: Clear all states first
     clearAllStateColors();
     
