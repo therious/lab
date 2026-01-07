@@ -320,30 +320,6 @@ export function DagViewer({
             console.log('DagViewer: No event name specified, returning matching edge');
             return edge as SVGGElement;
           }
-        } else if (fromMatch && toMatch) {
-          console.log('DagViewer: Found pattern matching edge for', fromState, '->', toState);
-          
-          // If eventName provided, check if label matches
-          if (eventName) {
-            const label = edge.querySelector('text');
-            if (label) {
-              const labelText = label.textContent || '';
-              console.log('DagViewer: Checking label:', labelText, 'for event:', eventName);
-              // Check if label contains the event name
-              if (labelText.includes(eventName)) {
-                console.log('DagViewer: Label matches event, returning edge');
-                return edge as SVGGElement;
-              } else {
-                console.log('DagViewer: Label does not match event');
-              }
-            } else {
-              console.log('DagViewer: No label element found in edge');
-            }
-          } else {
-            // Return first matching edge if no event name specified
-            console.log('DagViewer: No event name specified, returning first matching edge');
-            return edge as SVGGElement;
-          }
         }
       } else {
         console.log('DagViewer: Edge has no title element');
