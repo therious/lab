@@ -295,7 +295,8 @@ export function DagViewer({
       if (edge) {
         console.log('DagViewer: Found edge via map lookup:', edgeKey);
         
-        // If eventName provided, check if label matches
+        // If eventName provided, try to match label, but if no match, still return the edge
+        // (for conditional transitions, the label is the condition, not the event)
         if (eventName) {
           const label = edge.querySelector('text');
           if (label) {
@@ -304,16 +305,18 @@ export function DagViewer({
               console.log('DagViewer: Label matches event');
               return edge;
             } else {
-              console.log('DagViewer: Label does not match event:', labelText, 'vs', eventName);
+              console.log('DagViewer: Label does not match event (may be conditional transition):', labelText, 'vs', eventName);
+              // Still return the edge - it might be a conditional transition triggered by the event
+              return edge;
             }
           }
-        } else {
-          return edge;
         }
+        // Return edge if found, regardless of event name matching
+        return edge;
       }
     }
     
-    // Fallback: search all edges
+    // Fallback: search all edges by title
     const edges = svgElementRef.current.querySelectorAll('g.edge');
     for (const edge of edges) {
       const title = edge.querySelector('title');
@@ -324,17 +327,9 @@ export function DagViewer({
             titleText.includes(`"${fromState}"->"${toState}"`) ||
             titleText.includes(`'${fromState}'->'${toState}'`)) {
           
-          // If eventName provided, check label
-          if (eventName) {
-            const label = edge.querySelector('text');
-            if (label && label.textContent?.includes(eventName)) {
-              console.log('DagViewer: Found edge with matching label');
-              return edge as SVGGElement;
-            }
-          } else {
-            console.log('DagViewer: Found edge via fallback search');
-            return edge as SVGGElement;
-          }
+          console.log('DagViewer: Found edge via fallback search:', titleText);
+          // Return the edge - for conditional transitions, we don't need to match the event name
+          return edge as SVGGElement;
         }
       }
     }
