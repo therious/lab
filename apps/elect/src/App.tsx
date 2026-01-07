@@ -175,7 +175,7 @@ export default function App() {
         navigate(availableTabs[0].path, {replace: true});
       }
     }
-  }, [location.pathname, navigate, availableTabs.length, token, currentElection]);
+  }, [location.pathname, navigate, availableTabs, token, currentElection]);
 
   // If no token and not restoring, show landing page (AFTER all hooks are called)
   // Wait for restoration to complete before showing landing page

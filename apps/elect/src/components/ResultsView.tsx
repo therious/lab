@@ -466,7 +466,8 @@ export function ResultsView({setServerCommitHash}: {setServerCommitHash?: (hash:
         socket.disconnect();
       }
     };
-  }, [electionId]); // Only re-run when election identifier changes // Only re-run when election changes, not when results/loading change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [electionId]); // Only re-run when election identifier changes. POLL_ENABLED, POLL_INTERVAL_MS are constants. currentElection, results, setServerCommitHash are intentionally excluded to avoid unnecessary re-runs.
 
   if (!currentElection) {
     return <div style={{padding: '2rem'}}>No election selected</div>;

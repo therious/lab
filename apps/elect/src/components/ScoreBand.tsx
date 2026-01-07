@@ -366,7 +366,7 @@ export function ScoreBand({
         }
       },
     });
-  }, [score, ballotTitle, candidates.length, onDrop]);
+  }, [score, ballotTitle, candidates.length, onDrop, horizontal]);
 
   const isReject = score === '0';
   
