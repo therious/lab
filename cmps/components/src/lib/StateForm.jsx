@@ -181,6 +181,7 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
   
   const fsmInstanceRef = useRef(null);
   const fsmConfigRef = useRef(fsmConfig || null);
+  const currentStateRef = useRef(null); // Track current state for subscription callback
 
   const stateList = Object.keys(states);
   const evtTokens = extractEventTokens(stConfig);
@@ -218,13 +219,14 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
         // Subscribe to state changes
         fsmInst.subscribe((state) => {
           const stateValue = typeof state.value === 'string' ? state.value : Object.keys(state.value)[0];
-          // Use functional update to get the current state before setting new one
-          setCurrentState((prevState) => {
-            if (prevState !== null && prevState !== stateValue) {
-              setPreviousState(prevState);
-            }
-            return stateValue;
-          });
+          // Capture previous state from ref before updating
+          const prevState = currentStateRef.current;
+          if (prevState !== null && prevState !== stateValue) {
+            setPreviousState(prevState);
+            console.log('StateForm: State change detected', prevState, '->', stateValue);
+          }
+          currentStateRef.current = stateValue;
+          setCurrentState(stateValue);
           setCurrentContext(state.context);
           // Diagram will be updated via direct DOM manipulation in DagViewer
         });
@@ -232,6 +234,7 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
         // Set initial state
         const initialState = fsmInst.state;
         const initialValue = typeof initialState.value === 'string' ? initialState.value : Object.keys(initialState.value)[0];
+        currentStateRef.current = initialValue;
         setCurrentState(initialValue);
         setCurrentContext(initialState.context);
       } catch (err) {
@@ -250,14 +253,13 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
 
   const handleEvent = useCallback((eventName) => {
     if (fsmInstanceRef.current) {
-      // Set previous state before sending event
-      setCurrentState((prevState) => {
-        if (prevState !== null) {
-          setPreviousState(prevState);
-        }
-        return prevState; // Don't change state here, let subscription handle it
-      });
+      // Capture current state before sending event (subscription will update it)
+      const prevState = currentStateRef.current;
+      if (prevState !== null) {
+        setPreviousState(prevState);
+      }
       setLastEvent(eventName);
+      console.log('StateForm: Sending event', eventName, 'from state', prevState);
       fsmInstanceRef.current.send({ type: eventName });
     }
   }, []);
