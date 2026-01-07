@@ -41,21 +41,25 @@ export default function App() {
   const isUpcoming = votingStart && now < votingStart;
 
   // Build list of available tabs based on election status (paths only, no elements)
-  const availableTabs: Array<{path: string; label: string}> = [];
-  
-  // Results tab is always available
-  availableTabs.push({path: '/results', label: 'Results'});
-  
-  // Summary and ballot tabs only available if election is open (NOT upcoming)
-  if (isOpen && currentElection) {
-    availableTabs.push({path: '/summary', label: 'Summary'});
-    ballots.forEach((ballot: Ballot) => {
-      availableTabs.push({
-        path: `/ballot/${encodeURIComponent(ballot.title)}`,
-        label: ballot.title
+  const availableTabs: Array<{path: string; label: string}> = React.useMemo(() => {
+    const tabs: Array<{path: string; label: string}> = [];
+    
+    // Results tab is always available
+    tabs.push({path: '/results', label: 'Results'});
+    
+    // Summary and ballot tabs only available if election is open (NOT upcoming)
+    if (isOpen && currentElection) {
+      tabs.push({path: '/summary', label: 'Summary'});
+      ballots.forEach((ballot: Ballot) => {
+        tabs.push({
+          path: `/ballot/${encodeURIComponent(ballot.title)}`,
+          label: ballot.title
+        });
       });
-    });
-  }
+    }
+    
+    return tabs;
+  }, [isOpen, currentElection, ballots]);
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
   // Note: Session-persisted state (token, viewToken, electionIdentifier, userEmail, submitted)
