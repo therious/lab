@@ -464,16 +464,17 @@ export function DagViewer({
     
     if (!originalStyles) {
       console.error('DagViewer: CRITICAL - No stored styles for edge:', edgeId, 'Map size:', edgeStylesRef.current.size);
-      // Edge was already restored or never highlighted - just clean our modifications
+      // Edge was already restored or never highlighted - DON'T remove attributes!
+      // Just remove our highlight classes and check if we need to clean style
       const path = edge.querySelector('path') as SVGPathElement;
       const label = edge.querySelector('text') as SVGTextElement;
       
       if (path) {
-        // Only remove our highlight modifications, don't touch original attributes
+        // Only remove our highlight modifications if they exist
         const currentStroke = path.getAttribute('stroke');
         const currentStrokeWidth = path.getAttribute('stroke-width');
         
-        // If we added cyan/3, remove them
+        // If we added cyan/3, remove ONLY those
         if (currentStroke === 'cyan') {
           path.removeAttribute('stroke');
         }
@@ -481,7 +482,7 @@ export function DagViewer({
           path.removeAttribute('stroke-width');
         }
         
-        // Clean style attribute of our additions only
+        // Clean style attribute of our additions only, preserve everything else
         const currentStyle = path.getAttribute('style') || '';
         if (currentStyle.includes('stroke: cyan') || currentStyle.includes('stroke-width: 3')) {
           const cleanedStyle = currentStyle
@@ -490,7 +491,9 @@ export function DagViewer({
             .trim();
           if (cleanedStyle) {
             path.setAttribute('style', cleanedStyle);
-          } else {
+          } else if (currentStyle) {
+            // Only remove style if it was empty after cleaning AND it was our addition
+            // Don't remove if it had other styles originally
             path.removeAttribute('style');
           }
         }
@@ -498,13 +501,17 @@ export function DagViewer({
       }
       if (label) {
         const currentFill = label.getAttribute('fill');
+        // Only remove orange if we added it
         if (currentFill === 'orange') {
           label.removeAttribute('fill');
         }
-        label.style.fontWeight = '';
+        // Only clear fontWeight if we set it to bold
+        if (label.style.fontWeight === 'bold') {
+          label.style.fontWeight = '';
+        }
         label.classList.remove('dag-viewer-edge-label');
       }
-      console.log('DagViewer: Cleaned edge modifications (no stored styles)');
+      console.log('DagViewer: Cleaned edge modifications (no stored styles) - preserved original attributes');
       return;
     }
     
