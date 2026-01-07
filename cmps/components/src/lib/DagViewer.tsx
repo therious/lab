@@ -27,7 +27,8 @@ export function DagViewer({
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const svgElementRef = useRef<SVGSVGElement | null>(null);
   const elementMapRef = useRef<Map<string, SVGGElement>>(new Map());
-  const edgeStylesRef = useRef<Map<SVGGElement, {path?: {stroke?: string, strokeWidth?: string, style?: string}, label?: {fill?: string, fontWeight?: string}}>>(new Map());
+  // Use edge identifier (title) as key instead of DOM element for reliable lookup
+  const edgeStylesRef = useRef<Map<string, {path?: {stroke?: string, strokeWidth?: string, style?: string}, label?: {fill?: string, fontWeight?: string}, edge?: SVGGElement}>>(new Map());
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -367,12 +368,12 @@ export function DagViewer({
       return false; // Return false to indicate failure
     }
     
-    // Get edge identifier (title) for tracking
+    // Get edge identifier (title) for tracking - use this as the key
     const title = edge.querySelector('title');
     const edgeId = title?.textContent?.trim() || `${fromState}->${toState}`;
     
     // Check if edge is already highlighted - if so, don't modify again
-    if (edgeStylesRef.current.has(edge)) {
+    if (edgeStylesRef.current.has(edgeId)) {
       console.warn('DagViewer: Edge already highlighted, skipping:', edgeId);
       return true; // Already highlighted, consider it success
     }
@@ -448,8 +449,12 @@ export function DagViewer({
       console.warn('DagViewer: Label element not found in edge');
     }
     
-    // Store original styles for this edge using edge as key - MUST store for restoration
-    edgeStylesRef.current.set(edge, originalStyles);
+    // Store original styles for this edge using edgeId as key - MUST store for restoration
+    // Also store the edge reference so we can restore it directly
+    edgeStylesRef.current.set(edgeId, {
+      ...originalStyles,
+      edge: edge
+    });
     console.log('DagViewer: Stored original styles for edge restoration, edgeId:', edgeId);
     return true; // Return true to indicate success
   }
@@ -460,7 +465,12 @@ export function DagViewer({
     const edgeId = title?.textContent?.trim() || 'unknown';
     console.log('DagViewer: Restoring edge directly from stored reference, edgeId:', edgeId);
     
-    const originalStyles = edgeStylesRef.current.get(edge);
+    // Look up by edgeId instead of DOM element
+    const storedData = edgeStylesRef.current.get(edgeId);
+    const originalStyles = storedData ? {
+      path: storedData.path,
+      label: storedData.label
+    } : undefined;
     
     if (!originalStyles) {
       console.error('DagViewer: CRITICAL - No stored styles for edge:', edgeId, 'Map size:', edgeStylesRef.current.size);
@@ -577,10 +587,16 @@ export function DagViewer({
   
   // Clean up edge from map after verification
   function cleanupEdgeFromMap(edge: SVGGElement) {
-    edgeStylesRef.current.delete(edge);
     const title = edge.querySelector('title');
     const edgeId = title?.textContent?.trim() || 'unknown';
+    edgeStylesRef.current.delete(edgeId);
     console.log('DagViewer: Cleaned up edge from map:', edgeId);
+  }
+  
+  // Get edge identifier for lookup
+  function getEdgeId(edge: SVGGElement): string {
+    const title = edge.querySelector('title');
+    return title?.textContent?.trim() || 'unknown';
   }
 
   // Reset transition edge highlighting - MUST restore to original state
@@ -595,11 +611,10 @@ export function DagViewer({
       console.error('DagViewer: Edge not found for reset:', fromState, '->', toState, 'event:', eventName);
       // Try to find ANY edge that was highlighted and restore it
       // This is a safety mechanism to ensure edges are always restored
-      edgeStylesRef.current.forEach((styles, storedEdge) => {
-        const title = storedEdge.querySelector('title');
-        if (title && title.textContent?.includes(`${fromState}->${toState}`)) {
-          console.warn('DagViewer: Found stored edge for reset, restoring it');
-          edge = storedEdge;
+      edgeStylesRef.current.forEach((storedData, storedEdgeId) => {
+        if (storedEdgeId.includes(`${fromState}->${toState}`) && storedData.edge) {
+          console.warn('DagViewer: Found stored edge for reset, restoring it:', storedEdgeId);
+          edge = storedData.edge;
         }
       });
       
@@ -609,8 +624,13 @@ export function DagViewer({
       }
     }
     
-    // Get stored original styles - MUST exist if we highlighted
-    const originalStyles = edgeStylesRef.current.get(edge);
+    // Get stored original styles using edgeId
+    const edgeId = getEdgeId(edge);
+    const storedData = edgeStylesRef.current.get(edgeId);
+    const originalStyles = storedData ? {
+      path: storedData.path,
+      label: storedData.label
+    } : undefined;
     
     if (!originalStyles) {
       console.error('DagViewer: CRITICAL - No stored styles for edge! Attempting fallback restoration');
@@ -678,7 +698,7 @@ export function DagViewer({
     // DON'T delete from map here - let the caller cleanup after verification
     // This ensures we can restore again if needed
     
-    console.log('DagViewer: Edge highlighting RESET COMPLETE for', fromState, '->', toState);
+    console.log('DagViewer: Edge highlighting RESET COMPLETE for', fromState, '->', toState, 'edgeId:', edgeId);
   }
 
   // Pulse state color (for destination state in all transitions)
