@@ -172,9 +172,11 @@ export function DagViewer({
   // Build element map from SVG DOM
   function buildElementMap(svg: SVGSVGElement) {
     const map = new Map<string, SVGGElement>();
+    const edgeMap = new Map<string, SVGGElement>();
     
     // Find all node groups (states)
-    // Graphviz creates nodes with class "node" and title elements containing the state name
+    // Graphviz creates nodes with class "node" and IDs like "node1", "node2", etc.
+    // The title element contains the state name
     const nodeGroups = svg.querySelectorAll('g.node');
     nodeGroups.forEach((group) => {
       const title = group.querySelector('title');
@@ -189,8 +191,23 @@ export function DagViewer({
       }
     });
     
+    // Build edge map - Graphviz creates edges with class "edge" and title with "fromState->toState"
+    const edges = svg.querySelectorAll('g.edge');
+    edges.forEach((edge) => {
+      const title = edge.querySelector('title');
+      if (title) {
+        const edgeKey = title.textContent?.trim() || '';
+        if (edgeKey) {
+          edgeMap.set(edgeKey, edge as SVGGElement);
+        }
+      }
+    });
+    
     elementMapRef.current = map;
+    // Store edge map in a ref for easy lookup
+    (elementMapRef as any).edgeMap = edgeMap;
     console.log('DagViewer: Element map built with', map.size, 'states:', Array.from(map.keys()));
+    console.log('DagViewer: Edge map built with', edgeMap.size, 'edges:', Array.from(edgeMap.keys()));
   }
 
   // Setup CSS transitions
@@ -249,7 +266,7 @@ export function DagViewer({
     }
   }
 
-  // Find edge connecting two states
+  // Find edge connecting two states - use simple title lookup
   function findTransitionEdge(fromState: string, toState: string, eventName?: string): SVGGElement | null {
     console.log('DagViewer: findTransitionEdge called:', fromState, '->', toState, 'event:', eventName);
     
@@ -258,71 +275,67 @@ export function DagViewer({
       return null;
     }
     
-    const edges = svgElementRef.current.querySelectorAll('g.edge');
-    console.log('DagViewer: Found', edges.length, 'edges in SVG');
+    // Try direct lookup from edge map first
+    const edgeMap = (elementMapRef as any).edgeMap as Map<string, SVGGElement>;
+    if (edgeMap) {
+      // Try unquoted format first (most common)
+      let edgeKey = `${fromState}->${toState}`;
+      let edge = edgeMap.get(edgeKey);
+      
+      // Try quoted formats if not found
+      if (!edge) {
+        edgeKey = `"${fromState}"->"${toState}"`;
+        edge = edgeMap.get(edgeKey);
+      }
+      if (!edge) {
+        edgeKey = `'${fromState}'->'${toState}'`;
+        edge = edgeMap.get(edgeKey);
+      }
+      
+      if (edge) {
+        console.log('DagViewer: Found edge via map lookup:', edgeKey);
+        
+        // If eventName provided, check if label matches
+        if (eventName) {
+          const label = edge.querySelector('text');
+          if (label) {
+            const labelText = label.textContent || '';
+            if (labelText.includes(eventName)) {
+              console.log('DagViewer: Label matches event');
+              return edge;
+            } else {
+              console.log('DagViewer: Label does not match event:', labelText, 'vs', eventName);
+            }
+          }
+        } else {
+          return edge;
+        }
+      }
+    }
     
+    // Fallback: search all edges
+    const edges = svgElementRef.current.querySelectorAll('g.edge');
     for (const edge of edges) {
       const title = edge.querySelector('title');
       if (title) {
-        const titleText = title.textContent || '';
-        console.log('DagViewer: Checking edge with title:', titleText);
-        
-        // Graphviz title format can be: "fromState" -> "toState" or fromState->toState
-        // Trim whitespace and normalize
-        const normalizedTitle = titleText.trim();
-        
-        // More specific check first: the edge should be fromState->toState
-        const exactMatch = normalizedTitle === `${fromState}->${toState}` || 
-                          normalizedTitle === `"${fromState}"->"${toState}"` ||
-                          normalizedTitle === `'${fromState}'->'${toState}'`;
-        
-        // Pattern matching for unquoted format: fromState->toState
-        // Check if it starts with fromState-> and contains ->toState (not necessarily at end due to potential whitespace)
-        const unquotedMatch = normalizedTitle.startsWith(`${fromState}->`) && 
-                             (normalizedTitle.endsWith(`->${toState}`) || normalizedTitle.includes(`->${toState}`));
-        
-        // Pattern matching for quoted format: "fromState"->"toState"
-        const quotedMatch = (normalizedTitle.includes(`"${fromState}"`) || normalizedTitle.includes(`'${fromState}'`)) &&
-                           (normalizedTitle.includes(`"${toState}"`) || normalizedTitle.includes(`'${toState}'`)) &&
-                           normalizedTitle.includes('->');
-        
-        // Regex-based matching for more flexibility
-        const unquotedPattern = new RegExp(`^${fromState}->${toState}(?:\\s|$)`);
-        const quotedPattern = new RegExp(`["']${fromState}["']\\s*->\\s*["']${toState}["']`);
-        const regexMatch = unquotedPattern.test(normalizedTitle) || quotedPattern.test(normalizedTitle);
-        
-        console.log('DagViewer: Edge match check - title:', normalizedTitle, 'fromState:', fromState, 'toState:', toState);
-        console.log('DagViewer: Match results - exactMatch:', exactMatch, 'unquotedMatch:', unquotedMatch, 'quotedMatch:', quotedMatch, 'regexMatch:', regexMatch);
-        
-        // Check for exact match first (most reliable)
-        if (exactMatch || unquotedMatch || quotedMatch || regexMatch) {
-          const matchType = exactMatch ? 'exact' : unquotedMatch ? 'unquoted' : quotedMatch ? 'quoted' : 'regex';
-          console.log('DagViewer: Found matching edge for', fromState, '->', toState, 'type:', matchType);
+        const titleText = title.textContent?.trim() || '';
+        // Simple check: does title contain fromState->toState pattern?
+        if (titleText.includes(`${fromState}->${toState}`) || 
+            titleText.includes(`"${fromState}"->"${toState}"`) ||
+            titleText.includes(`'${fromState}'->'${toState}'`)) {
           
-          // If eventName provided, check if label matches
+          // If eventName provided, check label
           if (eventName) {
             const label = edge.querySelector('text');
-            if (label) {
-              const labelText = label.textContent || '';
-              console.log('DagViewer: Checking label:', labelText, 'for event:', eventName);
-              // Check if label contains the event name
-              if (labelText.includes(eventName)) {
-                console.log('DagViewer: Label matches event, returning edge');
-                return edge as SVGGElement;
-              } else {
-                console.log('DagViewer: Label does not match event');
-              }
-            } else {
-              console.log('DagViewer: No label element found in edge');
+            if (label && label.textContent?.includes(eventName)) {
+              console.log('DagViewer: Found edge with matching label');
+              return edge as SVGGElement;
             }
           } else {
-            // Return first matching edge if no event name specified
-            console.log('DagViewer: No event name specified, returning matching edge');
+            console.log('DagViewer: Found edge via fallback search');
             return edge as SVGGElement;
           }
         }
-      } else {
-        console.log('DagViewer: Edge has no title element');
       }
     }
     
