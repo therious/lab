@@ -24,7 +24,14 @@ export class InjectedStateForms
       const behavior      = {};
       const options       = {};
       const xstateConfig  = createXStateConfiguration(fsmConfig, behavior, options);
-      const diagram       = fsmConfigToDot(fsmConfig, behavior);
+      const visualizationOptions = {
+        colors: {
+          currentState: 'palegreen',
+          nonCurrentState: 'cornsilk',
+        },
+        highlightCurrentState: false, // We'll handle highlighting via direct manipulation
+      };
+      const diagram       = fsmConfigToDot(fsmConfig, behavior, visualizationOptions);
      return <StateForm key={xstateConfig.id} expanded={true} stConfig={xstateConfig} diagram={diagram} fsmConfig={fsmConfig}/>
     });
     return (

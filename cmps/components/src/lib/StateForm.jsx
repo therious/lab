@@ -199,54 +199,12 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
         const fsmInst = FsmControl.instantiate(fsmDef, true);
         fsmInstanceRef.current = fsmInst;
 
-        // Helper function to highlight only the current state in diagram
-        const highlightCurrentState = (diagram, currentStateValue) => {
-          // Get all state names from the diagram
-          const stateNames = fsmConfigRef.current?.states || [];
-          const defaultFillColor = 'cornsilk'; // Default from fsm-visualization-dot.ts
-          
-          let cleanedDiagram = diagram;
-          
-          // Process each state node definition
-          // State nodes: "StateName" [attributes] (no -> in the line)
-          // Transitions: "FromState"->"ToState" [attributes] (has -> in the line)
-          stateNames.forEach(stateName => {
-            const fillColor = stateName === currentStateValue ? 'palegreen' : defaultFillColor;
-            
-            // Match state node definitions only (lines that don't contain ->)
-            // We need to match the entire line to check for ->
-            const lines = cleanedDiagram.split('\n');
-            const processedLines = lines.map(line => {
-              // Check if this line is a state node definition (contains state name but no ->)
-              const stateNodePattern = new RegExp(`"${stateName}" \\[([^\\]]*)\\]`, 'g');
-              if (line.includes(`"${stateName}"`) && !line.includes('->')) {
-                // This is a state node definition, process it
-                return line.replace(stateNodePattern, (match, attrs) => {
-                  // Remove any existing fillcolor and add the correct one
-                  const cleanAttrs = attrs.replace(/fillcolor=[^\s\]]*/g, '').trim().replace(/\s+/g, ' ');
-                  return `"${stateName}" [${cleanAttrs} fillcolor=${fillColor}]`;
-                });
-              }
-              // This is a transition or other line, leave it unchanged
-              return line;
-            });
-            cleanedDiagram = processedLines.join('\n');
-          });
-          
-          return cleanedDiagram;
-        };
-
         // Subscribe to state changes
         fsmInst.subscribe((state) => {
           const stateValue = typeof state.value === 'string' ? state.value : Object.keys(state.value)[0];
           setCurrentState(stateValue);
           setCurrentContext(state.context);
-          // Regenerate diagram with current state highlighted
-          if (fsmConfigRef.current) {
-            const updatedDiagram = fsmConfigToDot(fsmConfigRef.current, {});
-            const highlightedDiagram = highlightCurrentState(updatedDiagram, stateValue);
-            setCurrentDiagram(highlightedDiagram);
-          }
+          // Diagram will be updated via direct DOM manipulation, no regeneration needed
         });
 
         // Set initial state
@@ -254,12 +212,6 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
         const initialValue = typeof initialState.value === 'string' ? initialState.value : Object.keys(initialState.value)[0];
         setCurrentState(initialValue);
         setCurrentContext(initialState.context);
-        // Update initial diagram
-        if (fsmConfigRef.current) {
-          const updatedDiagram = fsmConfigToDot(fsmConfigRef.current, {});
-          const highlightedDiagram = highlightCurrentState(updatedDiagram, initialValue);
-          setCurrentDiagram(highlightedDiagram);
-        }
       } catch (err) {
         console.error('Failed to instantiate state machine:', err);
       }
