@@ -221,9 +221,15 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
           const stateValue = typeof state.value === 'string' ? state.value : Object.keys(state.value)[0];
           // Capture previous state from ref before updating
           const prevState = currentStateRef.current;
-          if (prevState !== null && prevState !== stateValue) {
+          // Always set previousState, even for self-transitions (when state doesn't change)
+          // This allows self-transition animations to work
+          if (prevState !== null) {
             setPreviousState(prevState);
-            console.log('StateForm: State change detected', prevState, '->', stateValue);
+            if (prevState !== stateValue) {
+              console.log('StateForm: State change detected', prevState, '->', stateValue);
+            } else {
+              console.log('StateForm: Self-transition detected (state unchanged):', stateValue);
+            }
           }
           currentStateRef.current = stateValue;
           setCurrentState(stateValue);

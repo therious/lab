@@ -136,7 +136,8 @@ export function DagViewer({
       previousState,
       isLoading,
       elementMapSize: elementMapRef.current.size,
-      animationEnabled
+      animationEnabled,
+      transitionEvent
     });
     
     if (!svgElementRef.current || !currentState || isLoading) {
@@ -160,8 +161,20 @@ export function DagViewer({
     
     if (animationEnabled) {
       // Animate both regular transitions and self-transitions
-      console.log('DagViewer: Starting animation from', previousState, 'to', currentState, 'event:', transitionEvent);
-      animateStateTransition(previousState, currentState, transitionEvent, transitionTime, onAnimationComplete);
+      // For self-transitions, we need to check if there's a transition event to trigger animation
+      // Even if state doesn't change, if there's an event, we should animate
+      if (previousState === currentState && transitionEvent) {
+        console.log('DagViewer: Self-transition with event, animating');
+        animateStateTransition(previousState, currentState, transitionEvent, transitionTime, onAnimationComplete);
+      } else if (previousState !== currentState) {
+        console.log('DagViewer: State change transition, animating');
+        animateStateTransition(previousState, currentState, transitionEvent, transitionTime, onAnimationComplete);
+      } else {
+        // No event and no state change - just update
+        console.log('DagViewer: No state change and no event, direct update');
+        clearAllStateColors();
+        updateStateColor(currentState, true);
+      }
     } else {
       // Direct update without animation
       console.log('DagViewer: Direct update from', previousState, 'to', currentState, 'animationEnabled:', animationEnabled);
@@ -486,20 +499,22 @@ export function DagViewer({
     // Get current color
     const currentColor = shape.getAttribute('fill') || 'cornsilk';
     
-    // Convert palegreen to brighter/more saturated version for pulse
-    const brightColor = currentColor === 'palegreen' ? '#7FFF7F' : '#FFFFE0'; // Brighter green or light yellow
+    // Convert to much brighter/more saturated version for pulse
+    // Use more vibrant colors that are clearly noticeable
+    const brightColor = currentColor === 'palegreen' ? '#00FF00' : '#FFFF00'; // Bright green or bright yellow
     
     // Add transition class for smooth animation
     shape.classList.add('dag-viewer-state');
     
-    // Pulse animation: bright -> normal
+    // Pulse animation: bright -> normal (longer duration for visibility)
     shape.setAttribute('fill', brightColor);
     console.log('DagViewer: Pulsing state', stateName, 'from', currentColor, 'to bright color', brightColor);
     
+    // Use longer pulse duration (80% of total) so it's more noticeable
     setTimeout(() => {
       shape.setAttribute('fill', currentColor);
       console.log('DagViewer: Pulsed state', stateName, 'back to', currentColor);
-    }, duration * 0.6);
+    }, duration * 0.8);
   }
 
   // Animate state transition
