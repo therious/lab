@@ -367,72 +367,125 @@ export function DagViewer({
       return false; // Return false to indicate failure
     }
     
+    // Get edge identifier (title) for tracking
+    const title = edge.querySelector('title');
+    const edgeId = title?.textContent?.trim() || `${fromState}->${toState}`;
+    
+    // Check if edge is already highlighted - if so, don't modify again
+    if (edgeStylesRef.current.has(edge)) {
+      console.warn('DagViewer: Edge already highlighted, skipping:', edgeId);
+      return true; // Already highlighted, consider it success
+    }
+    
     const path = edge.querySelector('path') as SVGPathElement;
     const label = edge.querySelector('text') as SVGTextElement;
     
-    console.log('DagViewer: Highlighting edge from', fromState, 'to', toState);
+    console.log('DagViewer: Highlighting edge from', fromState, 'to', toState, 'id:', edgeId);
     
-    // Store original styles before modifying - CRITICAL for restoration
+    // Store original styles BEFORE any modifications - CRITICAL
     const originalStyles: {path?: {stroke?: string, strokeWidth?: string, style?: string}, label?: {fill?: string, fontWeight?: string}} = {};
     
     if (path) {
-      // Store original values - check both attribute and computed style
-      const computedStyle = window.getComputedStyle(path);
-      originalStyles.path = {
-        stroke: path.getAttribute('stroke') || computedStyle.stroke || '',
-        strokeWidth: path.getAttribute('stroke-width') || computedStyle.strokeWidth || ''
-      };
+      // Read ORIGINAL values BEFORE modifying - check if already highlighted
+      const currentStroke = path.getAttribute('stroke');
+      const currentStrokeWidth = path.getAttribute('stroke-width');
+      
+      // If already highlighted (cyan/3), we need to get the REAL original from storage
+      if (currentStroke === 'cyan' && currentStrokeWidth === '3') {
+        console.warn('DagViewer: Edge already highlighted! Reading from previous storage or computed style');
+        const computedStyle = window.getComputedStyle(path);
+        // Try to get the actual original from computed style (before our modifications)
+        originalStyles.path = {
+          stroke: '', // Will be removed if empty
+          strokeWidth: computedStyle.strokeWidth === '3px' ? '' : computedStyle.strokeWidth || ''
+        };
+      } else {
+        // Store actual original values
+        originalStyles.path = {
+          stroke: currentStroke || '',
+          strokeWidth: currentStrokeWidth || ''
+        };
+      }
       
       // Also store style attribute if present (for dotted edges)
       const styleAttr = path.getAttribute('style') || '';
-      if (styleAttr) {
+      if (styleAttr && !styleAttr.includes('stroke: cyan')) {
         originalStyles.path.style = styleAttr;
       }
       
       path.classList.add('dag-viewer-edge');
       path.setAttribute('stroke', 'cyan');
       path.setAttribute('stroke-width', '3');
-      console.log('DagViewer: Edge path highlighted, original stroke:', originalStyles.path.stroke, 'strokeWidth:', originalStyles.path.strokeWidth, 'style:', originalStyles.path.style);
+      console.log('DagViewer: Edge path highlighted, stored original stroke:', originalStyles.path.stroke || 'none', 'strokeWidth:', originalStyles.path.strokeWidth || 'none', 'style:', originalStyles.path.style || 'none');
     } else {
       console.warn('DagViewer: Path element not found in edge');
     }
     
     if (label) {
-      // Store original values
-      originalStyles.label = {
-        fill: label.getAttribute('fill') || '',
-        fontWeight: label.style.fontWeight || ''
-      };
+      // Read ORIGINAL values BEFORE modifying
+      const currentFill = label.getAttribute('fill');
+      
+      // If already highlighted (orange), get real original
+      if (currentFill === 'orange') {
+        console.warn('DagViewer: Label already highlighted! Reading from computed style');
+        const computedStyle = window.getComputedStyle(label);
+        originalStyles.label = {
+          fill: computedStyle.fill === 'rgb(255, 165, 0)' ? '' : computedStyle.fill || '',
+          fontWeight: ''
+        };
+      } else {
+        originalStyles.label = {
+          fill: currentFill || '',
+          fontWeight: label.style.fontWeight || ''
+        };
+      }
       
       label.classList.add('dag-viewer-edge-label');
       label.setAttribute('fill', 'orange');
       label.style.fontWeight = 'bold';
-      console.log('DagViewer: Edge label highlighted:', label.textContent, 'original fill:', originalStyles.label.fill);
+      console.log('DagViewer: Edge label highlighted:', label.textContent, 'stored original fill:', originalStyles.label.fill || 'none');
     } else {
       console.warn('DagViewer: Label element not found in edge');
     }
     
-    // Store original styles for this edge - MUST store for restoration
+    // Store original styles for this edge using edge as key - MUST store for restoration
     edgeStylesRef.current.set(edge, originalStyles);
-    console.log('DagViewer: Stored original styles for edge restoration');
+    console.log('DagViewer: Stored original styles for edge restoration, edgeId:', edgeId);
     return true; // Return true to indicate success
   }
 
   // Restore edge directly using stored edge reference
   function restoreEdgeDirectly(edge: SVGGElement) {
-    console.log('DagViewer: Restoring edge directly from stored reference');
+    const title = edge.querySelector('title');
+    const edgeId = title?.textContent?.trim() || 'unknown';
+    console.log('DagViewer: Restoring edge directly from stored reference, edgeId:', edgeId);
+    
     const originalStyles = edgeStylesRef.current.get(edge);
     
     if (!originalStyles) {
-      console.error('DagViewer: CRITICAL - No stored styles for direct restoration! Using fallback');
-      // Fallback restoration
+      console.error('DagViewer: CRITICAL - No stored styles for edge:', edgeId);
+      // Read current state and restore to defaults
       const path = edge.querySelector('path') as SVGPathElement;
       const label = edge.querySelector('text') as SVGTextElement;
       
       if (path) {
+        // Remove our modifications
         path.removeAttribute('stroke');
         path.removeAttribute('stroke-width');
-        path.removeAttribute('style');
+        // Don't remove style entirely - might have other important styles
+        const currentStyle = path.getAttribute('style') || '';
+        if (currentStyle.includes('stroke: cyan') || currentStyle.includes('stroke-width: 3')) {
+          // Remove our additions from style
+          const cleanedStyle = currentStyle
+            .replace(/stroke:\s*cyan[;\s]*/gi, '')
+            .replace(/stroke-width:\s*3[px\s]*[;\s]*/gi, '')
+            .trim();
+          if (cleanedStyle) {
+            path.setAttribute('style', cleanedStyle);
+          } else {
+            path.removeAttribute('style');
+          }
+        }
         path.classList.remove('dag-viewer-edge');
       }
       if (label) {
@@ -440,6 +493,7 @@ export function DagViewer({
         label.style.fontWeight = '';
         label.classList.remove('dag-viewer-edge-label');
       }
+      console.log('DagViewer: Restored edge using fallback method');
       return;
     }
     
@@ -447,42 +501,60 @@ export function DagViewer({
     const label = edge.querySelector('text') as SVGTextElement;
     
     if (path && originalStyles.path) {
-      if (originalStyles.path.stroke) {
+      // Restore stroke
+      if (originalStyles.path.stroke && originalStyles.path.stroke !== 'cyan') {
         path.setAttribute('stroke', originalStyles.path.stroke);
       } else {
         path.removeAttribute('stroke');
       }
-      if (originalStyles.path.strokeWidth) {
+      // Restore strokeWidth
+      if (originalStyles.path.strokeWidth && originalStyles.path.strokeWidth !== '3' && originalStyles.path.strokeWidth !== '3px') {
         path.setAttribute('stroke-width', originalStyles.path.strokeWidth);
       } else {
         path.removeAttribute('stroke-width');
       }
+      // Restore style attribute
       if (originalStyles.path.style) {
         path.setAttribute('style', originalStyles.path.style);
       } else {
-        path.removeAttribute('style');
+        // Clean our modifications from style if present
+        const currentStyle = path.getAttribute('style') || '';
+        if (currentStyle.includes('stroke: cyan') || currentStyle.includes('stroke-width: 3')) {
+          const cleanedStyle = currentStyle
+            .replace(/stroke:\s*cyan[;\s]*/gi, '')
+            .replace(/stroke-width:\s*3[px\s]*[;\s]*/gi, '')
+            .trim();
+          if (cleanedStyle) {
+            path.setAttribute('style', cleanedStyle);
+          } else {
+            path.removeAttribute('style');
+          }
+        }
       }
       path.classList.remove('dag-viewer-edge');
-      console.log('DagViewer: Directly restored path');
+      console.log('DagViewer: Directly restored path - stroke:', path.getAttribute('stroke') || 'removed', 'strokeWidth:', path.getAttribute('stroke-width') || 'removed');
     }
     
     if (label && originalStyles.label) {
-      if (originalStyles.label.fill) {
+      // Restore fill
+      if (originalStyles.label.fill && originalStyles.label.fill !== 'orange') {
         label.setAttribute('fill', originalStyles.label.fill);
       } else {
         label.removeAttribute('fill');
       }
+      // Restore fontWeight
       if (originalStyles.label.fontWeight) {
         label.style.fontWeight = originalStyles.label.fontWeight;
       } else {
         label.style.fontWeight = '';
       }
       label.classList.remove('dag-viewer-edge-label');
-      console.log('DagViewer: Directly restored label');
+      console.log('DagViewer: Directly restored label - fill:', label.getAttribute('fill') || 'removed');
     }
     
+    // Remove from stored styles map AFTER successful restoration
     edgeStylesRef.current.delete(edge);
-    console.log('DagViewer: Direct edge restoration complete');
+    console.log('DagViewer: Direct edge restoration complete for', edgeId);
   }
 
   // Reset transition edge highlighting - MUST restore to original state
