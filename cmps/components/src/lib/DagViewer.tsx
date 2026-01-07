@@ -131,7 +131,13 @@ export function DagViewer({
   useEffect(() => {
     if (!svgElementRef.current || !currentState || isLoading) return;
     
-    if (animationEnabled && previousState && previousState !== currentState) {
+    // Initial state highlighting (no previous state)
+    if (!previousState) {
+      updateStateColor(currentState, true);
+      return;
+    }
+    
+    if (animationEnabled && previousState !== currentState) {
       animateStateTransition(previousState, currentState, transitionEvent, transitionTime, onAnimationComplete);
     } else {
       // Direct update without animation

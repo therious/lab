@@ -173,8 +173,11 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
   const [formHeight, setFormHeight] = useState(500);
   const [showDiagram, setShowDiagram] = useState(true);
   const [currentState, setCurrentState] = useState(null);
+  const [previousState, setPreviousState] = useState(null);
+  const [lastEvent, setLastEvent] = useState(null);
   const [currentContext, setCurrentContext] = useState(initialContext);
   const [currentDiagram, setCurrentDiagram] = useState(diagram);
+  const [animationEnabled, setAnimationEnabled] = useState(true);
   
   const fsmInstanceRef = useRef(null);
   const fsmConfigRef = useRef(fsmConfig || null);
@@ -216,7 +219,7 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
         // Subscribe to state changes
         fsmInst.subscribe((state) => {
           const stateValue = typeof state.value === 'string' ? state.value : Object.keys(state.value)[0];
-          const previousState = currentState;
+          setPreviousState(currentState);
           setCurrentState(stateValue);
           setCurrentContext(state.context);
           // Diagram will be updated via direct DOM manipulation in DagViewer
@@ -243,6 +246,7 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
 
   const handleEvent = useCallback((eventName) => {
     if (fsmInstanceRef.current) {
+      setLastEvent(eventName);
       fsmInstanceRef.current.send({ type: eventName });
     }
   }, []);
@@ -369,7 +373,16 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
               </button>
             </div>
             {showDiagram ? (
-              <DagViewer dot={currentDiagram} width={"100%"} height={"calc(100% - 40px)"}/>
+              <DagViewer 
+                dot={currentDiagram} 
+                width={"100%"} 
+                height={"calc(100% - 40px)"}
+                currentState={currentState}
+                previousState={previousState}
+                transitionEvent={lastEvent}
+                animationEnabled={animationEnabled}
+                transitionTime={500}
+              />
             ) : (
               <textarea 
                 readOnly={true} 
