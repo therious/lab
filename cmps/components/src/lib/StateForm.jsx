@@ -204,7 +204,6 @@ export const  StateForm = ({expanded, stConfig, diagram, fsmConfig}) => {
 
         // Generate initial diagram
         if (fsmConfigRef.current) {
-          const {fsmConfigToDot} = require('@therious/fsm');
           const visualizationOptions = {
             colors: {
               currentState: 'palegreen',
