@@ -27,6 +27,7 @@ export function DagViewer({
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const svgElementRef = useRef<SVGSVGElement | null>(null);
   const elementMapRef = useRef<Map<string, SVGGElement>>(new Map());
+  const edgeStylesRef = useRef<Map<SVGGElement, {path?: {stroke?: string, strokeWidth?: string}, label?: {fill?: string, fontWeight?: string}}>>(new Map());
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -366,7 +367,16 @@ export function DagViewer({
     
     console.log('DagViewer: Highlighting edge from', fromState, 'to', toState);
     
+    // Store original styles before modifying
+    const originalStyles: {path?: {stroke?: string, strokeWidth?: string}, label?: {fill?: string, fontWeight?: string}} = {};
+    
     if (path) {
+      // Store original values
+      originalStyles.path = {
+        stroke: path.getAttribute('stroke') || '',
+        strokeWidth: path.getAttribute('stroke-width') || ''
+      };
+      
       path.classList.add('dag-viewer-edge');
       path.setAttribute('stroke', 'cyan');
       path.setAttribute('stroke-width', '3');
@@ -376,6 +386,12 @@ export function DagViewer({
     }
     
     if (label) {
+      // Store original values
+      originalStyles.label = {
+        fill: label.getAttribute('fill') || '',
+        fontWeight: label.style.fontWeight || ''
+      };
+      
       label.classList.add('dag-viewer-edge-label');
       label.setAttribute('fill', 'orange');
       label.style.fontWeight = 'bold';
@@ -383,6 +399,9 @@ export function DagViewer({
     } else {
       console.warn('DagViewer: Label element not found in edge');
     }
+    
+    // Store original styles for this edge
+    edgeStylesRef.current.set(edge, originalStyles);
   }
 
   // Reset transition edge highlighting
@@ -393,18 +412,54 @@ export function DagViewer({
       return;
     }
     
+    // Get stored original styles
+    const originalStyles = edgeStylesRef.current.get(edge);
+    
     const path = edge.querySelector('path') as SVGPathElement;
     const label = edge.querySelector('text') as SVGTextElement;
     
     if (path) {
-      path.removeAttribute('stroke');
-      path.removeAttribute('stroke-width');
+      if (originalStyles?.path) {
+        // Restore original values
+        if (originalStyles.path.stroke) {
+          path.setAttribute('stroke', originalStyles.path.stroke);
+        } else {
+          path.removeAttribute('stroke');
+        }
+        if (originalStyles.path.strokeWidth) {
+          path.setAttribute('stroke-width', originalStyles.path.strokeWidth);
+        } else {
+          path.removeAttribute('stroke-width');
+        }
+      } else {
+        // Fallback: remove attributes if no stored styles
+        path.removeAttribute('stroke');
+        path.removeAttribute('stroke-width');
+      }
     }
     
     if (label) {
-      label.removeAttribute('fill');
-      label.style.fontWeight = '';
+      if (originalStyles?.label) {
+        // Restore original values
+        if (originalStyles.label.fill) {
+          label.setAttribute('fill', originalStyles.label.fill);
+        } else {
+          label.removeAttribute('fill');
+        }
+        if (originalStyles.label.fontWeight) {
+          label.style.fontWeight = originalStyles.label.fontWeight;
+        } else {
+          label.style.fontWeight = '';
+        }
+      } else {
+        // Fallback: remove attributes if no stored styles
+        label.removeAttribute('fill');
+        label.style.fontWeight = '';
+      }
     }
+    
+    // Remove from stored styles map
+    edgeStylesRef.current.delete(edge);
     
     console.log('DagViewer: Edge highlighting reset');
   }
