@@ -81,7 +81,7 @@ export function BuildInfo({ serverBuildInfo, className, style }: BuildInfoProps)
       <div>Author: {uiBuildInfo.authorDate}</div>
       <div>Commit: {uiBuildInfo.commitDate}</div>
       <div>Build: {uiBuildInfo.buildDate}</div>
-      {uiBuildInfo.mnemonic && <div>Mnemonic: {uiBuildInfo.mnemonic}</div>}
+      {uiBuildInfo.mnemonic && <div>Mnemonic: "{uiBuildInfo.mnemonic.replace(/-/g, ' ')}"</div>}
       
       {serverBuildInfo && (
         <>
