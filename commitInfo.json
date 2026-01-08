@@ -1,0 +1,9 @@
+{
+  "repo": "lab",
+  "branch": "main",
+  "commit": "e7bf7ba1e1693128e7aaf48bec13e71d0784ce2a",
+  "date": "",
+  "message": "🦾 roots: Add removeFreeStage to tooltipCounts type definition",
+  "author_name": "Haim Zamir",
+  "author_email": "hzamir@gmail.com"
+}
