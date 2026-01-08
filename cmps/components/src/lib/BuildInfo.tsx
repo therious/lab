@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import styled from 'styled-components';
 
 interface BuildInfoData {
   commitHash: string;
@@ -14,6 +15,79 @@ interface BuildInfoProps {
   className?: string;
   style?: React.CSSProperties;
 }
+
+// Styled components
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  font-size: 10px;
+  color: #666;
+  font-family: monospace;
+  line-height: 1.2;
+  position: relative;
+  cursor: help;
+`;
+
+const WidgetLine = styled.div`
+  &:last-child {
+    color: #999;
+  }
+`;
+
+const TooltipContainer = styled.div<{ $position: { top?: number; bottom?: number; left?: number; right?: number } }>`
+  position: fixed;
+  ${props => props.$position.top !== undefined && `top: ${props.$position.top}px;`}
+  ${props => props.$position.bottom !== undefined && `bottom: ${props.$position.bottom}px;`}
+  ${props => props.$position.left !== undefined && `left: ${props.$position.left}px;`}
+  ${props => props.$position.right !== undefined && `right: ${props.$position.right}px;`}
+  background: #333;
+  color: #fff;
+  padding: 0.5rem;
+  border-radius: 4px;
+  z-index: 10000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  white-space: normal;
+  max-height: 80vh;
+  overflow-y: auto;
+  font-size: 10px;
+  font-family: monospace;
+  line-height: 1.4;
+  width: fit-content;
+  min-width: min-content;
+`;
+
+const TooltipTitle = styled.div`
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+`;
+
+const TooltipTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+`;
+
+const TooltipLabelCell = styled.td`
+  text-align: right;
+  padding-right: 0.75rem;
+  padding-bottom: 0.25rem;
+`;
+
+const TooltipValueCell = styled.td`
+  text-align: left;
+  padding-bottom: 0.25rem;
+  font-family: monospace;
+`;
+
+const TooltipValueCellLast = styled(TooltipValueCell)`
+  padding-bottom: 0;
+`;
 
 /**
  * Format a date string for display with smart formatting
@@ -68,6 +142,13 @@ function formatDateForDisplay(
 
   // Different date - show full date and time
   return { formatted: fullDateStr, fullLength };
+}
+
+/**
+ * Format mnemonic: wrap in double quotes and replace hyphens with spaces
+ */
+function formatMnemonic(mnemonic: string): string {
+  return `"${mnemonic.replace(/-/g, ' ')}"`;
 }
 
 /**
@@ -149,7 +230,7 @@ function calculateTooltipPosition(
  */
 export function BuildInfo({ buildInfo: buildInfoProp, className, style }: BuildInfoProps) {
   const [showTooltip, setShowTooltip] = useState(false);
-  const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
+  const [tooltipPosition, setTooltipPosition] = useState<{ top?: number; bottom?: number; left?: number; right?: number }>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
@@ -168,25 +249,7 @@ export function BuildInfo({ buildInfo: buildInfoProp, className, style }: BuildI
         viewportHeight
       );
 
-      setTooltipStyle({
-        position: 'fixed',
-        ...position,
-        background: '#333',
-        color: '#fff',
-        padding: '0.5rem',
-        borderRadius: '4px',
-        zIndex: 10000,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-        pointerEvents: 'none',
-        minWidth: '300px',
-        maxWidth: '400px',
-        whiteSpace: 'normal' as const,
-        maxHeight: '80vh',
-        overflowY: 'auto' as const,
-        fontSize: '10px',
-        fontFamily: 'monospace',
-        lineHeight: '1.4'
-      });
+      setTooltipPosition(position);
     }
   }, [showTooltip]);
 
@@ -210,79 +273,58 @@ export function BuildInfo({ buildInfo: buildInfoProp, className, style }: BuildI
     committedResult
   );
 
-  // Build tooltip content using a simple table
-  const tooltipContent = (
-    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-      <tbody>
-        <tr>
-          <td style={{ textAlign: 'right', paddingRight: '0.75rem', paddingBottom: '0.25rem' }}>Hash:</td>
-          <td style={{ textAlign: 'left', paddingBottom: '0.25rem' }}>{buildInfo.commitHash}</td>
-        </tr>
-        {buildInfo.mnemonic && (
-          <tr>
-            <td style={{ textAlign: 'right', paddingRight: '0.75rem', paddingBottom: '0.25rem' }}>Mnemonic:</td>
-            <td style={{ textAlign: 'left', paddingBottom: '0.25rem', color: '#999' }}>{buildInfo.mnemonic}</td>
-          </tr>
-        )}
-        <tr>
-          <td style={{ textAlign: 'right', paddingRight: '0.75rem', paddingBottom: '0.25rem' }}>Branch:</td>
-          <td style={{ textAlign: 'left', paddingBottom: '0.25rem' }}>{buildInfo.branch}</td>
-        </tr>
-        <tr>
-          <td style={{ textAlign: 'right', paddingRight: '0.75rem', paddingBottom: '0.25rem' }}>Authored:</td>
-          <td style={{ textAlign: 'left', fontFamily: 'monospace', paddingBottom: '0.25rem' }}>{authoredResult.formatted}</td>
-        </tr>
-        <tr>
-          <td style={{ textAlign: 'right', paddingRight: '0.75rem', paddingBottom: '0.25rem' }}>Committed:</td>
-          <td style={{ textAlign: 'left', fontFamily: 'monospace', paddingBottom: '0.25rem' }}>{committedResult.formatted}</td>
-        </tr>
-        <tr>
-          <td style={{ textAlign: 'right', paddingRight: '0.75rem' }}>Built:</td>
-          <td style={{ textAlign: 'left', fontFamily: 'monospace' }}>{builtResult.formatted}</td>
-        </tr>
-      </tbody>
-    </table>
-  );
-
-  // Widget style - two lines (commit hash on first line, mnemonic on second)
-  const defaultStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    padding: '0.5rem 1rem',
-    background: '#f8f9fa',
-    borderRadius: '8px',
-    border: '1px solid #dee2e6',
-    fontSize: '10px',
-    color: '#666',
-    fontFamily: 'monospace',
-    lineHeight: '1.2',
-    position: 'relative',
-    cursor: 'help',
-    ...style
-  };
+  // Format mnemonic
+  const formattedMnemonic = buildInfo.mnemonic ? formatMnemonic(buildInfo.mnemonic) : null;
 
   return (
-    <div
+    <Container
       ref={containerRef}
       className={className}
-      style={defaultStyle}
+      style={style}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
       title="Hover for full build info"
     >
-      <div>{buildInfo.commitHash}</div>
-      {buildInfo.mnemonic && (
-        <div style={{ color: '#999' }}>{buildInfo.mnemonic}</div>
+      <WidgetLine>{buildInfo.commitHash}</WidgetLine>
+      {formattedMnemonic && (
+        <WidgetLine>{formattedMnemonic}</WidgetLine>
       )}
 
       {showTooltip && (
-        <div ref={tooltipRef} style={tooltipStyle}>
-          <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Build Info:</div>
-          {tooltipContent}
-        </div>
+        <TooltipContainer ref={tooltipRef} $position={tooltipPosition}>
+          <TooltipTitle>Build Info:</TooltipTitle>
+          <TooltipTable>
+            <tbody>
+              <tr>
+                <TooltipLabelCell>Hash:</TooltipLabelCell>
+                <TooltipValueCell>{buildInfo.commitHash}</TooltipValueCell>
+              </tr>
+              {formattedMnemonic && (
+                <tr>
+                  <TooltipLabelCell>Mnemonic:</TooltipLabelCell>
+                  <TooltipValueCell style={{ color: '#999' }}>{formattedMnemonic}</TooltipValueCell>
+                </tr>
+              )}
+              <tr>
+                <TooltipLabelCell>Branch:</TooltipLabelCell>
+                <TooltipValueCell>{buildInfo.branch}</TooltipValueCell>
+              </tr>
+              <tr>
+                <TooltipLabelCell>Authored:</TooltipLabelCell>
+                <TooltipValueCell>{authoredResult.formatted}</TooltipValueCell>
+              </tr>
+              <tr>
+                <TooltipLabelCell>Committed:</TooltipLabelCell>
+                <TooltipValueCell>{committedResult.formatted}</TooltipValueCell>
+              </tr>
+              <tr>
+                <TooltipLabelCell>Built:</TooltipLabelCell>
+                <TooltipValueCellLast>{builtResult.formatted}</TooltipValueCellLast>
+              </tr>
+            </tbody>
+          </TooltipTable>
+        </TooltipContainer>
       )}
-    </div>
+    </Container>
   );
 }

@@ -165,7 +165,7 @@ export function BuildInfo({ serverBuildInfo, className, style }: BuildInfoProps)
     >
       <div>UI: {uiBuildInfo.commitHash}</div>
       {uiBuildInfo.mnemonic && (
-        <div>{uiBuildInfo.mnemonic}</div>
+        <div>"{uiBuildInfo.mnemonic.replace(/-/g, ' ')}"</div>
       )}
       
       {showTooltip && (
