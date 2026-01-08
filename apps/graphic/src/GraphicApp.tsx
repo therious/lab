@@ -8,6 +8,7 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query'
 import {NeueModal} from '@therious/components';
+import {BuildInfoWrapper} from './BuildInfoWrapper';
 
 const queryClient = new QueryClient();
 
@@ -42,7 +43,15 @@ function Example()
   },[]);
 
   return (
-    <div className="App" onContextMenu={contextMenu}>
+    <div className="App" onContextMenu={contextMenu} style={{ position: 'relative' }}>
+      <div style={{ 
+        position: 'absolute', 
+        top: '1rem', 
+        right: '1rem', 
+        zIndex: 1000 
+      }}>
+        <BuildInfoWrapper />
+      </div>
       <button disabled={modal} onClick={openModal}>Trigger modal</button>
       <NeueModal openIt={modal} close={closeModal}><h1>Wow</h1><p>Hello this is an extensive message</p><button onClick={closeModal}>Close me</button></NeueModal>
 

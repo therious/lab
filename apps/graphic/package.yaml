@@ -35,8 +35,8 @@ devDependencies:
 
 scripts:
   start:   VITE_CJS_IGNORE_WARNING=true vite  #it looks like react-swc plugin might be cause of the warning I am turning off?
-  dev:     VITE_CJS_IGNORE_WARNING=true vite
-  build:   tsc && vite build
+  dev:     node ../../scripts/generate-build-info.js && VITE_CJS_IGNORE_WARNING=true vite
+  build:   node ../../scripts/generate-build-info.js && tsc && vite build
   preview: vite preview
   lint:    eslint . --ext js,jsx,ts,tsx
 
