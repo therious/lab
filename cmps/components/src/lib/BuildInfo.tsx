@@ -17,6 +17,7 @@ interface BuildInfoProps {
 
 /**
  * Format a date string for display with smart formatting
+ * Returns date in yyyy-mm-dd HH:MM:SS format (local time)
  * If the date is the same as the previous date, only show the time
  * Use non-breaking spaces to align dates/times vertically
  */
@@ -26,15 +27,15 @@ function formatDateForDisplay(
   previousFormatted: { formatted: string; fullLength: number } | null
 ): { formatted: string; fullLength: number } {
   const date = new Date(dateStr);
-  const fullDateStr = date.toLocaleString('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  });
+  
+  // Format as yyyy-mm-dd HH:MM:SS (local time, no comma)
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const fullDateStr = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   const fullLength = fullDateStr.length;
 
   if (!previousDateStr) {
@@ -58,12 +59,7 @@ function formatDateForDisplay(
     currentDate.getDate() === prevDate.getDate()
   ) {
     // Extract time portion (format: "HH:MM:SS")
-    const timeStr = date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    });
+    const timeStr = `${hours}:${minutes}:${seconds}`;
     // Pad with non-breaking spaces to match previous full length
     const prevLength = previousFormatted?.fullLength || fullLength;
     const padding = '\u00A0'.repeat(Math.max(0, prevLength - timeStr.length));
@@ -72,6 +68,71 @@ function formatDateForDisplay(
 
   // Different date - show full date and time
   return { formatted: fullDateStr, fullLength };
+}
+
+/**
+ * Calculate tooltip position to avoid clipping on all screen edges
+ */
+function calculateTooltipPosition(
+  containerRect: DOMRect,
+  tooltipRect: DOMRect,
+  viewportWidth: number,
+  viewportHeight: number
+): { top?: number; bottom?: number; left?: number; right?: number } {
+  const margin = 10; // Margin from screen edges
+  const preferredGap = 8; // Gap between container and tooltip
+
+  // Try positioning above first
+  const spaceAbove = containerRect.top;
+  const spaceBelow = viewportHeight - containerRect.bottom;
+  const spaceLeft = containerRect.left;
+  const spaceRight = viewportWidth - containerRect.right;
+
+  let verticalPos: { top?: number; bottom?: number } = {};
+  let horizontalPos: { left?: number; right?: number } = {};
+
+  // Choose vertical position (above or below)
+  if (spaceAbove >= tooltipRect.height + preferredGap + margin) {
+    // Position above
+    verticalPos = {
+      bottom: viewportHeight - containerRect.top + preferredGap
+    };
+  } else if (spaceBelow >= tooltipRect.height + preferredGap + margin) {
+    // Position below
+    verticalPos = {
+      top: containerRect.bottom + preferredGap
+    };
+  } else {
+    // Not enough space on either side - position where there's more space
+    if (spaceAbove > spaceBelow) {
+      verticalPos = {
+        bottom: viewportHeight - containerRect.top + preferredGap
+      };
+    } else {
+      verticalPos = {
+        top: containerRect.bottom + preferredGap
+      };
+    }
+  }
+
+  // Choose horizontal position (left, center, or right aligned)
+  const tooltipLeft = containerRect.left + containerRect.width / 2 - tooltipRect.width / 2;
+  const tooltipRight = tooltipLeft + tooltipRect.width;
+
+  if (tooltipLeft < margin) {
+    // Too far left - align to left edge with margin
+    horizontalPos = { left: margin };
+  } else if (tooltipRight > viewportWidth - margin) {
+    // Too far right - align to right edge with margin
+    horizontalPos = { right: margin };
+  } else {
+    // Center it relative to container
+    horizontalPos = {
+      left: containerRect.left + containerRect.width / 2 - tooltipRect.width / 2
+    };
+  }
+
+  return { ...verticalPos, ...horizontalPos };
 }
 
 /**
@@ -88,29 +149,44 @@ function formatDateForDisplay(
  */
 export function BuildInfo({ buildInfo: buildInfoProp, className, style }: BuildInfoProps) {
   const [showTooltip, setShowTooltip] = useState(false);
-  const [tooltipPosition, setTooltipPosition] = useState<'top' | 'bottom'>('top');
+  const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  // Calculate tooltip position to avoid clipping
+  // Calculate tooltip position to avoid clipping on all edges
   useEffect(() => {
     if (showTooltip && containerRef.current && tooltipRef.current) {
       const containerRect = containerRef.current.getBoundingClientRect();
       const tooltipRect = tooltipRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      const spaceAbove = containerRect.top;
-      const spaceBelow = viewportHeight - containerRect.bottom;
-      const tooltipHeight = tooltipRect.height || 200; // Estimate if not yet rendered
 
-      // Position above if there's enough space, otherwise below
-      if (spaceAbove >= tooltipHeight + 10) {
-        setTooltipPosition('top');
-      } else if (spaceBelow >= tooltipHeight + 10) {
-        setTooltipPosition('bottom');
-      } else {
-        // Not enough space on either side - choose the side with more space
-        setTooltipPosition(spaceAbove > spaceBelow ? 'top' : 'bottom');
-      }
+      const position = calculateTooltipPosition(
+        containerRect,
+        tooltipRect,
+        viewportWidth,
+        viewportHeight
+      );
+
+      setTooltipStyle({
+        position: 'fixed',
+        ...position,
+        background: '#333',
+        color: '#fff',
+        padding: '0.5rem',
+        borderRadius: '4px',
+        zIndex: 10000,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+        pointerEvents: 'none',
+        minWidth: '300px',
+        maxWidth: '400px',
+        whiteSpace: 'normal' as const,
+        maxHeight: '80vh',
+        overflowY: 'auto' as const,
+        fontSize: '10px',
+        fontFamily: 'monospace',
+        lineHeight: '1.4'
+      });
     }
   }, [showTooltip]);
 
@@ -134,42 +210,41 @@ export function BuildInfo({ buildInfo: buildInfoProp, className, style }: BuildI
     committedResult
   );
 
-  // Build tooltip content with right-aligned property names
+  // Build tooltip content using a simple table
   const tooltipContent = (
-    <div style={{ padding: '0.5rem', fontSize: '10px', fontFamily: 'monospace', lineHeight: '1.4' }}>
-      <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>Build Info:</div>
-      <div style={{ display: 'table', width: '100%' }}>
-        <div style={{ display: 'table-row' }}>
-          <span style={{ display: 'table-cell', textAlign: 'right', paddingRight: '0.5rem' }}>Hash:</span>
-          <span style={{ display: 'table-cell' }}>{buildInfo.commitHash}</span>
-          {buildInfo.mnemonic && (
-            <span style={{ display: 'table-cell', paddingLeft: '0.5rem', color: '#999' }}>
-              {buildInfo.mnemonic}
-            </span>
-          )}
-        </div>
-        <div style={{ display: 'table-row' }}>
-          <span style={{ display: 'table-cell', textAlign: 'right', paddingRight: '0.5rem' }}>Branch:</span>
-          <span style={{ display: 'table-cell' }}>{buildInfo.branch}</span>
-        </div>
-        <div style={{ display: 'table-row' }}>
-          <span style={{ display: 'table-cell', textAlign: 'right', paddingRight: '0.5rem' }}>Authored:</span>
-          <span style={{ display: 'table-cell', fontFamily: 'monospace' }}>{authoredResult.formatted}</span>
-        </div>
-        <div style={{ display: 'table-row' }}>
-          <span style={{ display: 'table-cell', textAlign: 'right', paddingRight: '0.5rem' }}>Committed:</span>
-          <span style={{ display: 'table-cell', fontFamily: 'monospace' }}>{committedResult.formatted}</span>
-        </div>
-        <div style={{ display: 'table-row' }}>
-          <span style={{ display: 'table-cell', textAlign: 'right', paddingRight: '0.5rem' }}>Built:</span>
-          <span style={{ display: 'table-cell', fontFamily: 'monospace' }}>{builtResult.formatted}</span>
-        </div>
-      </div>
-    </div>
+    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <tbody>
+        <tr>
+          <td style={{ textAlign: 'right', paddingRight: '0.75rem', paddingBottom: '0.25rem' }}>Hash:</td>
+          <td style={{ textAlign: 'left', paddingBottom: '0.25rem' }}>{buildInfo.commitHash}</td>
+        </tr>
+        {buildInfo.mnemonic && (
+          <tr>
+            <td style={{ textAlign: 'right', paddingRight: '0.75rem', paddingBottom: '0.25rem' }}>Mnemonic:</td>
+            <td style={{ textAlign: 'left', paddingBottom: '0.25rem', color: '#999' }}>{buildInfo.mnemonic}</td>
+          </tr>
+        )}
+        <tr>
+          <td style={{ textAlign: 'right', paddingRight: '0.75rem', paddingBottom: '0.25rem' }}>Branch:</td>
+          <td style={{ textAlign: 'left', paddingBottom: '0.25rem' }}>{buildInfo.branch}</td>
+        </tr>
+        <tr>
+          <td style={{ textAlign: 'right', paddingRight: '0.75rem', paddingBottom: '0.25rem' }}>Authored:</td>
+          <td style={{ textAlign: 'left', fontFamily: 'monospace', paddingBottom: '0.25rem' }}>{authoredResult.formatted}</td>
+        </tr>
+        <tr>
+          <td style={{ textAlign: 'right', paddingRight: '0.75rem', paddingBottom: '0.25rem' }}>Committed:</td>
+          <td style={{ textAlign: 'left', fontFamily: 'monospace', paddingBottom: '0.25rem' }}>{committedResult.formatted}</td>
+        </tr>
+        <tr>
+          <td style={{ textAlign: 'right', paddingRight: '0.75rem' }}>Built:</td>
+          <td style={{ textAlign: 'left', fontFamily: 'monospace' }}>{builtResult.formatted}</td>
+        </tr>
+      </tbody>
+    </table>
   );
 
-  // Match UserProfile styling exactly: same padding, background, border-radius, border
-  // Same height by using same padding and single line display
+  // Widget style - two lines (commit hash on first line, mnemonic on second)
   const defaultStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
@@ -188,28 +263,6 @@ export function BuildInfo({ buildInfo: buildInfoProp, className, style }: BuildI
     ...style
   };
 
-  const tooltipStyle: React.CSSProperties = {
-    position: 'absolute',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    ...(tooltipPosition === 'top'
-      ? { bottom: '100%', marginBottom: '0.5rem' }
-      : { top: '100%', marginTop: '0.5rem' }
-    ),
-    background: '#333',
-    color: '#fff',
-    padding: '0.5rem',
-    borderRadius: '4px',
-    zIndex: 10000,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-    pointerEvents: 'none',
-    minWidth: '300px',
-    maxWidth: '400px',
-    whiteSpace: 'normal' as const,
-    maxHeight: '80vh',
-    overflowY: 'auto' as const
-  };
-
   return (
     <div
       ref={containerRef}
@@ -219,19 +272,17 @@ export function BuildInfo({ buildInfo: buildInfoProp, className, style }: BuildI
       onMouseLeave={() => setShowTooltip(false)}
       title="Hover for full build info"
     >
-      <div>
-        {buildInfo.commitHash}
-        {buildInfo.mnemonic && (
-          <span style={{ marginLeft: '0.5rem', color: '#999' }}>{buildInfo.mnemonic}</span>
-        )}
-      </div>
+      <div>{buildInfo.commitHash}</div>
+      {buildInfo.mnemonic && (
+        <div style={{ color: '#999' }}>{buildInfo.mnemonic}</div>
+      )}
 
       {showTooltip && (
         <div ref={tooltipRef} style={tooltipStyle}>
+          <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Build Info:</div>
           {tooltipContent}
         </div>
       )}
     </div>
   );
 }
-
