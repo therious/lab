@@ -1,5 +1,5 @@
 import type { LotteryGame } from '../types';
-import { getRangeForDate, historicalRanges } from '../data/historicalRanges';
+import { historicalRanges } from '../data/historicalRanges';
 
 /**
  * Calculate frequency of number combinations of a given size

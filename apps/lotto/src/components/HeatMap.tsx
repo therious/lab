@@ -233,7 +233,6 @@ export function HeatMap({
     
     // Find the actual date range of the loaded data
     const drawDates = game.draws.map(d => d.date).sort();
-    const earliestDraw = drawDates[0];
     const latestDraw = drawDates[drawDates.length - 1];
     
     // Only include range changes that are relevant to the loaded data

@@ -100,7 +100,7 @@ function App() {
       
       setPredictionWithAnimation({
         prediction: { ...actualResult, numbers: shuffledNumbers },
-        dropOrder: mostRecent.numbers.map((_, idx) => idx), // Fill positions left to right
+        dropOrder: mostRecent.numbers.map((_: number, idx: number) => idx), // Fill positions left to right
         showReordering: false,
         originalNumbers: mostRecent.numbers, // Keep original sorted for final order
       });
@@ -161,7 +161,7 @@ function App() {
           
           setPredictionWithAnimation({
             prediction: { ...result, numbers: shuffledNumbers },
-            dropOrder: result.numbers.map((_, idx) => idx), // Fill positions left to right
+            dropOrder: result.numbers.map((_: number, idx: number) => idx), // Fill positions left to right
             showReordering: false,
             originalNumbers: result.numbers, // Keep original sorted for final order
           });
@@ -195,7 +195,7 @@ function App() {
           
           setPredictionWithAnimation({
             prediction: { ...result, numbers: shuffledNumbers },
-            dropOrder: result.numbers.map((_, idx) => idx), // Fill positions left to right
+            dropOrder: result.numbers.map((_: number, idx: number) => idx), // Fill positions left to right
             showReordering: false,
             originalNumbers: result.numbers, // Keep original sorted for final order
           });
@@ -305,7 +305,7 @@ function App() {
           
           setPredictionWithAnimation({
             prediction: { ...result, numbers: shuffledNumbers },
-            dropOrder: result.numbers.map((_, idx) => idx), // Fill positions left to right
+            dropOrder: result.numbers.map((_: number, idx: number) => idx), // Fill positions left to right
             showReordering: false,
             originalNumbers: result.numbers, // Keep original sorted for final order
           });
