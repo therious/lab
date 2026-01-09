@@ -1,0 +1,199 @@
+import React from 'react';
+import type { LotterySummary } from '../utils/summary';
+import './PrintTickets.css';
+
+interface PrintTicketsProps {
+  summaries: Record<string, LotterySummary[]>;
+  onClose: () => void;
+}
+
+export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
+  // Handle both key formats: lowercase keys from getAllSummaries or direct game names
+  const powerballSummaries = summaries.powerball || summaries.Powerball || [];
+  const megamillionsSummaries = summaries.megamillions || summaries['Mega Millions'] || [];
+  const lottoSummaries = summaries.lotto || summaries.Lotto || [];
+  
+  const totalSummaries = powerballSummaries.length + megamillionsSummaries.length + lottoSummaries.length;
+  
+  if (totalSummaries === 0) {
+    return (
+      <div className="print-tickets-overlay">
+        <div className="print-tickets-modal">
+          <h2>No Saved Tickets</h2>
+          <p>You need to generate and save at least one prediction before printing.</p>
+          <button onClick={onClose} className="print-close-button">Close</button>
+        </div>
+      </div>
+    );
+  }
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <>
+      <div className="print-tickets-overlay">
+        <div className="print-tickets-modal">
+          <div className="print-tickets-header">
+            <h2>Print Preview</h2>
+            <div className="print-tickets-actions">
+              <button onClick={handlePrint} className="print-button">
+                🖨️ Print
+              </button>
+              <button onClick={onClose} className="print-close-button">
+                Close
+              </button>
+            </div>
+          </div>
+          <div className="print-tickets-info">
+            <p>Total tickets: {totalSummaries}</p>
+            <p>Powerball: {powerballSummaries.length} | Mega Millions: {megamillionsSummaries.length} | Lotto: {lottoSummaries.length}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div className="print-content">
+        <div className="print-header">
+          <h1>Lottery Number Tickets</h1>
+          <p className="print-date">Generated: {new Date().toLocaleString()}</p>
+        </div>
+
+        {powerballSummaries.length > 0 && (
+          <div className="print-game-section">
+            <h2 className="print-game-title">POWERBALL</h2>
+            {powerballSummaries.map((summary, index) => (
+              <div key={index} className="print-ticket">
+                <div className="print-ticket-header">
+                  <span className="print-ticket-number">Ticket #{index + 1}</span>
+                  <span className="print-ticket-date">
+                    {new Date(summary.timestamp).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+                <div className="print-numbers-row">
+                  {summary.prediction.numbers.map((num, idx) => (
+                    <span key={idx} className="print-number">
+                      {num.toString().padStart(2, '0')}
+                    </span>
+                  ))}
+                  {summary.prediction.bonus !== undefined && (
+                    <>
+                      <span className="print-separator">+</span>
+                      <span className="print-number print-bonus">
+                        {summary.prediction.bonus.toString().padStart(2, '0')}
+                      </span>
+                    </>
+                  )}
+                </div>
+                {summary.prediction.handPickedMain && summary.prediction.handPickedMain.length > 0 && (
+                  <div className="print-handpicked">
+                    Hand-picked: {summary.prediction.handPickedMain.map(n => n.toString().padStart(2, '0')).join(', ')}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {megamillionsSummaries.length > 0 && (
+          <div className="print-game-section">
+            <h2 className="print-game-title">MEGA MILLIONS</h2>
+            {megamillionsSummaries.map((summary, index) => (
+              <div key={index} className="print-ticket">
+                <div className="print-ticket-header">
+                  <span className="print-ticket-number">Ticket #{index + 1}</span>
+                  <span className="print-ticket-date">
+                    {new Date(summary.timestamp).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+                <div className="print-numbers-row">
+                  {summary.prediction.numbers.map((num, idx) => (
+                    <span key={idx} className="print-number">
+                      {num.toString().padStart(2, '0')}
+                    </span>
+                  ))}
+                  {summary.prediction.bonus !== undefined && (
+                    <>
+                      <span className="print-separator">+</span>
+                      <span className="print-number print-bonus">
+                        {summary.prediction.bonus.toString().padStart(2, '0')}
+                      </span>
+                    </>
+                  )}
+                </div>
+                {summary.prediction.handPickedMain && summary.prediction.handPickedMain.length > 0 && (
+                  <div className="print-handpicked">
+                    Hand-picked: {summary.prediction.handPickedMain.map(n => n.toString().padStart(2, '0')).join(', ')}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {lottoSummaries.length > 0 && (
+          <div className="print-game-section">
+            <h2 className="print-game-title">LOTTO</h2>
+            {lottoSummaries.map((summary, index) => (
+              <div key={index} className="print-ticket">
+                <div className="print-ticket-header">
+                  <span className="print-ticket-number">Ticket #{index + 1}</span>
+                  <span className="print-ticket-date">
+                    {new Date(summary.timestamp).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+                <div className="print-numbers-row">
+                  {summary.prediction.numbers.map((num, idx) => (
+                    <span key={idx} className="print-number">
+                      {num.toString().padStart(2, '0')}
+                    </span>
+                  ))}
+                  {summary.prediction.bonus !== undefined && (
+                    <>
+                      <span className="print-separator">+</span>
+                      <span className="print-number print-bonus">
+                        {summary.prediction.bonus.toString().padStart(2, '0')}
+                      </span>
+                    </>
+                  )}
+                </div>
+                {summary.prediction.handPickedMain && summary.prediction.handPickedMain.length > 0 && (
+                  <div className="print-handpicked">
+                    Hand-picked: {summary.prediction.handPickedMain.map(n => n.toString().padStart(2, '0')).join(', ')}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="print-footer">
+          <p className="print-disclaimer">
+            <strong>Disclaimer:</strong> These are predicted numbers based on historical data analysis. 
+            Lottery numbers are drawn randomly and each combination has equal probability. 
+            For entertainment purposes only.
+          </p>
+        </div>
+      </div>
+    </>
+  );
+}
+

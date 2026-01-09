@@ -9,7 +9,8 @@ import { CombinationFrequencyView } from './components/CombinationFrequencyView'
 import { NumberHistoryTimeline } from './components/NumberHistoryTimeline';
 import { YearScale } from './components/YearScale';
 import { getUniformTimelineRange } from './utils/combinationFrequencies';
-import { saveSummaryToStorage, getSummariesFromStorage, downloadSummariesAsFile, formatPredictionSummary, type LotterySummary } from './utils/summary';
+import { saveSummaryToStorage, getSummariesFromStorage, downloadSummariesAsFile, formatPredictionSummary, getAllSummaries, type LotterySummary } from './utils/summary';
+import { PrintTickets } from './components/PrintTickets';
 import './App.css';
 
 const games: Record<string, LotteryGame> = {
@@ -40,6 +41,7 @@ function App() {
   } | null>(null);
   const [predictionKey, setPredictionKey] = useState<number>(0);
   const [showTimelines, setShowTimelines] = useState<boolean>(false);
+  const [showPrintTickets, setShowPrintTickets] = useState<boolean>(false);
   const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
@@ -426,14 +428,24 @@ function App() {
                 </label>
               </div>
 
-          <button
-            onClick={handlePredict}
-            disabled={isComputing}
-            className="predict-button"
-            title="Click to generate prediction. Control/Command+Click to show most recent winning numbers."
-          >
-            {isComputing ? 'Computing...' : 'Generate Prediction'}
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <button
+              onClick={handlePredict}
+              disabled={isComputing}
+              className="predict-button"
+              title="Click to generate prediction. Control/Command+Click to show most recent winning numbers."
+            >
+              {isComputing ? 'Computing...' : 'Generate Prediction'}
+            </button>
+            
+            <button
+              onClick={() => setShowPrintTickets(true)}
+              className="print-tickets-button"
+              title="Print all saved lottery number selections"
+            >
+              🖨️ Print Tickets
+            </button>
+          </div>
           
           {isComputing && (
             <div className="computation-progress">
@@ -892,6 +904,13 @@ function App() {
           )}
         </div>
       </main>
+      
+      {showPrintTickets && (
+        <PrintTickets
+          summaries={getAllSummaries()}
+          onClose={() => setShowPrintTickets(false)}
+        />
+      )}
     </div>
   );
 }

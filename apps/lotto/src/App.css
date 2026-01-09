@@ -100,7 +100,8 @@ body {
   border-color: #667eea;
 }
 
-.predict-button {
+.predict-button,
+.print-tickets-button {
   padding: 1rem 2rem;
   font-size: 1.1rem;
   font-weight: bold;
@@ -113,9 +114,18 @@ body {
   align-self: flex-start;
 }
 
-.predict-button:hover:not(:disabled) {
+.predict-button:hover:not(:disabled),
+.print-tickets-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.print-tickets-button {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+}
+
+.print-tickets-button:hover {
+  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
 }
 
 .predict-button:disabled {

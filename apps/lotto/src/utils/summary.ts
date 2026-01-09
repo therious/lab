@@ -105,6 +105,14 @@ export function getAllSummaries(): Record<string, LotterySummary[]> {
 }
 
 /**
+ * Get total count of all summaries across all games
+ */
+export function getTotalSummaryCount(): number {
+  const all = getAllSummaries();
+  return all.powerball.length + all.megamillions.length + all.lotto.length;
+}
+
+/**
  * Format all summaries for a game as a single human-readable document
  */
 export function formatAllSummariesForGame(gameName: string): string {
