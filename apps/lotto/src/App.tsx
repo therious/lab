@@ -9,7 +9,7 @@ import { CombinationFrequencyView } from './components/CombinationFrequencyView'
 import { NumberHistoryTimeline } from './components/NumberHistoryTimeline';
 import { YearScale } from './components/YearScale';
 import { getUniformTimelineRange } from './utils/combinationFrequencies';
-import { saveSummaryToStorage, getSummariesFromStorage, downloadSummariesAsFile, formatPredictionSummary, getAllSummaries, type LotterySummary } from './utils/summary';
+import { saveSummaryToStorage, getSummariesFromStorage, formatPredictionSummary, getAllSummaries, type LotterySummary } from './utils/summary';
 import { PrintTickets } from './components/PrintTickets';
 import './App.css';
 

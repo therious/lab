@@ -1,4 +1,4 @@
-import type { PredictionResult, LotteryGame } from '../types';
+import type { PredictionResult } from '../types';
 
 export interface LotterySummary {
   gameName: string;

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import type { LotterySummary } from '../utils/summary';
 import { AppUrl } from '../lib/AppUrl';
 import './PrintTickets.css';
