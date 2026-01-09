@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import type { LotterySummary } from '../utils/summary';
+import { AppUrl } from '../lib/AppUrl';
 import './PrintTickets.css';
 
 interface PrintTicketsProps {
@@ -27,9 +28,13 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
     );
   }
 
-  const handlePrint = () => {
+  const handlePrint = useCallback(() => {
     window.print();
-  };
+  }, []);
+
+  const handleClose = useCallback(() => {
+    onClose();
+  }, [onClose]);
 
   return (
     <>
@@ -41,7 +46,7 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
               <button onClick={handlePrint} className="print-button">
                 🖨️ Print
               </button>
-              <button onClick={onClose} className="print-close-button">
+              <button onClick={handleClose} className="print-close-button">
                 Close
               </button>
             </div>
@@ -57,6 +62,9 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
         <div className="print-header">
           <h1>Lottery Number Tickets</h1>
           <p className="print-date">Generated: {new Date().toLocaleString()}</p>
+          <div className="print-app-url">
+            <AppUrl showQrCode={true} qrCodeSize={80} />
+          </div>
         </div>
 
         {powerballSummaries.length > 0 && (

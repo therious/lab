@@ -439,7 +439,7 @@ function App() {
             </button>
             
             <button
-              onClick={() => setShowPrintTickets(true)}
+              onClick={useCallback(() => setShowPrintTickets(true), [])}
               className="print-tickets-button"
               title="Print all saved lottery number selections"
             >

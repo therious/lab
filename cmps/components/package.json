@@ -10,21 +10,25 @@
     "url": "ssh://git@github.com:therious/lab.git",
     "directory": "cmps/components"
   },
-  "dependencies": {},
+  "dependencies": {
+    "qrcode.react": "^4.2.0"
+  },
   "peerDependencies": {
-  "@sequencemedia/graphviz-react": "~0.0.81",
-    "@therious/utils":"workspace:*",
+    "@sequencemedia/graphviz-react": "~0.0.81",
     "@therious/fsm": "workspace:*",
+    "@therious/utils": "workspace:*",
     "@viz-js/viz": "~3.4.0",
     "d3-graphviz": ">=5.4.0",
-    "styled-components": "5.x",
     "react": "18.x",
-    "react-dom": "18.x"
+    "react-dom": "18.x",
+    "styled-components": "5.x"
   },
   "devDependencies": {
     "@types/d3-graphviz": "~2.6.10",
     "@viz-js/viz": "~3.4.0"
   },
   "scripts": {},
-  "browserslist": ["since 2023"]
+  "browserslist": [
+    "since 2023"
+  ]
 }
