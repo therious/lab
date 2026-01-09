@@ -60,30 +60,16 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
       
       <div className="print-content">
         <div className="print-header">
-          <h1>Lottery Number Tickets</h1>
-          <p className="print-date">Generated: {new Date().toLocaleString()}</p>
           <div className="print-app-url">
-            <AppUrl showQrCode={true} qrCodeSize={80} />
+            <AppUrl showQrCode={true} qrCodeSize={60} />
           </div>
         </div>
 
         {powerballSummaries.length > 0 && (
           <div className="print-game-section">
-            <h2 className="print-game-title">POWERBALL</h2>
             {powerballSummaries.map((summary, index) => (
               <div key={index} className="print-ticket">
-                <div className="print-ticket-header">
-                  <span className="print-ticket-number">Ticket #{index + 1}</span>
-                  <span className="print-ticket-date">
-                    {new Date(summary.timestamp).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                </div>
+                <div className="print-ticket-label">Powerball</div>
                 <div className="print-numbers-row">
                   {summary.prediction.numbers.map((num, idx) => (
                     <span key={idx} className="print-number">
@@ -111,21 +97,9 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
 
         {megamillionsSummaries.length > 0 && (
           <div className="print-game-section">
-            <h2 className="print-game-title">MEGA MILLIONS</h2>
             {megamillionsSummaries.map((summary, index) => (
               <div key={index} className="print-ticket">
-                <div className="print-ticket-header">
-                  <span className="print-ticket-number">Ticket #{index + 1}</span>
-                  <span className="print-ticket-date">
-                    {new Date(summary.timestamp).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                </div>
+                <div className="print-ticket-label">Mega Millions</div>
                 <div className="print-numbers-row">
                   {summary.prediction.numbers.map((num, idx) => (
                     <span key={idx} className="print-number">
@@ -153,21 +127,9 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
 
         {lottoSummaries.length > 0 && (
           <div className="print-game-section">
-            <h2 className="print-game-title">LOTTO</h2>
             {lottoSummaries.map((summary, index) => (
               <div key={index} className="print-ticket">
-                <div className="print-ticket-header">
-                  <span className="print-ticket-number">Ticket #{index + 1}</span>
-                  <span className="print-ticket-date">
-                    {new Date(summary.timestamp).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                </div>
+                <div className="print-ticket-label">Lotto</div>
                 <div className="print-numbers-row">
                   {summary.prediction.numbers.map((num, idx) => (
                     <span key={idx} className="print-number">

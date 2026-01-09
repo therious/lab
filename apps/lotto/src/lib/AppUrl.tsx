@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 const Container = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   gap: 0.5rem;
   font-family: monospace;
@@ -14,7 +14,7 @@ const Container = styled.div`
 const UrlText = styled.div`
   color: #333;
   word-break: break-all;
-  text-align: center;
+  text-align: left;
 `;
 
 const QrCodeContainer = styled.div`
