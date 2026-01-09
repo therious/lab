@@ -12,7 +12,9 @@
     "resolveJsonModule": true,
     "types": ["node"],
     "lib": ["ES2020"],
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "allowJs": false,
+    "checkJs": false
   },
   "include": [
     "*.ts",
@@ -20,7 +22,8 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "../libs/utils/index.ts"
   ]
 }
 
