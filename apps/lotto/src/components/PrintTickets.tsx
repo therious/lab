@@ -34,12 +34,21 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
   
   const totalSummaries = powerballSummaries.length + megamillionsSummaries.length + lottoSummaries.length;
   
+  const handleClose = useCallback(() => {
+    // Clean up any pending operations
+    setIsMounted(false);
+    // Use setTimeout to ensure cleanup happens after current execution
+    setTimeout(() => {
+      onClose();
+    }, 0);
+  }, [onClose]);
+
   // Handle click outside to close
   useEffect(() => {
     if (!isMounted) return;
     
     const handleClickOutside = (event: MouseEvent) => {
-      if (overlayRef.current && !overlayRef.current.contains(event.target as Node)) {
+      if (overlayRef.current && event.target && !overlayRef.current.contains(event.target as Node)) {
         handleClose();
       }
     };
@@ -61,12 +70,17 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [isMounted]);
+  }, [isMounted, handleClose]);
 
   const handlePrint = useCallback(() => {
     // Defer print to avoid blocking
     requestAnimationFrame(() => {
-      window.print();
+      try {
+        window.print();
+      } catch (error) {
+        // Silently handle print errors (e.g., if print dialog is blocked)
+        console.warn('Print failed:', error);
+      }
     });
   }, []);
 
@@ -75,7 +89,12 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
     setIsMounted(false);
     // Use setTimeout to ensure cleanup happens after current execution
     setTimeout(() => {
-      onClose();
+      try {
+        onClose();
+      } catch (error) {
+        // Silently handle cleanup errors (e.g., from browser extensions)
+        console.warn('Close handler error:', error);
+      }
     }, 0);
   }, [onClose]);
 
