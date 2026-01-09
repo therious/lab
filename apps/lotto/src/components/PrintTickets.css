@@ -86,6 +86,16 @@
 /* Print Content (hidden on screen, visible when printing) */
 .print-content {
   display: none;
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  width: 8.5in;
+  background: white;
+  padding: 1cm;
+  font-family: 'Courier New', monospace;
+  font-size: 10pt;
+  line-height: 1.4;
+  color: black;
 }
 
 /* Print Styles */
@@ -105,7 +115,7 @@
     left: 0;
     top: 0;
     width: 100%;
-    display: block;
+    display: block !important;
     background: white;
     padding: 1cm;
     font-family: 'Courier New', monospace;
