@@ -9,6 +9,24 @@ interface PrintTicketsProps {
 }
 
 export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
+  const [isMounted, setIsMounted] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  
+  // Mount asynchronously to avoid blocking click handler
+  useEffect(() => {
+    // Use requestAnimationFrame to defer rendering to next frame
+    const frameId = requestAnimationFrame(() => {
+      // Use setTimeout to ensure it's truly async
+      setTimeout(() => {
+        setIsMounted(true);
+      }, 0);
+    });
+    
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
+  }, []);
+
   // Handle both key formats: lowercase keys from getAllSummaries or direct game names
   const powerballSummaries = summaries.powerball || summaries.Powerball || [];
   const megamillionsSummaries = summaries.megamillions || summaries['Mega Millions'] || [];
@@ -16,29 +34,70 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
   
   const totalSummaries = powerballSummaries.length + megamillionsSummaries.length + lottoSummaries.length;
   
+  // Handle click outside to close
+  useEffect(() => {
+    if (!isMounted) return;
+    
+    const handleClickOutside = (event: MouseEvent) => {
+      if (overlayRef.current && !overlayRef.current.contains(event.target as Node)) {
+        handleClose();
+      }
+    };
+    
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleClose();
+      }
+    };
+    
+    // Add listeners with a small delay to avoid immediate triggers
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+    }, 100);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isMounted]);
+
+  const handlePrint = useCallback(() => {
+    // Defer print to avoid blocking
+    requestAnimationFrame(() => {
+      window.print();
+    });
+  }, []);
+
+  const handleClose = useCallback(() => {
+    // Clean up any pending operations
+    setIsMounted(false);
+    // Use setTimeout to ensure cleanup happens after current execution
+    setTimeout(() => {
+      onClose();
+    }, 0);
+  }, [onClose]);
+
   if (totalSummaries === 0) {
     return (
-      <div className="print-tickets-overlay">
+      <div className="print-tickets-overlay" ref={overlayRef}>
         <div className="print-tickets-modal">
           <h2>No Saved Tickets</h2>
           <p>You need to generate and save at least one prediction before printing.</p>
-          <button onClick={onClose} className="print-close-button">Close</button>
+          <button onClick={handleClose} className="print-close-button">Close</button>
         </div>
       </div>
     );
   }
 
-  const handlePrint = useCallback(() => {
-    window.print();
-  }, []);
-
-  const handleClose = useCallback(() => {
-    onClose();
-  }, [onClose]);
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <>
-      <div className="print-tickets-overlay">
+      <div className="print-tickets-overlay" ref={overlayRef}>
         <div className="print-tickets-modal">
           <div className="print-tickets-header">
             <h2>Print Preview</h2>

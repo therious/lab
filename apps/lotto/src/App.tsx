@@ -439,7 +439,12 @@ function App() {
             </button>
             
             <button
-              onClick={() => setShowPrintTickets(true)}
+              onClick={() => {
+                // Defer state update to avoid blocking click handler
+                requestAnimationFrame(() => {
+                  setShowPrintTickets(true);
+                });
+              }}
               className="print-tickets-button"
               title="Print all saved lottery number selections"
             >

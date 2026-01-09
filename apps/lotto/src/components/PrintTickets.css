@@ -11,6 +11,8 @@
   justify-content: center;
   z-index: 10000;
   padding: 2rem;
+  /* Prevent pointer events during initial render to avoid violations */
+  pointer-events: auto;
 }
 
 .print-tickets-modal {

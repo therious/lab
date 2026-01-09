@@ -37,6 +37,8 @@ interface AppUrlProps {
  * Can be used in print layouts
  */
 export function AppUrl({ className, style, showQrCode = true, qrCodeSize = 100 }: AppUrlProps) {
+  const [isReady, setIsReady] = useState(false);
+  
   const appUrl = useMemo(() => {
     if (typeof window === 'undefined') {
       return '';
@@ -61,13 +63,25 @@ export function AppUrl({ className, style, showQrCode = true, qrCodeSize = 100 }
     return url;
   }, []);
 
+  // Defer QR code rendering to avoid blocking
+  useEffect(() => {
+    if (showQrCode && appUrl) {
+      const timeoutId = setTimeout(() => {
+        setIsReady(true);
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    } else {
+      setIsReady(true);
+    }
+  }, [showQrCode, appUrl]);
+
   if (!appUrl) {
     return null;
   }
 
   return (
     <Container className={className} style={style}>
-      {showQrCode && (
+      {showQrCode && isReady && (
         <QrCodeContainer>
           <QRCodeSVG value={appUrl} size={qrCodeSize} level="M" />
         </QrCodeContainer>
