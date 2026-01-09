@@ -148,26 +148,37 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
             {powerballSummaries.map((summary, index) => (
               <div key={index} className="print-ticket">
                 <div className="print-ticket-label">Powerball</div>
-                <div className="print-numbers-row">
-                  {summary.prediction.numbers.map((num, idx) => (
-                    <span key={idx} className="print-number">
-                      {num.toString().padStart(2, '0')}
-                    </span>
-                  ))}
-                  {summary.prediction.bonus !== undefined && (
-                    <>
-                      <span className="print-separator">+</span>
-                      <span className="print-number print-bonus">
-                        {summary.prediction.bonus.toString().padStart(2, '0')}
+                <div className="print-ticket-content">
+                  <div className="print-ticket-date">
+                    {new Date(summary.timestamp).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                  <div className="print-numbers-row">
+                    {summary.prediction.numbers.map((num, idx) => (
+                      <span key={idx} className="print-number">
+                        {num.toString().padStart(2, '0')}
                       </span>
-                    </>
+                    ))}
+                    {summary.prediction.bonus !== undefined && (
+                      <>
+                        <span className="print-separator">+</span>
+                        <span className="print-number print-bonus">
+                          {summary.prediction.bonus.toString().padStart(2, '0')}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  {summary.prediction.handPickedMain && summary.prediction.handPickedMain.length > 0 && (
+                    <div className="print-handpicked">
+                      Hand-picked: {summary.prediction.handPickedMain.map(n => n.toString().padStart(2, '0')).join(', ')}
+                    </div>
                   )}
                 </div>
-                {summary.prediction.handPickedMain && summary.prediction.handPickedMain.length > 0 && (
-                  <div className="print-handpicked">
-                    Hand-picked: {summary.prediction.handPickedMain.map(n => n.toString().padStart(2, '0')).join(', ')}
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -178,26 +189,37 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
             {megamillionsSummaries.map((summary, index) => (
               <div key={index} className="print-ticket">
                 <div className="print-ticket-label">Mega Millions</div>
-                <div className="print-numbers-row">
-                  {summary.prediction.numbers.map((num, idx) => (
-                    <span key={idx} className="print-number">
-                      {num.toString().padStart(2, '0')}
-                    </span>
-                  ))}
-                  {summary.prediction.bonus !== undefined && (
-                    <>
-                      <span className="print-separator">+</span>
-                      <span className="print-number print-bonus">
-                        {summary.prediction.bonus.toString().padStart(2, '0')}
+                <div className="print-ticket-content">
+                  <div className="print-ticket-date">
+                    {new Date(summary.timestamp).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                  <div className="print-numbers-row">
+                    {summary.prediction.numbers.map((num, idx) => (
+                      <span key={idx} className="print-number">
+                        {num.toString().padStart(2, '0')}
                       </span>
-                    </>
+                    ))}
+                    {summary.prediction.bonus !== undefined && (
+                      <>
+                        <span className="print-separator">+</span>
+                        <span className="print-number print-bonus">
+                          {summary.prediction.bonus.toString().padStart(2, '0')}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  {summary.prediction.handPickedMain && summary.prediction.handPickedMain.length > 0 && (
+                    <div className="print-handpicked">
+                      Hand-picked: {summary.prediction.handPickedMain.map(n => n.toString().padStart(2, '0')).join(', ')}
+                    </div>
                   )}
                 </div>
-                {summary.prediction.handPickedMain && summary.prediction.handPickedMain.length > 0 && (
-                  <div className="print-handpicked">
-                    Hand-picked: {summary.prediction.handPickedMain.map(n => n.toString().padStart(2, '0')).join(', ')}
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -208,26 +230,37 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
             {lottoSummaries.map((summary, index) => (
               <div key={index} className="print-ticket">
                 <div className="print-ticket-label">Lotto</div>
-                <div className="print-numbers-row">
-                  {summary.prediction.numbers.map((num, idx) => (
-                    <span key={idx} className="print-number">
-                      {num.toString().padStart(2, '0')}
-                    </span>
-                  ))}
-                  {summary.prediction.bonus !== undefined && (
-                    <>
-                      <span className="print-separator">+</span>
-                      <span className="print-number print-bonus">
-                        {summary.prediction.bonus.toString().padStart(2, '0')}
+                <div className="print-ticket-content">
+                  <div className="print-ticket-date">
+                    {new Date(summary.timestamp).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                  <div className="print-numbers-row">
+                    {summary.prediction.numbers.map((num, idx) => (
+                      <span key={idx} className="print-number">
+                        {num.toString().padStart(2, '0')}
                       </span>
-                    </>
+                    ))}
+                    {summary.prediction.bonus !== undefined && (
+                      <>
+                        <span className="print-separator">+</span>
+                        <span className="print-number print-bonus">
+                          {summary.prediction.bonus.toString().padStart(2, '0')}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  {summary.prediction.handPickedMain && summary.prediction.handPickedMain.length > 0 && (
+                    <div className="print-handpicked">
+                      Hand-picked: {summary.prediction.handPickedMain.map(n => n.toString().padStart(2, '0')).join(', ')}
+                    </div>
                   )}
                 </div>
-                {summary.prediction.handPickedMain && summary.prediction.handPickedMain.length > 0 && (
-                  <div className="print-handpicked">
-                    Hand-picked: {summary.prediction.handPickedMain.map(n => n.toString().padStart(2, '0')).join(', ')}
-                  </div>
-                )}
               </div>
             ))}
           </div>

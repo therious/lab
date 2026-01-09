@@ -158,7 +158,7 @@
 
   .print-ticket {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.2cm;
     margin-bottom: 0.1cm;
     padding: 0.05cm 0.1cm;
@@ -171,9 +171,24 @@
     font-size: 6pt;
     font-weight: bold;
     color: #333;
-    min-width: 1.2cm;
-    text-align: left;
+    width: 1.5cm;
+    text-align: right;
     line-height: 1.2;
+    flex-shrink: 0;
+  }
+
+  .print-ticket-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.05cm;
+  }
+
+  .print-ticket-date {
+    font-size: 5pt;
+    color: #666;
+    font-style: italic;
+    line-height: 1.1;
   }
 
   .print-numbers-row {
@@ -228,7 +243,7 @@
   .print-disclaimer {
     font-size: 4pt;
     color: #666;
-    text-align: center;
+    text-align: left;
     margin: 0;
     line-height: 1.1;
   }
