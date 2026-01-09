@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import type { LotterySummary } from '../utils/summary';
 import { AppUrl } from '../lib/AppUrl';
 import './PrintTickets.css';
@@ -34,12 +34,29 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
   
   const totalSummaries = powerballSummaries.length + megamillionsSummaries.length + lottoSummaries.length;
   
+  const handlePrint = useCallback(() => {
+    // Defer print to avoid blocking
+    requestAnimationFrame(() => {
+      try {
+        window.print();
+      } catch (error) {
+        // Silently handle print errors (e.g., if print dialog is blocked)
+        console.warn('Print failed:', error);
+      }
+    });
+  }, []);
+
   const handleClose = useCallback(() => {
     // Clean up any pending operations
     setIsMounted(false);
     // Use setTimeout to ensure cleanup happens after current execution
     setTimeout(() => {
-      onClose();
+      try {
+        onClose();
+      } catch (error) {
+        // Silently handle cleanup errors (e.g., from browser extensions)
+        console.warn('Close handler error:', error);
+      }
     }, 0);
   }, [onClose]);
 
@@ -71,32 +88,6 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
       document.removeEventListener('keydown', handleEscape);
     };
   }, [isMounted, handleClose]);
-
-  const handlePrint = useCallback(() => {
-    // Defer print to avoid blocking
-    requestAnimationFrame(() => {
-      try {
-        window.print();
-      } catch (error) {
-        // Silently handle print errors (e.g., if print dialog is blocked)
-        console.warn('Print failed:', error);
-      }
-    });
-  }, []);
-
-  const handleClose = useCallback(() => {
-    // Clean up any pending operations
-    setIsMounted(false);
-    // Use setTimeout to ensure cleanup happens after current execution
-    setTimeout(() => {
-      try {
-        onClose();
-      } catch (error) {
-        // Silently handle cleanup errors (e.g., from browser extensions)
-        console.warn('Close handler error:', error);
-      }
-    }, 0);
-  }, [onClose]);
 
   if (totalSummaries === 0) {
     return (
