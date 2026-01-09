@@ -13,17 +13,22 @@
     "types": ["node"],
     "lib": ["ES2020"],
     "outDir": "./dist",
-    "allowJs": false,
-    "checkJs": false
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true
   },
   "include": [
-    "*.ts",
-    "../libs/utils/src/bip39.ts"
+    "*.ts"
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "../libs/utils/index.ts"
-  ]
+    "dist"
+  ],
+  "ts-node": {
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  }
 }
 
