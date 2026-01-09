@@ -3,5 +3,5 @@
 
 A modest monorepo
 
-Continue to [documentation](/docs/topics/lab-intro.md)
+Continue to [documentation](./docs/topics/lab-intro.md)
 
