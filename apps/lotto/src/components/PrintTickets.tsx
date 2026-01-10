@@ -4,7 +4,7 @@ import { AppUrl } from '../lib/AppUrl';
 import './PrintTickets.css';
 
 interface PrintTicketsProps {
-  summaries: Record<string, LotterySummary[]>;
+  summaries: Record<string, LotterySummary | null>;
   onClose: () => void;
 }
 
@@ -27,12 +27,12 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
     };
   }, []);
 
-  // Handle both key formats: lowercase keys from getAllSummaries or direct game names
-  const powerballSummaries = summaries.powerball || summaries.Powerball || [];
-  const megamillionsSummaries = summaries.megamillions || summaries['Mega Millions'] || [];
-  const lottoSummaries = summaries.lotto || summaries.Lotto || [];
+  // Get single summary per game (or null if not saved)
+  const powerballSummary = summaries.powerball || summaries.Powerball || null;
+  const megamillionsSummary = summaries.megamillions || summaries['Mega Millions'] || null;
+  const lottoSummary = summaries.lotto || summaries.Lotto || null;
   
-  const totalSummaries = powerballSummaries.length + megamillionsSummaries.length + lottoSummaries.length;
+  const totalSummaries = (powerballSummary ? 1 : 0) + (megamillionsSummary ? 1 : 0) + (lottoSummary ? 1 : 0);
   
   const handlePrint = useCallback(() => {
     // Defer print to avoid blocking
@@ -122,7 +122,7 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
           </div>
           <div className="print-tickets-info">
             <p>Total tickets: {totalSummaries}</p>
-            <p>Powerball: {powerballSummaries.length} | Mega Millions: {megamillionsSummaries.length} | Lotto: {lottoSummaries.length}</p>
+            <p>Powerball: {powerballSummary ? 1 : 0} | Mega Millions: {megamillionsSummary ? 1 : 0} | Lotto: {lottoSummary ? 1 : 0}</p>
           </div>
         </div>
       </div>
@@ -134,126 +134,105 @@ export function PrintTickets({ summaries, onClose }: PrintTicketsProps) {
           </div>
         </div>
 
-        {powerballSummaries.length > 0 && (
+        {powerballSummary && (
           <div className="print-game-section">
-            {powerballSummaries.map((summary, index) => (
-              <div key={index} className="print-ticket">
-                <div className="print-ticket-label">Powerball</div>
-                <div className="print-ticket-content">
-                  <div className="print-ticket-date">
-                    {new Date(summary.timestamp).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </div>
-                  <div className="print-numbers-row">
-                    {summary.prediction.numbers.map((num, idx) => (
-                      <span key={idx} className="print-number">
-                        {num.toString().padStart(2, '0')}
+            <div className="print-ticket">
+              <div className="print-ticket-label">Powerball</div>
+              <div className="print-ticket-content">
+                <div className="print-ticket-date">
+                  {new Date(powerballSummary.timestamp).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </div>
+                <div className="print-numbers-row">
+                  {powerballSummary.numbers.map((num, idx) => (
+                    <span key={idx} className="print-number">
+                      {num.toString().padStart(2, '0')}
+                    </span>
+                  ))}
+                  {powerballSummary.bonus !== undefined && (
+                    <>
+                      <span className="print-separator">+</span>
+                      <span className="print-number print-bonus">
+                        {powerballSummary.bonus.toString().padStart(2, '0')}
                       </span>
-                    ))}
-                    {summary.prediction.bonus !== undefined && (
-                      <>
-                        <span className="print-separator">+</span>
-                        <span className="print-number print-bonus">
-                          {summary.prediction.bonus.toString().padStart(2, '0')}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  {summary.prediction.handPickedMain && summary.prediction.handPickedMain.length > 0 && (
-                    <div className="print-handpicked">
-                      Hand-picked: {summary.prediction.handPickedMain.map(n => n.toString().padStart(2, '0')).join(', ')}
-                    </div>
+                    </>
                   )}
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         )}
 
-        {megamillionsSummaries.length > 0 && (
+        {megamillionsSummary && (
           <div className="print-game-section">
-            {megamillionsSummaries.map((summary, index) => (
-              <div key={index} className="print-ticket">
-                <div className="print-ticket-label">Mega Millions</div>
-                <div className="print-ticket-content">
-                  <div className="print-ticket-date">
-                    {new Date(summary.timestamp).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </div>
-                  <div className="print-numbers-row">
-                    {summary.prediction.numbers.map((num, idx) => (
-                      <span key={idx} className="print-number">
-                        {num.toString().padStart(2, '0')}
+            <div className="print-ticket">
+              <div className="print-ticket-label">Mega Millions</div>
+              <div className="print-ticket-content">
+                <div className="print-ticket-date">
+                  {new Date(megamillionsSummary.timestamp).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </div>
+                <div className="print-numbers-row">
+                  {megamillionsSummary.numbers.map((num, idx) => (
+                    <span key={idx} className="print-number">
+                      {num.toString().padStart(2, '0')}
+                    </span>
+                  ))}
+                  {megamillionsSummary.bonus !== undefined && (
+                    <>
+                      <span className="print-separator">+</span>
+                      <span className="print-number print-bonus">
+                        {megamillionsSummary.bonus.toString().padStart(2, '0')}
                       </span>
-                    ))}
-                    {summary.prediction.bonus !== undefined && (
-                      <>
-                        <span className="print-separator">+</span>
-                        <span className="print-number print-bonus">
-                          {summary.prediction.bonus.toString().padStart(2, '0')}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  {summary.prediction.handPickedMain && summary.prediction.handPickedMain.length > 0 && (
-                    <div className="print-handpicked">
-                      Hand-picked: {summary.prediction.handPickedMain.map(n => n.toString().padStart(2, '0')).join(', ')}
-                    </div>
+                    </>
                   )}
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         )}
 
-        {lottoSummaries.length > 0 && (
+        {lottoSummary && (
           <div className="print-game-section">
-            {lottoSummaries.map((summary, index) => (
-              <div key={index} className="print-ticket">
-                <div className="print-ticket-label">Lotto</div>
-                <div className="print-ticket-content">
-                  <div className="print-ticket-date">
-                    {new Date(summary.timestamp).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </div>
-                  <div className="print-numbers-row">
-                    {summary.prediction.numbers.map((num, idx) => (
-                      <span key={idx} className="print-number">
-                        {num.toString().padStart(2, '0')}
+            <div className="print-ticket">
+              <div className="print-ticket-label">Lotto</div>
+              <div className="print-ticket-content">
+                <div className="print-ticket-date">
+                  {new Date(lottoSummary.timestamp).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </div>
+                <div className="print-numbers-row">
+                  {lottoSummary.numbers.map((num, idx) => (
+                    <span key={idx} className="print-number">
+                      {num.toString().padStart(2, '0')}
+                    </span>
+                  ))}
+                  {lottoSummary.bonus !== undefined && (
+                    <>
+                      <span className="print-separator">+</span>
+                      <span className="print-number print-bonus">
+                        {lottoSummary.bonus.toString().padStart(2, '0')}
                       </span>
-                    ))}
-                    {summary.prediction.bonus !== undefined && (
-                      <>
-                        <span className="print-separator">+</span>
-                        <span className="print-number print-bonus">
-                          {summary.prediction.bonus.toString().padStart(2, '0')}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  {summary.prediction.handPickedMain && summary.prediction.handPickedMain.length > 0 && (
-                    <div className="print-handpicked">
-                      Hand-picked: {summary.prediction.handPickedMain.map(n => n.toString().padStart(2, '0')).join(', ')}
-                    </div>
+                    </>
                   )}
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         )}
 

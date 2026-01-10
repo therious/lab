@@ -94,17 +94,14 @@ function App() {
       
       setPrediction(actualResult);
       
-      // Save summary automatically
-      const summary: LotterySummary = {
-        gameName: game.name,
-        timestamp: new Date().toISOString(),
-        prediction: actualResult,
-        gameConfig: {
-          mainNumbers: game.mainNumbers,
-          bonusNumber: game.bonusNumber,
-        },
-      };
-      saveSummaryToStorage(game.name, summary);
+          // Save summary automatically (minimal data for printing only)
+          const summary: LotterySummary = {
+            gameName: game.name,
+            timestamp: new Date().toISOString(),
+            numbers: actualResult.numbers,
+            bonus: actualResult.bonus,
+          };
+          saveSummaryToStorage(game.name, summary);
       
       // Shuffle the numbers themselves for random order
       const shuffledNumbers = [...mostRecent.numbers];
@@ -167,15 +164,12 @@ function App() {
           const result = event.data.result;
           setPrediction(result);
           
-          // Save summary automatically
+          // Save summary automatically (minimal data for printing only)
           const summary: LotterySummary = {
             gameName: game.name,
             timestamp: new Date().toISOString(),
-            prediction: result,
-            gameConfig: {
-              mainNumbers: game.mainNumbers,
-              bonusNumber: game.bonusNumber,
-            },
+            numbers: result.numbers,
+            bonus: result.bonus,
           };
           saveSummaryToStorage(game.name, summary);
           
@@ -213,15 +207,12 @@ function App() {
           );
           setPrediction(result);
           
-          // Save summary automatically
+          // Save summary automatically (minimal data for printing only)
           const summary: LotterySummary = {
             gameName: game.name,
             timestamp: new Date().toISOString(),
-            prediction: result,
-            gameConfig: {
-              mainNumbers: game.mainNumbers,
-              bonusNumber: game.bonusNumber,
-            },
+            numbers: result.numbers,
+            bonus: result.bonus,
           };
           saveSummaryToStorage(game.name, summary);
           
@@ -265,15 +256,12 @@ function App() {
           );
           setPrediction(result);
           
-          // Save summary automatically
+          // Save summary automatically (minimal data for printing only)
           const summary: LotterySummary = {
             gameName: game.name,
             timestamp: new Date().toISOString(),
-            prediction: result,
-            gameConfig: {
-              mainNumbers: game.mainNumbers,
-              bonusNumber: game.bonusNumber,
-            },
+            numbers: result.numbers,
+            bonus: result.bonus,
           };
           saveSummaryToStorage(game.name, summary);
           
@@ -347,15 +335,12 @@ function App() {
           );
           setPrediction(result);
           
-          // Save summary automatically
+          // Save summary automatically (minimal data for printing only)
           const summary: LotterySummary = {
             gameName: game.name,
             timestamp: new Date().toISOString(),
-            prediction: result,
-            gameConfig: {
-              mainNumbers: game.mainNumbers,
-              bonusNumber: game.bonusNumber,
-            },
+            numbers: result.numbers,
+            bonus: result.bonus,
           };
           saveSummaryToStorage(game.name, summary);
           
