@@ -119,11 +119,13 @@
     width: 100%;
     display: block !important;
     background: white;
-    padding: 1cm;
+    padding: 0.3cm;
     font-family: 'Courier New', monospace;
     font-size: 10pt;
-    line-height: 1.4;
+    line-height: 1.2;
     color: black;
+    max-height: 100vh;
+    overflow: hidden;
   }
 
   .print-header {
@@ -258,10 +260,44 @@
     page-break-inside: avoid;
   }
 
-  /* Remove margins for printing */
+  /* Remove margins for printing and force single page */
   @page {
     margin: 0.3cm;
     size: letter;
+  }
+
+  /* Force content to fit on one page - hide overflow */
+  html, body {
+    height: auto;
+    overflow: hidden;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Prevent page breaks and ensure single page */
+  .print-content {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+    max-height: calc(100vh - 0.6cm);
+    overflow: hidden;
+  }
+
+  .print-game-section {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-ticket {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-footer {
+    page-break-after: avoid;
+    page-break-inside: avoid;
   }
 
   /* Hide print modal overlay when printing */

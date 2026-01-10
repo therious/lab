@@ -9,7 +9,7 @@ import { CombinationFrequencyView } from './components/CombinationFrequencyView'
 import { NumberHistoryTimeline } from './components/NumberHistoryTimeline';
 import { YearScale } from './components/YearScale';
 import { getUniformTimelineRange } from './utils/combinationFrequencies';
-import { saveSummaryToStorage, getSummariesFromStorage, formatPredictionSummary, getAllSummaries, type LotterySummary } from './utils/summary';
+import { saveSummaryToStorage, getAllSummaries, type LotterySummary } from './utils/summary';
 import { PrintTickets } from './components/PrintTickets';
 import './App.css';
 
@@ -553,69 +553,10 @@ function App() {
                   )
                 : null;
               
-              const savedSummaries = getSummariesFromStorage(game.name);
-              
               return (
               <div className="prediction-result" key={`prediction-${predictionKey}`}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <h2 style={{ margin: 0 }}>Predicted Numbers</h2>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                      onClick={() => {
-                        const summary: LotterySummary = {
-                          gameName: game.name,
-                          timestamp: new Date().toISOString(),
-                          prediction: currentPrediction!,
-                          gameConfig: {
-                            mainNumbers: game.mainNumbers,
-                            bonusNumber: game.bonusNumber,
-                          },
-                        };
-                        saveSummaryToStorage(game.name, summary);
-                        alert(`Summary saved! Total saved: ${savedSummaries.length + 1}`);
-                      }}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        fontSize: '0.9rem',
-                        cursor: 'pointer',
-                        backgroundColor: '#4CAF50',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                      }}
-                    >
-                      💾 Save Summary
-                    </button>
-                    {savedSummaries.length > 0 && (
-                      <>
-                        <button
-                          onClick={() => {
-                            const content = savedSummaries.map(s => formatPredictionSummary(s)).join('\n');
-                            const blob = new Blob([content], { type: 'text/plain' });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = `${game.name.toLowerCase().replace(/\s+/g, '_')}_summaries_${new Date().toISOString().split('T')[0]}.txt`;
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            URL.revokeObjectURL(url);
-                          }}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            fontSize: '0.9rem',
-                            cursor: 'pointer',
-                            backgroundColor: '#2196F3',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                          }}
-                        >
-                          📥 Download ({savedSummaries.length})
-                        </button>
-                      </>
-                    )}
-                  </div>
                 </div>
                 <div className="numbers-display-wrapper">
                   <div className="numbers-display">
