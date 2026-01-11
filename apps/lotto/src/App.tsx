@@ -9,7 +9,7 @@ import { CombinationFrequencyView } from './components/CombinationFrequencyView'
 import { NumberHistoryTimeline } from './components/NumberHistoryTimeline';
 import { YearScale } from './components/YearScale';
 import { getUniformTimelineRange } from './utils/combinationFrequencies';
-import { saveSummaryToStorage, getAllSummaries, type LotterySummary } from './utils/summary';
+import { saveSummaryToStorage, getAllSummaries, getSavedTicketsCount, type LotterySummary } from './utils/summary';
 import { PrintTickets } from './components/PrintTickets';
 import './App.css';
 
@@ -42,7 +42,33 @@ function App() {
   const [predictionKey, setPredictionKey] = useState<number>(0);
   const [showTimelines, setShowTimelines] = useState<boolean>(false);
   const [showPrintTickets, setShowPrintTickets] = useState<boolean>(false);
+  const [savedTicketsCount, setSavedTicketsCount] = useState<number>(0);
   const workerRef = useRef<Worker | null>(null);
+
+  // Update saved tickets count on mount and when storage changes
+  useEffect(() => {
+    const updateCount = () => {
+      setSavedTicketsCount(getSavedTicketsCount());
+    };
+    
+    // Update on mount
+    updateCount();
+    
+    // Listen for storage changes (when predictions are saved)
+    const handleStorageChange = () => {
+      updateCount();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also poll for changes (since storage event doesn't fire for same-window changes)
+    const intervalId = setInterval(updateCount, 500);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(intervalId);
+    };
+  }, []);
 
   useEffect(() => {
     // Cleanup worker on unmount
@@ -102,6 +128,7 @@ function App() {
             bonus: actualResult.bonus,
           };
           saveSummaryToStorage(game.name, summary);
+          setSavedTicketsCount(getSavedTicketsCount());
       
       // Shuffle the numbers themselves for random order
       const shuffledNumbers = [...mostRecent.numbers];
@@ -172,6 +199,7 @@ function App() {
             bonus: result.bonus,
           };
           saveSummaryToStorage(game.name, summary);
+          setSavedTicketsCount(getSavedTicketsCount());
           
           // Shuffle the numbers themselves (not the indices) for random order
           const shuffledNumbers = [...result.numbers];
@@ -215,6 +243,7 @@ function App() {
             bonus: result.bonus,
           };
           saveSummaryToStorage(game.name, summary);
+          setSavedTicketsCount(getSavedTicketsCount());
           
           // Shuffle the numbers themselves for random order
           const shuffledNumbers = [...result.numbers];
@@ -264,6 +293,7 @@ function App() {
             bonus: result.bonus,
           };
           saveSummaryToStorage(game.name, summary);
+          setSavedTicketsCount(getSavedTicketsCount());
           
           // Shuffle the numbers themselves for random order
         const shuffledNumbers = [...result.numbers];
@@ -343,6 +373,7 @@ function App() {
             bonus: result.bonus,
           };
           saveSummaryToStorage(game.name, summary);
+          setSavedTicketsCount(getSavedTicketsCount());
           
           // Shuffle the numbers themselves for random order
           const shuffledNumbers = [...result.numbers];
@@ -423,18 +454,20 @@ function App() {
               {isComputing ? 'Computing...' : 'Generate Prediction'}
             </button>
             
-            <button
-              onClick={() => {
-                // Defer state update to avoid blocking click handler
-                requestAnimationFrame(() => {
-                  setShowPrintTickets(true);
-                });
-              }}
-              className="print-tickets-button"
-              title="Print all saved lottery number selections"
-            >
-              🖨️ Print Tickets
-            </button>
+            {savedTicketsCount > 0 && (
+              <button
+                onClick={() => {
+                  // Defer state update to avoid blocking click handler
+                  requestAnimationFrame(() => {
+                    setShowPrintTickets(true);
+                  });
+                }}
+                className="print-tickets-button"
+                title="Print all saved lottery number selections"
+              >
+                🖨️ Print {savedTicketsCount} Ticket{savedTicketsCount !== 1 ? 's' : ''}
+              </button>
+            )}
           </div>
           
           {isComputing && (

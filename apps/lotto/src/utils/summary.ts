@@ -39,3 +39,13 @@ export function getAllSummaries(): Record<string, LotterySummary | null> {
   };
 }
 
+/**
+ * Get count of saved tickets across all games
+ */
+export function getSavedTicketsCount(): number {
+  const allSummaries = getAllSummaries();
+  return (allSummaries.powerball ? 1 : 0) + 
+         (allSummaries.megamillions ? 1 : 0) + 
+         (allSummaries.lotto ? 1 : 0);
+}
+
