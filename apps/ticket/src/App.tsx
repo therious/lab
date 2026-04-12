@@ -5,7 +5,6 @@ import {SnackbarProvider} from 'notistack';
 import {Modalize} from '@therious/components';
 import {useSelector} from './actions-integration';
 import {useSession, signout} from './auth';
-import {Countries} from './react/Countries';
 import {Game} from './react/Game';
 
 import {Layout, CenterBody, MyNavLink, Navbar} from './react/Navbar';
@@ -60,7 +59,6 @@ export default function App() {
           <Navbar>
             <MyNavLink curPath={curPath} to="/">Game </MyNavLink>
             <MyNavLink curPath={curPath} to="/patches">Patches </MyNavLink>
-            <MyNavLink curPath={curPath} to="/countries">Countries</MyNavLink>
             <MyNavLink curPath={curPath} to="/profile">Profile </MyNavLink>
             <MyNavLink curPath={curPath} to="/signout">Signout </MyNavLink>
           </Navbar>
@@ -68,7 +66,6 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Game/>}/>
               <Route path="/patches" element={<RtStorage/>}/>
-              <Route path="/countries" element={<Countries/>}/>
               <Route path="/profile" element={<Profile/>}/>
               <Route path="/signout" element={<Signout/>}/>
             </Routes>
