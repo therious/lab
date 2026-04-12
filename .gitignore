@@ -63,6 +63,7 @@ servers/elections/priv/static/
 **/deps/
 **/_build/
 
-# API keys (never commit)
+# API keys and credentials (never commit)
 apps/anthropic/anthropic-key.txt
 **/*key*.txt
+docs/firebase.txt
