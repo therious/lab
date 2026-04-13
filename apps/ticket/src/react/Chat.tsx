@@ -55,13 +55,27 @@ const BubbleWrap = styled.div<{ $mine: boolean }>`
 `;
 
 const Bubble = styled.div<{ $mine: boolean }>`
+  position: relative;
   max-width: 80%;
   padding: 7px 11px;
   border-radius: 14px;
   font-size: 13px;
-  background: ${p => p.$mine ? '#1a73e8' : '#f1f3f4'};
+  background: ${p => p.$mine ? '#3c4043' : '#f1f3f4'};
   color: ${p => p.$mine ? 'white' : '#202124'};
   word-break: break-word;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 8px;
+    border-style: solid;
+    right: ${p => p.$mine ? '-7px' : 'auto'};
+    left:  ${p => p.$mine ? 'auto' : '-7px'};
+    border-width: ${p => p.$mine ? '6px 0 6px 8px' : '6px 8px 6px 0'};
+    border-color: ${p => p.$mine
+      ? 'transparent transparent transparent #3c4043'
+      : 'transparent #f1f3f4 transparent transparent'};
+  }
 `;
 
 const BubbleTime = styled.div<{ $mine: boolean }>`
