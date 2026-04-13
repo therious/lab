@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, limitToLast, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import styled from 'styled-components';
 import { db } from '../firebase';
 import { actions, useSelector } from '../actions-integration';
-import { ChatMessage, UserRec, chatId } from '../actions/chat-slice';
+import { ChatMessage, UserRec, chatId, HISTORY_LIMIT } from '../actions/chat-slice';
 import { hashColor } from './avatar-utils';
 
 // ── Styles ───────────────────────────────────────────────────────────────────
@@ -179,7 +179,7 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
   // so background-listener messageReceived entries are superseded without duplication.
   useEffect(() => {
     actions.chat.setConversation(them.email, []);
-    const q     = query(collection(db, 'chats', convoId, 'messages'), orderBy('timestamp', 'asc'));
+    const q     = query(collection(db, 'chats', convoId, 'messages'), orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
     const unsub = onSnapshot(q, snap => {
       if (snap.metadata.fromCache && snap.docs.length === 0) return;
       actions.chat.setConversation(them.email, snap.docs.map(d => {

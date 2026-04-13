@@ -1,6 +1,8 @@
 // UserRec lives here so both the slice and Chat components share the same type
 export type UserRec = { uid: string; displayName: string; email: string; };
 
+export const HISTORY_LIMIT = 100; // max messages loaded per conversation (1-1 and group)
+
 export const chatId = (a: string, b: string) => [a, b].sort().join('__');
 
 export type ChatMessage = {
