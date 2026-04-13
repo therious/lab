@@ -2,6 +2,7 @@ import { useEffect, useCallback, useMemo, useRef } from 'react';
 import { collection, onSnapshot, query, orderBy, where, Timestamp } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import styled, { createGlobalStyle } from 'styled-components';
+import { HSplit, VSplit } from './SplitPane';
 import { db } from '../firebase';
 import { actions, useSelector } from '../actions-integration';
 import { UserProfile, INACTIVITY_TIMEOUT_MS, STATUS_REFRESH_INTERVAL_MS } from '../actions/users-slice';
@@ -12,7 +13,6 @@ import { hashColor } from './avatar-utils';
 
 // ── Layout ───────────────────────────────────────────────────────────────────
 
-// Outer wrapper: flex column so the header sits above the content row
 const Page = styled.div`
   display: flex;
   flex-direction: column;
@@ -27,31 +27,21 @@ const PageHeader = styled.h3`
   flex-shrink: 0;
 `;
 
-// Content row: grid left, chat right, both the same height
-const ContentRow = styled.div`
-  display: flex;
-  flex-direction: row;
+const SplitFill = styled.div`
   flex: 1;
-  gap: 12px;
   min-height: 0;
 `;
 
-// Fixed-width users pane
-const UsersPane = styled.div`
-  width: 560px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-`;
-
-// Chat pane: fills remaining width up to same max as the grid
-const ChatPane = styled.div`
+const GroupChatsPlaceholder = styled.div`
   flex: 1;
-  max-width: 380px;
   display: flex;
-  flex-direction: column;
-  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  font-size: 13px;
+  font-style: italic;
+  border: 1px dashed #dadce0;
+  border-radius: 4px;
 `;
 
 // ── Column defs ───────────────────────────────────────────────────────────────
@@ -188,28 +178,33 @@ export const UsersView = ({ session }: Props) => {
     }
   }, [session.uid]);
 
+  const leftPane = (
+    <VSplit
+      defaultSize={62}
+      first={
+        <MyGrid
+          style={gridStyle}
+          rowData={users}
+          columnDefs={columnDefs}
+          onRowClicked={onRowClicked}
+          rowSelection="single"
+          isRowSelectable={isRowSelectable}
+          rowClassRules={rowClassRules}
+          apiRef={gridApiRef}
+          dark={false}
+        />
+      }
+      second={<GroupChatsPlaceholder>group chats</GroupChatsPlaceholder>}
+    />
+  );
+
   return (
     <Page>
       <GridGlobalStyle />
       <PageHeader>Users — click a row to chat</PageHeader>
-      <ContentRow>
-        <UsersPane>
-          <MyGrid
-            style={gridStyle}
-            rowData={users}
-            columnDefs={columnDefs}
-            onRowClicked={onRowClicked}
-            rowSelection="single"
-            isRowSelectable={isRowSelectable}
-            rowClassRules={rowClassRules}
-            apiRef={gridApiRef}
-            dark={false}
-          />
-        </UsersPane>
-        <ChatPane>
-          <Chat me={session} />
-        </ChatPane>
-      </ContentRow>
+      <SplitFill>
+        <HSplit defaultSize={62} first={leftPane} second={<Chat me={session} />} />
+      </SplitFill>
     </Page>
   );
 };
