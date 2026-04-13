@@ -5,8 +5,7 @@ import { User } from 'firebase/auth';
 import styled from 'styled-components';
 import { db } from '../firebase';
 import { actions, useSelector } from '../actions-integration';
-import { ChatMessage, UserRec, chatId, HISTORY_LIMIT } from '../actions/chat-slice';
-import { GroupChat } from '../actions/group-chats-slice';
+import { ChatMessage, UserRec, GroupChat, ChatTarget, targetKey, chatId, HISTORY_LIMIT } from '../actions/chat-slice';
 import { UserProfile } from '../actions/users-slice';
 import { hashColor } from './avatar-utils';
 
@@ -289,17 +288,17 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
 
 const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
   const [text, setText] = useState('');
-  const messages = useSelector(s => s.groupChats.conversations[group.id] ?? []);
+  const messages = useSelector(s => s.chat.conversations[group.id] ?? []);
 
   // History — skip for pending chats (no Firestore document yet)
   useEffect(() => {
     if (group.pending) return;
-    actions.groupChats.setGroupConversation(group.id, []);
+    actions.chat.setConversation(group.id, []);
     const q     = query(collection(db, 'groupChats', group.id, 'messages'),
                         orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
     const unsub = onSnapshot(q, snap => {
       if (snap.metadata.fromCache && snap.docs.length === 0) return;
-      actions.groupChats.setGroupConversation(group.id, snap.docs.map(d => {
+      actions.chat.setConversation(group.id, snap.docs.map(d => {
         const data = d.data();
         return {
           fromUid:   data.from      ?? '',
@@ -320,7 +319,7 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
     const message: ChatMessage = {
       fromUid: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: Date.now(),
     };
-    actions.groupChats.groupMessageSent(group.id, message); // optimistic + clears pending flag
+    actions.chat.groupMessageSent(group.id, message); // optimistic + clears pending flag
 
     if (group.pending) {
       // First message — atomically create the group doc + first message
@@ -368,10 +367,11 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
 type ChatProps = { me: User };
 
 export const Chat = ({ me }: ChatProps) => {
-  const them          = useSelector(s => s.chat.chattingWith);
-  const activeGroupId = useSelector(s => s.groupChats.activeGroupId);
+  const active        = useSelector(s => s.chat.active);
+  const them          = active?.kind === '1-1'    ? active.user : null;
+  const activeGroupId = active?.kind === 'group'  ? active.id   : null;
   const group         = useSelector(s =>
-    activeGroupId ? (s.groupChats.list.find(g => g.id === activeGroupId) ?? null) : null
+    activeGroupId ? (s.chat.groups.find(g => g.id === activeGroupId) ?? null) : null
   );
 
   const renderHeader = () => {

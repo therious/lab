@@ -7,8 +7,7 @@ import 'react-contexify/ReactContexify.css';
 import { db } from '../firebase';
 import { actions, useSelector } from '../actions-integration';
 import { UserProfile, INACTIVITY_TIMEOUT_MS, STATUS_REFRESH_INTERVAL_MS } from '../actions/users-slice';
-import { chatId, ChatMessage, HISTORY_LIMIT } from '../actions/chat-slice';
-import { GroupChat } from '../actions/group-chats-slice';
+import { chatId, GroupChat } from '../actions/chat-slice';
 import { MyGrid } from './MyGrid';
 import { Chat } from './Chat';
 import { HSplit, VSplit } from './SplitPane';
@@ -132,29 +131,45 @@ const NicknameDialog = ({ participants, onConfirm, onCancel }: NicknameDialogPro
 
 // ── Column defs — users ───────────────────────────────────────────────────────
 
+const StatusDot = ({ isOnline, lastSeen }: { isOnline: boolean; lastSeen: number | null }) => {
+  let bg = '#dadce0';
+  if (isOnline) {
+    const idle = lastSeen && (Date.now() - lastSeen) > INACTIVITY_TIMEOUT_MS;
+    bg = idle ? '#f9a825' : '#34a853';
+  }
+  return (
+    <div style={{
+      position: 'absolute', bottom: 1, right: 1,
+      width: 9, height: 9, borderRadius: '50%',
+      background: bg, border: '1.5px solid #000',
+    }} />
+  );
+};
+
 const AvatarCell = ({ value, data }: any) => {
+  const wrap: React.CSSProperties = { position: 'relative', display: 'inline-block', marginTop: 2 };
+  const dot = <StatusDot isOnline={!!data?.isOnline} lastSeen={data?.lastSeen ?? null} />;
   if (value) {
-    return <img src={value} referrerPolicy="no-referrer" loading="lazy"
-      style={{ width: 28, height: 28, borderRadius: '50%', verticalAlign: 'middle', marginTop: 2 }} />;
+    return (
+      <div style={wrap}>
+        <img src={value} referrerPolicy="no-referrer" loading="lazy"
+          style={{ width: 28, height: 28, borderRadius: '50%', display: 'block' }} />
+        {dot}
+      </div>
+    );
   }
   const initial = ((data?.displayName ?? data?.email ?? '?') as string)[0].toUpperCase();
   const bg      = hashColor(data?.email ?? '');
   return (
-    <div style={{ width: 28, height: 28, borderRadius: '50%', background: bg, color: 'white',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, marginTop: 2,
-      fontStyle: 'normal' }}>
-      {initial}
+    <div style={wrap}>
+      <div style={{ width: 28, height: 28, borderRadius: '50%', background: bg, color: 'white',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12,
+        fontStyle: 'normal' }}>
+        {initial}
+      </div>
+      {dot}
     </div>
   );
-};
-
-const OnlineCell = ({ value, data }: any) => {
-  let bg = '#dadce0';
-  if (value) {
-    const idle = data?.lastSeen && (Date.now() - data.lastSeen) > INACTIVITY_TIMEOUT_MS;
-    bg = idle ? '#f9a825' : '#34a853';
-  }
-  return <div style={{ width: 10, height: 10, borderRadius: '50%', margin: '9px auto 0', background: bg }} />;
 };
 
 const lastSeenFmt = (p: any) => p.value ? new Date(p.value).toLocaleString() : '—';
@@ -162,7 +177,6 @@ const lastSeenCmp = (a: number, b: number) => (a ?? 0) - (b ?? 0);
 
 const userColumnDefs = [
   { headerName: '',          field: 'photoURL',    width: 44,  cellRenderer: AvatarCell, sortable: false },
-  { headerName: '',          field: 'isOnline',    width: 32,  cellRenderer: OnlineCell, sortable: false },
   { headerName: 'Name',      field: 'displayName', flex: 1,    sortable: true, filter: true },
   { headerName: 'Email',     field: 'email',       flex: 2,    sortable: true, filter: true },
   { headerName: 'Last Seen', field: 'lastSeen',    flex: 1,    minWidth: 160,  sortable: true,
@@ -209,6 +223,7 @@ const GridGlobalStyle = createGlobalStyle`
   .ag-theme-balham .ag-row.user-unread       { font-weight: bold; }
   .ag-theme-balham .ag-row.group-pending     { font-style: italic; }
   .ag-theme-balham .ag-row.group-unread      { font-weight: bold; }
+  .contexify_item__content                   { color: #202124 !important; }
 `;
 
 const USERS_MENU_ID = 'users-ctx-menu';
@@ -218,11 +233,10 @@ const USERS_MENU_ID = 'users-ctx-menu';
 type Props = { session: User };
 
 export const UsersView = ({ session }: Props) => {
-  const users       = useSelector(s => s.users.list);
-  const unread      = useSelector(s => s.chat.unread);
-  const me          = useSelector(s => s.chat.me);
-  const groups      = useSelector(s => s.groupChats.list);
-  const groupUnread = useSelector(s => s.groupChats.unread);
+  const users  = useSelector(s => s.users.list);
+  const unread = useSelector(s => s.chat.unread);
+  const me     = useSelector(s => s.chat.me);
+  const groups = useSelector(s => s.chat.groups);
 
   const gridApiRef      = useRef<any>(null);
   const groupGridApiRef = useRef<any>(null);
@@ -234,7 +248,7 @@ export const UsersView = ({ session }: Props) => {
   // Periodic refresh of the online dot colour
   useEffect(() => {
     const id = setInterval(() => {
-      gridApiRef.current?.refreshCells({ columns: ['isOnline'], force: true });
+      gridApiRef.current?.refreshCells({ columns: ['photoURL'], force: true });
     }, STATUS_REFRESH_INTERVAL_MS);
     return () => clearInterval(id);
   }, []);
@@ -273,7 +287,7 @@ export const UsersView = ({ session }: Props) => {
           pending:       false,
         };
       });
-      actions.groupChats.setGroupChats(fetched);
+      actions.chat.setGroups(fetched);
     });
     return unsub;
   }, [me?.uid]);
@@ -330,7 +344,7 @@ export const UsersView = ({ session }: Props) => {
           if (change.type !== 'added') return;
           const d = change.doc.data();
           if (d.from === me.uid) return;
-          actions.groupChats.groupMessageReceived(group.id, {
+          actions.chat.groupMessageReceived(group.id, {
             fromUid:   d.from      ?? '',
             fromEmail: d.fromEmail ?? '',
             text:      d.text      ?? '',
@@ -360,8 +374,8 @@ export const UsersView = ({ session }: Props) => {
 
   const groupRowClassRules = useMemo(() => ({
     'group-pending': (p: any) => !!p.data?.pending,
-    'group-unread':  (p: any) => !!groupUnread[p.data?.id],
-  }), [groupUnread]);
+    'group-unread':  (p: any) => !!unread[p.data?.id],
+  }), [unread]);
 
   const isRowSelectable = useCallback((node: any) => node.data?.uid !== session.uid, [session.uid]);
 
@@ -370,17 +384,14 @@ export const UsersView = ({ session }: Props) => {
   const onRowClicked = useCallback((event: any) => {
     const user = event.data as UserProfile;
     if (user && user.uid !== session.uid) {
-      actions.chat.chatWith(user);
-      actions.groupChats.setActiveGroup(null); // clear any open group chat
+      actions.chat.setActive({ kind: '1-1', user });
     }
   }, [session.uid]);
 
   const onGroupRowClicked = useCallback((event: any) => {
     const group = event.data as GroupChat;
     if (group) {
-      actions.groupChats.markGroupRead(group.id);
-      actions.chat.chatWith(null);           // clear 1-1
-      actions.groupChats.setActiveGroup(group.id);
+      actions.chat.setActive({ kind: 'group', id: group.id });
     }
   }, []);
 
@@ -417,9 +428,8 @@ export const UsersView = ({ session }: Props) => {
       pending:       true,
     };
 
-    actions.groupChats.addGroupChat(newGroup);
-    actions.chat.chatWith(null);
-    actions.groupChats.setActiveGroup(realId);
+    actions.chat.addGroup(newGroup);
+    actions.chat.setActive({ kind: 'group', id: realId });
   }, [me, dialogParticipants]);
 
   // ── Render ───────────────────────────────────────────────────────────────────

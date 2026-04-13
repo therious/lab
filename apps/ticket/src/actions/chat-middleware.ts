@@ -21,8 +21,8 @@ const maybeUpdate = (store: any, force: boolean) => {
 
 export const chatMiddleware = (store: any) => (next: NextF) => (a: Action) => {
   const result = next(a);
-  if (a.type === 'chat/messageSent')        maybeUpdate(store, true);
-  else if (a.type === 'coverage/updateSlice') maybeUpdate(store, false);
+  if (a.type === 'chat/messageSent' || a.type === 'chat/groupMessageSent') maybeUpdate(store, true);
+  else if (a.type === 'coverage/updateSlice')                              maybeUpdate(store, false);
   return result;
 };
 
