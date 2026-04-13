@@ -5,7 +5,7 @@ import { User } from 'firebase/auth';
 import styled from 'styled-components';
 import { db } from '../firebase';
 import { actions, useSelector } from '../actions-integration';
-import { ChatMessage, UserRec, GroupChat, ChatTarget, targetKey, chatId, HISTORY_LIMIT } from '../actions/chat-slice';
+import { ChatMessage, UserRec, GroupChat, chatId, HISTORY_LIMIT } from '../actions/chat-slice';
 import { UserProfile } from '../actions/users-slice';
 import { hashColor } from './avatar-utils';
 
