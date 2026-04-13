@@ -20,11 +20,20 @@ type Reducer  = (s: ChatState, payload: any) => ChatState;
 const initialState: ChatState = { me: null, chattingWith: null, conversations: {} };
 
 const creators: Record<string, Creator> = {
-  setMe:           (user: UserRec | null)                     => ({ user }),
-  chatWith:        (user: UserRec | null)                     => ({ user }),
-  setConversation: (email: string, messages: ChatMessage[])   => ({ email, messages }),
-  addMessage:      (email: string, message: ChatMessage)      => ({ email, message }),
+  setMe:            (user: UserRec | null)                   => ({ user }),
+  chatWith:         (user: UserRec | null)                   => ({ user }),
+  setConversation:  (email: string, messages: ChatMessage[]) => ({ email, messages }),
+  messageSent:      (email: string, message: ChatMessage)    => ({ email, message }),
+  messageReceived:  (email: string, message: ChatMessage)    => ({ email, message }),
 };
+
+const appendMessage = (s: ChatState, { email, message }: { email: string; message: ChatMessage }): ChatState => ({
+  ...s,
+  conversations: {
+    ...s.conversations,
+    [email]: [...(s.conversations[email] ?? []), message],
+  },
+});
 
 const reducers: Record<string, Reducer> = {
   setMe:    (s, { user }) => ({ ...s, me: user }),
@@ -35,13 +44,8 @@ const reducers: Record<string, Reducer> = {
     conversations: { ...s.conversations, [email]: messages },
   }),
 
-  addMessage: (s, { email, message }) => ({
-    ...s,
-    conversations: {
-      ...s.conversations,
-      [email]: [...(s.conversations[email] ?? []), message],
-    },
-  }),
+  messageSent:     appendMessage,
+  messageReceived: appendMessage,
 };
 
 export const sliceConfig = { name: 'chat', creators, initialState, reducers };

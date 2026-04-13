@@ -38,7 +38,7 @@ const ContentRow = styled.div`
 
 // Fixed-width users pane
 const UsersPane = styled.div`
-  width: 380px;
+  width: 560px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -75,7 +75,7 @@ const columnDefs = [
   { headerName: '',          field: 'photoURL',    width: 44,  cellRenderer: AvatarCell, sortable: false },
   { headerName: 'Name',      field: 'displayName', flex: 1,    sortable: true, filter: true },
   { headerName: 'Email',     field: 'email',       flex: 2,    sortable: true, filter: true },
-  { headerName: 'Last Seen', field: 'lastSeen',    flex: 1,    sortable: true,
+  { headerName: 'Last Seen', field: 'lastSeen',    flex: 1,    minWidth: 160, sortable: true,
     valueFormatter: lastSeenFmt, comparator: lastSeenCmp },
 ];
 

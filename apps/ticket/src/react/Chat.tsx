@@ -99,25 +99,41 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
   const messages        = useSelector(s => s.chat.conversations[them.email] ?? []);
   const bottomRef       = useRef<HTMLDivElement>(null);
 
-  // Sync Firestore → Redux using docChanges so only new messages are appended.
-  // setConversation([]) on mount clears any stale messages from a previous visit.
   useEffect(() => {
     actions.chat.setConversation(them.email, []);
+    let initialLoad = true;
     const q     = query(collection(db, 'chats', convoId, 'messages'), orderBy('timestamp', 'asc'));
     const unsub = onSnapshot(q, snap => {
-      snap.docChanges().forEach(change => {
-        if (change.type !== 'added') return;
-        const data = change.doc.data();
-        actions.chat.addMessage(them.email, {
-          fromUid:   data.from      ?? '',
-          fromEmail: data.fromEmail ?? '',
-          text:      data.text      ?? '',
-          timestamp: data.timestamp?.toMillis() ?? Date.now(),
+      if (initialLoad) {
+        initialLoad = false;
+        // Bulk-load history on first snapshot (setConversation keeps the log readable)
+        actions.chat.setConversation(them.email, snap.docs.map(d => {
+          const data = d.data();
+          return {
+            fromUid:   data.from      ?? '',
+            fromEmail: data.fromEmail ?? '',
+            text:      data.text      ?? '',
+            timestamp: data.timestamp?.toMillis() ?? Date.now(),
+          };
+        }));
+      } else {
+        // Subsequent snapshots: only added docs from the other party
+        // (own messages are already in state via messageSent)
+        snap.docChanges().forEach(change => {
+          if (change.type !== 'added') return;
+          const data = change.doc.data();
+          if (data.from === me.uid) return;
+          actions.chat.messageReceived(them.email, {
+            fromUid:   data.from      ?? '',
+            fromEmail: data.fromEmail ?? '',
+            text:      data.text      ?? '',
+            timestamp: data.timestamp?.toMillis() ?? Date.now(),
+          });
         });
-      });
+      }
     });
     return unsub;
-  }, [convoId, them.email]);
+  }, [convoId, them.email, me.uid]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -127,13 +143,19 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
     const msg = text.trim();
     if (!msg) return;
     setText('');
+    actions.chat.messageSent(them.email, {
+      fromUid:   me.uid,
+      fromEmail: me.email ?? '',
+      text:      msg,
+      timestamp: Date.now(),
+    });
     await addDoc(collection(db, 'chats', convoId, 'messages'), {
       from:      me.uid,
       fromEmail: me.email ?? '',
       text:      msg,
       timestamp: serverTimestamp(),
     });
-  }, [text, me.uid, me.email, convoId]);
+  }, [text, me.uid, me.email, convoId, them.email]);
 
   const onKey = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
