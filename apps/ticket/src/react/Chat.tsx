@@ -6,8 +6,8 @@ import styled from 'styled-components';
 import { db } from '../firebase';
 import { actions, useSelector } from '../actions-integration';
 import { ChatMessage, UserRec, GroupChat, chatId, HISTORY_LIMIT } from '../actions/chat-slice';
-import { UserProfile } from '../actions/users-slice';
-import { hashColor } from './avatar-utils';
+import { UserProfile, INACTIVITY_TIMEOUT_MS } from '../actions/users-slice';
+import { hashColor, statusDotColor } from './avatar-utils';
 
 // ── Styles ───────────────────────────────────────────────────────────────────
 
@@ -102,6 +102,14 @@ const SenderLabel = styled.div`
   margin: 0 4px 2px;
 `;
 
+// Row wrapper used for others' group messages: [avatar] [bubble column]
+const MsgRow = styled.div`
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  align-self: flex-start;
+`;
+
 const DateSep = styled.div`
   display: flex;
   align-items: center;
@@ -159,11 +167,62 @@ const ErrorBar = styled.div`
   flex-shrink: 0;
 `;
 
+// ── Shared avatar with status dot ────────────────────────────────────────────
+// size: px value for width/height. dotSize scales proportionally.
+
+type AvatarProps = {
+  profile:  UserProfile | null;
+  fallback: { email: string; displayName?: string };
+  size?:    number;
+};
+
+const Avatar = ({ profile, fallback, size = 24 }: AvatarProps) => {
+  const dotSize = Math.round(size * 0.34);
+  const dot = profile ? (
+    <div style={{
+      position: 'absolute', bottom: 0, right: 0,
+      width: dotSize, height: dotSize, borderRadius: '50%',
+      background: statusDotColor(profile.isOnline, profile.lastSeen, INACTIVITY_TIMEOUT_MS),
+      border: `${Math.max(1, Math.round(dotSize * 0.22))}px solid #000`,
+    }} />
+  ) : null;
+
+  const wrap: React.CSSProperties = {
+    position: 'relative', display: 'inline-block', flexShrink: 0,
+    width: size, height: size,
+  };
+
+  if (profile?.photoURL) {
+    return (
+      <div style={wrap}>
+        <img src={profile.photoURL} referrerPolicy="no-referrer" loading="lazy"
+          style={{ width: size, height: size, borderRadius: '50%', display: 'block' }} />
+        {dot}
+      </div>
+    );
+  }
+
+  const src   = profile ?? fallback;
+  const label = (('displayName' in src ? src.displayName : undefined) || src.email || '?')[0].toUpperCase();
+  const bg    = hashColor(src.email);
+  return (
+    <div style={wrap}>
+      <div style={{ width: size, height: size, borderRadius: '50%', background: bg,
+        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: Math.round(size * 0.46) }}>
+        {label}
+      </div>
+      {dot}
+    </div>
+  );
+};
+
 // ── Shared message list renderer ──────────────────────────────────────────────
 
-const MessageList = ({ messages, myUid, showSender = false }:
-    { messages: ChatMessage[]; myUid: string; showSender?: boolean }) => {
-  const bottomRef = useRef<HTMLDivElement>(null);
+const MessageList = ({ messages, myUid, showAvatars = false }:
+    { messages: ChatMessage[]; myUid: string; showAvatars?: boolean }) => {
+  const bottomRef  = useRef<HTMLDivElement>(null);
+  const allUsers   = useSelector(s => s.users.list);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   return (
@@ -175,14 +234,27 @@ const MessageList = ({ messages, myUid, showSender = false }:
         const showSep   = i === 0 || toDateKey(messages[i - 1].timestamp) !== toDateKey(m.timestamp);
         const dateLabel = new Date(m.timestamp).toLocaleDateString(undefined,
           { weekday: 'long', month: 'long', day: 'numeric' });
+        const profile   = allUsers.find(u => u.uid === m.fromUid) ?? null;
+
+        const bubble = (
+          <BubbleWrap $mine={mine}>
+            {showAvatars && !mine && (
+              <SenderLabel>{profile?.displayName ?? m.fromEmail}</SenderLabel>
+            )}
+            <Bubble $mine={mine}>{m.text}</Bubble>
+            <BubbleTime $mine={mine}>{time}</BubbleTime>
+          </BubbleWrap>
+        );
+
         return (
           <React.Fragment key={i}>
             {showSep && <DateSep>{dateLabel}</DateSep>}
-            <BubbleWrap $mine={mine}>
-              {showSender && !mine && <SenderLabel>{m.fromEmail}</SenderLabel>}
-              <Bubble $mine={mine}>{m.text}</Bubble>
-              <BubbleTime $mine={mine}>{time}</BubbleTime>
-            </BubbleWrap>
+            {showAvatars && !mine ? (
+              <MsgRow>
+                <Avatar profile={profile} fallback={{ email: m.fromEmail }} size={28} />
+                {bubble}
+              </MsgRow>
+            ) : bubble}
           </React.Fragment>
         );
       })}
@@ -193,34 +265,9 @@ const MessageList = ({ messages, myUid, showSender = false }:
 
 // ── Header avatars ────────────────────────────────────────────────────────────
 
-const SmallAvatar = ({ profile }: { profile: UserProfile }) => {
-  if (profile.photoURL) {
-    return <img src={profile.photoURL} referrerPolicy="no-referrer" loading="lazy"
-      style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />;
-  }
-  const initial = (profile.displayName || profile.email || '?')[0].toUpperCase();
-  return (
-    <div style={{ width: 24, height: 24, borderRadius: '50%', background: hashColor(profile.email),
-      color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 11, flexShrink: 0 }}>
-      {initial}
-    </div>
-  );
-};
-
 const HeaderAvatar = ({ them }: { them: UserRec }) => {
-  const profile = useSelector(s => s.users.list.find(u => u.uid === them.uid));
-  if (!profile) {
-    const initial = (them.displayName || them.email || '?')[0].toUpperCase();
-    return (
-      <div style={{ width: 24, height: 24, borderRadius: '50%', background: hashColor(them.email),
-        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 11, flexShrink: 0 }}>
-        {initial}
-      </div>
-    );
-  }
-  return <SmallAvatar profile={profile} />;
+  const profile = useSelector(s => s.users.list.find(u => u.uid === them.uid) ?? null);
+  return <Avatar profile={profile} fallback={them} size={24} />;
 };
 
 const GroupHeaderAvatars = ({ group }: { group: GroupChat }) => {
@@ -228,13 +275,13 @@ const GroupHeaderAvatars = ({ group }: { group: GroupChat }) => {
   const allUsers = useSelector(s => s.users.list);
   const profiles = group.participants
     .filter(uid => uid !== myUid)
-    .map(uid => allUsers.find(u => u.uid === uid))
-    .filter(Boolean)
-    .slice(0, 3) as UserProfile[];
+    .map(uid => allUsers.find(u => u.uid === uid) ?? null)
+    .filter((p): p is UserProfile => p !== null)
+    .slice(0, 3);
 
   return (
     <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-      {profiles.map(p => <SmallAvatar key={p.uid} profile={p} />)}
+      {profiles.map(p => <Avatar key={p.uid} profile={p} fallback={p} size={24} />)}
     </div>
   );
 };
@@ -380,7 +427,7 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
 
   return (
     <>
-      <MessageList messages={messages} myUid={me.uid} showSender />
+      <MessageList messages={messages} myUid={me.uid} showAvatars />
       {sendErr && <ErrorBar>{sendErr}</ErrorBar>}
       <InputRow>
         <TextInput value={text} onChange={e => { setText(e.target.value); setSendErr(null); }}

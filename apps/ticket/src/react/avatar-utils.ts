@@ -9,3 +9,15 @@ export const hashColor = (email: string): string => {
   for (let i = 0; i < email.length; i++) h = (h * 31 + email.charCodeAt(i)) >>> 0;
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
 };
+
+// Returns the status dot fill colour given presence data.
+// grey = never seen / offline, amber = idle, green = active
+export const statusDotColor = (
+  isOnline: boolean,
+  lastSeen: number | null,
+  inactivityMs: number,
+): string => {
+  if (!isOnline) return '#dadce0';
+  if (lastSeen && Date.now() - lastSeen > inactivityMs) return '#f9a825';
+  return '#34a853';
+};

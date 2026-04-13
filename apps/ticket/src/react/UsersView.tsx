@@ -11,7 +11,7 @@ import { chatId, GroupChat } from '../actions/chat-slice';
 import { MyGrid } from './MyGrid';
 import { Chat } from './Chat';
 import { HSplit, VSplit } from './SplitPane';
-import { hashColor } from './avatar-utils';
+import { hashColor, statusDotColor } from './avatar-utils';
 
 // ── Layout ───────────────────────────────────────────────────────────────────
 
@@ -131,20 +131,14 @@ const NicknameDialog = ({ participants, onConfirm, onCancel }: NicknameDialogPro
 
 // ── Column defs — users ───────────────────────────────────────────────────────
 
-const StatusDot = ({ isOnline, lastSeen }: { isOnline: boolean; lastSeen: number | null }) => {
-  let bg = '#dadce0';
-  if (isOnline) {
-    const idle = lastSeen && (Date.now() - lastSeen) > INACTIVITY_TIMEOUT_MS;
-    bg = idle ? '#f9a825' : '#34a853';
-  }
-  return (
-    <div style={{
-      position: 'absolute', bottom: 1, right: 1,
-      width: 9, height: 9, borderRadius: '50%',
-      background: bg, border: '1.5px solid #000',
-    }} />
-  );
-};
+const StatusDot = ({ isOnline, lastSeen }: { isOnline: boolean; lastSeen: number | null }) => (
+  <div style={{
+    position: 'absolute', bottom: 1, right: 1,
+    width: 9, height: 9, borderRadius: '50%',
+    background: statusDotColor(isOnline, lastSeen, INACTIVITY_TIMEOUT_MS),
+    border: '1.5px solid #000',
+  }} />
+);
 
 const AvatarCell = ({ value, data }: any) => {
   const wrap: React.CSSProperties = { position: 'relative', display: 'inline-block', marginTop: 2 };
@@ -190,16 +184,21 @@ const MultiAvatarCell = ({ data }: any) => {
   const profiles: UserProfile[] = group?._profiles ?? [];
   const shown = profiles.slice(0, 3);
   return (
-    <div style={{ display: 'flex', gap: 2, alignItems: 'center', marginTop: 4 }}>
-      {shown.map(p => p.photoURL
-        ? <img key={p.uid} src={p.photoURL} referrerPolicy="no-referrer" loading="lazy"
-            style={{ width: 22, height: 22, borderRadius: '50%' }} />
-        : <div key={p.uid} style={{ width: 22, height: 22, borderRadius: '50%',
-            background: hashColor(p.email), color: 'white', fontSize: 10,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontStyle: 'normal' }}>
-            {(p.displayName ?? p.email ?? '?')[0].toUpperCase()}
-          </div>
-      )}
+    <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginTop: 4 }}>
+      {shown.map(p => (
+        <div key={p.uid} style={{ position: 'relative', width: 22, height: 22, flexShrink: 0 }}>
+          {p.photoURL
+            ? <img src={p.photoURL} referrerPolicy="no-referrer" loading="lazy"
+                style={{ width: 22, height: 22, borderRadius: '50%', display: 'block' }} />
+            : <div style={{ width: 22, height: 22, borderRadius: '50%',
+                background: hashColor(p.email), color: 'white', fontSize: 9,
+                display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {(p.displayName ?? p.email ?? '?')[0].toUpperCase()}
+              </div>
+          }
+          <StatusDot isOnline={p.isOnline} lastSeen={p.lastSeen} />
+        </div>
+      ))}
       {profiles.length > 3 && <span style={{ fontSize: 10, color: '#888' }}>+{profiles.length - 3}</span>}
     </div>
   );
