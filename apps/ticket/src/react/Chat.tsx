@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import styled from 'styled-components';
@@ -71,6 +71,23 @@ const BubbleTime = styled.div<{ $mine: boolean }>`
   color: #aaa;
   margin: 1px 4px 0;
 `;
+
+const DateSep = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #aaa;
+  margin: 4px 0;
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #eee;
+  }
+`;
+
+const toDateKey = (ts: number) => new Date(ts).toDateString();
 
 const InputRow = styled.div`
   display: flex;
@@ -177,13 +194,18 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
     <>
       <Messages>
         {messages.map((m, i) => {
-          const mine = m.fromUid === me.uid;
-          const time = new Date(m.timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+          const mine    = m.fromUid === me.uid;
+          const time    = new Date(m.timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+          const showSep = i === 0 || toDateKey(messages[i - 1].timestamp) !== toDateKey(m.timestamp);
+          const dateLabel = new Date(m.timestamp).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
           return (
-            <BubbleWrap key={i} $mine={mine}>
-              <Bubble $mine={mine}>{m.text}</Bubble>
-              <BubbleTime $mine={mine}>{time}</BubbleTime>
-            </BubbleWrap>
+            <React.Fragment key={i}>
+              {showSep && <DateSep>{dateLabel}</DateSep>}
+              <BubbleWrap $mine={mine}>
+                <Bubble $mine={mine}>{m.text}</Bubble>
+                <BubbleTime $mine={mine}>{time}</BubbleTime>
+              </BubbleWrap>
+            </React.Fragment>
           );
         })}
         <div ref={bottomRef} />
