@@ -150,6 +150,15 @@ const SendBtn = styled.button`
   &:not(:disabled):hover { background: #1558b0; }
 `;
 
+const ErrorBar = styled.div`
+  padding: 6px 12px;
+  background: #fce8e6;
+  color: #c5221f;
+  font-size: 12px;
+  border-top: 1px solid #f5c6c4;
+  flex-shrink: 0;
+`;
+
 // ── Shared message list renderer ──────────────────────────────────────────────
 
 const MessageList = ({ messages, myUid, showSender = false }:
@@ -233,7 +242,8 @@ const GroupHeaderAvatars = ({ group }: { group: GroupChat }) => {
 // ── 1-1 chat ─────────────────────────────────────────────────────────────────
 
 const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
-  const [text, setText] = useState('');
+  const [text, setText]       = useState('');
+  const [sendErr, setSendErr] = useState<string | null>(null);
   const convoId  = chatId(me.uid, them.uid);
   const messages = useSelector(s => s.chat.conversations[them.email] ?? []);
 
@@ -241,18 +251,21 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
     actions.chat.setConversation(them.email, []);
     const q     = query(collection(db, 'chats', convoId, 'messages'),
                         orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
-    const unsub = onSnapshot(q, snap => {
-      if (snap.metadata.fromCache && snap.docs.length === 0) return;
-      actions.chat.setConversation(them.email, snap.docs.map(d => {
-        const data = d.data();
-        return {
-          fromUid:   data.from      ?? '',
-          fromEmail: data.fromEmail ?? '',
-          text:      data.text      ?? '',
-          timestamp: data.timestamp?.toMillis() ?? Date.now(),
-        };
-      }));
-    });
+    const unsub = onSnapshot(q,
+      snap => {
+        if (snap.metadata.fromCache && snap.docs.length === 0) return;
+        actions.chat.setConversation(them.email, snap.docs.map(d => {
+          const data = d.data();
+          return {
+            fromUid:   data.from      ?? '',
+            fromEmail: data.fromEmail ?? '',
+            text:      data.text      ?? '',
+            timestamp: data.timestamp?.toMillis() ?? Date.now(),
+          };
+        }));
+      },
+      err => setSendErr(`History unavailable: ${err.code}`),
+    );
     return unsub;
   }, [convoId, them.email]);
 
@@ -260,12 +273,17 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
     const msg = text.trim();
     if (!msg) return;
     setText('');
+    setSendErr(null);
     actions.chat.messageSent(them.email, {
       fromUid: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: Date.now(),
     });
-    await addDoc(collection(db, 'chats', convoId, 'messages'), {
-      from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: serverTimestamp(),
-    });
+    try {
+      await addDoc(collection(db, 'chats', convoId, 'messages'), {
+        from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: serverTimestamp(),
+      });
+    } catch (e: any) {
+      setSendErr(`Send failed: ${e?.code ?? e?.message ?? 'unknown error'}`);
+    }
   }, [text, me.uid, me.email, convoId, them.email]);
 
   const onKey = useCallback((e: React.KeyboardEvent) => {
@@ -275,9 +293,10 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
   return (
     <>
       <MessageList messages={messages} myUid={me.uid} />
+      {sendErr && <ErrorBar>{sendErr}</ErrorBar>}
       <InputRow>
-        <TextInput value={text} onChange={e => setText(e.target.value)} onKeyDown={onKey}
-          placeholder={`Message ${them.displayName ?? them.email}…`} autoFocus />
+        <TextInput value={text} onChange={e => { setText(e.target.value); setSendErr(null); }}
+          onKeyDown={onKey} placeholder={`Message ${them.displayName ?? them.email}…`} autoFocus />
         <SendBtn disabled={!text.trim()} onClick={send}>Send</SendBtn>
       </InputRow>
     </>
@@ -287,7 +306,8 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
 // ── Group chat ────────────────────────────────────────────────────────────────
 
 const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
-  const [text, setText] = useState('');
+  const [text, setText]       = useState('');
+  const [sendErr, setSendErr] = useState<string | null>(null);
   const messages = useSelector(s => s.chat.conversations[group.id] ?? []);
 
   // History — skip for pending chats (no Firestore document yet)
@@ -296,18 +316,21 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
     actions.chat.setConversation(group.id, []);
     const q     = query(collection(db, 'groupChats', group.id, 'messages'),
                         orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
-    const unsub = onSnapshot(q, snap => {
-      if (snap.metadata.fromCache && snap.docs.length === 0) return;
-      actions.chat.setConversation(group.id, snap.docs.map(d => {
-        const data = d.data();
-        return {
-          fromUid:   data.from      ?? '',
-          fromEmail: data.fromEmail ?? '',
-          text:      data.text      ?? '',
-          timestamp: data.timestamp?.toMillis() ?? Date.now(),
-        };
-      }));
-    });
+    const unsub = onSnapshot(q,
+      snap => {
+        if (snap.metadata.fromCache && snap.docs.length === 0) return;
+        actions.chat.setConversation(group.id, snap.docs.map(d => {
+          const data = d.data();
+          return {
+            fromUid:   data.from      ?? '',
+            fromEmail: data.fromEmail ?? '',
+            text:      data.text      ?? '',
+            timestamp: data.timestamp?.toMillis() ?? Date.now(),
+          };
+        }));
+      },
+      err => setSendErr(`History unavailable: ${err.code}`),
+    );
     return unsub;
   }, [group.id, group.pending]);
 
@@ -315,34 +338,39 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
     const msg = text.trim();
     if (!msg) return;
     setText('');
+    setSendErr(null);
 
     const message: ChatMessage = {
       fromUid: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: Date.now(),
     };
     actions.chat.groupMessageSent(group.id, message); // optimistic + clears pending flag
 
-    if (group.pending) {
-      // First message — atomically create the group doc + first message
-      const batch    = writeBatch(db);
-      const groupRef = doc(db, 'groupChats', group.id);
-      batch.set(groupRef, {
-        participants:  group.participants,
-        nickname:      group.nickname,
-        createdBy:     group.createdBy,
-        createdAt:     serverTimestamp(),
-        lastMessageAt: serverTimestamp(),
-      });
-      const msgRef = doc(collection(db, 'groupChats', group.id, 'messages'));
-      batch.set(msgRef, {
-        from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: serverTimestamp(),
-      });
-      await batch.commit();
-    } else {
-      await addDoc(collection(db, 'groupChats', group.id, 'messages'), {
-        from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: serverTimestamp(),
-      });
-      await setDoc(doc(db, 'groupChats', group.id),
-        { lastMessageAt: serverTimestamp() }, { merge: true });
+    try {
+      if (group.pending) {
+        // First message — atomically create the group doc + first message
+        const batch    = writeBatch(db);
+        const groupRef = doc(db, 'groupChats', group.id);
+        batch.set(groupRef, {
+          participants:  group.participants,
+          nickname:      group.nickname,
+          createdBy:     group.createdBy,
+          createdAt:     serverTimestamp(),
+          lastMessageAt: serverTimestamp(),
+        });
+        const msgRef = doc(collection(db, 'groupChats', group.id, 'messages'));
+        batch.set(msgRef, {
+          from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: serverTimestamp(),
+        });
+        await batch.commit();
+      } else {
+        await addDoc(collection(db, 'groupChats', group.id, 'messages'), {
+          from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: serverTimestamp(),
+        });
+        await setDoc(doc(db, 'groupChats', group.id),
+          { lastMessageAt: serverTimestamp() }, { merge: true });
+      }
+    } catch (e: any) {
+      setSendErr(`Send failed: ${e?.code ?? e?.message ?? 'unknown error'}`);
     }
   }, [text, me.uid, me.email, group]);
 
@@ -353,9 +381,10 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
   return (
     <>
       <MessageList messages={messages} myUid={me.uid} showSender />
+      {sendErr && <ErrorBar>{sendErr}</ErrorBar>}
       <InputRow>
-        <TextInput value={text} onChange={e => setText(e.target.value)} onKeyDown={onKey}
-          placeholder={`Message ${group.nickname}…`} autoFocus />
+        <TextInput value={text} onChange={e => { setText(e.target.value); setSendErr(null); }}
+          onKeyDown={onKey} placeholder={`Message ${group.nickname}…`} autoFocus />
         <SendBtn disabled={!text.trim()} onClick={send}>Send</SendBtn>
       </InputRow>
     </>

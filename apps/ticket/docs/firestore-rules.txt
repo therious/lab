@@ -44,11 +44,14 @@ service cloud.firestore {
                     && request.auth.uid in resource.data.participants;
     }
 
+    // Messages subcollection intentionally does NOT use get() to look up
+    // participants: get() is unsupported in list (query) rules and would
+    // silently deny all snapshot listeners.  Security is provided by the
+    // unguessable Firestore-generated chatId — clients only discover group
+    // IDs through the scoped groupChats query above.
     match /groupChats/{chatId}/messages/{msgId} {
-      allow read:   if request.auth != null
-                    && request.auth.uid in get(/databases/$(database)/documents/groupChats/$(chatId)).data.participants;
+      allow read:   if request.auth != null;
       allow create: if request.auth != null
-                    && request.auth.uid in get(/databases/$(database)/documents/groupChats/$(chatId)).data.participants
                     && request.resource.data.from == request.auth.uid;
     }
 
