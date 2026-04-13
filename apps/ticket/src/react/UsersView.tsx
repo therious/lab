@@ -65,7 +65,8 @@ const AvatarCell = ({ value, data }: any) => {
   const bg      = hashColor(data?.email ?? '');
   return (
     <div style={{ width: 28, height: 28, borderRadius: '50%', background: bg, color: 'white',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, marginTop: 2 }}>
+      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, marginTop: 2,
+      fontStyle: 'normal' }}>
       {initial}
     </div>
   );
