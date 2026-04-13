@@ -31,7 +31,7 @@ const frameworkComponents = {
   patchCommentEditor:PatchCommentEditor,
 };
 
-export const  MyGrid = ({children, style, contextM, rowData, columnDefs,  getRowNodeId, dark=true}) => {
+export const  MyGrid = ({children=null, style, contextM=undefined, rowData, columnDefs, getRowNodeId=undefined, dark=true}) => {
   const gridRef = useRef(null);
   const ready = useCallback(e=>{console.log(`ready event`, e)},[]);
 

@@ -6,6 +6,7 @@ import {Modalize} from '@therious/components';
 import {useSelector} from './actions-integration';
 import {useSession, signout} from './auth';
 import {Game} from './react/Game';
+import {UsersView} from './react/UsersView';
 
 import {Layout, CenterBody, MyNavLink, Navbar} from './react/Navbar';
 import {Login} from './react/Login';
@@ -57,12 +58,14 @@ export default function App() {
         <Layout>
           <Navbar>
             <MyNavLink curPath={curPath} to="/">Game </MyNavLink>
+            <MyNavLink curPath={curPath} to="/users">Users </MyNavLink>
             <MyNavLink curPath={curPath} to="/profile">Profile </MyNavLink>
             <MyNavLink curPath={curPath} to="/signout">Signout </MyNavLink>
           </Navbar>
           <CenterBody>
             <Routes>
               <Route path="/" element={<Game/>}/>
+              <Route path="/users" element={<UsersView/>}/>
               <Route path="/profile" element={<Profile/>}/>
               <Route path="/signout" element={<Signout/>}/>
             </Routes>
