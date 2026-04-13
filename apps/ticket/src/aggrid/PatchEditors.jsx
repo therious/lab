@@ -1,6 +1,8 @@
 //https://ag-grid.com/react-data-grid/component-cell-editor/
 import React, {forwardRef, useEffect, useState, useRef, useImperativeHandle, useCallback} from "react";
-import {isSpecialPatchName, isSpecialName} from '../actions/patch-slice'
+// patch-slice removed; these guards are no-ops until a replacement slice provides them
+const isSpecialPatchName = () => false;
+const isSpecialName      = () => false;
 
 
 // add code here to get the actions installed it needs to rename a patch
