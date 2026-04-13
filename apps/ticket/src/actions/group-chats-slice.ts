@@ -13,6 +13,7 @@ export type GroupChatsState = {
   list:          GroupChat[];
   conversations: Record<string, ChatMessage[]>; // key = group chat id
   unread:        Record<string, true>;
+  activeGroupId: string | null;
 };
 
 type Creator = (...args: any[]) => unknown;
@@ -22,6 +23,7 @@ const initialState: GroupChatsState = {
   list:          [],
   conversations: {},
   unread:        {},
+  activeGroupId: null,
 };
 
 const creators: Record<string, Creator> = {
@@ -31,6 +33,7 @@ const creators: Record<string, Creator> = {
   groupMessageSent:    (id: string, message: ChatMessage)             => ({ id, message }),
   groupMessageReceived:(id: string, message: ChatMessage)             => ({ id, message }),
   markGroupRead:       (id: string)                                   => ({ id }),
+  setActiveGroup:      (id: string | null)                            => ({ id }),
 };
 
 const appendMessage = (
@@ -81,6 +84,8 @@ const reducers: Record<string, Reducer> = {
     delete unread[id];
     return { ...s, unread };
   },
+
+  setActiveGroup: (s, { id }) => ({ ...s, activeGroupId: id }),
 };
 
 export const sliceConfig = { name: 'groupChats', creators, initialState, reducers };

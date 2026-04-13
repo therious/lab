@@ -1,14 +1,17 @@
-import { useEffect, useCallback, useMemo, useRef } from 'react';
-import { collection, onSnapshot, query, orderBy, where, Timestamp } from 'firebase/firestore';
+import { useEffect, useCallback, useMemo, useRef, useState } from 'react';
+import { collection, onSnapshot, query, orderBy, where, Timestamp, doc } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import styled, { createGlobalStyle } from 'styled-components';
-import { HSplit, VSplit } from './SplitPane';
+import { Menu, Item, useContextMenu } from 'react-contexify';
+import 'react-contexify/ReactContexify.css';
 import { db } from '../firebase';
 import { actions, useSelector } from '../actions-integration';
 import { UserProfile, INACTIVITY_TIMEOUT_MS, STATUS_REFRESH_INTERVAL_MS } from '../actions/users-slice';
-import { chatId } from '../actions/chat-slice';
+import { chatId, ChatMessage, HISTORY_LIMIT } from '../actions/chat-slice';
+import { GroupChat } from '../actions/group-chats-slice';
 import { MyGrid } from './MyGrid';
 import { Chat } from './Chat';
+import { HSplit, VSplit } from './SplitPane';
 import { hashColor } from './avatar-utils';
 
 // ── Layout ───────────────────────────────────────────────────────────────────
@@ -32,19 +35,102 @@ const SplitFill = styled.div`
   min-height: 0;
 `;
 
-const GroupChatsPlaceholder = styled.div`
-  flex: 1;
+const GroupChatsHeader = styled.div`
+  font-size: 12px;
+  font-weight: bold;
+  color: #5f6368;
+  padding: 4px 2px;
+  flex-shrink: 0;
+`;
+
+// ── Nickname dialog ───────────────────────────────────────────────────────────
+
+const DialogOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #aaa;
-  font-size: 13px;
-  font-style: italic;
-  border: 1px dashed #dadce0;
-  border-radius: 4px;
+  z-index: 1000;
 `;
 
-// ── Column defs ───────────────────────────────────────────────────────────────
+const DialogBox = styled.div`
+  background: white;
+  border-radius: 8px;
+  padding: 20px 24px;
+  width: 320px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const DialogTitle = styled.div`
+  font-weight: bold;
+  font-size: 14px;
+`;
+
+const DialogInput = styled.input`
+  padding: 7px 10px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  &:focus { border-color: #1a73e8; }
+`;
+
+const DialogRow = styled.div`
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+`;
+
+const Btn = styled.button<{ $primary?: boolean }>`
+  padding: 6px 16px;
+  border-radius: 4px;
+  border: 1px solid ${p => p.$primary ? '#1a73e8' : '#dadce0'};
+  background: ${p => p.$primary ? '#1a73e8' : 'white'};
+  color: ${p => p.$primary ? 'white' : '#202124'};
+  font-size: 13px;
+  cursor: pointer;
+  &:hover { opacity: 0.85; }
+`;
+
+type NicknameDialogProps = {
+  participants: UserProfile[];
+  onConfirm: (nickname: string) => void;
+  onCancel: () => void;
+};
+
+const NicknameDialog = ({ participants, onConfirm, onCancel }: NicknameDialogProps) => {
+  const [value, setValue] = useState('');
+  const names = participants.map(p => p.displayName ?? p.email).join(', ');
+
+  const confirm = () => onConfirm(value.trim() || names);
+
+  return (
+    <DialogOverlay onClick={onCancel}>
+      <DialogBox onClick={e => e.stopPropagation()}>
+        <DialogTitle>New chat with {names}</DialogTitle>
+        <DialogInput
+          autoFocus
+          placeholder="Nickname (optional — defaults to names)"
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') confirm(); if (e.key === 'Escape') onCancel(); }}
+        />
+        <DialogRow>
+          <Btn onClick={onCancel}>Cancel</Btn>
+          <Btn $primary onClick={confirm}>Create</Btn>
+        </DialogRow>
+      </DialogBox>
+    </DialogOverlay>
+  );
+};
+
+// ── Column defs — users ───────────────────────────────────────────────────────
 
 const AvatarCell = ({ value, data }: any) => {
   if (value) {
@@ -63,10 +149,10 @@ const AvatarCell = ({ value, data }: any) => {
 };
 
 const OnlineCell = ({ value, data }: any) => {
-  let bg = '#dadce0'; // offline
+  let bg = '#dadce0';
   if (value) {
     const idle = data?.lastSeen && (Date.now() - data.lastSeen) > INACTIVITY_TIMEOUT_MS;
-    bg = idle ? '#f9a825' : '#34a853'; // amber = idle, green = active
+    bg = idle ? '#f9a825' : '#34a853';
   }
   return <div style={{ width: 10, height: 10, borderRadius: '50%', margin: '9px auto 0', background: bg }} />;
 };
@@ -74,7 +160,7 @@ const OnlineCell = ({ value, data }: any) => {
 const lastSeenFmt = (p: any) => p.value ? new Date(p.value).toLocaleString() : '—';
 const lastSeenCmp = (a: number, b: number) => (a ?? 0) - (b ?? 0);
 
-const columnDefs = [
+const userColumnDefs = [
   { headerName: '',          field: 'photoURL',    width: 44,  cellRenderer: AvatarCell, sortable: false },
   { headerName: '',          field: 'isOnline',    width: 32,  cellRenderer: OnlineCell, sortable: false },
   { headerName: 'Name',      field: 'displayName', flex: 1,    sortable: true, filter: true },
@@ -83,25 +169,69 @@ const columnDefs = [
     valueFormatter: lastSeenFmt, comparator: lastSeenCmp },
 ];
 
+// ── Column defs — group chats ─────────────────────────────────────────────────
+
+const MultiAvatarCell = ({ data }: any) => {
+  const group = data as GroupChat & { _profiles?: UserProfile[] };
+  const profiles: UserProfile[] = group?._profiles ?? [];
+  const shown = profiles.slice(0, 3);
+  return (
+    <div style={{ display: 'flex', gap: 2, alignItems: 'center', marginTop: 4 }}>
+      {shown.map(p => p.photoURL
+        ? <img key={p.uid} src={p.photoURL} referrerPolicy="no-referrer" loading="lazy"
+            style={{ width: 22, height: 22, borderRadius: '50%' }} />
+        : <div key={p.uid} style={{ width: 22, height: 22, borderRadius: '50%',
+            background: hashColor(p.email), color: 'white', fontSize: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontStyle: 'normal' }}>
+            {(p.displayName ?? p.email ?? '?')[0].toUpperCase()}
+          </div>
+      )}
+      {profiles.length > 3 && <span style={{ fontSize: 10, color: '#888' }}>+{profiles.length - 3}</span>}
+    </div>
+  );
+};
+
+const groupLastFmt = (p: any) => p.value ? new Date(p.value).toLocaleString() : '—';
+
+const groupColumnDefs = [
+  { headerName: '',          field: 'id',            width: 80,  cellRenderer: MultiAvatarCell, sortable: false },
+  { headerName: 'Chat',      field: 'nickname',       flex: 2,    sortable: true },
+  { headerName: 'Members',   field: 'participants',   flex: 1,    sortable: false,
+    valueFormatter: (p: any) => `${(p.value?.length ?? 0)} members` },
+  { headerName: 'Last msg',  field: 'lastMessageAt',  flex: 1,    minWidth: 140,  sortable: true,
+    valueFormatter: groupLastFmt },
+];
+
 const gridStyle = { flex: 1, width: '100%' } as React.CSSProperties;
 
 const GridGlobalStyle = createGlobalStyle`
-  .ag-theme-balham .ag-row.user-self   { font-style: italic; color: #888; }
-  .ag-theme-balham .ag-row.user-unread { font-weight: bold; }
+  .ag-theme-balham .ag-row.user-self         { font-style: italic; color: #888; }
+  .ag-theme-balham .ag-row.user-unread       { font-weight: bold; }
+  .ag-theme-balham .ag-row.group-pending     { font-style: italic; }
+  .ag-theme-balham .ag-row.group-unread      { font-weight: bold; }
 `;
+
+const USERS_MENU_ID = 'users-ctx-menu';
 
 // ── Component ────────────────────────────────────────────────────────────────
 
 type Props = { session: User };
 
 export const UsersView = ({ session }: Props) => {
-  const users      = useSelector(s => s.users.list);
-  const unread     = useSelector(s => s.chat.unread);
-  const me         = useSelector(s => s.chat.me);
-  const gridApiRef = useRef<any>(null);
+  const users       = useSelector(s => s.users.list);
+  const unread      = useSelector(s => s.chat.unread);
+  const me          = useSelector(s => s.chat.me);
+  const groups      = useSelector(s => s.groupChats.list);
+  const groupUnread = useSelector(s => s.groupChats.unread);
 
-  // Periodically force-refresh the online dot column so colour reflects elapsed time
-  // even when row data has not changed in Firestore.
+  const gridApiRef      = useRef<any>(null);
+  const groupGridApiRef = useRef<any>(null);
+
+  const [dialogParticipants, setDialogParticipants] = useState<UserProfile[] | null>(null);
+
+  const { show: showMenu } = useContextMenu({ id: USERS_MENU_ID });
+
+  // Periodic refresh of the online dot colour
   useEffect(() => {
     const id = setInterval(() => {
       gridApiRef.current?.refreshCells({ columns: ['isOnline'], force: true });
@@ -109,7 +239,7 @@ export const UsersView = ({ session }: Props) => {
     return () => clearInterval(id);
   }, []);
 
-  // Firestore listener: keep the users list fresh
+  // Firestore: keep users list fresh
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'users'), snap => {
       actions.users.setUsers(snap.docs.map(d => {
@@ -127,9 +257,28 @@ export const UsersView = ({ session }: Props) => {
     return unsub;
   }, []);
 
-  // Background listeners: one per other user so incoming messages are detected
-  // even when that conversation is not open. Re-runs only when the set of UIDs changes,
-  // not on every lastSeen heartbeat.
+  // Firestore: keep group chats list fresh (participant listener)
+  useEffect(() => {
+    if (!me?.uid) return;
+    const q = query(collection(db, 'groupChats'), where('participants', 'array-contains', me.uid));
+    const unsub = onSnapshot(q, snap => {
+      const fetched: GroupChat[] = snap.docs.map(d => {
+        const r = d.data();
+        return {
+          id:            d.id,
+          participants:  r.participants  ?? [],
+          nickname:      r.nickname      ?? '',
+          createdBy:     r.createdBy     ?? '',
+          lastMessageAt: (r.lastMessageAt as Timestamp | null)?.toMillis() ?? null,
+          pending:       false,
+        };
+      });
+      actions.groupChats.setGroupChats(fetched);
+    });
+    return unsub;
+  }, [me?.uid]);
+
+  // Background 1-1 message listeners (unread detection)
   const otherUidKey = users
     .filter(u => u.uid !== me?.uid)
     .map(u => u.uid)
@@ -164,47 +313,177 @@ export const UsersView = ({ session }: Props) => {
     return () => unsubs.forEach(u => u());
   }, [otherUidKey, me?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const rowClassRules = useMemo(() => ({
+  // Background group message listeners (unread detection)
+  const groupIdKey = groups.filter(g => !g.pending).map(g => g.id).sort().join(',');
+
+  useEffect(() => {
+    if (!me?.uid || !groupIdKey) return;
+    const since = Timestamp.now();
+    const unsubs = groups.filter(g => !g.pending).map(group => {
+      const q = query(
+        collection(db, 'groupChats', group.id, 'messages'),
+        orderBy('timestamp', 'asc'),
+        where('timestamp', '>', since),
+      );
+      return onSnapshot(q, snap =>
+        snap.docChanges().forEach(change => {
+          if (change.type !== 'added') return;
+          const d = change.doc.data();
+          if (d.from === me.uid) return;
+          actions.groupChats.groupMessageReceived(group.id, {
+            fromUid:   d.from      ?? '',
+            fromEmail: d.fromEmail ?? '',
+            text:      d.text      ?? '',
+            timestamp: d.timestamp?.toMillis() ?? Date.now(),
+          });
+        })
+      );
+    });
+    return () => unsubs.forEach(u => u());
+  }, [groupIdKey, me?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Enrich group rows with resolved UserProfile objects for the avatar cell
+  const groupRows = useMemo(() => groups.map(g => ({
+    ...g,
+    _profiles: g.participants
+      .filter(uid => uid !== me?.uid)
+      .map(uid => users.find(u => u.uid === uid))
+      .filter(Boolean) as UserProfile[],
+  })), [groups, users, me?.uid]);
+
+  // ── Grid rules ──────────────────────────────────────────────────────────────
+
+  const userRowClassRules = useMemo(() => ({
     'user-self':   (p: any) => p.data?.uid === session.uid,
     'user-unread': (p: any) => !!unread[p.data?.email],
   }), [session.uid, unread]);
 
+  const groupRowClassRules = useMemo(() => ({
+    'group-pending': (p: any) => !!p.data?.pending,
+    'group-unread':  (p: any) => !!groupUnread[p.data?.id],
+  }), [groupUnread]);
+
   const isRowSelectable = useCallback((node: any) => node.data?.uid !== session.uid, [session.uid]);
+
+  // ── Row click / context menu ─────────────────────────────────────────────────
 
   const onRowClicked = useCallback((event: any) => {
     const user = event.data as UserProfile;
     if (user && user.uid !== session.uid) {
       actions.chat.chatWith(user);
+      actions.groupChats.setActiveGroup(null); // clear any open group chat
     }
   }, [session.uid]);
 
-  const leftPane = (
-    <VSplit
-      defaultSize={62}
-      first={
-        <MyGrid
-          style={gridStyle}
-          rowData={users}
-          columnDefs={columnDefs}
-          onRowClicked={onRowClicked}
-          rowSelection="single"
-          isRowSelectable={isRowSelectable}
-          rowClassRules={rowClassRules}
-          apiRef={gridApiRef}
-          dark={false}
-        />
-      }
-      second={<GroupChatsPlaceholder>group chats</GroupChatsPlaceholder>}
+  const onGroupRowClicked = useCallback((event: any) => {
+    const group = event.data as GroupChat;
+    if (group) {
+      actions.groupChats.markGroupRead(group.id);
+      actions.chat.chatWith(null);           // clear 1-1
+      actions.groupChats.setActiveGroup(group.id);
+    }
+  }, []);
+
+  // Right-click on users grid — must not change selection
+  const onCellContextMenu = useCallback((event: any) => {
+    event.event?.preventDefault();
+    const api = gridApiRef.current;
+    if (!api) return;
+    const selected: UserProfile[] = api.getSelectedRows().filter((u: UserProfile) => u.uid !== session.uid);
+    showMenu({ event: event.event, props: { selected } });
+  }, [session.uid, showMenu]);
+
+  const onCreateChat = useCallback(({ props }: any) => {
+    const selected: UserProfile[] = props?.selected ?? [];
+    if (!selected.length) return;
+    setDialogParticipants(selected);
+  }, []);
+
+  const handleDialogConfirm = useCallback(async (nickname: string) => {
+    if (!me || !dialogParticipants?.length) return;
+    setDialogParticipants(null);
+
+    const allUids = [me.uid, ...dialogParticipants.map(p => p.uid)];
+    // Pre-generate a real Firestore document ID so the batch write in Chat.tsx
+    // can use the same ID without a round-trip.
+    const realId  = doc(collection(db, 'groupChats')).id;
+
+    const newGroup: GroupChat = {
+      id:            realId,
+      participants:  allUids,
+      nickname,
+      createdBy:     me.uid,
+      lastMessageAt: null,
+      pending:       true,
+    };
+
+    actions.groupChats.addGroupChat(newGroup);
+    actions.chat.chatWith(null);
+    actions.groupChats.setActiveGroup(realId);
+  }, [me, dialogParticipants]);
+
+  // ── Render ───────────────────────────────────────────────────────────────────
+
+  const usersGrid = (
+    <MyGrid
+      style={gridStyle}
+      rowData={users}
+      columnDefs={userColumnDefs}
+      onRowClicked={onRowClicked}
+      contextM={onCellContextMenu}
+      rowSelection="multiple"
+      isRowSelectable={isRowSelectable}
+      rowClassRules={userRowClassRules}
+      apiRef={gridApiRef}
+      dark={false}
     />
+  );
+
+  const groupChatsGrid = (
+    <>
+      <GroupChatsHeader>Group chats</GroupChatsHeader>
+      <MyGrid
+        style={gridStyle}
+        rowData={groupRows}
+        columnDefs={groupColumnDefs}
+        onRowClicked={onGroupRowClicked}
+        rowClassRules={groupRowClassRules}
+        apiRef={groupGridApiRef}
+        dark={false}
+      />
+    </>
   );
 
   return (
     <Page>
       <GridGlobalStyle />
-      <PageHeader>Users — click a row to chat</PageHeader>
+      <PageHeader>Users — click to chat, right-click to create group</PageHeader>
+
       <SplitFill>
-        <HSplit defaultSize={62} first={leftPane} second={<Chat me={session} />} />
+        <HSplit
+          defaultSize={62}
+          first={
+            <VSplit
+              defaultSize={62}
+              first={usersGrid}
+              second={groupChatsGrid}
+            />
+          }
+          second={<Chat me={session} />}
+        />
       </SplitFill>
+
+      <Menu id={USERS_MENU_ID}>
+        <Item onClick={onCreateChat}>New chat with selected users…</Item>
+      </Menu>
+
+      {dialogParticipants && (
+        <NicknameDialog
+          participants={dialogParticipants}
+          onConfirm={handleDialogConfirm}
+          onCancel={() => setDialogParticipants(null)}
+        />
+      )}
     </Page>
   );
 };

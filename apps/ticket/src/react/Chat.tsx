@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { collection, addDoc, query, orderBy, limitToLast, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, writeBatch,
+         query, orderBy, limitToLast, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import styled from 'styled-components';
 import { db } from '../firebase';
 import { actions, useSelector } from '../actions-integration';
 import { ChatMessage, UserRec, chatId, HISTORY_LIMIT } from '../actions/chat-slice';
+import { GroupChat } from '../actions/group-chats-slice';
+import { UserProfile } from '../actions/users-slice';
 import { hashColor } from './avatar-utils';
 
 // ── Styles ───────────────────────────────────────────────────────────────────
@@ -94,6 +97,12 @@ const BubbleTime = styled.div<{ $mine: boolean }>`
   margin: 1px 4px 0;
 `;
 
+const SenderLabel = styled.div`
+  font-size: 10px;
+  color: #888;
+  margin: 0 4px 2px;
+`;
+
 const DateSep = styled.div`
   display: flex;
   align-items: center;
@@ -142,44 +151,97 @@ const SendBtn = styled.button`
   &:not(:disabled):hover { background: #1558b0; }
 `;
 
-// ── Header avatar ────────────────────────────────────────────────────────────
+// ── Shared message list renderer ──────────────────────────────────────────────
 
-const HeaderAvatar = ({ them }: { them: UserRec }) => {
-  const photoURL = useSelector(s => s.users.list.find(u => u.uid === them.uid)?.photoURL ?? null);
-  if (photoURL) {
-    return (
-      <img src={photoURL} referrerPolicy="no-referrer" loading="lazy"
-        style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />
-    );
-  }
-  const initial = (them.displayName || them.email || '?')[0].toUpperCase();
+const MessageList = ({ messages, myUid, showSender = false }:
+    { messages: ChatMessage[]; myUid: string; showSender?: boolean }) => {
+  const bottomRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
   return (
-    <div style={{
-      width: 24, height: 24, borderRadius: '50%', background: hashColor(them.email),
+    <Messages>
+      {messages.map((m, i) => {
+        const mine      = m.fromUid === myUid;
+        const time      = new Date(m.timestamp).toLocaleTimeString(undefined,
+          { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const showSep   = i === 0 || toDateKey(messages[i - 1].timestamp) !== toDateKey(m.timestamp);
+        const dateLabel = new Date(m.timestamp).toLocaleDateString(undefined,
+          { weekday: 'long', month: 'long', day: 'numeric' });
+        return (
+          <React.Fragment key={i}>
+            {showSep && <DateSep>{dateLabel}</DateSep>}
+            <BubbleWrap $mine={mine}>
+              {showSender && !mine && <SenderLabel>{m.fromEmail}</SenderLabel>}
+              <Bubble $mine={mine}>{m.text}</Bubble>
+              <BubbleTime $mine={mine}>{time}</BubbleTime>
+            </BubbleWrap>
+          </React.Fragment>
+        );
+      })}
+      <div ref={bottomRef} />
+    </Messages>
+  );
+};
+
+// ── Header avatars ────────────────────────────────────────────────────────────
+
+const SmallAvatar = ({ profile }: { profile: UserProfile }) => {
+  if (profile.photoURL) {
+    return <img src={profile.photoURL} referrerPolicy="no-referrer" loading="lazy"
+      style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />;
+  }
+  const initial = (profile.displayName || profile.email || '?')[0].toUpperCase();
+  return (
+    <div style={{ width: 24, height: 24, borderRadius: '50%', background: hashColor(profile.email),
       color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 11, flexShrink: 0,
-    }}>
+      fontSize: 11, flexShrink: 0 }}>
       {initial}
     </div>
   );
 };
 
-// ── Active conversation ───────────────────────────────────────────────────────
+const HeaderAvatar = ({ them }: { them: UserRec }) => {
+  const profile = useSelector(s => s.users.list.find(u => u.uid === them.uid));
+  if (!profile) {
+    const initial = (them.displayName || them.email || '?')[0].toUpperCase();
+    return (
+      <div style={{ width: 24, height: 24, borderRadius: '50%', background: hashColor(them.email),
+        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 11, flexShrink: 0 }}>
+        {initial}
+      </div>
+    );
+  }
+  return <SmallAvatar profile={profile} />;
+};
+
+const GroupHeaderAvatars = ({ group }: { group: GroupChat }) => {
+  const myUid    = useSelector(s => s.chat.me?.uid);
+  const allUsers = useSelector(s => s.users.list);
+  const profiles = group.participants
+    .filter(uid => uid !== myUid)
+    .map(uid => allUsers.find(u => u.uid === uid))
+    .filter(Boolean)
+    .slice(0, 3) as UserProfile[];
+
+  return (
+    <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+      {profiles.map(p => <SmallAvatar key={p.uid} profile={p} />)}
+    </div>
+  );
+};
+
+// ── 1-1 chat ─────────────────────────────────────────────────────────────────
 
 const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
   const [text, setText] = useState('');
-  const convoId         = chatId(me.uid, them.uid);
-  const messages        = useSelector(s => s.chat.conversations[them.email] ?? []);
-  const bottomRef       = useRef<HTMLDivElement>(null);
+  const convoId  = chatId(me.uid, them.uid);
+  const messages = useSelector(s => s.chat.conversations[them.email] ?? []);
 
-  // Keep conversation in sync with Firestore.
-  // Skip the initial empty cache-miss snapshot the SDK fires before server data arrives —
-  // that was setting a "loaded" flag too early and discarding the real history.
-  // Always calling setConversation on real snapshots is safe: it replaces the whole array,
-  // so background-listener messageReceived entries are superseded without duplication.
   useEffect(() => {
     actions.chat.setConversation(them.email, []);
-    const q     = query(collection(db, 'chats', convoId, 'messages'), orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
+    const q     = query(collection(db, 'chats', convoId, 'messages'),
+                        orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
     const unsub = onSnapshot(q, snap => {
       if (snap.metadata.fromCache && snap.docs.length === 0) return;
       actions.chat.setConversation(them.email, snap.docs.map(d => {
@@ -195,25 +257,15 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
     return unsub;
   }, [convoId, them.email]);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
   const send = useCallback(async () => {
     const msg = text.trim();
     if (!msg) return;
     setText('');
     actions.chat.messageSent(them.email, {
-      fromUid:   me.uid,
-      fromEmail: me.email ?? '',
-      text:      msg,
-      timestamp: Date.now(),
+      fromUid: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: Date.now(),
     });
     await addDoc(collection(db, 'chats', convoId, 'messages'), {
-      from:      me.uid,
-      fromEmail: me.email ?? '',
-      text:      msg,
-      timestamp: serverTimestamp(),
+      from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: serverTimestamp(),
     });
   }, [text, me.uid, me.email, convoId, them.email]);
 
@@ -223,32 +275,88 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
 
   return (
     <>
-      <Messages>
-        {messages.map((m, i) => {
-          const mine    = m.fromUid === me.uid;
-          const time    = new Date(m.timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-          const showSep = i === 0 || toDateKey(messages[i - 1].timestamp) !== toDateKey(m.timestamp);
-          const dateLabel = new Date(m.timestamp).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
-          return (
-            <React.Fragment key={i}>
-              {showSep && <DateSep>{dateLabel}</DateSep>}
-              <BubbleWrap $mine={mine}>
-                <Bubble $mine={mine}>{m.text}</Bubble>
-                <BubbleTime $mine={mine}>{time}</BubbleTime>
-              </BubbleWrap>
-            </React.Fragment>
-          );
-        })}
-        <div ref={bottomRef} />
-      </Messages>
+      <MessageList messages={messages} myUid={me.uid} />
       <InputRow>
-        <TextInput
-          value={text}
-          onChange={e => setText(e.target.value)}
-          onKeyDown={onKey}
-          placeholder={`Message ${them.displayName ?? them.email}…`}
-          autoFocus
-        />
+        <TextInput value={text} onChange={e => setText(e.target.value)} onKeyDown={onKey}
+          placeholder={`Message ${them.displayName ?? them.email}…`} autoFocus />
+        <SendBtn disabled={!text.trim()} onClick={send}>Send</SendBtn>
+      </InputRow>
+    </>
+  );
+};
+
+// ── Group chat ────────────────────────────────────────────────────────────────
+
+const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
+  const [text, setText] = useState('');
+  const messages = useSelector(s => s.groupChats.conversations[group.id] ?? []);
+
+  // History — skip for pending chats (no Firestore document yet)
+  useEffect(() => {
+    if (group.pending) return;
+    actions.groupChats.setGroupConversation(group.id, []);
+    const q     = query(collection(db, 'groupChats', group.id, 'messages'),
+                        orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
+    const unsub = onSnapshot(q, snap => {
+      if (snap.metadata.fromCache && snap.docs.length === 0) return;
+      actions.groupChats.setGroupConversation(group.id, snap.docs.map(d => {
+        const data = d.data();
+        return {
+          fromUid:   data.from      ?? '',
+          fromEmail: data.fromEmail ?? '',
+          text:      data.text      ?? '',
+          timestamp: data.timestamp?.toMillis() ?? Date.now(),
+        };
+      }));
+    });
+    return unsub;
+  }, [group.id, group.pending]);
+
+  const send = useCallback(async () => {
+    const msg = text.trim();
+    if (!msg) return;
+    setText('');
+
+    const message: ChatMessage = {
+      fromUid: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: Date.now(),
+    };
+    actions.groupChats.groupMessageSent(group.id, message); // optimistic + clears pending flag
+
+    if (group.pending) {
+      // First message — atomically create the group doc + first message
+      const batch    = writeBatch(db);
+      const groupRef = doc(db, 'groupChats', group.id);
+      batch.set(groupRef, {
+        participants:  group.participants,
+        nickname:      group.nickname,
+        createdBy:     group.createdBy,
+        createdAt:     serverTimestamp(),
+        lastMessageAt: serverTimestamp(),
+      });
+      const msgRef = doc(collection(db, 'groupChats', group.id, 'messages'));
+      batch.set(msgRef, {
+        from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: serverTimestamp(),
+      });
+      await batch.commit();
+    } else {
+      await addDoc(collection(db, 'groupChats', group.id, 'messages'), {
+        from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: serverTimestamp(),
+      });
+      await setDoc(doc(db, 'groupChats', group.id),
+        { lastMessageAt: serverTimestamp() }, { merge: true });
+    }
+  }, [text, me.uid, me.email, group]);
+
+  const onKey = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  }, [send]);
+
+  return (
+    <>
+      <MessageList messages={messages} myUid={me.uid} showSender />
+      <InputRow>
+        <TextInput value={text} onChange={e => setText(e.target.value)} onKeyDown={onKey}
+          placeholder={`Message ${group.nickname}…`} autoFocus />
         <SendBtn disabled={!text.trim()} onClick={send}>Send</SendBtn>
       </InputRow>
     </>
@@ -257,26 +365,42 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
 
 // ── Main export ───────────────────────────────────────────────────────────────
 
-// Chat reads who it is talking to from the slice — no `them` prop needed
 type ChatProps = { me: User };
 
 export const Chat = ({ me }: ChatProps) => {
-  const them = useSelector(s => s.chat.chattingWith);
+  const them          = useSelector(s => s.chat.chattingWith);
+  const activeGroupId = useSelector(s => s.groupChats.activeGroupId);
+  const group         = useSelector(s =>
+    activeGroupId ? (s.groupChats.list.find(g => g.id === activeGroupId) ?? null) : null
+  );
+
+  const renderHeader = () => {
+    if (them) return (
+      <>
+        <HeaderLabel>Chat with:</HeaderLabel>
+        <HeaderAvatar them={them} />
+        {them.displayName ?? them.email}
+      </>
+    );
+    if (group) return (
+      <>
+        <HeaderLabel>Chat with:</HeaderLabel>
+        <GroupHeaderAvatars group={group} />
+        {group.nickname}
+        {group.pending && <span style={{ fontSize: 11, opacity: 0.7, marginLeft: 4 }}>(draft)</span>}
+      </>
+    );
+    return 'Chat';
+  };
 
   return (
     <Wrap>
-      <Header>
-        {them ? (
-          <>
-            <HeaderLabel>Chat with:</HeaderLabel>
-            <HeaderAvatar them={them} />
-            {them.displayName ?? them.email}
-          </>
-        ) : 'Chat'}
-      </Header>
+      <Header>{renderHeader()}</Header>
       {them
         ? <ActiveChat me={me} them={them} />
-        : <Placeholder>Click a user to start chatting</Placeholder>
+        : group
+          ? <ActiveGroupChat me={me} group={group} />
+          : <Placeholder>Click a user or group to start chatting</Placeholder>
       }
     </Wrap>
   );
