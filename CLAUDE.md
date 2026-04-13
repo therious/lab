@@ -57,32 +57,19 @@ firebase.txt cleaned up, env.local commented, users view + 1-1 chat built).
   and populates recipient's grid when first message is sent (item 12)
 - Per-group background message listeners (same pattern as 1-1) for unread detection
 
-**App-origin scoping (multi-app / micro-frontend support)**
-- DECISION NEEDED before implementing: choose namespace strategy —
-  raw `window.location.origin` as Firestore key, a sanitized slug, or a
-  short app-id configured via `VITE_APP_ID` in `.env.local`
-- All Firestore reads/writes for `users`, `chats`, `groupChats` must be namespaced
-  so that users on different deployed apps (different origins) are isolated from each other
-- Likely data model: `apps/{appId}/users/{uid}`, `apps/{appId}/chats/...`,
-  `apps/{appId}/groupChats/...`
-- Security rules and firebase-setup.md must be updated to match
-- `auth.ts` and all Firestore listeners need the appId injected (pass via context or
-  a module-level constant set at boot time)
-- See discussion: the intent is to package the chat+users feature as a
-  micro-frontend reusable across multiple React apps in this monorepo,
-  each isolated by their own origin/appId, sharing one Firebase project
-
-**Multiple Firebase databases question (research, not yet decided)**
-- User wants to understand tradeoffs: one Firebase project with multiple named databases
-  (Firestore supports up to 100 per project) vs one database per Firebase project
-- Key concern: stay within free tier across multiple lightly-used apps
-- Free tier (Spark plan) is per PROJECT, not per database — a second named database
-  within the same project shares the same daily quota (50k reads, 20k writes, 1GB storage)
-- A separate Firebase project gets its own independent free tier — better isolation,
-  independent migration, but requires separate `.env.local` config per app
-- Recommendation to confirm with user before acting: use one Firebase project per app
-  (easiest mental model, independent free tiers, copy rules.txt between projects);
-  the shared-rules problem is solved by keeping firestore-rules.txt in the repo
+**App-origin scoping (DEFERRED — do after all group chat work is complete)**
+- Implement AFTER resizable splits and group chats are fully working
+- Single Firebase project + single database for now; no multiple-database complexity
+- Decided namespace strategy: use `hostname:port` as the Firestore key
+  (e.g. `localhost:5173`, `ticket.example.com:443`). Escape the colon to `_`
+  if Firestore rejects it as a document ID character, giving `localhost_5173`.
+  Derive at runtime from `window.location.hostname` + `window.location.port`.
+- Data model when implemented: `apps/{hostPort}/users/{uid}`,
+  `apps/{hostPort}/chats/...`, `apps/{hostPort}/groupChats/...`
+- `auth.ts` and all Firestore listeners will need the namespace injected
+- Security rules and firebase-setup.md to be updated at that time
+- One Firebase project is sufficient; each app's free-tier quota is shared but
+  light usage across a few apps will stay well within Spark limits
 
 ## Commands
 
