@@ -8,28 +8,23 @@ export type UserRec = { uid: string; displayName: string; email: string; };
 
 type Message = { from: string; text: string; };
 
-const chatId = (a: string, b: string) => [a, b].sort().join('__');
+export const chatId = (a: string, b: string) => [a, b].sort().join('__');
 
 // ── Styles ───────────────────────────────────────────────────────────────────
 
-const Panel = styled.div`
-  position: fixed;
-  right: 0; bottom: 0;
-  width: 320px; height: 420px;
-  background: white;
-  border: 1px solid #dadce0;
-  border-radius: 8px 0 0 0;
-  box-shadow: -2px -2px 8px rgba(0,0,0,0.18);
+const Wrap = styled.div`
   display: flex; flex-direction: column;
-  z-index: 1000;
+  height: 100%;
+  border-left: 1px solid #dadce0;
+  background: white;
 `;
 
 const Header = styled.div`
   display: flex; justify-content: space-between; align-items: center;
-  padding: 10px 12px;
+  padding: 10px 14px;
   background: #1a73e8; color: white;
-  border-radius: 8px 0 0 0;
   font-weight: bold; font-size: 14px;
+  flex-shrink: 0;
 `;
 
 const CloseBtn = styled.button`
@@ -55,6 +50,7 @@ const Bubble = styled.div<{ $mine: boolean }>`
 const InputRow = styled.div`
   display: flex; padding: 8px; gap: 6px;
   border-top: 1px solid #eee;
+  flex-shrink: 0;
 `;
 
 const TextInput = styled.input`
@@ -84,7 +80,7 @@ export const Chat = ({ me, them, onClose }: ChatProps) => {
   const convoId                 = chatId(me.uid, them.uid);
 
   useEffect(() => {
-    const q    = query(collection(db, 'chats', convoId, 'messages'), orderBy('timestamp', 'asc'));
+    const q     = query(collection(db, 'chats', convoId, 'messages'), orderBy('timestamp', 'asc'));
     const unsub = onSnapshot(q, snap => setMessages(snap.docs.map(d => d.data() as Message)));
     return unsub;
   }, [convoId]);
@@ -109,10 +105,10 @@ export const Chat = ({ me, them, onClose }: ChatProps) => {
   const label = them.displayName ?? them.email;
 
   return (
-    <Panel>
+    <Wrap>
       <Header>
         <span>Chat — {label}</span>
-        <CloseBtn onClick={onClose}>×</CloseBtn>
+        <CloseBtn onClick={onClose} title="Close chat">×</CloseBtn>
       </Header>
       <Messages>
         {messages.map((m, i) => (
@@ -130,6 +126,6 @@ export const Chat = ({ me, them, onClose }: ChatProps) => {
         />
         <SendBtn disabled={!text.trim()} onClick={send}>Send</SendBtn>
       </InputRow>
-    </Panel>
+    </Wrap>
   );
 };
