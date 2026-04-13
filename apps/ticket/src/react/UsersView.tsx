@@ -1,55 +1,80 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { collection, onSnapshot, Timestamp } from 'firebase/firestore';
+import { User } from 'firebase/auth';
 import styled from 'styled-components';
 import { db } from '../firebase';
-import { useSession } from '../auth';
+import { actions } from '../actions-integration';
+import { UserRec } from '../actions/chat-slice';
 import { MyGrid } from './MyGrid';
-import { Chat, UserRec } from './Chat';
+import { Chat } from './Chat';
 
 type FirestoreUserRec = UserRec & { photoURL: string | null; lastSeen: Timestamp | null; };
 
 // ── Layout ───────────────────────────────────────────────────────────────────
 
-const Page = styled.div<{ $chatOpen: boolean }>`
-  display: grid;
-  grid-template-columns: ${p => p.$chatOpen ? '1fr 1fr' : '1fr'};
-  grid-template-rows: 1fr;
-  height: 100%;
-  overflow: hidden;
-`;
-
-const GridPane = styled.div`
+// Outer wrapper: flex column so the header sits above the content row
+const Page = styled.div`
   display: flex;
   flex-direction: column;
+  height: 100%;
   padding: 12px;
   overflow: hidden;
+  box-sizing: border-box;
+`;
+
+const PageHeader = styled.h3`
+  margin: 0 0 8px;
+  flex-shrink: 0;
+`;
+
+// Content row: grid left, chat right, both the same height
+const ContentRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  gap: 12px;
   min-height: 0;
 `;
 
-const ChatPane = styled.div`
+// Fixed-width users pane
+const UsersPane = styled.div`
+  width: 380px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   min-height: 0;
 `;
 
-// ── Column helpers ────────────────────────────────────────────────────────────
+// Chat pane: fills remaining width up to same max as the grid
+const ChatPane = styled.div`
+  flex: 1;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+`;
+
+// ── Column defs ───────────────────────────────────────────────────────────────
 
 const lastSeenFmt = (p: any) => p.value?.toDate?.()?.toLocaleString() ?? '—';
 const lastSeenCmp = (a: Timestamp, b: Timestamp) => (a?.seconds ?? 0) - (b?.seconds ?? 0);
 
+const columnDefs = [
+  { headerName: 'Name',      field: 'displayName', flex: 1, sortable: true, filter: true },
+  { headerName: 'Email',     field: 'email',       flex: 2, sortable: true, filter: true },
+  { headerName: 'Last Seen', field: 'lastSeen',    flex: 1, sortable: true,
+    valueFormatter: lastSeenFmt, comparator: lastSeenCmp },
+];
+
+// flex:1 so the grid fills the UsersPane column
+const gridStyle = { flex: 1, width: '100%' } as React.CSSProperties;
+
 // ── Component ────────────────────────────────────────────────────────────────
 
-const gridStyle = { height: '100%', width: '100%' };
+type Props = { session: User };
 
-export const UsersView = () => {
-  const [session]                   = useSession();
-  const [users, setUsers]           = useState<FirestoreUserRec[]>([]);
-  const [chatTarget, setChatTarget] = useState<UserRec | null>(null);
-
-  // Stable ref so column defs don't need to be recreated when callback changes
-  const onChatRef = useRef(setChatTarget);
-  onChatRef.current = setChatTarget;
+export const UsersView = ({ session }: Props) => {
+  const [users, setUsers] = useState<FirestoreUserRec[]>([]);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'users'), snap =>
@@ -58,42 +83,31 @@ export const UsersView = () => {
     return unsub;
   }, []);
 
-  // Only recompute columns when the current user's uid changes
-  const columnDefs = useMemo(() => {
-    const myUid = session?.uid ?? '';
-    return [
-      { headerName: 'Name',      field: 'displayName', flex: 1, sortable: true, filter: true },
-      { headerName: 'Email',     field: 'email',       flex: 2, sortable: true, filter: true },
-      { headerName: 'Last Seen', field: 'lastSeen',    flex: 1, sortable: true,
-        valueFormatter: lastSeenFmt, comparator: lastSeenCmp },
-      { headerName: '', width: 80, sortable: false, filter: false,
-        cellRenderer: (p: any) => {
-          if (!p.data || p.data.uid === myUid) return null;
-          return (
-            <button
-              onClick={e => { e.stopPropagation(); onChatRef.current(p.data); }}
-              style={{ padding: '2px 10px', cursor: 'pointer', fontSize: 12 }}
-            >
-              Chat
-            </button>
-          );
-        },
-      },
-    ];
-  }, [session?.uid]);
+  const onRowClicked = useCallback((event: any) => {
+    const user = event.data as FirestoreUserRec;
+    console.log('UsersView onRowClicked', user, 'self?', user?.uid === session.uid);
+    if (user && user.uid !== session.uid) {
+      actions.chat.chatWith(user);
+    }
+  }, [session.uid]);
 
   return (
-    <Page $chatOpen={!!chatTarget}>
-      <GridPane>
-        <h3 style={{ margin: '0 0 8px', flexShrink: 0 }}>Users</h3>
-        <MyGrid style={gridStyle} rowData={users} columnDefs={columnDefs} dark={false} />
-      </GridPane>
-
-      {chatTarget && session && (
+    <Page>
+      <PageHeader>Users — click a row to chat</PageHeader>
+      <ContentRow>
+        <UsersPane>
+          <MyGrid
+            style={gridStyle}
+            rowData={users}
+            columnDefs={columnDefs}
+            onRowClicked={onRowClicked}
+            dark={false}
+          />
+        </UsersPane>
         <ChatPane>
-          <Chat me={session} them={chatTarget} onClose={() => setChatTarget(null)} />
+          <Chat me={session} />
         </ChatPane>
-      )}
+      </ContentRow>
     </Page>
   );
 };

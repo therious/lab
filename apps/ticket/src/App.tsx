@@ -65,7 +65,7 @@ export default function App() {
           <CenterBody>
             <Routes>
               <Route path="/" element={<Game/>}/>
-              <Route path="/users" element={<UsersView/>}/>
+              <Route path="/users" element={<UsersView session={session}/>}/>
               <Route path="/profile" element={<Profile/>}/>
               <Route path="/signout" element={<Signout/>}/>
             </Routes>
