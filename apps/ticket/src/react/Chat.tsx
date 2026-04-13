@@ -126,15 +126,16 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
   const messages        = useSelector(s => s.chat.conversations[them.email] ?? []);
   const bottomRef       = useRef<HTMLDivElement>(null);
 
-  // Load conversation history once on mount.
-  // Real-time inbound messages from the other party arrive via UsersView's background listeners.
+  // Keep conversation in sync with Firestore.
+  // Skip the initial empty cache-miss snapshot the SDK fires before server data arrives —
+  // that was setting a "loaded" flag too early and discarding the real history.
+  // Always calling setConversation on real snapshots is safe: it replaces the whole array,
+  // so background-listener messageReceived entries are superseded without duplication.
   useEffect(() => {
     actions.chat.setConversation(them.email, []);
-    let loaded = false;
     const q     = query(collection(db, 'chats', convoId, 'messages'), orderBy('timestamp', 'asc'));
     const unsub = onSnapshot(q, snap => {
-      if (loaded) return;
-      loaded = true;
+      if (snap.metadata.fromCache && snap.docs.length === 0) return;
       actions.chat.setConversation(them.email, snap.docs.map(d => {
         const data = d.data();
         return {
@@ -179,7 +180,7 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
       <Messages>
         {messages.map((m, i) => {
           const mine    = m.fromUid === me.uid;
-          const time    = new Date(m.timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+          const time    = new Date(m.timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
           const showSep = i === 0 || toDateKey(messages[i - 1].timestamp) !== toDateKey(m.timestamp);
           const dateLabel = new Date(m.timestamp).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
           return (
