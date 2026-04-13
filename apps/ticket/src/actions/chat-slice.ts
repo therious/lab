@@ -9,15 +9,16 @@ export type ChatMessage = {
 };
 
 export type ChatState = {
-  me:            UserRec | null;                // the logged-in user
-  chattingWith:  UserRec | null;               // currently selected conversation partner
-  conversations: Record<string, ChatMessage[]>; // key = partner's email address
+  me:            UserRec | null;
+  chattingWith:  UserRec | null;
+  conversations: Record<string, ChatMessage[]>; // key = partner email
+  unread:        Record<string, true>;          // emails with unseen incoming messages
 };
 
 type Creator = (...args: any[]) => unknown;
 type Reducer  = (s: ChatState, payload: any) => ChatState;
 
-const initialState: ChatState = { me: null, chattingWith: null, conversations: {} };
+const initialState: ChatState = { me: null, chattingWith: null, conversations: {}, unread: {} };
 
 const creators: Record<string, Creator> = {
   setMe:            (user: UserRec | null)                   => ({ user }),
@@ -36,16 +37,26 @@ const appendMessage = (s: ChatState, { email, message }: { email: string; messag
 });
 
 const reducers: Record<string, Reducer> = {
-  setMe:    (s, { user }) => ({ ...s, me: user }),
-  chatWith: (s, { user }) => ({ ...s, chattingWith: user }),
+  setMe: (s, { user }) => ({ ...s, me: user }),
+
+  chatWith: (s, { user }) => {
+    const unread = { ...s.unread };
+    if (user?.email) delete unread[user.email];
+    return { ...s, chattingWith: user, unread };
+  },
 
   setConversation: (s, { email, messages }) => ({
     ...s,
     conversations: { ...s.conversations, [email]: messages },
   }),
 
-  messageSent:     appendMessage,
-  messageReceived: appendMessage,
+  messageSent: appendMessage,
+
+  messageReceived: (s, { email, message }) => {
+    const next = appendMessage(s, { email, message });
+    if (s.chattingWith?.email === email) return next;
+    return { ...next, unread: { ...s.unread, [email]: true } };
+  },
 };
 
 export const sliceConfig = { name: 'chat', creators, initialState, reducers };

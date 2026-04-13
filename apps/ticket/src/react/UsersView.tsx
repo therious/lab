@@ -88,7 +88,8 @@ const columnDefs = [
 const gridStyle = { flex: 1, width: '100%' } as React.CSSProperties;
 
 const GridGlobalStyle = createGlobalStyle`
-  .ag-theme-balham .user-self { font-style: italic; color: #888; }
+  .ag-theme-balham .ag-row.user-self   { font-style: italic; color: #888; }
+  .ag-theme-balham .ag-row.user-unread { font-weight: bold; }
 `;
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -96,7 +97,8 @@ const GridGlobalStyle = createGlobalStyle`
 type Props = { session: User };
 
 export const UsersView = ({ session }: Props) => {
-  const users = useSelector(s => s.users.list);
+  const users  = useSelector(s => s.users.list);
+  const unread = useSelector(s => s.chat.unread);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'users'), snap => {
@@ -115,9 +117,10 @@ export const UsersView = ({ session }: Props) => {
     return unsub;
   }, []);
 
-  const rowClassRules  = useMemo(() => ({
-    'user-self': (p: any) => p.data?.uid === session.uid,
-  }), [session.uid]);
+  const rowClassRules = useMemo(() => ({
+    'user-self':   (p: any) => p.data?.uid === session.uid,
+    'user-unread': (p: any) => !!unread[p.data?.email],
+  }), [session.uid, unread]);
 
   const isRowSelectable = useCallback((node: any) => node.data?.uid !== session.uid, [session.uid]);
 
