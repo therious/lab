@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import { db } from '../firebase';
 import { actions, useSelector } from '../actions-integration';
 import { ChatMessage, UserRec, chatId } from '../actions/chat-slice';
+import { hashColor } from './avatar-utils';
 
 // ── Styles ───────────────────────────────────────────────────────────────────
 
@@ -25,6 +26,15 @@ const Header = styled.div`
   font-weight: bold;
   font-size: 14px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const HeaderLabel = styled.span`
+  font-weight: normal;
+  opacity: 0.85;
+  margin-right: 2px;
 `;
 
 const Placeholder = styled.div`
@@ -132,6 +142,28 @@ const SendBtn = styled.button`
   &:not(:disabled):hover { background: #1558b0; }
 `;
 
+// ── Header avatar ────────────────────────────────────────────────────────────
+
+const HeaderAvatar = ({ them }: { them: UserRec }) => {
+  const photoURL = useSelector(s => s.users.list.find(u => u.uid === them.uid)?.photoURL ?? null);
+  if (photoURL) {
+    return (
+      <img src={photoURL} referrerPolicy="no-referrer" loading="lazy"
+        style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />
+    );
+  }
+  const initial = (them.displayName || them.email || '?')[0].toUpperCase();
+  return (
+    <div style={{
+      width: 24, height: 24, borderRadius: '50%', background: hashColor(them.email),
+      color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 11, flexShrink: 0,
+    }}>
+      {initial}
+    </div>
+  );
+};
+
 // ── Active conversation ───────────────────────────────────────────────────────
 
 const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
@@ -233,7 +265,15 @@ export const Chat = ({ me }: ChatProps) => {
 
   return (
     <Wrap>
-      <Header>{them ? `Chat — ${them.displayName ?? them.email}` : 'Chat'}</Header>
+      <Header>
+        {them ? (
+          <>
+            <HeaderLabel>Chat with:</HeaderLabel>
+            <HeaderAvatar them={them} />
+            {them.displayName ?? them.email}
+          </>
+        ) : 'Chat'}
+      </Header>
       {them
         ? <ActiveChat me={me} them={them} />
         : <Placeholder>Click a user to start chatting</Placeholder>
