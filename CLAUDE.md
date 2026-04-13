@@ -17,7 +17,72 @@ At the start of each session, read these files in order to restore context:
 
 ## Current Tasks
 
-<!-- Add tasks here. Claude will work through these during sessions. -->
+### Ticket app — completed
+Items 1–5 from the original list are done (auth providers, patches removed,
+firebase.txt cleaned up, env.local commented, users view + 1-1 chat built).
+
+### Ticket app — pending implementation (implement in order, commit each separately)
+
+**Resizable splits**
+- Add `react-resizable-panels` to ticket's package.yaml
+- Replace fixed-width `UsersPane` / `ChatPane` layout in `UsersView.tsx` with
+  horizontal `PanelGroup` (users+groups left | chat right)
+- Add vertical split inside the left panel (users grid top | group chats grid bottom)
+- Both splits should be draggable and persist size across re-renders (use `Panel` defaultSize)
+
+**Group chats (items 6–12 from original list)**
+- New Redux slice: `group-chats-slice.ts` — types `GroupChat`, `GroupChatsState`;
+  actions: `setGroupChats`, `addGroupChat` (pending=true), `setGroupConversation`,
+  `groupMessageSent`, `groupMessageReceived`, `markGroupRead`
+- Register slice in `combined-slices.ts`
+- Firestore collection: `groupChats/{autoId}` with fields
+  `participants[]`, `nickname`, `createdBy`, `createdAt`, `lastMessageAt`
+  Messages subcollection identical structure to 1-1 chats
+- Switch users grid to `rowSelection="multiple"`; right-click must NOT change selection —
+  context menu operates on whatever rows are already selected
+- Right-click context menu (react-contexify, already installed) offers:
+  - "New chat with [Name]" when exactly 1 row selected (creates a named 1-person group chat)
+  - "New group chat…" when 2+ rows selected
+  - Both options open a `Modalize` nickname dialog before creating
+- Lazy instantiation: `addGroupChat` creates a Redux entry with `pending: true`;
+  Firestore document is written only when the first message is sent
+  (use a write batch: create doc + add message atomically)
+- Group chats grid columns: multi-avatar (up to 3 icons), comma-joined names,
+  nickname, last message date; pending chats shown in italics
+- `user-unread` bold rule applies identically to the group chats grid rows
+- Extend `Chat.tsx` to accept `target: {kind:'1-1'; them:UserRec} | {kind:'group'; chatId:string}`;
+  header shows multi-avatar + nickname for group chats; applies same `HISTORY_LIMIT`
+- Background listener in `UsersView`: `onSnapshot` on
+  `groupChats where participants array-contains myUid` — keeps group chats list fresh
+  and populates recipient's grid when first message is sent (item 12)
+- Per-group background message listeners (same pattern as 1-1) for unread detection
+
+**App-origin scoping (multi-app / micro-frontend support)**
+- DECISION NEEDED before implementing: choose namespace strategy —
+  raw `window.location.origin` as Firestore key, a sanitized slug, or a
+  short app-id configured via `VITE_APP_ID` in `.env.local`
+- All Firestore reads/writes for `users`, `chats`, `groupChats` must be namespaced
+  so that users on different deployed apps (different origins) are isolated from each other
+- Likely data model: `apps/{appId}/users/{uid}`, `apps/{appId}/chats/...`,
+  `apps/{appId}/groupChats/...`
+- Security rules and firebase-setup.md must be updated to match
+- `auth.ts` and all Firestore listeners need the appId injected (pass via context or
+  a module-level constant set at boot time)
+- See discussion: the intent is to package the chat+users feature as a
+  micro-frontend reusable across multiple React apps in this monorepo,
+  each isolated by their own origin/appId, sharing one Firebase project
+
+**Multiple Firebase databases question (research, not yet decided)**
+- User wants to understand tradeoffs: one Firebase project with multiple named databases
+  (Firestore supports up to 100 per project) vs one database per Firebase project
+- Key concern: stay within free tier across multiple lightly-used apps
+- Free tier (Spark plan) is per PROJECT, not per database — a second named database
+  within the same project shares the same daily quota (50k reads, 20k writes, 1GB storage)
+- A separate Firebase project gets its own independent free tier — better isolation,
+  independent migration, but requires separate `.env.local` config per app
+- Recommendation to confirm with user before acting: use one Firebase project per app
+  (easiest mental model, independent free tiers, copy rules.txt between projects);
+  the shared-rules problem is solved by keeping firestore-rules.txt in the repo
 
 ## Commands
 
