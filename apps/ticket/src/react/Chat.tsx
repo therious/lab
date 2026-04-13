@@ -49,15 +49,27 @@ const Messages = styled.div`
   min-height: 0;
 `;
 
+const BubbleWrap = styled.div<{ $mine: boolean }>`
+  display: flex;
+  flex-direction: column;
+  align-items: ${p => p.$mine ? 'flex-end' : 'flex-start'};
+  align-self:  ${p => p.$mine ? 'flex-end' : 'flex-start'};
+`;
+
 const Bubble = styled.div<{ $mine: boolean }>`
   max-width: 80%;
   padding: 7px 11px;
   border-radius: 14px;
   font-size: 13px;
-  align-self: ${p => p.$mine ? 'flex-end' : 'flex-start'};
   background: ${p => p.$mine ? '#1a73e8' : '#f1f3f4'};
   color: ${p => p.$mine ? 'white' : '#202124'};
   word-break: break-word;
+`;
+
+const BubbleTime = styled.div<{ $mine: boolean }>`
+  font-size: 10px;
+  color: #aaa;
+  margin: 1px 4px 0;
 `;
 
 const InputRow = styled.div`
@@ -164,9 +176,16 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
   return (
     <>
       <Messages>
-        {messages.map((m, i) => (
-          <Bubble key={i} $mine={m.fromUid === me.uid}>{m.text}</Bubble>
-        ))}
+        {messages.map((m, i) => {
+          const mine = m.fromUid === me.uid;
+          const time = new Date(m.timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+          return (
+            <BubbleWrap key={i} $mine={mine}>
+              <Bubble $mine={mine}>{m.text}</Bubble>
+              <BubbleTime $mine={mine}>{time}</BubbleTime>
+            </BubbleWrap>
+          );
+        })}
         <div ref={bottomRef} />
       </Messages>
       <InputRow>
