@@ -15,7 +15,7 @@ export type UsersState = {
 type Creator = (...args: any[]) => unknown;
 type Reducer  = (s: UsersState, payload: any) => UsersState;
 
-export const INACTIVITY_TIMEOUT_MS = 0.5 * 60 * 1000; // 5 minutes — never modified at runtime
+export const INACTIVITY_TIMEOUT_MS = 0.5 * 60 * 1000; // 30 seconds (set to 5*60*1000 for prod) — never modified at runtime
 
 const initialState: UsersState = {
   list: [],
