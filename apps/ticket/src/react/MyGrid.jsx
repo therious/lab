@@ -17,6 +17,7 @@ export const MyGrid = ({children=null, style, contextM=undefined, onRowClicked=u
   cbRef.current = { onRowClicked, contextM, isRowSelectable };
 
   const gridOptions = useRef({
+    rowHeight: 36,
     suppressPropertyNamesCheck: true,
     onRowClicked:      (e) => { console.log('row clicked', e.data); cbRef.current.onRowClicked?.(e); },
     onCellContextMenu: (e) => cbRef.current.contextM?.(e),
