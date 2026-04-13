@@ -275,20 +275,23 @@ export const UsersView = ({ session }: Props) => {
   useEffect(() => {
     if (!me?.uid) return;
     const q = query(collection(db, 'groupChats'), where('participants', 'array-contains', me.uid));
-    const unsub = onSnapshot(q, snap => {
-      const fetched: GroupChat[] = snap.docs.map(d => {
-        const r = d.data();
-        return {
-          id:            d.id,
-          participants:  r.participants  ?? [],
-          nickname:      r.nickname      ?? '',
-          createdBy:     r.createdBy     ?? '',
-          lastMessageAt: (r.lastMessageAt as Timestamp | null)?.toMillis() ?? null,
-          pending:       false,
-        };
-      });
-      actions.chat.setGroups(fetched);
-    });
+    const unsub = onSnapshot(q,
+      snap => {
+        const fetched: GroupChat[] = snap.docs.map(d => {
+          const r = d.data();
+          return {
+            id:            d.id,
+            participants:  r.participants  ?? [],
+            nickname:      r.nickname      ?? '',
+            createdBy:     r.createdBy     ?? '',
+            lastMessageAt: (r.lastMessageAt as Timestamp | null)?.toMillis() ?? null,
+            pending:       false,
+          };
+        });
+        actions.chat.setGroups(fetched);
+      },
+      err => console.error('[groupChats listener]', err.code, err.message),
+    );
     return unsub;
   }, [me?.uid]);
 
@@ -310,8 +313,8 @@ export const UsersView = ({ session }: Props) => {
         orderBy('timestamp', 'asc'),
         where('timestamp', '>', since),
       );
-      return onSnapshot(q, snap =>
-        snap.docChanges().forEach(change => {
+      return onSnapshot(q,
+        snap => snap.docChanges().forEach(change => {
           if (change.type !== 'added') return;
           const d = change.doc.data();
           if (d.from === me.uid) return;
@@ -321,7 +324,8 @@ export const UsersView = ({ session }: Props) => {
             text:      d.text      ?? '',
             timestamp: d.timestamp?.toMillis() ?? Date.now(),
           });
-        })
+        }),
+        err => console.error('[1-1 message listener]', user.email, err.code),
       );
     });
     return () => unsubs.forEach(u => u());
@@ -339,8 +343,8 @@ export const UsersView = ({ session }: Props) => {
         orderBy('timestamp', 'asc'),
         where('timestamp', '>', since),
       );
-      return onSnapshot(q, snap =>
-        snap.docChanges().forEach(change => {
+      return onSnapshot(q,
+        snap => snap.docChanges().forEach(change => {
           if (change.type !== 'added') return;
           const d = change.doc.data();
           if (d.from === me.uid) return;
@@ -350,7 +354,8 @@ export const UsersView = ({ session }: Props) => {
             text:      d.text      ?? '',
             timestamp: d.timestamp?.toMillis() ?? Date.now(),
           });
-        })
+        }),
+        err => console.error('[group message listener]', group.id, err.code),
       );
     });
     return () => unsubs.forEach(u => u());

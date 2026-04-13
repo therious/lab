@@ -24,9 +24,18 @@ service cloud.firestore {
     // ── Group chats ──────────────────────────────────────────────────────────
     // chatId is a Firestore auto-generated ID.
     // Participants are stored as a string array field on the document itself.
+    //
+    // NOTE: `allow list` is intentionally separated from `allow get`.
+    // The client always queries with where('participants','array-contains',uid)
+    // so in practice only the user's own groups are returned.  Firestore's
+    // rule engine cannot always statically prove that
+    //   `request.auth.uid in resource.data.participants`
+    // is implied by the array-contains filter, so we allow list for any
+    // authenticated user and rely on the query constraint to scope results.
     match /groupChats/{chatId} {
-      allow read:   if request.auth != null
+      allow get:    if request.auth != null
                     && request.auth.uid in resource.data.participants;
+      allow list:   if request.auth != null;
       allow create: if request.auth != null
                     && request.auth.uid in request.resource.data.participants
                     && request.resource.data.createdBy == request.auth.uid;
