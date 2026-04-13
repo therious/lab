@@ -20,6 +20,7 @@ export const useSession = (): [SessionRec, SetSessionFunc] => {
           displayName: user.displayName ?? user.email,
           photoURL:    user.photoURL,
           lastSeen:    serverTimestamp(),
+          isOnline:    true,
         }, { merge: true });
       }
     });
@@ -28,4 +29,10 @@ export const useSession = (): [SessionRec, SetSessionFunc] => {
   return [session, setSession];
 };
 
-export const signout = () => signOut(firebaseAuth);
+export const signout = async () => {
+  const user = firebaseAuth.currentUser;
+  if (user) {
+    await setDoc(doc(db, 'users', user.uid), { isOnline: false, lastSeen: serverTimestamp() }, { merge: true });
+  }
+  return signOut(firebaseAuth);
+};

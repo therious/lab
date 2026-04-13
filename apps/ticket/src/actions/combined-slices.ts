@@ -11,11 +11,12 @@ import {requestSlice,   RequestState,
 import {sliceConfig as localSlice,  LocalState}  from "./local-slice";
 import {sliceConfig as ticketSlice, TicketState} from './ticket-slice';
 import {sliceConfig as chatSlice,   ChatState}   from './chat-slice';
+import {sliceConfig as usersSlice,  UsersState}  from './users-slice';
 
 
 //-- app specific middlewares
 
-export const allSlices = [requestSlice, notifySlice, coverageSlice, localSlice, ticketSlice, chatSlice];
+export const allSlices = [requestSlice, notifySlice, coverageSlice, localSlice, ticketSlice, chatSlice, usersSlice];
 export const allMiddlewares = [ fatalMiddleware, coverageMiddleware, loggingMiddleware];
 export const middlewareInits = [  coverageMiddlewareInit];
 
@@ -30,5 +31,6 @@ export type TotalState = {
      local: LocalState;
     ticket: TicketState;
       chat: ChatState;
+     users: UsersState;
 }
 

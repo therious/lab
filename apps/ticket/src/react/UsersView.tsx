@@ -1,14 +1,12 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { collection, onSnapshot, Timestamp } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import styled, { createGlobalStyle } from 'styled-components';
 import { db } from '../firebase';
-import { actions } from '../actions-integration';
-import { UserRec } from '../actions/chat-slice';
+import { actions, useSelector } from '../actions-integration';
+import { UserProfile } from '../actions/users-slice';
 import { MyGrid } from './MyGrid';
 import { Chat } from './Chat';
-
-type FirestoreUserRec = UserRec & { photoURL: string | null; lastSeen: Timestamp | null; };
 
 // ── Layout ───────────────────────────────────────────────────────────────────
 
@@ -58,24 +56,32 @@ const ChatPane = styled.div`
 
 const AvatarCell = ({ value, data }: any) => {
   if (value) {
-    return <img src={value} style={{ width: 28, height: 28, borderRadius: '50%', verticalAlign: 'middle', marginTop: 2 }} />;
+    return <img src={value} referrerPolicy="no-referrer" loading="lazy"
+      style={{ width: 28, height: 28, borderRadius: '50%', verticalAlign: 'middle', marginTop: 2 }} />;
   }
   const initial = ((data?.displayName ?? data?.email ?? '?') as string)[0].toUpperCase();
   return (
-    <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#1a73e8', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, marginTop: 2 }}>
+    <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#1a73e8', color: 'white',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, marginTop: 2 }}>
       {initial}
     </div>
   );
 };
 
-const lastSeenFmt = (p: any) => p.value?.toDate?.()?.toLocaleString() ?? '—';
-const lastSeenCmp = (a: Timestamp, b: Timestamp) => (a?.seconds ?? 0) - (b?.seconds ?? 0);
+const OnlineCell = ({ value }: any) => (
+  <div style={{ width: 10, height: 10, borderRadius: '50%', margin: '9px auto 0',
+    background: value ? '#34a853' : '#dadce0' }} />
+);
+
+const lastSeenFmt = (p: any) => p.value ? new Date(p.value).toLocaleString() : '—';
+const lastSeenCmp = (a: number, b: number) => (a ?? 0) - (b ?? 0);
 
 const columnDefs = [
   { headerName: '',          field: 'photoURL',    width: 44,  cellRenderer: AvatarCell, sortable: false },
+  { headerName: '',          field: 'isOnline',    width: 32,  cellRenderer: OnlineCell, sortable: false },
   { headerName: 'Name',      field: 'displayName', flex: 1,    sortable: true, filter: true },
   { headerName: 'Email',     field: 'email',       flex: 2,    sortable: true, filter: true },
-  { headerName: 'Last Seen', field: 'lastSeen',    flex: 1,    minWidth: 160, sortable: true,
+  { headerName: 'Last Seen', field: 'lastSeen',    flex: 1,    minWidth: 160,  sortable: true,
     valueFormatter: lastSeenFmt, comparator: lastSeenCmp },
 ];
 
@@ -90,12 +96,22 @@ const GridGlobalStyle = createGlobalStyle`
 type Props = { session: User };
 
 export const UsersView = ({ session }: Props) => {
-  const [users, setUsers] = useState<FirestoreUserRec[]>([]);
+  const users = useSelector(s => s.users.list);
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'users'), snap =>
-      setUsers(snap.docs.map(d => d.data() as FirestoreUserRec))
-    );
+    const unsub = onSnapshot(collection(db, 'users'), snap => {
+      actions.users.setUsers(snap.docs.map(d => {
+        const r = d.data();
+        return {
+          uid:         r.uid         ?? '',
+          email:       r.email       ?? '',
+          displayName: r.displayName ?? r.email ?? '',
+          photoURL:    r.photoURL    ?? null,
+          lastSeen:    (r.lastSeen as Timestamp | null)?.toMillis() ?? null,
+          isOnline:    r.isOnline    ?? false,
+        } as UserProfile;
+      }));
+    });
     return unsub;
   }, []);
 
@@ -106,7 +122,7 @@ export const UsersView = ({ session }: Props) => {
   const isRowSelectable = useCallback((node: any) => node.data?.uid !== session.uid, [session.uid]);
 
   const onRowClicked = useCallback((event: any) => {
-    const user = event.data as FirestoreUserRec;
+    const user = event.data as UserProfile;
     if (user && user.uid !== session.uid) {
       actions.chat.chatWith(user);
     }
