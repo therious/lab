@@ -54,14 +54,27 @@ const ChatPane = styled.div`
 
 // ── Column defs ───────────────────────────────────────────────────────────────
 
+const AVATAR_COLORS = [
+  '#e53935', '#d81b60', '#8e24aa', '#5e35b1',
+  '#1e88e5', '#00897b', '#43a047', '#f4511e',
+  '#fb8c00', '#6d4c41', '#546e7a', '#00acc1',
+];
+
+const hashColor = (email: string): string => {
+  let h = 0;
+  for (let i = 0; i < email.length; i++) h = (h * 31 + email.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+};
+
 const AvatarCell = ({ value, data }: any) => {
   if (value) {
     return <img src={value} referrerPolicy="no-referrer" loading="lazy"
       style={{ width: 28, height: 28, borderRadius: '50%', verticalAlign: 'middle', marginTop: 2 }} />;
   }
   const initial = ((data?.displayName ?? data?.email ?? '?') as string)[0].toUpperCase();
+  const bg      = hashColor(data?.email ?? '');
   return (
-    <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#1a73e8', color: 'white',
+    <div style={{ width: 28, height: 28, borderRadius: '50%', background: bg, color: 'white',
       display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, marginTop: 2 }}>
       {initial}
     </div>
