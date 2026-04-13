@@ -1,10 +1,11 @@
 import { useEffect, useCallback, useMemo } from 'react';
-import { collection, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, where, Timestamp } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import styled, { createGlobalStyle } from 'styled-components';
 import { db } from '../firebase';
 import { actions, useSelector } from '../actions-integration';
 import { UserProfile } from '../actions/users-slice';
+import { chatId } from '../actions/chat-slice';
 import { MyGrid } from './MyGrid';
 import { Chat } from './Chat';
 
@@ -112,7 +113,9 @@ type Props = { session: User };
 export const UsersView = ({ session }: Props) => {
   const users  = useSelector(s => s.users.list);
   const unread = useSelector(s => s.chat.unread);
+  const me     = useSelector(s => s.chat.me);
 
+  // Firestore listener: keep the users list fresh
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'users'), snap => {
       actions.users.setUsers(snap.docs.map(d => {
@@ -129,6 +132,43 @@ export const UsersView = ({ session }: Props) => {
     });
     return unsub;
   }, []);
+
+  // Background listeners: one per other user so incoming messages are detected
+  // even when that conversation is not open. Re-runs only when the set of UIDs changes,
+  // not on every lastSeen heartbeat.
+  const otherUidKey = users
+    .filter(u => u.uid !== me?.uid)
+    .map(u => u.uid)
+    .sort()
+    .join(',');
+
+  useEffect(() => {
+    if (!me?.uid || !otherUidKey) return;
+    const since  = Timestamp.now();
+    const others = users.filter(u => u.uid !== me.uid);
+    const unsubs = others.map(user => {
+      const convoId = chatId(me.uid, user.uid);
+      const q = query(
+        collection(db, 'chats', convoId, 'messages'),
+        orderBy('timestamp', 'asc'),
+        where('timestamp', '>', since),
+      );
+      return onSnapshot(q, snap =>
+        snap.docChanges().forEach(change => {
+          if (change.type !== 'added') return;
+          const d = change.doc.data();
+          if (d.from === me.uid) return;
+          actions.chat.messageReceived(user.email, {
+            fromUid:   d.from      ?? '',
+            fromEmail: d.fromEmail ?? '',
+            text:      d.text      ?? '',
+            timestamp: d.timestamp?.toMillis() ?? Date.now(),
+          });
+        })
+      );
+    });
+    return () => unsubs.forEach(u => u());
+  }, [otherUidKey, me?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const rowClassRules = useMemo(() => ({
     'user-self':   (p: any) => p.data?.uid === session.uid,

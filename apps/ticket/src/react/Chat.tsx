@@ -4,9 +4,7 @@ import { User } from 'firebase/auth';
 import styled from 'styled-components';
 import { db } from '../firebase';
 import { actions, useSelector } from '../actions-integration';
-import { ChatMessage, UserRec } from '../actions/chat-slice';
-
-const chatId = (a: string, b: string) => [a, b].sort().join('__');
+import { ChatMessage, UserRec, chatId } from '../actions/chat-slice';
 
 // ── Styles ───────────────────────────────────────────────────────────────────
 
@@ -128,41 +126,27 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
   const messages        = useSelector(s => s.chat.conversations[them.email] ?? []);
   const bottomRef       = useRef<HTMLDivElement>(null);
 
+  // Load conversation history once on mount.
+  // Real-time inbound messages from the other party arrive via UsersView's background listeners.
   useEffect(() => {
     actions.chat.setConversation(them.email, []);
-    let initialLoad = true;
+    let loaded = false;
     const q     = query(collection(db, 'chats', convoId, 'messages'), orderBy('timestamp', 'asc'));
     const unsub = onSnapshot(q, snap => {
-      if (initialLoad) {
-        initialLoad = false;
-        // Bulk-load history on first snapshot (setConversation keeps the log readable)
-        actions.chat.setConversation(them.email, snap.docs.map(d => {
-          const data = d.data();
-          return {
-            fromUid:   data.from      ?? '',
-            fromEmail: data.fromEmail ?? '',
-            text:      data.text      ?? '',
-            timestamp: data.timestamp?.toMillis() ?? Date.now(),
-          };
-        }));
-      } else {
-        // Subsequent snapshots: only added docs from the other party
-        // (own messages are already in state via messageSent)
-        snap.docChanges().forEach(change => {
-          if (change.type !== 'added') return;
-          const data = change.doc.data();
-          if (data.from === me.uid) return;
-          actions.chat.messageReceived(them.email, {
-            fromUid:   data.from      ?? '',
-            fromEmail: data.fromEmail ?? '',
-            text:      data.text      ?? '',
-            timestamp: data.timestamp?.toMillis() ?? Date.now(),
-          });
-        });
-      }
+      if (loaded) return;
+      loaded = true;
+      actions.chat.setConversation(them.email, snap.docs.map(d => {
+        const data = d.data();
+        return {
+          fromUid:   data.from      ?? '',
+          fromEmail: data.fromEmail ?? '',
+          text:      data.text      ?? '',
+          timestamp: data.timestamp?.toMillis() ?? Date.now(),
+        };
+      }));
     });
     return unsub;
-  }, [convoId, them.email, me.uid]);
+  }, [convoId, them.email]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
