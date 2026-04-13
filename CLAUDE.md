@@ -18,58 +18,28 @@ At the start of each session, read these files in order to restore context:
 ## Current Tasks
 
 ### Ticket app — completed
-Items 1–5 from the original list are done (auth providers, patches removed,
-firebase.txt cleaned up, env.local commented, users view + 1-1 chat built).
+All chat features are implemented and working:
+- Auth, users grid, 1-1 chat with history + unread indicators
+- Resizable splits (custom HSplit/VSplit)
+- Group chats: create via right-click context menu, nickname dialog, lazy Firestore
+  instantiation (writeBatch on first message), per-group unread detection
+- Unified chat Redux slice (`chat-slice.ts`) — groups and 1-1 state in one place
+- Avatars with live status dots (green/amber/grey) everywhere: user grid, group grid,
+  chat header, message bubbles in group chats
+- Send error UI (red ErrorBar) with try/catch in both ActiveChat and ActiveGroupChat
 
-### Ticket app — pending implementation (implement in order, commit each separately)
+### Ticket app — deferred
 
-**Resizable splits**
-- Add `react-resizable-panels` to ticket's package.yaml
-- Replace fixed-width `UsersPane` / `ChatPane` layout in `UsersView.tsx` with
-  horizontal `PanelGroup` (users+groups left | chat right)
-- Add vertical split inside the left panel (users grid top | group chats grid bottom)
-- Both splits should be draggable and persist size across re-renders (use `Panel` defaultSize)
-
-**Group chats (items 6–12 from original list)**
-- New Redux slice: `group-chats-slice.ts` — types `GroupChat`, `GroupChatsState`;
-  actions: `setGroupChats`, `addGroupChat` (pending=true), `setGroupConversation`,
-  `groupMessageSent`, `groupMessageReceived`, `markGroupRead`
-- Register slice in `combined-slices.ts`
-- Firestore collection: `groupChats/{autoId}` with fields
-  `participants[]`, `nickname`, `createdBy`, `createdAt`, `lastMessageAt`
-  Messages subcollection identical structure to 1-1 chats
-- Switch users grid to `rowSelection="multiple"`; right-click must NOT change selection —
-  context menu operates on whatever rows are already selected
-- Right-click context menu (react-contexify, already installed) offers:
-  - "New chat with [Name]" when exactly 1 row selected (creates a named 1-person group chat)
-  - "New group chat…" when 2+ rows selected
-  - Both options open a `Modalize` nickname dialog before creating
-- Lazy instantiation: `addGroupChat` creates a Redux entry with `pending: true`;
-  Firestore document is written only when the first message is sent
-  (use a write batch: create doc + add message atomically)
-- Group chats grid columns: multi-avatar (up to 3 icons), comma-joined names,
-  nickname, last message date; pending chats shown in italics
-- `user-unread` bold rule applies identically to the group chats grid rows
-- Extend `Chat.tsx` to accept `target: {kind:'1-1'; them:UserRec} | {kind:'group'; chatId:string}`;
-  header shows multi-avatar + nickname for group chats; applies same `HISTORY_LIMIT`
-- Background listener in `UsersView`: `onSnapshot` on
-  `groupChats where participants array-contains myUid` — keeps group chats list fresh
-  and populates recipient's grid when first message is sent (item 12)
-- Per-group background message listeners (same pattern as 1-1) for unread detection
-
-**App-origin scoping (DEFERRED — do after all group chat work is complete)**
-- Implement AFTER resizable splits and group chats are fully working
-- Single Firebase project + single database for now; no multiple-database complexity
-- Decided namespace strategy: use `hostname:port` as the Firestore key
-  (e.g. `localhost:5173`, `ticket.example.com:443`). Escape the colon to `_`
-  if Firestore rejects it as a document ID character, giving `localhost_5173`.
-  Derive at runtime from `window.location.hostname` + `window.location.port`.
-- Data model when implemented: `apps/{hostPort}/users/{uid}`,
-  `apps/{hostPort}/chats/...`, `apps/{hostPort}/groupChats/...`
-- `auth.ts` and all Firestore listeners will need the namespace injected
-- Security rules and firebase-setup.md to be updated at that time
-- One Firebase project is sufficient; each app's free-tier quota is shared but
-  light usage across a few apps will stay well within Spark limits
+**App-origin scoping (implement when ready to package chat as a micro-frontend)**
+- Namespace all Firestore paths under `apps/{hostPort}/...` so multiple apps on
+  different origins share one Firebase project without data collision
+- Strategy: derive key at runtime from `window.location.hostname + '_' + window.location.port`
+  (colon escaped to `_` for Firestore document ID safety)
+- Data model: `apps/{hostPort}/users/{uid}`, `apps/{hostPort}/chats/...`,
+  `apps/{hostPort}/groupChats/...`
+- Touch points: `auth.ts`, all Firestore collection refs in `UsersView.tsx` and `Chat.tsx`,
+  `actions-integration/index.tsx`, security rules, `firebase-setup.md`
+- Single Firebase project is sufficient; Spark-plan quota is shared but adequate
 
 ## Commands
 
