@@ -15,9 +15,10 @@ import {sliceConfig as usersSlice,  UsersState}  from './users-slice';
 
 
 //-- app specific middlewares
+import { chatMiddleware } from './chat-middleware';
 
 export const allSlices = [requestSlice, notifySlice, coverageSlice, localSlice, ticketSlice, chatSlice, usersSlice];
-export const allMiddlewares = [ fatalMiddleware, coverageMiddleware, loggingMiddleware];
+export const allMiddlewares = [ fatalMiddleware, coverageMiddleware, chatMiddleware, loggingMiddleware];
 export const middlewareInits = [  coverageMiddlewareInit];
 
 // when I get smarter about deriving types in typescript I can presumably fix this (he claims)

@@ -8,13 +8,19 @@ export type UserProfile = {
 };
 
 export type UsersState = {
-  list: UserProfile[];
+  list:              UserProfile[];
+  inactivityTimeout: number; // ms — user is considered idle once lastSeen is older than this
 };
 
 type Creator = (...args: any[]) => unknown;
 type Reducer  = (s: UsersState, payload: any) => UsersState;
 
-const initialState: UsersState = { list: [] };
+export const INACTIVITY_TIMEOUT_MS = 0.5 * 60 * 1000; // 5 minutes — never modified at runtime
+
+const initialState: UsersState = {
+  list: [],
+  inactivityTimeout: INACTIVITY_TIMEOUT_MS,
+};
 
 const creators: Record<string, Creator> = {
   setUsers: (users: UserProfile[]) => ({ users }),

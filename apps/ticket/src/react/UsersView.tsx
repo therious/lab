@@ -4,7 +4,7 @@ import { User } from 'firebase/auth';
 import styled, { createGlobalStyle } from 'styled-components';
 import { db } from '../firebase';
 import { actions, useSelector } from '../actions-integration';
-import { UserProfile } from '../actions/users-slice';
+import { UserProfile, INACTIVITY_TIMEOUT_MS } from '../actions/users-slice';
 import { chatId } from '../actions/chat-slice';
 import { MyGrid } from './MyGrid';
 import { Chat } from './Chat';
@@ -72,10 +72,14 @@ const AvatarCell = ({ value, data }: any) => {
   );
 };
 
-const OnlineCell = ({ value }: any) => (
-  <div style={{ width: 10, height: 10, borderRadius: '50%', margin: '9px auto 0',
-    background: value ? '#34a853' : '#dadce0' }} />
-);
+const OnlineCell = ({ value, data }: any) => {
+  let bg = '#dadce0'; // offline
+  if (value) {
+    const idle = data?.lastSeen && (Date.now() - data.lastSeen) > INACTIVITY_TIMEOUT_MS;
+    bg = idle ? '#f9a825' : '#34a853'; // amber = idle, green = active
+  }
+  return <div style={{ width: 10, height: 10, borderRadius: '50%', margin: '9px auto 0', background: bg }} />;
+};
 
 const lastSeenFmt = (p: any) => p.value ? new Date(p.value).toLocaleString() : '—';
 const lastSeenCmp = (a: number, b: number) => (a ?? 0) - (b ?? 0);
