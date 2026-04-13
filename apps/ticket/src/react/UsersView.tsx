@@ -56,13 +56,26 @@ const ChatPane = styled.div`
 
 // ── Column defs ───────────────────────────────────────────────────────────────
 
+const AvatarCell = ({ value, data }: any) => {
+  if (value) {
+    return <img src={value} style={{ width: 28, height: 28, borderRadius: '50%', verticalAlign: 'middle', marginTop: 2 }} />;
+  }
+  const initial = ((data?.displayName ?? data?.email ?? '?') as string)[0].toUpperCase();
+  return (
+    <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#1a73e8', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, marginTop: 2 }}>
+      {initial}
+    </div>
+  );
+};
+
 const lastSeenFmt = (p: any) => p.value?.toDate?.()?.toLocaleString() ?? '—';
 const lastSeenCmp = (a: Timestamp, b: Timestamp) => (a?.seconds ?? 0) - (b?.seconds ?? 0);
 
 const columnDefs = [
-  { headerName: 'Name',      field: 'displayName', flex: 1, sortable: true, filter: true },
-  { headerName: 'Email',     field: 'email',       flex: 2, sortable: true, filter: true },
-  { headerName: 'Last Seen', field: 'lastSeen',    flex: 1, sortable: true,
+  { headerName: '',          field: 'photoURL',    width: 44,  cellRenderer: AvatarCell, sortable: false },
+  { headerName: 'Name',      field: 'displayName', flex: 1,    sortable: true, filter: true },
+  { headerName: 'Email',     field: 'email',       flex: 2,    sortable: true, filter: true },
+  { headerName: 'Last Seen', field: 'lastSeen',    flex: 1,    sortable: true,
     valueFormatter: lastSeenFmt, comparator: lastSeenCmp },
 ];
 

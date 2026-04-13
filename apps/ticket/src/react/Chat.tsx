@@ -99,20 +99,22 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
   const messages        = useSelector(s => s.chat.conversations[them.email] ?? []);
   const bottomRef       = useRef<HTMLDivElement>(null);
 
-  // Sync Firestore → Redux on every snapshot
+  // Sync Firestore → Redux using docChanges so only new messages are appended.
+  // setConversation([]) on mount clears any stale messages from a previous visit.
   useEffect(() => {
+    actions.chat.setConversation(them.email, []);
     const q     = query(collection(db, 'chats', convoId, 'messages'), orderBy('timestamp', 'asc'));
     const unsub = onSnapshot(q, snap => {
-      const msgs: ChatMessage[] = snap.docs.map(d => {
-        const data = d.data();
-        return {
+      snap.docChanges().forEach(change => {
+        if (change.type !== 'added') return;
+        const data = change.doc.data();
+        actions.chat.addMessage(them.email, {
           fromUid:   data.from      ?? '',
           fromEmail: data.fromEmail ?? '',
           text:      data.text      ?? '',
           timestamp: data.timestamp?.toMillis() ?? Date.now(),
-        };
+        });
       });
-      actions.chat.setConversation(them.email, msgs);
     });
     return unsub;
   }, [convoId, them.email]);
