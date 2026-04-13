@@ -9,6 +9,7 @@ export type ChatMessage = {
 };
 
 export type ChatState = {
+  me:            UserRec | null;                // the logged-in user
   chattingWith:  UserRec | null;               // currently selected conversation partner
   conversations: Record<string, ChatMessage[]>; // key = partner's email address
 };
@@ -16,15 +17,17 @@ export type ChatState = {
 type Creator = (...args: any[]) => unknown;
 type Reducer  = (s: ChatState, payload: any) => ChatState;
 
-const initialState: ChatState = { chattingWith: null, conversations: {} };
+const initialState: ChatState = { me: null, chattingWith: null, conversations: {} };
 
 const creators: Record<string, Creator> = {
+  setMe:           (user: UserRec | null)                     => ({ user }),
   chatWith:        (user: UserRec | null)                     => ({ user }),
   setConversation: (email: string, messages: ChatMessage[])   => ({ email, messages }),
   addMessage:      (email: string, message: ChatMessage)      => ({ email, message }),
 };
 
 const reducers: Record<string, Reducer> = {
+  setMe:    (s, { user }) => ({ ...s, me: user }),
   chatWith: (s, { user }) => ({ ...s, chattingWith: user }),
 
   setConversation: (s, { email, messages }) => ({

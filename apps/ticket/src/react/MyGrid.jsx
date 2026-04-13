@@ -9,20 +9,18 @@ export const CheckboxRenderer = ({node, column, value}) => {
   return <input type="checkbox" onChange={click} checked={value ?? false}/>;
 };
 
-export const MyGrid = ({children=null, style, contextM=undefined, onRowClicked=undefined, rowData, columnDefs, getRowNodeId=undefined, dark=true}) => {
+export const MyGrid = ({children=null, style, contextM=undefined, onRowClicked=undefined, rowData, columnDefs, getRowNodeId=undefined, dark=true, rowSelection=undefined, isRowSelectable=undefined, rowClassRules=undefined}) => {
   const gridRef = useRef(null);
   const onReady = useCallback(e => { console.log('grid ready', e); }, []);
 
-  // Keep a ref to the latest callbacks so gridOptions (created once) never goes stale
-  const cbRef = useRef({ onRowClicked, contextM });
-  cbRef.current = { onRowClicked, contextM };
+  const cbRef = useRef({ onRowClicked, contextM, isRowSelectable });
+  cbRef.current = { onRowClicked, contextM, isRowSelectable };
 
-  // gridOptions is created once — event handlers delegate to the ref so ag-grid
-  // always calls the latest function without recreating the options object
   const gridOptions = useRef({
     suppressPropertyNamesCheck: true,
-    onRowClicked:       (e) => { console.log('row clicked', e.data); cbRef.current.onRowClicked?.(e); },
-    onCellContextMenu:  (e) => cbRef.current.contextM?.(e),
+    onRowClicked:      (e) => { console.log('row clicked', e.data); cbRef.current.onRowClicked?.(e); },
+    onCellContextMenu: (e) => cbRef.current.contextM?.(e),
+    isRowSelectable:   (node) => cbRef.current.isRowSelectable ? cbRef.current.isRowSelectable(node) : true,
   }).current;
 
   const cls = `ag-theme-balham${dark ? '-dark' : ''}`;
@@ -38,6 +36,8 @@ export const MyGrid = ({children=null, style, contextM=undefined, onRowClicked=u
         rowData={rowData}
         getRowNodeId={getRowNodeId}
         onGridReady={onReady}
+        rowSelection={rowSelection}
+        rowClassRules={rowClassRules}
       />
     </div>
   );

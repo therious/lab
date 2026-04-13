@@ -2,6 +2,7 @@ import { useState, useEffect }               from 'react';
 import { User, signOut, onAuthStateChanged } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp }      from 'firebase/firestore';
 import { firebaseAuth, db }                  from './firebase';
+import { actions }                           from './actions-integration';
 
 type SessionRec     = User | null;
 type SetSessionFunc = (session: SessionRec) => void;
@@ -11,8 +12,8 @@ export const useSession = (): [SessionRec, SetSessionFunc] => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(firebaseAuth, user => {
       setSession(user);
+      actions.chat.setMe(user ? { uid: user.uid, email: user.email ?? '', displayName: user.displayName ?? user.email ?? '' } : null);
       if (user) {
-        // Upsert user profile so others can see who is around
         setDoc(doc(db, 'users', user.uid), {
           uid:         user.uid,
           email:       user.email,

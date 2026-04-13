@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { collection, onSnapshot, Timestamp } from 'firebase/firestore';
 import { User } from 'firebase/auth';
-import styled from 'styled-components';
+import styled, { createGlobalStyle } from 'styled-components';
 import { db } from '../firebase';
 import { actions } from '../actions-integration';
 import { UserRec } from '../actions/chat-slice';
@@ -66,8 +66,11 @@ const columnDefs = [
     valueFormatter: lastSeenFmt, comparator: lastSeenCmp },
 ];
 
-// flex:1 so the grid fills the UsersPane column
 const gridStyle = { flex: 1, width: '100%' } as React.CSSProperties;
+
+const GridGlobalStyle = createGlobalStyle`
+  .ag-theme-balham .user-self { font-style: italic; color: #888; }
+`;
 
 // ── Component ────────────────────────────────────────────────────────────────
 
@@ -83,9 +86,14 @@ export const UsersView = ({ session }: Props) => {
     return unsub;
   }, []);
 
+  const rowClassRules  = useMemo(() => ({
+    'user-self': (p: any) => p.data?.uid === session.uid,
+  }), [session.uid]);
+
+  const isRowSelectable = useCallback((node: any) => node.data?.uid !== session.uid, [session.uid]);
+
   const onRowClicked = useCallback((event: any) => {
     const user = event.data as FirestoreUserRec;
-    console.log('UsersView onRowClicked', user, 'self?', user?.uid === session.uid);
     if (user && user.uid !== session.uid) {
       actions.chat.chatWith(user);
     }
@@ -93,6 +101,7 @@ export const UsersView = ({ session }: Props) => {
 
   return (
     <Page>
+      <GridGlobalStyle />
       <PageHeader>Users — click a row to chat</PageHeader>
       <ContentRow>
         <UsersPane>
@@ -101,6 +110,9 @@ export const UsersView = ({ session }: Props) => {
             rowData={users}
             columnDefs={columnDefs}
             onRowClicked={onRowClicked}
+            rowSelection="single"
+            isRowSelectable={isRowSelectable}
+            rowClassRules={rowClassRules}
             dark={false}
           />
         </UsersPane>
