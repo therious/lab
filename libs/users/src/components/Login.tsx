@@ -3,9 +3,9 @@ import {
   signInWithPopup, GoogleAuthProvider,
   signInWithEmailAndPassword, createUserWithEmailAndPassword,
   sendSignInLinkToEmail, signInWithEmailLink, isSignInWithEmailLink,
+  Auth,
 } from 'firebase/auth';
 import styled from 'styled-components';
-import { firebaseAuth } from '../firebase';
 
 const EMAIL_KEY = 'ticket:emailForSignIn';
 
@@ -110,7 +110,7 @@ const Msg = styled.p<{ $error?: boolean }>`
 
 type Mode = 'password' | 'link';
 
-export const Login = () => {
+export const Login = ({ auth }: { auth: Auth }) => {
   const [mode, setMode]       = useState<Mode>('password');
   const [email, setEmail]     = useState('');
   const [password, setPassword] = useState('');
@@ -123,9 +123,9 @@ export const Login = () => {
 
   // Complete magic-link sign-in when user returns from email link
   useEffect(() => {
-    if (!isSignInWithEmailLink(firebaseAuth, window.location.href)) return;
+    if (!isSignInWithEmailLink(auth, window.location.href)) return;
     const saved = localStorage.getItem(EMAIL_KEY) ?? window.prompt('Confirm your email:') ?? '';
-    signInWithEmailLink(firebaseAuth, saved, window.location.href)
+    signInWithEmailLink(auth, saved, window.location.href)
       .then(() => {
         localStorage.removeItem(EMAIL_KEY);
         window.history.replaceState({}, '', window.location.pathname);
@@ -134,21 +134,21 @@ export const Login = () => {
   }, []);
 
   const signInGoogle = useCallback(() =>
-    signInWithPopup(firebaseAuth, new GoogleAuthProvider()).catch(e => fail(e.message)), []);
+    signInWithPopup(auth, new GoogleAuthProvider()).catch(e => fail(e.message)), []);
 
   const signInPassword = useCallback(async () => {
-    try { await signInWithEmailAndPassword(firebaseAuth, email, password); }
+    try { await signInWithEmailAndPassword(auth, email, password); }
     catch(e: any) { fail(e.message); }
   }, [email, password]);
 
   const createAccount = useCallback(async () => {
-    try { await createUserWithEmailAndPassword(firebaseAuth, email, password); }
+    try { await createUserWithEmailAndPassword(auth, email, password); }
     catch(e: any) { fail(e.message); }
   }, [email, password]);
 
   const sendLink = useCallback(async () => {
     try {
-      await sendSignInLinkToEmail(firebaseAuth, email, actionCodeSettings);
+      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
       localStorage.setItem(EMAIL_KEY, email);
       setLinkSent(true);
       ok(`Link sent to ${email} — check your inbox.`);

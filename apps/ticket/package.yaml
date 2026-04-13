@@ -4,6 +4,7 @@ private: true
 dependencies:
   '@therious/actions': workspace:*
   '@therious/ag-grid': workspace:*
+  '@therious/users':   workspace:*
   '@therious/boot': workspace:*
   '@therious/components': workspace:*
   '@therious/fsm': workspace:*

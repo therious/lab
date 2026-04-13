@@ -3,10 +3,9 @@ import { collection, addDoc, doc, setDoc, writeBatch,
          query, orderBy, limitToLast, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import styled from 'styled-components';
-import { db } from '../firebase';
-import { actions, useSelector } from '../actions-integration';
-import { ChatMessage, UserRec, GroupChat, chatId, HISTORY_LIMIT } from '../actions/chat-slice';
-import { UserProfile, INACTIVITY_TIMEOUT_MS } from '../actions/users-slice';
+import { useUsersCtx } from '../context';
+import { ChatMessage, UserRec, GroupChat, chatId, HISTORY_LIMIT } from '../slices/chat-slice';
+import { UserProfile, INACTIVITY_TIMEOUT_MS } from '../slices/users-slice';
 import { hashColor, statusDotColor } from './avatar-utils';
 
 // ── Styles ───────────────────────────────────────────────────────────────────
@@ -168,7 +167,6 @@ const ErrorBar = styled.div`
 `;
 
 // ── Shared avatar with status dot ────────────────────────────────────────────
-// size: px value for width/height. dotSize scales proportionally.
 
 type AvatarProps = {
   profile:  UserProfile | null;
@@ -221,8 +219,9 @@ const Avatar = ({ profile, fallback, size = 24 }: AvatarProps) => {
 
 const MessageList = ({ messages, myUid, showAvatars = false }:
     { messages: ChatMessage[]; myUid: string; showAvatars?: boolean }) => {
+  const { useSelector } = useUsersCtx();
   const bottomRef  = useRef<HTMLDivElement>(null);
-  const allUsers   = useSelector(s => s.users.list);
+  const allUsers   = useSelector((s: any) => s.users.list);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   return (
@@ -234,7 +233,7 @@ const MessageList = ({ messages, myUid, showAvatars = false }:
         const showSep   = i === 0 || toDateKey(messages[i - 1].timestamp) !== toDateKey(m.timestamp);
         const dateLabel = new Date(m.timestamp).toLocaleDateString(undefined,
           { weekday: 'long', month: 'long', day: 'numeric' });
-        const profile   = allUsers.find(u => u.uid === m.fromUid) ?? null;
+        const profile   = allUsers.find((u: UserProfile) => u.uid === m.fromUid) ?? null;
 
         const bubble = (
           <BubbleWrap $mine={mine}>
@@ -266,22 +265,24 @@ const MessageList = ({ messages, myUid, showAvatars = false }:
 // ── Header avatars ────────────────────────────────────────────────────────────
 
 const HeaderAvatar = ({ them }: { them: UserRec }) => {
-  const profile = useSelector(s => s.users.list.find(u => u.uid === them.uid) ?? null);
+  const { useSelector } = useUsersCtx();
+  const profile = useSelector((s: any) => s.users.list.find((u: UserProfile) => u.uid === them.uid) ?? null);
   return <Avatar profile={profile} fallback={them} size={24} />;
 };
 
 const GroupHeaderAvatars = ({ group }: { group: GroupChat }) => {
-  const myUid    = useSelector(s => s.chat.me?.uid);
-  const allUsers = useSelector(s => s.users.list);
+  const { useSelector } = useUsersCtx();
+  const myUid    = useSelector((s: any) => s.chat.me?.uid);
+  const allUsers = useSelector((s: any) => s.users.list);
   const profiles = group.participants
-    .filter(uid => uid !== myUid)
-    .map(uid => allUsers.find(u => u.uid === uid) ?? null)
-    .filter((p): p is UserProfile => p !== null)
+    .filter((uid: string) => uid !== myUid)
+    .map((uid: string) => allUsers.find((u: UserProfile) => u.uid === uid) ?? null)
+    .filter((p: UserProfile | null): p is UserProfile => p !== null)
     .slice(0, 3);
 
   return (
     <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-      {profiles.map(p => <Avatar key={p.uid} profile={p} fallback={p} size={24} />)}
+      {profiles.map((p: UserProfile) => <Avatar key={p.uid} profile={p} fallback={p} size={24} />)}
     </div>
   );
 };
@@ -289,10 +290,11 @@ const GroupHeaderAvatars = ({ group }: { group: GroupChat }) => {
 // ── 1-1 chat ─────────────────────────────────────────────────────────────────
 
 const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
+  const { db, actions, useSelector } = useUsersCtx();
   const [text, setText]       = useState('');
   const [sendErr, setSendErr] = useState<string | null>(null);
   const convoId  = chatId(me.uid, them.uid);
-  const messages = useSelector(s => s.chat.conversations[them.email] ?? []);
+  const messages = useSelector((s: any) => s.chat.conversations[them.email] ?? []);
 
   useEffect(() => {
     actions.chat.setConversation(them.email, []);
@@ -301,7 +303,7 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
     const unsub = onSnapshot(q,
       snap => {
         if (snap.metadata.fromCache && snap.docs.length === 0) return;
-        actions.chat.setConversation(them.email, snap.docs.map(d => {
+        actions.chat.setConversation(them.email, snap.docs.map((d: any) => {
           const data = d.data();
           return {
             fromUid:   data.from      ?? '',
@@ -314,7 +316,7 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
       err => setSendErr(`History unavailable: ${err.code}`),
     );
     return unsub;
-  }, [convoId, them.email]);
+  }, [convoId, them.email]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const send = useCallback(async () => {
     const msg = text.trim();
@@ -331,7 +333,7 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
     } catch (e: any) {
       setSendErr(`Send failed: ${e?.code ?? e?.message ?? 'unknown error'}`);
     }
-  }, [text, me.uid, me.email, convoId, them.email]);
+  }, [text, me.uid, me.email, convoId, them.email, db, actions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onKey = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
@@ -353,9 +355,10 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
 // ── Group chat ────────────────────────────────────────────────────────────────
 
 const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
+  const { db, actions, useSelector } = useUsersCtx();
   const [text, setText]       = useState('');
   const [sendErr, setSendErr] = useState<string | null>(null);
-  const messages = useSelector(s => s.chat.conversations[group.id] ?? []);
+  const messages = useSelector((s: any) => s.chat.conversations[group.id] ?? []);
 
   // History — skip for pending chats (no Firestore document yet)
   useEffect(() => {
@@ -366,7 +369,7 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
     const unsub = onSnapshot(q,
       snap => {
         if (snap.metadata.fromCache && snap.docs.length === 0) return;
-        actions.chat.setConversation(group.id, snap.docs.map(d => {
+        actions.chat.setConversation(group.id, snap.docs.map((d: any) => {
           const data = d.data();
           return {
             fromUid:   data.from      ?? '',
@@ -379,7 +382,7 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
       err => setSendErr(`History unavailable: ${err.code}`),
     );
     return unsub;
-  }, [group.id, group.pending]);
+  }, [group.id, group.pending]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const send = useCallback(async () => {
     const msg = text.trim();
@@ -390,11 +393,10 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
     const message: ChatMessage = {
       fromUid: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: Date.now(),
     };
-    actions.chat.groupMessageSent(group.id, message); // optimistic + clears pending flag
+    actions.chat.groupMessageSent(group.id, message);
 
     try {
       if (group.pending) {
-        // First message — atomically create the group doc + first message
         const batch    = writeBatch(db);
         const groupRef = doc(db, 'groupChats', group.id);
         batch.set(groupRef, {
@@ -419,7 +421,7 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
     } catch (e: any) {
       setSendErr(`Send failed: ${e?.code ?? e?.message ?? 'unknown error'}`);
     }
-  }, [text, me.uid, me.email, group]);
+  }, [text, me.uid, me.email, group, db, actions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onKey = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
@@ -443,11 +445,12 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
 type ChatProps = { me: User };
 
 export const Chat = ({ me }: ChatProps) => {
-  const active        = useSelector(s => s.chat.active);
-  const them          = active?.kind === '1-1'    ? active.user : null;
-  const activeGroupId = active?.kind === 'group'  ? active.id   : null;
-  const group         = useSelector(s =>
-    activeGroupId ? (s.chat.groups.find(g => g.id === activeGroupId) ?? null) : null
+  const { useSelector } = useUsersCtx();
+  const active        = useSelector((s: any) => s.chat.active);
+  const them          = active?.kind === '1-1'   ? active.user : null;
+  const activeGroupId = active?.kind === 'group' ? active.id   : null;
+  const group         = useSelector((s: any) =>
+    activeGroupId ? (s.chat.groups.find((g: GroupChat) => g.id === activeGroupId) ?? null) : null
   );
 
   const renderHeader = () => {

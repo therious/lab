@@ -10,21 +10,18 @@ import {requestSlice,   RequestState,
 // -- app specific slices --
 import {sliceConfig as localSlice,  LocalState}  from "./local-slice";
 import {sliceConfig as ticketSlice, TicketState} from './ticket-slice';
-import {sliceConfig as chatSlice,  ChatState}  from './chat-slice';
-import {sliceConfig as usersSlice, UsersState} from './users-slice';
 
+// -- users library slices --
+import { chatSlice, usersSlice } from '@therious/users';
+import type { ChatState, UsersState } from '@therious/users';
 
-//-- app specific middlewares
-import { chatMiddleware } from './chat-middleware';
+//-- middlewares
+import { chatMiddleware } from '@therious/users';
 
 export const allSlices = [requestSlice, notifySlice, coverageSlice, localSlice, ticketSlice, chatSlice, usersSlice];
 export const allMiddlewares = [ fatalMiddleware, coverageMiddleware, chatMiddleware, loggingMiddleware];
 export const middlewareInits = [  coverageMiddlewareInit];
 
-// when I get smarter about deriving types in typescript I can presumably fix this (he claims)
-// but the important thing is it makes every part of state known
-//There is a source of truth problem, I need to derive the keys from the slice names directly encountered issues
-// with non-literals
 export type TotalState = {
    request: RequestState;
     notify: NotifyState;
@@ -34,4 +31,3 @@ export type TotalState = {
       chat: ChatState;
      users: UsersState;
 }
-

@@ -4,10 +4,9 @@ import { User } from 'firebase/auth';
 import styled, { createGlobalStyle } from 'styled-components';
 import { Menu, Item, useContextMenu } from 'react-contexify';
 import 'react-contexify/ReactContexify.css';
-import { db } from '../firebase';
-import { actions, useSelector } from '../actions-integration';
-import { UserProfile, INACTIVITY_TIMEOUT_MS, STATUS_REFRESH_INTERVAL_MS } from '../actions/users-slice';
-import { chatId, GroupChat } from '../actions/chat-slice';
+import { useUsersCtx } from '../context';
+import { UserProfile, INACTIVITY_TIMEOUT_MS, STATUS_REFRESH_INTERVAL_MS } from '../slices/users-slice';
+import { chatId, GroupChat } from '../slices/chat-slice';
 import { MyGrid } from './MyGrid';
 import { Chat } from './Chat';
 import { HSplit, VSplit } from './SplitPane';
@@ -232,10 +231,11 @@ const USERS_MENU_ID = 'users-ctx-menu';
 type Props = { session: User };
 
 export const UsersView = ({ session }: Props) => {
-  const users  = useSelector(s => s.users.list);
-  const unread = useSelector(s => s.chat.unread);
-  const me     = useSelector(s => s.chat.me);
-  const groups = useSelector(s => s.chat.groups);
+  const { db, actions, useSelector } = useUsersCtx();
+  const users  = useSelector((s: any) => s.users.list);
+  const unread = useSelector((s: any) => s.chat.unread);
+  const me     = useSelector((s: any) => s.chat.me);
+  const groups = useSelector((s: any) => s.chat.groups);
 
   const gridApiRef      = useRef<any>(null);
   const groupGridApiRef = useRef<any>(null);
@@ -296,16 +296,16 @@ export const UsersView = ({ session }: Props) => {
 
   // Background 1-1 message listeners (unread detection)
   const otherUidKey = users
-    .filter(u => u.uid !== me?.uid)
-    .map(u => u.uid)
+    .filter((u: UserProfile) => u.uid !== me?.uid)
+    .map((u: UserProfile) => u.uid)
     .sort()
     .join(',');
 
   useEffect(() => {
     if (!me?.uid || !otherUidKey) return;
     const since  = Timestamp.now();
-    const others = users.filter(u => u.uid !== me.uid);
-    const unsubs = others.map(user => {
+    const others = users.filter((u: UserProfile) => u.uid !== me.uid);
+    const unsubs = others.map((user: UserProfile) => {
       const convoId = chatId(me.uid, user.uid);
       const q = query(
         collection(db, 'chats', convoId, 'messages'),
@@ -327,16 +327,16 @@ export const UsersView = ({ session }: Props) => {
         err => console.error('[1-1 message listener]', user.email, err.code),
       );
     });
-    return () => unsubs.forEach(u => u());
+    return () => unsubs.forEach((u: () => void) => u());
   }, [otherUidKey, me?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Background group message listeners (unread detection)
-  const groupIdKey = groups.filter(g => !g.pending).map(g => g.id).sort().join(',');
+  const groupIdKey = groups.filter((g: GroupChat) => !g.pending).map((g: GroupChat) => g.id).sort().join(',');
 
   useEffect(() => {
     if (!me?.uid || !groupIdKey) return;
     const since = Timestamp.now();
-    const unsubs = groups.filter(g => !g.pending).map(group => {
+    const unsubs = groups.filter((g: GroupChat) => !g.pending).map((group: GroupChat) => {
       const q = query(
         collection(db, 'groupChats', group.id, 'messages'),
         orderBy('timestamp', 'asc'),
@@ -357,15 +357,15 @@ export const UsersView = ({ session }: Props) => {
         err => console.error('[group message listener]', group.id, err.code),
       );
     });
-    return () => unsubs.forEach(u => u());
+    return () => unsubs.forEach((u: () => void) => u());
   }, [groupIdKey, me?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Enrich group rows with resolved UserProfile objects for the avatar cell
-  const groupRows = useMemo(() => groups.map(g => ({
+  const groupRows = useMemo(() => groups.map((g: GroupChat) => ({
     ...g,
     _profiles: g.participants
-      .filter(uid => uid !== me?.uid)
-      .map(uid => users.find(u => u.uid === uid))
+      .filter((uid: string) => uid !== me?.uid)
+      .map((uid: string) => users.find((u: UserProfile) => u.uid === uid))
       .filter(Boolean) as UserProfile[],
   })), [groups, users, me?.uid]);
 
