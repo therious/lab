@@ -79,8 +79,8 @@ const Bubble = styled.div<{ $mine: boolean }>`
     position: absolute;
     bottom: 8px;
     border-style: solid;
-    right: ${p => p.$mine ? '-7px' : 'auto'};
-    left:  ${p => p.$mine ? 'auto' : '-7px'};
+    right: ${p => p.$mine ? '-6px' : 'auto'};
+    left:  ${p => p.$mine ? 'auto' : '-6px'};
     border-width: ${p => p.$mine ? '6px 0 6px 8px' : '6px 8px 6px 0'};
     border-color: ${p => p.$mine
       ? 'transparent transparent transparent #3c4043'

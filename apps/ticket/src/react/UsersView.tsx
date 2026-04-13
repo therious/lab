@@ -1,10 +1,10 @@
-import { useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo, useRef } from 'react';
 import { collection, onSnapshot, query, orderBy, where, Timestamp } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import styled, { createGlobalStyle } from 'styled-components';
 import { db } from '../firebase';
 import { actions, useSelector } from '../actions-integration';
-import { UserProfile, INACTIVITY_TIMEOUT_MS } from '../actions/users-slice';
+import { UserProfile, INACTIVITY_TIMEOUT_MS, STATUS_REFRESH_INTERVAL_MS } from '../actions/users-slice';
 import { chatId } from '../actions/chat-slice';
 import { MyGrid } from './MyGrid';
 import { Chat } from './Chat';
@@ -105,9 +105,19 @@ const GridGlobalStyle = createGlobalStyle`
 type Props = { session: User };
 
 export const UsersView = ({ session }: Props) => {
-  const users  = useSelector(s => s.users.list);
-  const unread = useSelector(s => s.chat.unread);
-  const me     = useSelector(s => s.chat.me);
+  const users      = useSelector(s => s.users.list);
+  const unread     = useSelector(s => s.chat.unread);
+  const me         = useSelector(s => s.chat.me);
+  const gridApiRef = useRef<any>(null);
+
+  // Periodically force-refresh the online dot column so colour reflects elapsed time
+  // even when row data has not changed in Firestore.
+  useEffect(() => {
+    const id = setInterval(() => {
+      gridApiRef.current?.refreshCells({ columns: ['isOnline'], force: true });
+    }, STATUS_REFRESH_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
 
   // Firestore listener: keep the users list fresh
   useEffect(() => {
@@ -192,6 +202,7 @@ export const UsersView = ({ session }: Props) => {
             rowSelection="single"
             isRowSelectable={isRowSelectable}
             rowClassRules={rowClassRules}
+            apiRef={gridApiRef}
             dark={false}
           />
         </UsersPane>

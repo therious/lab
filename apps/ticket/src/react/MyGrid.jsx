@@ -9,9 +9,12 @@ export const CheckboxRenderer = ({node, column, value}) => {
   return <input type="checkbox" onChange={click} checked={value ?? false}/>;
 };
 
-export const MyGrid = ({children=null, style, contextM=undefined, onRowClicked=undefined, rowData, columnDefs, getRowNodeId=undefined, dark=true, rowSelection=undefined, isRowSelectable=undefined, rowClassRules=undefined}) => {
+export const MyGrid = ({children=null, style, contextM=undefined, onRowClicked=undefined, rowData, columnDefs, getRowNodeId=undefined, dark=true, rowSelection=undefined, isRowSelectable=undefined, rowClassRules=undefined, apiRef=undefined}) => {
   const gridRef = useRef(null);
-  const onReady = useCallback(e => { console.log('grid ready', e); }, []);
+  const onReady = useCallback(e => {
+    console.log('grid ready', e);
+    if (apiRef) apiRef.current = e.api;
+  }, [apiRef]);
 
   const cbRef = useRef({ onRowClicked, contextM, isRowSelectable });
   cbRef.current = { onRowClicked, contextM, isRowSelectable };

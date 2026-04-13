@@ -14,4 +14,5 @@ export const MyGrid: React.FC<{
   rowSelection?:     'single' | 'multiple';
   isRowSelectable?:  (node: any) => boolean;
   rowClassRules?:    Record<string, (params: any) => boolean>;
+  apiRef?:           React.MutableRefObject<any>;
 }>;
