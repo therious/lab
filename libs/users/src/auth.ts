@@ -10,12 +10,14 @@ export const useSession = (
   auth:    Auth,
   db:      Firestore,
   actions: any,
-): [SessionRec, SetSessionFunc] => {
+): [SessionRec, SetSessionFunc, boolean] => {
   const [session, setSession] = useState<SessionRec>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     return onAuthStateChanged(auth, user => {
       setSession(user);
+      setLoading(false);
       actions.chat.setMe(user
         ? { uid: user.uid, email: user.email ?? '', displayName: user.displayName ?? user.email ?? '' }
         : null,
@@ -33,7 +35,7 @@ export const useSession = (
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return [session, setSession];
+  return [session, setSession, loading];
 };
 
 export const signout = async (auth: Auth, db: Firestore): Promise<void> => {

@@ -124,7 +124,7 @@ let messageCtr = 0;
 
 const  App = () => {
   const location = useLocation();
-  const [session] = useSession(firebaseAuth, db, actions);
+  const [session, , loading] = useSession(firebaseAuth, db, actions);
 
   // when app renders, plug in handler for updates to local storage
   // todo move this to patch-middleware instead when it is created
@@ -152,6 +152,8 @@ const  App = () => {
   const {warn,error,fatal,dismiss} = actions.notify;
 
   const {  toggleLeft, toggleRight, } = actions.local;
+
+  if (loading) return null;
 
   if (!session) {
     return (

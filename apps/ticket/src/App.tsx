@@ -14,14 +14,16 @@ import { TotalState }  from './actions/combined-slices';
 const Profile = () => <>{`profile here`}</>;
 
 export default function App() {
-  const [session, _] = useSession(firebaseAuth, db, actions);
+  const [session, , loading] = useSession(firebaseAuth, db, actions);
   const curPath = useLocation().pathname;
 
   return (
     <SnackbarProvider maxSnack={5} hideIconVariant
       anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
       <NotifyWrapper />
-      {!session
+      {loading
+        ? null
+        : !session
         ? <Modalize $maxWidth="320px"><Login auth={firebaseAuth} /></Modalize>
         : <UsersProvider db={db} auth={firebaseAuth} actions={actions} useSelector={useSelector}>
             <Layout>
