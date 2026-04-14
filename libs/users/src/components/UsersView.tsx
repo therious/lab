@@ -145,7 +145,7 @@ const AvatarCell = ({ value, data }: any) => {
   if (value) {
     return (
       <div style={wrap}>
-        <img src={value} referrerPolicy="no-referrer" loading="lazy"
+        <img src={value} referrerPolicy="no-referrer" loading="lazy" alt=""
           style={{ width: 28, height: 28, borderRadius: '50%', display: 'block' }} />
         {dot}
       </div>
@@ -187,7 +187,7 @@ const MultiAvatarCell = ({ data }: any) => {
       {shown.map(p => (
         <div key={p.uid} style={{ position: 'relative', width: 22, height: 22, flexShrink: 0 }}>
           {p.photoURL
-            ? <img src={p.photoURL} referrerPolicy="no-referrer" loading="lazy"
+            ? <img src={p.photoURL} referrerPolicy="no-referrer" loading="lazy" alt=""
                 style={{ width: 22, height: 22, borderRadius: '50%', display: 'block' }} />
             : <div style={{ width: 22, height: 22, borderRadius: '50%',
                 background: hashColor(p.email), color: 'white', fontSize: 9,
@@ -254,7 +254,7 @@ export const UsersView = ({ session }: Props) => {
 
   // Firestore: keep users list fresh
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'users'), snap => {
+    return onSnapshot(collection(db, 'users'), snap => {
       actions.users.setUsers(snap.docs.map(d => {
         const r = d.data();
         return {
@@ -267,14 +267,13 @@ export const UsersView = ({ session }: Props) => {
         } as UserProfile;
       }));
     });
-    return unsub;
   }, []);
 
   // Firestore: keep group chats list fresh (participant listener)
   useEffect(() => {
     if (!me?.uid) return;
     const q = query(collection(db, 'groupChats'), where('participants', 'array-contains', me.uid));
-    const unsub = onSnapshot(q,
+    return onSnapshot(q,
       snap => {
         const fetched: GroupChat[] = snap.docs.map(d => {
           const r = d.data();
@@ -291,7 +290,6 @@ export const UsersView = ({ session }: Props) => {
       },
       err => console.error('[groupChats listener]', err.code, err.message),
     );
-    return unsub;
   }, [me?.uid]);
 
   // Background 1-1 message listeners (unread detection)

@@ -193,7 +193,7 @@ const Avatar = ({ profile, fallback, size = 24 }: AvatarProps) => {
   if (profile?.photoURL) {
     return (
       <div style={wrap}>
-        <img src={profile.photoURL} referrerPolicy="no-referrer" loading="lazy"
+        <img src={profile.photoURL} referrerPolicy="no-referrer" loading="lazy" alt=""
           style={{ width: size, height: size, borderRadius: '50%', display: 'block' }} />
         {dot}
       </div>
@@ -300,7 +300,7 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
     actions.chat.setConversation(them.email, []);
     const q     = query(collection(db, 'chats', convoId, 'messages'),
                         orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
-    const unsub = onSnapshot(q,
+    return onSnapshot(q,
       snap => {
         if (snap.metadata.fromCache && snap.docs.length === 0) return;
         actions.chat.setConversation(them.email, snap.docs.map((d: any) => {
@@ -315,7 +315,6 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
       },
       err => setSendErr(`History unavailable: ${err.code}`),
     );
-    return unsub;
   }, [convoId, them.email]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const send = useCallback(async () => {
@@ -366,7 +365,7 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
     actions.chat.setConversation(group.id, []);
     const q     = query(collection(db, 'groupChats', group.id, 'messages'),
                         orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
-    const unsub = onSnapshot(q,
+    return onSnapshot(q,
       snap => {
         if (snap.metadata.fromCache && snap.docs.length === 0) return;
         actions.chat.setConversation(group.id, snap.docs.map((d: any) => {
@@ -381,7 +380,6 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
       },
       err => setSendErr(`History unavailable: ${err.code}`),
     );
-    return unsub;
   }, [group.id, group.pending]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const send = useCallback(async () => {

@@ -5,7 +5,7 @@ import 'ag-grid-community/styles/ag-theme-balham.css';
 import 'react-contexify/ReactContexify.css';
 
 export const CheckboxRenderer = ({node, column, value}) => {
-  const click = useCallback(e => node.setDataValue(column.colId, e?.target?.checked), []);
+  const click = useCallback(e => node.setDataValue(column.colId, e?.target?.checked), [node, column.colId]);
   return <input type="checkbox" onChange={click} checked={value ?? false}/>;
 };
 

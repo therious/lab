@@ -131,20 +131,20 @@ export const Login = ({ auth }: { auth: Auth }) => {
         window.history.replaceState({}, '', window.location.pathname);
       })
       .catch(e => fail(e.message));
-  }, []);
+  }, [auth]);
 
   const signInGoogle = useCallback(() =>
-    signInWithPopup(auth, new GoogleAuthProvider()).catch(e => fail(e.message)), []);
+    signInWithPopup(auth, new GoogleAuthProvider()).catch(e => fail(e.message)), [auth]);
 
   const signInPassword = useCallback(async () => {
     try { await signInWithEmailAndPassword(auth, email, password); }
     catch(e: any) { fail(e.message); }
-  }, [email, password]);
+  }, [auth, email, password]);
 
   const createAccount = useCallback(async () => {
     try { await createUserWithEmailAndPassword(auth, email, password); }
     catch(e: any) { fail(e.message); }
-  }, [email, password]);
+  }, [auth, email, password]);
 
   const sendLink = useCallback(async () => {
     try {
@@ -153,7 +153,7 @@ export const Login = ({ auth }: { auth: Auth }) => {
       setLinkSent(true);
       ok(`Link sent to ${email} — check your inbox.`);
     } catch(e: any) { fail(e.message); }
-  }, [email]);
+  }, [auth, email]);
 
   const hasEmail    = email.trim().length > 0;
   const hasPassword = password.length > 0;
