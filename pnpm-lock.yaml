@@ -435,9 +435,18 @@ importers:
       '@therious/actions':
         specifier: workspace:*
         version: link:../../libs/actions
+      '@therious/ag-grid':
+        specifier: workspace:*
+        version: link:../../libs/ag-grid
       '@therious/boot':
         specifier: workspace:*
         version: link:../../libs/boot
+      '@therious/components':
+        specifier: workspace:*
+        version: link:../../cmps/components
+      '@therious/users':
+        specifier: workspace:*
+        version: link:../../libs/users
       '@therious/utils':
         specifier: workspace:*
         version: link:../../libs/utils
@@ -453,6 +462,9 @@ importers:
       browser-fs-access:
         specifier: ~0.33.0
         version: 0.33.1
+      firebase:
+        specifier: ~10.12.0
+        version: 10.12.5
       js-yaml:
         specifier: ~4.1.1
         version: 4.1.1

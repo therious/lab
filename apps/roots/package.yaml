@@ -11,9 +11,13 @@ scripts:
   preview: vite preview
   lint: eslint . --ext js,jsx,ts,tsx
 dependencies:
-  '@therious/actions': workspace:*
-  '@therious/boot': workspace:*
-  '@therious/utils': workspace:*
+  '@therious/actions':    workspace:*
+  '@therious/ag-grid':    workspace:*
+  '@therious/boot':       workspace:*
+  '@therious/components': workspace:*
+  '@therious/users':      workspace:*
+  '@therious/utils':      workspace:*
+  firebase:               ~10.12.0
   ag-grid-community: ~34.3.1
   ag-grid-react: ~34.3.1
   axios: ~1.13.2

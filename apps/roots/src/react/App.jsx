@@ -1,9 +1,12 @@
-import React, {useEffect} from 'react';
-import { Route, Routes, NavLink, useLocation } from "react-router-dom"
+import React, {useCallback, useEffect} from 'react';
+import { Route, Routes, NavLink, useLocation, useNavigate } from "react-router-dom"
 
 import styled from 'styled-components';
 
 import {actions, useSelector} from '../actions-integration';
+import { UsersProvider, useSession, signout, Login, UsersView } from '@therious/users';
+import { Modalize } from '@therious/components';
+import { firebaseAuth, db } from '../firebase';
 
 import {SnackbarProvider} from "notistack";
 
@@ -117,10 +120,27 @@ const MyNavLink = ({to, children, curPath})=> {
 
 
 
+const Signout = () => {
+  const navigate = useNavigate();
+  const cb = useCallback(async () => {
+    await signout(firebaseAuth, db);
+    navigate('/');
+  }, [navigate]);
+  return (
+    <Modalize $maxWidth="350px">
+      <h1>Signout?</h1>
+      <hr />
+      <button onClick={cb}>Signout</button>
+    </Modalize>
+  );
+};
+
 let messageCtr = 0;
 
 const  App = () => {
   const location = useLocation();
+  const [session] = useSession(firebaseAuth, db, actions);
+
   // when app renders, plug in handler for updates to local storage
   // todo move this to patch-middleware instead when it is created
   useEffect(()=> {
@@ -148,17 +168,29 @@ const  App = () => {
 
   const {  toggleLeft, toggleRight, } = actions.local;
 
+  if (!session) {
+    return (
+      <SnackbarProvider maxSnack={5} hideIconVariant anchorOrigin={{vertical: "top", horizontal: "right"}}>
+        <NotifyWrapper />
+        <Modalize $maxWidth="320px"><Login auth={firebaseAuth} /></Modalize>
+      </SnackbarProvider>
+    );
+  }
+
    return  (
    <SnackbarProvider maxSnack={5} hideIconVariant
                      anchorOrigin={{vertical: "top", horizontal: "right",}}
                      >
      <NotifyWrapper />
+     <UsersProvider db={db} auth={firebaseAuth} actions={actions} useSelector={useSelector}>
         <Layout left={left} right={right}>
 
             <Navbar>
               <div style={{ margin: 'auto', width: '50%', display: 'inline-block'}}>
                 <MyNavLink curPath={location.pathname} to="/grid">Grid View</MyNavLink>
                 <MyNavLink curPath={location.pathname} to="/star">Visualization</MyNavLink>
+                <MyNavLink curPath={location.pathname} to="/users">Users</MyNavLink>
+                <MyNavLink curPath={location.pathname} to="/signout">Signout</MyNavLink>
 
                 {/*<MyNavLink curPath={location.pathname} to="/files">Import/Export Settings</MyNavLink>*/}
 
@@ -194,16 +226,18 @@ const  App = () => {
                 :
                 <>
                   <Routes>
-                    <Route path="/"       element={<RtGridView/>}/>
-                    <Route path="/grid"  element={<RtGridView/>}/>
-                    <Route path="/star"  element={<RtStarView/>}/>
-
+                    <Route path="/"        element={<RtGridView/>}/>
+                    <Route path="/grid"    element={<RtGridView/>}/>
+                    <Route path="/star"    element={<RtStarView/>}/>
+                    <Route path="/users"   element={<UsersView session={session} />}/>
+                    <Route path="/signout" element={<Signout />}/>
                   </Routes>
                 </>
             }
           </CenterBody>
 
         </Layout>
+     </UsersProvider>
    </SnackbarProvider>
     );
 };

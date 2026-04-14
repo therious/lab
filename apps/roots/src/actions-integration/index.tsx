@@ -2,10 +2,17 @@
 import {Provider, TypedUseSelectorHook, useSelector as reduxUseSelector} from "react-redux";
 import React from "react";
 import {integrate} from '@therious/actions';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { initChatMiddleware } from '@therious/users';
+import { db } from '../firebase';
 
 import {allSlices, allMiddlewares, middlewareInits, TotalState} from "../actions/combined-slices";
 
-export const {store, actions} = integrate(allSlices, allMiddlewares, middlewareInits)
+export const {store, actions} = integrate(allSlices, allMiddlewares, middlewareInits);
+
+initChatMiddleware((uid: string) =>
+  setDoc(doc(db, 'users', uid), { lastSeen: serverTimestamp() }, { merge: true })
+);
 
 export function connectRootComponent(WrappedComponent: React.FunctionComponent):React.FunctionComponent {
   // Creating the inner component. The calculated Props type here is the where the magic happens.
