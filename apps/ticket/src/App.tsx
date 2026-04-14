@@ -31,7 +31,6 @@ const Signout = () => {
 };
 
 export default function App() {
-  const { notify: { notices } } = useSelector<TotalState>(s => s);
   const [session, _] = useSession(firebaseAuth, db, actions);
   const curPath = useLocation().pathname;
 
