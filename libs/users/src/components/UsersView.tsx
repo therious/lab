@@ -2,6 +2,7 @@ import React, { useEffect, useCallback, useMemo, useRef, useState } from 'react'
 import { collection, onSnapshot, query, orderBy, where, Timestamp, doc } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import styled, { createGlobalStyle } from 'styled-components';
+import { appKey } from '../app-key';
 import { Menu, Item, useContextMenu } from 'react-contexify';
 import 'react-contexify/ReactContexify.css';
 import { useUsersCtx } from '../context';
@@ -254,7 +255,7 @@ export const UsersView = ({ session }: Props) => {
 
   // Firestore: keep users list fresh
   useEffect(() => {
-    return onSnapshot(collection(db, 'users'), snap => {
+    return onSnapshot(collection(db, 'apps', appKey(), 'users'), snap => {
       actions.users.setUsers(snap.docs.map(d => {
         const r = d.data();
         return {
@@ -272,7 +273,7 @@ export const UsersView = ({ session }: Props) => {
   // Firestore: keep group chats list fresh (participant listener)
   useEffect(() => {
     if (!me?.uid) return;
-    const q = query(collection(db, 'groupChats'), where('participants', 'array-contains', me.uid));
+    const q = query(collection(db, 'apps', appKey(), 'groupChats'), where('participants', 'array-contains', me.uid));
     return onSnapshot(q,
       snap => {
         const fetched: GroupChat[] = snap.docs.map(d => {
@@ -306,7 +307,7 @@ export const UsersView = ({ session }: Props) => {
     const unsubs = others.map((user: UserProfile) => {
       const convoId = chatId(me.uid, user.uid);
       const q = query(
-        collection(db, 'chats', convoId, 'messages'),
+        collection(db, 'apps', appKey(), 'chats', convoId, 'messages'),
         orderBy('timestamp', 'asc'),
         where('timestamp', '>', since),
       );
@@ -336,7 +337,7 @@ export const UsersView = ({ session }: Props) => {
     const since = Timestamp.now();
     const unsubs = groups.filter((g: GroupChat) => !g.pending).map((group: GroupChat) => {
       const q = query(
-        collection(db, 'groupChats', group.id, 'messages'),
+        collection(db, 'apps', appKey(), 'groupChats', group.id, 'messages'),
         orderBy('timestamp', 'asc'),
         where('timestamp', '>', since),
       );
@@ -419,7 +420,7 @@ export const UsersView = ({ session }: Props) => {
     const allUids = [me.uid, ...dialogParticipants.map(p => p.uid)];
     // Pre-generate a real Firestore document ID so the batch write in Chat.tsx
     // can use the same ID without a round-trip.
-    const realId  = doc(collection(db, 'groupChats')).id;
+    const realId  = doc(collection(db, 'apps', appKey(), 'groupChats')).id;
 
     const newGroup: GroupChat = {
       id:            realId,

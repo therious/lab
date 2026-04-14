@@ -16,3 +16,6 @@ export { Login }     from './components/Login';
 
 // ── Auth utilities — call from App.tsx ───────────────────────────────────────
 export { useSession, signout } from './auth';
+
+// ── App-origin key — used to namespace Firestore paths ───────────────────────
+export { appKey } from './app-key';

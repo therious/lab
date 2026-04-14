@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { collection, addDoc, doc, setDoc, writeBatch,
          query, orderBy, limitToLast, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { appKey } from '../app-key';
 import { User } from 'firebase/auth';
 import styled from 'styled-components';
 import { useUsersCtx } from '../context';
@@ -298,7 +299,7 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
 
   useEffect(() => {
     actions.chat.setConversation(them.email, []);
-    const q     = query(collection(db, 'chats', convoId, 'messages'),
+    const q     = query(collection(db, 'apps', appKey(), 'chats', convoId, 'messages'),
                         orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
     return onSnapshot(q,
       snap => {
@@ -326,7 +327,7 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
       fromUid: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: Date.now(),
     });
     try {
-      await addDoc(collection(db, 'chats', convoId, 'messages'), {
+      await addDoc(collection(db, 'apps', appKey(), 'chats', convoId, 'messages'), {
         from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: serverTimestamp(),
       });
     } catch (e: any) {
@@ -363,7 +364,7 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
   useEffect(() => {
     if (group.pending) return;
     actions.chat.setConversation(group.id, []);
-    const q     = query(collection(db, 'groupChats', group.id, 'messages'),
+    const q     = query(collection(db, 'apps', appKey(), 'groupChats', group.id, 'messages'),
                         orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
     return onSnapshot(q,
       snap => {
@@ -396,7 +397,7 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
     try {
       if (group.pending) {
         const batch    = writeBatch(db);
-        const groupRef = doc(db, 'groupChats', group.id);
+        const groupRef = doc(db, 'apps', appKey(), 'groupChats', group.id);
         batch.set(groupRef, {
           participants:  group.participants,
           nickname:      group.nickname,
@@ -404,16 +405,16 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
           createdAt:     serverTimestamp(),
           lastMessageAt: serverTimestamp(),
         });
-        const msgRef = doc(collection(db, 'groupChats', group.id, 'messages'));
+        const msgRef = doc(collection(db, 'apps', appKey(), 'groupChats', group.id, 'messages'));
         batch.set(msgRef, {
           from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: serverTimestamp(),
         });
         await batch.commit();
       } else {
-        await addDoc(collection(db, 'groupChats', group.id, 'messages'), {
+        await addDoc(collection(db, 'apps', appKey(), 'groupChats', group.id, 'messages'), {
           from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: serverTimestamp(),
         });
-        await setDoc(doc(db, 'groupChats', group.id),
+        await setDoc(doc(db, 'apps', appKey(), 'groupChats', group.id),
           { lastMessageAt: serverTimestamp() }, { merge: true });
       }
     } catch (e: any) {
