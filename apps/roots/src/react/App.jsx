@@ -1,10 +1,10 @@
-import React, {useCallback, useEffect} from 'react';
-import { Route, Routes, NavLink, useLocation, useNavigate } from "react-router-dom"
+import React, {useEffect} from 'react';
+import { Route, Routes, NavLink, useLocation } from "react-router-dom"
 
 import styled from 'styled-components';
 
 import {actions, useSelector} from '../actions-integration';
-import { UsersProvider, useSession, signout, Login, UsersView } from '@therious/users';
+import { UsersProvider, useSession, Login, UsersView } from '@therious/users';
 import { Modalize } from '@therious/components';
 import { firebaseAuth, db } from '../firebase';
 
@@ -120,21 +120,6 @@ const MyNavLink = ({to, children, curPath})=> {
 
 
 
-const Signout = () => {
-  const navigate = useNavigate();
-  const cb = useCallback(async () => {
-    await signout(firebaseAuth, db);
-    navigate('/');
-  }, [navigate]);
-  return (
-    <Modalize $maxWidth="350px">
-      <h1>Signout?</h1>
-      <hr />
-      <button onClick={cb}>Signout</button>
-    </Modalize>
-  );
-};
-
 let messageCtr = 0;
 
 const  App = () => {
@@ -190,7 +175,6 @@ const  App = () => {
                 <MyNavLink curPath={location.pathname} to="/grid">Grid View</MyNavLink>
                 <MyNavLink curPath={location.pathname} to="/star">Visualization</MyNavLink>
                 <MyNavLink curPath={location.pathname} to="/users">Users</MyNavLink>
-                <MyNavLink curPath={location.pathname} to="/signout">Signout</MyNavLink>
 
                 {/*<MyNavLink curPath={location.pathname} to="/files">Import/Export Settings</MyNavLink>*/}
 
@@ -230,7 +214,6 @@ const  App = () => {
                     <Route path="/grid"    element={<RtGridView/>}/>
                     <Route path="/star"    element={<RtStarView/>}/>
                     <Route path="/users"   element={<UsersView session={session} />}/>
-                    <Route path="/signout" element={<Signout />}/>
                   </Routes>
                 </>
             }

@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { collection, onSnapshot, query, orderBy, where, Timestamp, doc } from 'firebase/firestore';
 import { User } from 'firebase/auth';
+import { signout } from '../auth';
 import styled, { createGlobalStyle } from 'styled-components';
 import { appKey } from '../app-key';
 import { Menu, Item, useContextMenu } from 'react-contexify';
@@ -24,9 +25,27 @@ const Page = styled.div`
   box-sizing: border-box;
 `;
 
-const PageHeader = styled.h3`
+const PageHeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin: 0 0 8px;
   flex-shrink: 0;
+`;
+
+const PageHeader = styled.h3`
+  margin: 0;
+`;
+
+const SignOutBtn = styled.button`
+  padding: 5px 14px;
+  font-size: 13px;
+  background: white;
+  color: #c62828;
+  border: 1px solid #c62828;
+  border-radius: 4px;
+  cursor: pointer;
+  &:hover { background: #fdecea; }
 `;
 
 const SplitFill = styled.div`
@@ -232,7 +251,7 @@ const USERS_MENU_ID = 'users-ctx-menu';
 type Props = { session: User };
 
 export const UsersView = ({ session }: Props) => {
-  const { db, actions, useSelector } = useUsersCtx();
+  const { db, auth, actions, useSelector } = useUsersCtx();
   const users  = useSelector((s: any) => s.users.list);
   const unread = useSelector((s: any) => s.chat.unread);
   const me     = useSelector((s: any) => s.chat.me);
@@ -470,7 +489,10 @@ export const UsersView = ({ session }: Props) => {
   return (
     <Page>
       <GridGlobalStyle />
-      <PageHeader>Users — click to chat, right-click to create group</PageHeader>
+      <PageHeaderRow>
+        <PageHeader>Users — click to chat, right-click to create group</PageHeader>
+        <SignOutBtn onClick={() => signout(auth, db)}>Sign out</SignOutBtn>
+      </PageHeaderRow>
 
       <SplitFill>
         <HSplit

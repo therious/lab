@@ -52,16 +52,20 @@ const Divider = styled.div`
   &::before, &::after { content: ''; flex: 1; border-top: 1px solid #ddd; }
 `;
 
-const Tabs = styled.div`display: flex; border: 1px solid #dadce0; border-radius: 4px; overflow: hidden;`;
-const Tab = styled.button<{ $active: boolean }>`
-  flex: 1;
-  padding: 7px;
-  font-size: 13px;
-  border: none;
+const RadioGroup = styled.div`
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  font-size: 14px;
+  color: #3c4043;
+`;
+
+const RadioLabel = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 6px;
   cursor: pointer;
-  background: ${p => p.$active ? '#1a73e8' : 'white'};
-  color: ${p => p.$active ? 'white' : '#3c4043'};
-  &:hover { background: ${p => p.$active ? '#1a73e8' : '#f8f8f8'}; }
+  user-select: none;
 `;
 
 const Input = styled.input`
@@ -164,12 +168,20 @@ export const Login = ({ auth }: { auth: Auth }) => {
 
       <GoogleBtn onClick={signInGoogle}>Sign in with Google</GoogleBtn>
 
-      <Divider>or sign in with email</Divider>
+      <Divider>or sign in via</Divider>
 
-      <Tabs>
-        <Tab $active={mode === 'password'} onClick={() => setMode('password')}>Password</Tab>
-        <Tab $active={mode === 'link'}     onClick={() => setMode('link')}>Email link</Tab>
-      </Tabs>
+      <RadioGroup>
+        <RadioLabel>
+          <input type="radio" name="mode" value="password"
+            checked={mode === 'password'} onChange={() => setMode('password')} />
+          Password
+        </RadioLabel>
+        <RadioLabel>
+          <input type="radio" name="mode" value="link"
+            checked={mode === 'link'} onChange={() => setMode('link')} />
+          Emailed link
+        </RadioLabel>
+      </RadioGroup>
 
       <Input
         type="email"
