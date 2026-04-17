@@ -30,111 +30,209 @@ All chat features are implemented and working:
 
 ## Feature Brainstorming
 
-These ideas are being developed together because their designs interact.
-Do not implement any of them until explicitly asked.
+Six related concepts being matured together. Their designs interact — read all before
+implementing any. Do not implement any of them until explicitly asked.
 
 ---
 
-### Idea 1 — Access request / approval gate (`@therious/users`)
+### Concept 1 — RoleModel
 
-An optional workflow layered on top of the existing auth. When `requireApproval={true}`
-is set on `UsersProvider`, a freshly authenticated user is held at a waiting screen until
-an admin approves them. Approved users proceed normally; denied users see a rejection screen.
+The identity and permissions substrate that everything else builds on.
 
-**Firestore data model** (under `apps/{appId}/`):
+**Core rule:** roles are namespaced strings `appname:rolename`. A wildcard role `*:rolename`
+is accepted anywhere `appname:rolename` is required, because role names are globally unique
+by convention. Roles are flat (no hierarchy for now).
+
+Every authenticated user implicitly holds `*:user` — the baseline that grants access to
+unsecured routes and allows receiving messages. All other roles are explicitly granted.
+
+**Firestore data model (global, not per-app):**
 ```
-accessRequests/{uid}  { uid, email, displayName, photoURL,
-                        status: 'pending'|'approved'|'denied',
-                        requestedAt, resolvedAt, resolvedBy, note }
-admins/{uid}          { uid: true }   — created manually in Firebase Console only
+userRoles/{uid}   { roles: ['ticket:player', '*:admin', 'roots:editor', ...] }
 ```
+Stored at the root (not under `apps/{appId}/`) because identity is portable across apps.
+Role strings are just strings — no registry enforces them for now. Apps are responsible for
+knowing which role names they use. A universal permissioning client (Concept 4) will
+coordinate this later.
 
-**Library changes:**
-- `UsersProvider` gains `requireApproval?: boolean` and `adminUids?: string[]` props
-- `useSession` returns a 4th value: `accessStatus: 'not-required'|'checking'|'pending'|'approved'|'denied'`
-- New internal screens: `RequestAccessScreen`, `PendingScreen`, `DeniedScreen`
-- `AccessRequestsPanel` rendered inside `UsersView` for admin users only — grid of requests
-  with Approve / Deny buttons and an optional note field
-- "Ignore" = leave `pending` indefinitely; no extra state needed
+**Grant authority:**
+- Roles are not hierarchical; no role automatically implies another
+- Who can grant what is a Concept 4 concern for now; initially set manually via Firebase Console
+- `*:rolename` grants are more powerful and should be granted only by a trusted admin
 
-**Security rules addition:**
-```
-match /apps/{appId}/accessRequests/{uid} {
-  allow create, read: if request.auth.uid == uid;
-  allow read, update: if exists(.../admins/$(request.auth.uid));
+**Matching logic (client-side, in the library):**
+```ts
+// Does the user satisfy a required role?
+function satisfies(userRoles: string[], required: string): boolean {
+  const [, name] = required.split(':');
+  return userRoles.includes(required) ||
+         userRoles.includes(`*:${name}`);
 }
-match /apps/{appId}/admins/{uid} {
-  allow read:  if request.auth != null;
-  allow write: if false;
-}
 ```
 
-**Design question to resolve before implementing:** how does this interact with
-Idea 2's game channels — should game channel membership also gate on approval status?
+**Firestore security rules recommendation:**
+Role enforcement is primarily client-side via RoleGuard (Concept 2). Firestore rules stay
+simple — auth + participant-array checks. For rules that do need to inspect roles:
+```
+function userRoles() {
+  return get(/databases/$(database)/documents/userRoles/$(request.auth.uid)).data.roles;
+}
+```
+This costs one `get()` per evaluation and only works for single-document reads (not list
+queries). For list operations, rely on query constraints + auth-only, same as groupChats.
+
+**Firestore rules for userRoles collection:**
+```
+match /userRoles/{uid} {
+  allow read:  if request.auth.uid == uid;          // user reads own roles
+  allow write: if false;                             // only writable via admin SDK / Console
+}
+```
 
 ---
 
-### Idea 2 — Chat as a Redux action transport layer (multiplayer / workflow bus)
+### Concept 2 — RoleGuard
 
-Use a Firestore chat channel as a real-time delivery mechanism for Redux action payloads,
-enabling multiplayer game moves (or workflow events) to flow between clients without a
-dedicated game server.
+Route-level protection using RoleModel. Entirely client-side; Firestore rules are a
+secondary backstop, not the primary enforcement mechanism.
 
-**Core concept:**
-Messages in a chat channel can carry a hidden `_action` field in addition to optional
-display text. When the chat middleware receives a message containing `_action`, it
-dispatches it directly into the Redux store of every connected client. The game/workflow
-slice receives the action exactly as if it had been dispatched locally.
+**API:**
+```tsx
+// Wrap any route element with required roles
+<Route path="/game" element={
+  <RoleGuard roles={['ticket:player']}>
+    <Game />
+  </RoleGuard>
+} />
+```
+
+`RoleGuard` reads the current user's roles (from Redux state, populated by `useSession`)
+and either renders children or redirects. What it redirects to is app-controlled — for now
+the convention is that `/` (home) is always safe. A richer fallback (Concept 5 — Foyer)
+will handle role-request discovery later.
+
+**`useSession` change:** populate roles into Redux on login by reading `userRoles/{uid}`.
+The chat slice (or a new identity slice) holds `{ uid, email, displayName, roles: string[] }`.
+
+**Unsecured routes** are just normal routes with no `RoleGuard` — any authenticated user
+(i.e. holder of implicit `*:user`) can reach them. Unauthenticated users still see the
+login screen.
+
+**Admin-initiated contact for no-role users:** an admin can always open a 1-1 chat to any
+authenticated user regardless of their roles. The no-role user sees a minimal shell — just
+enough to receive and respond to that message. This shell is the seed of Concept 5.
+
+---
+
+### Concept 3 — ActionBus
+
+Use a Firestore chat channel as a real-time Redux action delivery mechanism, enabling
+multiplayer game moves and workflow events to flow between clients without a dedicated
+game server.
+
+**Core concept:** messages in a channel carry an optional `_action` field alongside
+display text. The chat middleware detects `_action`, checks it against a registered
+whitelist, and dispatches it into the local Redux store. Every connected client receives
+the action as if it had been dispatched locally.
 
 **Firestore message shape:**
 ```
 {
   from:      uid,
   fromEmail: string,
-  text:      string | null,      // null for pure action messages
+  text:      string | null,      // null = pure action message, hidden from chat UI
   _action:   { type: string, payload: any } | null,
   timestamp: Timestamp,
 }
 ```
 
-**API surface the consuming app uses:**
+**API surface:**
 ```ts
-// 1. Create a channel dedicated to a game session
-const channelId = await createGameChannel(db, appKey(), { gameId, participants });
+// Register which action types are safe to re-dispatch from remote messages (whitelist)
+initActionBus(['game/movePiece', 'game/endTurn', 'game/resign']);
 
-// 2. Send a local Redux action to all other players via Firestore
-await sendGameAction(db, appKey(), channelId, { type: 'game/movePiece', payload: {...} });
-
-// 3. Register which incoming action types the middleware should re-dispatch
-//    (whitelist prevents arbitrary remote code execution)
-initGameMiddleware(['game/movePiece', 'game/endTurn', 'game/resign']);
+// Send a local Redux action to all channel participants via Firestore
+await sendChannelAction(db, appKey(), channelId, { type: 'game/movePiece', payload: {...} });
 ```
 
 **Middleware behaviour:**
-- Existing `chatMiddleware` is extended (or a sibling `gameMiddleware` is added)
-- On receiving a message with `_action`, checks it against the registered whitelist
-- If allowed, dispatches `_action` into the Redux store — the game slice handles it
-  identically to a local action
-- Messages with `_action` and `text: null` are hidden from the chat UI by default;
-  messages with both fields show a minimal indicator (e.g. "▶ game event")
+- `chatMiddleware` is extended (or a sibling `actionBusMiddleware` added)
+- Incoming messages with `_action` are checked against the whitelist before dispatch
+- `text: null` messages are invisible in chat UI; messages with both fields show "▶ event"
 
-**Channel types to consider:**
-- `1-1` (existing) — could carry game actions between two players
-- `group` (existing) — could carry game actions for a multi-player session
-- `dedicated` (new, no UI) — pure action bus, no chat UI rendered at all
+**Channel types:**
+- `1-1` / `group` (existing) — can carry action messages alongside chat
+- `dedicated` (new) — pure action bus, no chat UI rendered; created eagerly before first action
+  (contrast with lazy group chat creation)
 
 **Open design questions:**
-1. Should dedicated/game channels live under `groupChats` (re-use existing path) or a
-   new `gameChannels` collection? Re-use is simpler; separate collection allows different
-   security rules and cleaner Firestore separation.
-2. How does channel creation relate to group chat creation? Currently group chats are
-   created lazily (on first message). Game channels may need to be created eagerly so
-   all players are subscribed before the first move.
-3. Relation to Idea 1: should game channel participation require an approved access
-   request, or is channel membership (array-contains participant check) sufficient?
-4. Relation to workflows generally: a workflow step (e.g. "approve PR", "sign document")
-   is structurally identical to a game move — an action payload delivered to other
-   clients via a channel. The same transport layer could serve both. Discuss separately.
+1. Do dedicated channels live under `groupChats` (simpler, re-uses rules) or a new
+   `channels` collection (cleaner separation)? Leaning toward `channels` since dedicated
+   channels need eager creation and different access semantics.
+2. RoleModel connection: channel access controlled by participant array as today;
+   RoleGuard can gate the UI that lets you join/create channels — not the channel itself.
+3. Workflows: a workflow step (approve, sign, escalate) is structurally identical to a
+   game move. The same ActionBus transport serves both. Workflow-specific concerns
+   (ordering, idempotency, audit trail) are a separate concept to mature.
+
+---
+
+### Concept 4 — Permissioner
+
+A universal cross-app admin client (a new app in the monorepo) that can see and manage
+all users who have ever authenticated into the system, across all app origins.
+
+**Scope:**
+- Reads from global `userRoles/{uid}` and per-app `apps/{appId}/users/{uid}` collections
+- Can grant / revoke any role including `*:rolename` wildcards
+- Can see which apps a user has accessed (which `apps/{appId}/users/{uid}` docs exist)
+- Initiates contact with any user regardless of their roles (admin-to-user channel)
+
+**This is where grant authority lives.** For now, roles are set manually in Firebase Console.
+Permissioner formalizes that into a UI and defines who-can-grant-what rules.
+
+**Open design questions:**
+1. Does Permissioner itself use RoleGuard? Almost certainly yes — access to it requires
+   something like `*:superadmin`.
+2. Is Permissioner a standalone app (separate origin → separate appKey) or is it a route
+   within an existing app? Standalone is cleaner for security scoping.
+
+---
+
+### Concept 5 — Foyer
+
+A universal home route / landing shell that every app includes. Safe for any authenticated
+user regardless of roles. Serves three purposes:
+
+1. **Discovery** — shows the user which routes/features they have access to and which roles
+   they could request to unlock more
+2. **Role request** — lets a user request a specific role; the request goes to Permissioner
+   (or an app-local admin) for approval
+3. **Minimal shell for no-role users** — the landing place after login when the user has
+   no app-specific roles; they can see what exists and can receive admin-initiated messages
+
+This is the replacement for the current simple redirect-to-home fallback in RoleGuard.
+Foyer is a component the library provides; apps configure it with a list of role
+descriptions to display.
+
+---
+
+### Concept 6 — Actor
+
+An automated identity (server process, Cloud Function, bot) that holds roles and can
+initiate channels, send messages, and dispatch ActionBus actions on behalf of the system.
+
+**Key distinction from a human user:** an Actor uses the Firebase Admin SDK (service
+account), so it bypasses Firestore security rules. Its role grants are advisory — used
+by client-side RoleGuard to decide whether to render Actor-generated content — not for
+rules enforcement.
+
+**Use cases:**
+- A game server Actor that referees moves and sends `game/invalidMove` actions via ActionBus
+- A workflow Actor that triggers the next step automatically when conditions are met
+- An onboarding Actor that messages new users in Foyer
+
+Matures further when Concept 3 (ActionBus) and Concept 4 (Permissioner) are implemented.
 
 ## Commands
 
