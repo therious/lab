@@ -28,18 +28,113 @@ All chat features are implemented and working:
   chat header, message bubbles in group chats
 - Send error UI (red ErrorBar) with try/catch in both ActiveChat and ActiveGroupChat
 
-### Ticket app — deferred
+## Feature Brainstorming
 
-**App-origin scoping (implement when ready to package chat as a micro-frontend)**
-- Namespace all Firestore paths under `apps/{hostPort}/...` so multiple apps on
-  different origins share one Firebase project without data collision
-- Strategy: derive key at runtime from `window.location.hostname + '_' + window.location.port`
-  (colon escaped to `_` for Firestore document ID safety)
-- Data model: `apps/{hostPort}/users/{uid}`, `apps/{hostPort}/chats/...`,
-  `apps/{hostPort}/groupChats/...`
-- Touch points: `auth.ts`, all Firestore collection refs in `UsersView.tsx` and `Chat.tsx`,
-  `actions-integration/index.tsx`, security rules, `firebase-setup.md`
-- Single Firebase project is sufficient; Spark-plan quota is shared but adequate
+These ideas are being developed together because their designs interact.
+Do not implement any of them until explicitly asked.
+
+---
+
+### Idea 1 — Access request / approval gate (`@therious/users`)
+
+An optional workflow layered on top of the existing auth. When `requireApproval={true}`
+is set on `UsersProvider`, a freshly authenticated user is held at a waiting screen until
+an admin approves them. Approved users proceed normally; denied users see a rejection screen.
+
+**Firestore data model** (under `apps/{appId}/`):
+```
+accessRequests/{uid}  { uid, email, displayName, photoURL,
+                        status: 'pending'|'approved'|'denied',
+                        requestedAt, resolvedAt, resolvedBy, note }
+admins/{uid}          { uid: true }   — created manually in Firebase Console only
+```
+
+**Library changes:**
+- `UsersProvider` gains `requireApproval?: boolean` and `adminUids?: string[]` props
+- `useSession` returns a 4th value: `accessStatus: 'not-required'|'checking'|'pending'|'approved'|'denied'`
+- New internal screens: `RequestAccessScreen`, `PendingScreen`, `DeniedScreen`
+- `AccessRequestsPanel` rendered inside `UsersView` for admin users only — grid of requests
+  with Approve / Deny buttons and an optional note field
+- "Ignore" = leave `pending` indefinitely; no extra state needed
+
+**Security rules addition:**
+```
+match /apps/{appId}/accessRequests/{uid} {
+  allow create, read: if request.auth.uid == uid;
+  allow read, update: if exists(.../admins/$(request.auth.uid));
+}
+match /apps/{appId}/admins/{uid} {
+  allow read:  if request.auth != null;
+  allow write: if false;
+}
+```
+
+**Design question to resolve before implementing:** how does this interact with
+Idea 2's game channels — should game channel membership also gate on approval status?
+
+---
+
+### Idea 2 — Chat as a Redux action transport layer (multiplayer / workflow bus)
+
+Use a Firestore chat channel as a real-time delivery mechanism for Redux action payloads,
+enabling multiplayer game moves (or workflow events) to flow between clients without a
+dedicated game server.
+
+**Core concept:**
+Messages in a chat channel can carry a hidden `_action` field in addition to optional
+display text. When the chat middleware receives a message containing `_action`, it
+dispatches it directly into the Redux store of every connected client. The game/workflow
+slice receives the action exactly as if it had been dispatched locally.
+
+**Firestore message shape:**
+```
+{
+  from:      uid,
+  fromEmail: string,
+  text:      string | null,      // null for pure action messages
+  _action:   { type: string, payload: any } | null,
+  timestamp: Timestamp,
+}
+```
+
+**API surface the consuming app uses:**
+```ts
+// 1. Create a channel dedicated to a game session
+const channelId = await createGameChannel(db, appKey(), { gameId, participants });
+
+// 2. Send a local Redux action to all other players via Firestore
+await sendGameAction(db, appKey(), channelId, { type: 'game/movePiece', payload: {...} });
+
+// 3. Register which incoming action types the middleware should re-dispatch
+//    (whitelist prevents arbitrary remote code execution)
+initGameMiddleware(['game/movePiece', 'game/endTurn', 'game/resign']);
+```
+
+**Middleware behaviour:**
+- Existing `chatMiddleware` is extended (or a sibling `gameMiddleware` is added)
+- On receiving a message with `_action`, checks it against the registered whitelist
+- If allowed, dispatches `_action` into the Redux store — the game slice handles it
+  identically to a local action
+- Messages with `_action` and `text: null` are hidden from the chat UI by default;
+  messages with both fields show a minimal indicator (e.g. "▶ game event")
+
+**Channel types to consider:**
+- `1-1` (existing) — could carry game actions between two players
+- `group` (existing) — could carry game actions for a multi-player session
+- `dedicated` (new, no UI) — pure action bus, no chat UI rendered at all
+
+**Open design questions:**
+1. Should dedicated/game channels live under `groupChats` (re-use existing path) or a
+   new `gameChannels` collection? Re-use is simpler; separate collection allows different
+   security rules and cleaner Firestore separation.
+2. How does channel creation relate to group chat creation? Currently group chats are
+   created lazily (on first message). Game channels may need to be created eagerly so
+   all players are subscribed before the first move.
+3. Relation to Idea 1: should game channel participation require an approved access
+   request, or is channel membership (array-contains participant check) sufficient?
+4. Relation to workflows generally: a workflow step (e.g. "approve PR", "sign document")
+   is structurally identical to a game move — an action payload delivered to other
+   clients via a channel. The same transport layer could serve both. Discuss separately.
 
 ## Commands
 
