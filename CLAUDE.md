@@ -126,53 +126,54 @@ enough to receive and respond to that message. This shell is the seed of Concept
 
 ### Concept 3 — ActionBus
 
-Use a Firestore chat channel as a real-time Redux action delivery mechanism, enabling
-multiplayer game moves and workflow events to flow between clients without a dedicated
-game server.
+Every message on a channel IS a Redux action. Chat messages are just the familiar case
+(`chat/messageReceived`) — actions whose payload contains display text. Any other slice can
+participate by sending actions through the same channel. The middleware dispatches all
+incoming messages into the store; Redux routes each to the correct reducer automatically.
+There is no special `_action` sidecar field — the message shape is the action shape.
 
-**Core concept:** messages in a channel carry an optional `_action` field alongside
-display text. The chat middleware detects `_action`, checks it against a registered
-whitelist, and dispatches it into the local Redux store. Every connected client receives
-the action as if it had been dispatched locally.
-
-**Firestore message shape:**
+**Firestore message shape (unified):**
 ```
 {
-  from:      uid,
-  fromEmail: string,
-  text:      string | null,      // null = pure action message, hidden from chat UI
-  _action:   { type: string, payload: any } | null,
-  timestamp: Timestamp,
+  type:      string,       // Redux action type: 'chat/messageReceived', 'game/movePiece', …
+  payload:   any,          // action-specific data; chat payload includes { fromUid, fromEmail, text }
+  from:      uid,          // always present — security + audit
+  timestamp: Timestamp,    // always present — ordering
 }
 ```
 
+**Middleware behaviour:**
+- On receiving a Firestore message, check `type` against the registered whitelist
+- If allowed, `store.dispatch({ type, payload })` — the correct reducer handles it
+- Chat UI renders messages whose `type` it knows; unknown types are invisible or "▶ event"
+- The whitelist is the primary security boundary (Firestore rules cannot constrain message
+  content by type, only by participant membership)
+
 **API surface:**
 ```ts
-// Register which action types are safe to re-dispatch from remote messages (whitelist)
-initActionBus(['game/movePiece', 'game/endTurn', 'game/resign']);
+// Register which action types are safe to dispatch from remote messages
+initActionBus(['chat/messageReceived', 'chat/groupMessageReceived', 'game/movePiece', ...]);
 
-// Send a local Redux action to all channel participants via Firestore
+// Send any Redux action to all channel participants via Firestore
 await sendChannelAction(db, appKey(), channelId, { type: 'game/movePiece', payload: {...} });
 ```
 
-**Middleware behaviour:**
-- `chatMiddleware` is extended (or a sibling `actionBusMiddleware` added)
-- Incoming messages with `_action` are checked against the whitelist before dispatch
-- `text: null` messages are invisible in chat UI; messages with both fields show "▶ event"
+**Channel access model:** unchanged from today. Who can subscribe is controlled by
+participant arrays + RoleGuard on the UI. Channel type (chat vs game vs workflow) is just
+a matter of which action types flow through it — no separate collection needed.
 
-**Channel types:**
-- `1-1` / `group` (existing) — can carry action messages alongside chat
-- `dedicated` (new) — pure action bus, no chat UI rendered; created eagerly before first action
-  (contrast with lazy group chat creation)
+**Migration note:** existing Firestore messages lack a `type` field. A backwards-compat
+read path (treat missing `type` as `chat/messageReceived`) is needed when ActionBus lands.
 
 **Open design questions:**
-1. Do dedicated channels live under `groupChats` (simpler, re-uses rules) or a new
-   `channels` collection (cleaner separation)? Leaning toward `channels` since dedicated
-   channels need eager creation and different access semantics.
-2. RoleModel connection: channel access controlled by participant array as today;
-   RoleGuard can gate the UI that lets you join/create channels — not the channel itself.
+1. Should `chatMiddleware` be renamed/extended into `actionBusMiddleware`, or should
+   ActionBus be a separate middleware that chat registers with? Separate is cleaner;
+   chat becomes a consumer of ActionBus rather than ActionBus being bolted onto chat.
+2. Eager vs lazy channel creation: current group chats are created lazily on first message.
+   A game/workflow channel may need to exist before the first action so all participants
+   are subscribed. Resolve at implementation time.
 3. Workflows: a workflow step (approve, sign, escalate) is structurally identical to a
-   game move. The same ActionBus transport serves both. Workflow-specific concerns
+   game move — an action payload delivered via a channel. Workflow-specific concerns
    (ordering, idempotency, audit trail) are a separate concept to mature.
 
 ---
