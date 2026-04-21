@@ -44,7 +44,11 @@ export const useSession = (
         })
         .finally(() => {
           setLoading(false);
-          setDoc(doc(db, 'apps', appKey(), 'users', user.uid), {
+          const key = appKey();
+          // Register this app origin so the admin app can discover it
+          setDoc(doc(db, 'apps', key), { appId: key, lastActive: serverTimestamp() }, { merge: true });
+          // Write presence / profile for this user
+          setDoc(doc(db, 'apps', key, 'users', user.uid), {
             uid:         user.uid,
             email:       user.email,
             displayName: user.displayName ?? user.email,
