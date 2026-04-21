@@ -4,7 +4,7 @@ import { Route, Routes, NavLink, useLocation } from "react-router-dom"
 import styled from 'styled-components';
 
 import {actions, useSelector} from '../actions-integration';
-import { UsersProvider, useSession, Login, UsersView } from '@therious/users';
+import { UsersProvider, useSession, Login, UsersView, AdminView, RoleGuard } from '@therious/users';
 import { Modalize } from '@therious/components';
 import { firebaseAuth, db } from '../firebase';
 
@@ -177,6 +177,9 @@ const  App = () => {
                 <MyNavLink curPath={location.pathname} to="/grid">Grid View</MyNavLink>
                 <MyNavLink curPath={location.pathname} to="/star">Visualization</MyNavLink>
                 <MyNavLink curPath={location.pathname} to="/users">Users</MyNavLink>
+                <RoleGuard roles={['roots:admin', '*:admin']}>
+                  <MyNavLink curPath={location.pathname} to="/admin">Admin</MyNavLink>
+                </RoleGuard>
 
                 {/*<MyNavLink curPath={location.pathname} to="/files">Import/Export Settings</MyNavLink>*/}
 
@@ -216,6 +219,11 @@ const  App = () => {
                     <Route path="/grid"    element={<RtGridView/>}/>
                     <Route path="/star"    element={<RtStarView/>}/>
                     <Route path="/users"   element={<UsersView session={session} />}/>
+                    <Route path="/admin"   element={
+                      <RoleGuard roles={['roots:admin', '*:admin']}>
+                        <AdminView appName="roots" />
+                      </RoleGuard>
+                    }/>
                   </Routes>
                 </>
             }
