@@ -2,7 +2,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // All data is scoped under apps/{appId} where appId is derived from
+    // ── Roles (global — not scoped per app) ──────────────────────────────────
+    // Roles are portable across apps. Only the user can read their own roles.
+    // Writes are blocked client-side; roles are managed via Firebase Console
+    // or the Permissioner admin app using the Admin SDK.
+    match /userRoles/{uid} {
+      allow read:  if request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // All other data is scoped under apps/{appId} where appId is derived from
     // the client's hostname+port (e.g. "localhost_5173", "app.example.com").
     // This allows multiple apps to share one Firebase project without collision.
     match /apps/{appId} {

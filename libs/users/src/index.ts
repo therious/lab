@@ -11,11 +11,15 @@ export type { UsersState, UserProfile }                                 from './
 export { UsersProvider } from './context';
 
 // ── Components ────────────────────────────────────────────────────────────────
-export { UsersView } from './components/UsersView';
-export { Login }     from './components/Login';
+export { UsersView }  from './components/UsersView';
+export { Login }      from './components/Login';
+export { RoleGuard }  from './components/RoleGuard';
 
 // ── Auth utilities — call from App.tsx ───────────────────────────────────────
 export { useSession, signout } from './auth';
 
 // ── App-origin key — used to namespace Firestore paths ───────────────────────
 export { appKey } from './app-key';
+
+// ── Role utilities ────────────────────────────────────────────────────────────
+export { satisfies, hasAnyRole } from './role-utils';

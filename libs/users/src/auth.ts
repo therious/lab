@@ -1,6 +1,6 @@
-import { useState, useEffect }                    from 'react';
-import { User, signOut, onAuthStateChanged, Auth } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp, Firestore } from 'firebase/firestore';
+import { useState, useEffect }                          from 'react';
+import { User, signOut, onAuthStateChanged, Auth }      from 'firebase/auth';
+import { doc, getDoc, setDoc, serverTimestamp, Firestore } from 'firebase/firestore';
 import { appKey } from './app-key';
 
 type SessionRec     = User | null;
@@ -17,21 +17,41 @@ export const useSession = (
   useEffect(() => {
     return onAuthStateChanged(auth, user => {
       setSession(user);
-      setLoading(false);
-      actions.chat.setMe(user
-        ? { uid: user.uid, email: user.email ?? '', displayName: user.displayName ?? user.email ?? '' }
-        : null,
-      );
-      if (user) {
-        setDoc(doc(db, 'apps', appKey(), 'users', user.uid), {
-          uid:         user.uid,
-          email:       user.email,
-          displayName: user.displayName ?? user.email,
-          photoURL:    user.photoURL,
-          lastSeen:    serverTimestamp(),
-          isOnline:    true,
-        }, { merge: true });
+      if (!user) {
+        actions.chat.setMe(null);
+        setLoading(false);
+        return;
       }
+      // Fetch roles before clearing loading so RoleGuard never sees a role-less frame
+      getDoc(doc(db, 'userRoles', user.uid))
+        .then(snap => {
+          const roles: string[] = snap.exists() ? (snap.data().roles ?? []) : [];
+          actions.chat.setMe({
+            uid:         user.uid,
+            email:       user.email        ?? '',
+            displayName: user.displayName  ?? user.email ?? '',
+            roles,
+          });
+        })
+        .catch(() => {
+          actions.chat.setMe({
+            uid:         user.uid,
+            email:       user.email        ?? '',
+            displayName: user.displayName  ?? user.email ?? '',
+            roles:       [],
+          });
+        })
+        .finally(() => {
+          setLoading(false);
+          setDoc(doc(db, 'apps', appKey(), 'users', user.uid), {
+            uid:         user.uid,
+            email:       user.email,
+            displayName: user.displayName ?? user.email,
+            photoURL:    user.photoURL,
+            lastSeen:    serverTimestamp(),
+            isOnline:    true,
+          }, { merge: true });
+        });
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
