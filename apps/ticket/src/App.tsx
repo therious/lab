@@ -5,7 +5,7 @@ import { User } from 'firebase/auth';
 import { Modalize } from '@therious/components';
 import { useSelector, actions } from './actions-integration';
 import {
-  UsersProvider, useSession, Login, UsersView,
+  UsersProvider, useSession, Login, UsersView, AdminView,
   RouteConfig, GuardedRoutes, useAccessibleRoutes, Foyer,
 } from '@therious/users';
 import { firebaseAuth, db } from './firebase';
@@ -23,6 +23,7 @@ const makeRoutes = (session: User): RouteConfig[] => [
   { path: '/',        label: 'Game',    element: <Foyer><Game /></Foyer> },
   { path: '/users',   label: 'Users',   element: <UsersView session={session} /> },
   { path: '/profile', label: 'Profile', element: <Profile /> },
+  { path: '/admin',   label: 'Admin',   roles: ['ticket:admin', '*:admin'], element: <AdminView appName="ticket" /> },
 ];
 
 const AuthenticatedApp = ({ session }: { session: User }) => {
