@@ -107,8 +107,8 @@ const AppCardSub = styled.div`
 const AppRoute = () => {
   const { appId } = useParams<{ appId: string }>();
   if (!appId) return null;
-  // Derive a human-readable app name from the appId for the role input placeholder
-  // e.g. "localhost_5173" → "localhost", "myapp.com" → "myapp.com"
+  // Pass appName derived from appId so role suggestions say e.g. "ticket:admin"
+  // rather than "admin:admin" (the admin app's own symbolic name).
   const appName = appId.includes('_') ? appId.split('_')[0] : appId;
   return <AdminView appId={appId} appName={appName} />;
 };
@@ -160,8 +160,8 @@ const AuthenticatedApp = ({ session }: { session: User }) => {
   );
 
   return (
-    <UsersProvider db={db} auth={firebaseAuth} actions={actions} useSelector={useSelector}>
-      <RoleGuard roles={['*:admin']} fallback={noAccessFallback}>
+    <UsersProvider db={db} auth={firebaseAuth} actions={actions} useSelector={useSelector} appName="admin">
+      <RoleGuard roles={['admin']} fallback={noAccessFallback}>
         <AppShell>
           <Navbar>
             <NavTitle>Admin</NavTitle>

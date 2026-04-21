@@ -23,7 +23,7 @@ const makeRoutes = (session: User): RouteConfig[] => [
   { path: '/',        label: 'Game',    element: <Foyer><Game /></Foyer> },
   { path: '/users',   label: 'Users',   element: <UsersView session={session} /> },
   { path: '/profile', label: 'Profile', element: <Profile /> },
-  { path: '/admin',   label: 'Admin',   roles: ['ticket:admin', '*:admin'], element: <AdminView appName="ticket" /> },
+  { path: '/admin',   label: 'Admin',   roles: ['admin'], element: <AdminView /> },
 ];
 
 const AuthenticatedApp = ({ session }: { session: User }) => {
@@ -56,7 +56,7 @@ export default function App() {
         ? null
         : !session
         ? <Modalize $maxWidth="320px"><Login auth={firebaseAuth} /></Modalize>
-        : <UsersProvider db={db} auth={firebaseAuth} actions={actions} useSelector={useSelector}>
+        : <UsersProvider db={db} auth={firebaseAuth} actions={actions} useSelector={useSelector} appName="ticket">
             <AuthenticatedApp session={session} />
           </UsersProvider>
       }

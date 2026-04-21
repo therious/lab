@@ -1,7 +1,7 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { useUsersCtx } from '../context';
-import { hasAnyRole }   from '../role-utils';
+import { hasAnyRoleInApp } from '../role-utils';
 import { RoleGuard }    from './RoleGuard';
 
 /**
@@ -26,9 +26,9 @@ export type RouteConfig = {
  *  - requireAuth=false (skip mode) → same rule; no roles = included, roles = excluded (no user)
  */
 export const useAccessibleRoutes = (routes: RouteConfig[]): RouteConfig[] => {
-  const { useSelector } = useUsersCtx();
+  const { useSelector, appName } = useUsersCtx();
   const userRoles: string[] = useSelector((s: any) => s.chat.me?.roles ?? []);
-  return routes.filter(r => hasAnyRole(userRoles, r.roles ?? []));
+  return routes.filter(r => hasAnyRoleInApp(userRoles, r.roles ?? [], appName));
 };
 
 /**

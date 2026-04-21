@@ -25,4 +25,4 @@ export { useSession, signout } from './auth';
 export { appKey } from './app-key';
 
 // ── Role utilities ────────────────────────────────────────────────────────────
-export { satisfies, hasAnyRole } from './role-utils';
+export { satisfies, hasAnyRole, satisfiesInApp, hasAnyRoleInApp } from './role-utils';

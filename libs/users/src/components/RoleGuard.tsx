@@ -1,6 +1,6 @@
 import React from 'react';
 import { useUsersCtx } from '../context';
-import { hasAnyRole }  from '../role-utils';
+import { hasAnyRoleInApp } from '../role-utils';
 
 type Props = {
   /** At least one of these roles must be satisfied (OR semantics). */
@@ -25,8 +25,8 @@ type Props = {
  * Pass a fallback prop (e.g. <Navigate to="/" />) to redirect instead of rendering null.
  */
 export const RoleGuard = ({ roles, children, fallback = null }: Props) => {
-  const { useSelector } = useUsersCtx();
+  const { useSelector, appName } = useUsersCtx();
   const userRoles: string[] = useSelector((s: any) => s.chat.me?.roles ?? []);
 
-  return hasAnyRole(userRoles, roles) ? <>{children}</> : <>{fallback}</>;
+  return hasAnyRoleInApp(userRoles, roles, appName) ? <>{children}</> : <>{fallback}</>;
 };

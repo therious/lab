@@ -23,3 +23,20 @@ export const satisfies = (userRoles: string[], required: string): boolean => {
  */
 export const hasAnyRole = (userRoles: string[], required: string[]): boolean =>
   required.length === 0 || required.some(r => satisfies(userRoles, r));
+
+/**
+ * Like satisfies(), but accepts unqualified role names (no colon).
+ * An unqualified name like "admin" is expanded to "{appName}:admin", then
+ * satisfies() resolves both the exact match and the "*:admin" wildcard.
+ * Fully-qualified names (containing ":") are passed through unchanged.
+ */
+export const satisfiesInApp = (userRoles: string[], required: string, appName: string): boolean =>
+  satisfies(userRoles, required.includes(':') ? required : `${appName}:${required}`);
+
+/**
+ * hasAnyRole with app-aware short-name expansion.
+ * Routes can declare roles: ['admin'] instead of ['ticket:admin', '*:admin'] —
+ * the appName prefix is injected here, and * wildcards are resolved by satisfies().
+ */
+export const hasAnyRoleInApp = (userRoles: string[], required: string[], appName: string): boolean =>
+  required.length === 0 || required.some(r => satisfiesInApp(userRoles, r, appName));

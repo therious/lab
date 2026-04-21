@@ -6,8 +6,9 @@ import {
   Auth,
 } from 'firebase/auth';
 import styled from 'styled-components';
+import { appKey } from '../app-key';
 
-const EMAIL_KEY = 'ticket:emailForSignIn';
+const emailKey = () => `${appKey()}:emailForSignIn`;
 
 const actionCodeSettings = {
   url: window.location.origin,
@@ -128,10 +129,10 @@ export const Login = ({ auth }: { auth: Auth }) => {
   // Complete magic-link sign-in when user returns from email link
   useEffect(() => {
     if (!isSignInWithEmailLink(auth, window.location.href)) return;
-    const saved = localStorage.getItem(EMAIL_KEY) ?? window.prompt('Confirm your email:') ?? '';
+    const saved = localStorage.getItem(emailKey()) ?? window.prompt('Confirm your email:') ?? '';
     signInWithEmailLink(auth, saved, window.location.href)
       .then(() => {
-        localStorage.removeItem(EMAIL_KEY);
+        localStorage.removeItem(emailKey());
         window.history.replaceState({}, '', window.location.pathname);
       })
       .catch(e => fail(e.message));
@@ -153,7 +154,7 @@ export const Login = ({ auth }: { auth: Auth }) => {
   const sendLink = useCallback(async () => {
     try {
       await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-      localStorage.setItem(EMAIL_KEY, email);
+      localStorage.setItem(emailKey(), email);
       setLinkSent(true);
       ok(`Link sent to ${email} — check your inbox.`);
     } catch(e: any) { fail(e.message); }
@@ -164,7 +165,7 @@ export const Login = ({ auth }: { auth: Auth }) => {
 
   return (
     <Wrap>
-      <Title>Ticket to Ride</Title>
+      <Title>{document.title}</Title>
 
       <GoogleBtn onClick={signInGoogle}>Sign in with Google</GoogleBtn>
 

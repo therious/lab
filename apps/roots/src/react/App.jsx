@@ -169,7 +169,7 @@ const  App = () => {
                      anchorOrigin={{vertical: "top", horizontal: "right",}}
                      >
      <NotifyWrapper />
-     <UsersProvider db={db} auth={firebaseAuth} actions={actions} useSelector={useSelector}>
+     <UsersProvider db={db} auth={firebaseAuth} actions={actions} useSelector={useSelector} appName="roots">
         <Layout left={left} right={right}>
 
             <Navbar>
@@ -177,7 +177,7 @@ const  App = () => {
                 <MyNavLink curPath={location.pathname} to="/grid">Grid View</MyNavLink>
                 <MyNavLink curPath={location.pathname} to="/star">Visualization</MyNavLink>
                 <MyNavLink curPath={location.pathname} to="/users">Users</MyNavLink>
-                <RoleGuard roles={['roots:admin', '*:admin']}>
+                <RoleGuard roles={['admin']}>
                   <MyNavLink curPath={location.pathname} to="/admin">Admin</MyNavLink>
                 </RoleGuard>
 
@@ -220,8 +220,8 @@ const  App = () => {
                     <Route path="/star"    element={<RtStarView/>}/>
                     <Route path="/users"   element={<UsersView session={session} />}/>
                     <Route path="/admin"   element={
-                      <RoleGuard roles={['roots:admin', '*:admin']}>
-                        <AdminView appName="roots" />
+                      <RoleGuard roles={['admin']}>
+                        <AdminView />
                       </RoleGuard>
                     }/>
                   </Routes>
