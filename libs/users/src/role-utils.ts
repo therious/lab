@@ -18,7 +18,8 @@ export const satisfies = (userRoles: string[], required: string): boolean => {
 
 /**
  * Returns true if the user satisfies at least one of the required roles (OR semantics).
+ * An empty required array means no restriction — always returns true.
  * Use this for route/feature gating where any qualifying role grants access.
  */
 export const hasAnyRole = (userRoles: string[], required: string[]): boolean =>
-  required.some(r => satisfies(userRoles, r));
+  required.length === 0 || required.some(r => satisfies(userRoles, r));

@@ -9,6 +9,7 @@ export type UsersCtxValue = {
   auth:        Auth;
   actions:     any;
   useSelector: (selector: (s: any) => any) => any;
+  requireAuth: boolean;
 };
 
 const Ctx = createContext<UsersCtxValue | null>(null);
@@ -19,10 +20,13 @@ export const useUsersCtx = (): UsersCtxValue => {
   return v;
 };
 
-type Props = UsersCtxValue & { children: React.ReactNode };
+type Props = Omit<UsersCtxValue, 'requireAuth'> & {
+  requireAuth?: boolean;   // default true — set false when using useSession({ skip: true })
+  children:     React.ReactNode;
+};
 
-export const UsersProvider = ({ db, auth, actions, useSelector, children }: Props) => (
-  <Ctx.Provider value={{ db, auth, actions, useSelector }}>
+export const UsersProvider = ({ db, auth, actions, useSelector, requireAuth = true, children }: Props) => (
+  <Ctx.Provider value={{ db, auth, actions, useSelector, requireAuth }}>
     {children}
   </Ctx.Provider>
 );
