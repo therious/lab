@@ -198,9 +198,12 @@ const columnDefs = [
 type Props = {
   /** Used to suggest role names, e.g. "ticket" → suggests "ticket:admin". Optional. */
   appName?: string;
+  /** Override which app's users to show. Defaults to appKey() (the current origin).
+   *  Pass this when rendering from a cross-app admin tool. */
+  appId?: string;
 };
 
-export const AdminView = ({ appName }: Props) => {
+export const AdminView = ({ appName, appId }: Props) => {
   const { db } = useUsersCtx();
   const [rows, setRows]         = useState<AdminRow[]>([]);
   const [selected, setSelected] = useState<AdminRow | null>(null);
@@ -208,9 +211,10 @@ export const AdminView = ({ appName }: Props) => {
   const [saving, setSaving]     = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Load all users + their roles for this app origin
+  // Load all users + their roles for this app origin (or the provided appId)
   const load = useCallback(async () => {
-    const snap = await getDocs(collection(db, 'apps', appKey(), 'users'));
+    const targetAppId = appId ?? appKey();
+    const snap = await getDocs(collection(db, 'apps', targetAppId, 'users'));
     const profiles = snap.docs.map(d => d.data() as UserProfile);
 
     const enriched = await Promise.all(
@@ -223,7 +227,7 @@ export const AdminView = ({ appName }: Props) => {
     setRows(enriched);
     // Refresh the selected panel if a user is already selected
     setSelected(prev => prev ? enriched.find(r => r.uid === prev.uid) ?? null : null);
-  }, [db]);
+  }, [db, appId]);
 
   useEffect(() => { load(); }, [load]);
 
