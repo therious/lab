@@ -12,6 +12,7 @@ export { UsersProvider } from './context';
 
 // ── Components ────────────────────────────────────────────────────────────────
 export { UsersView }                                    from './components/UsersView';
+export { AdminView }                                    from './components/AdminView';
 export { Login }                                        from './components/Login';
 export { RoleGuard }                                    from './components/RoleGuard';
 export { Foyer, GuardedRoutes, useAccessibleRoutes }    from './components/route-utils';

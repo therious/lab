@@ -33,7 +33,8 @@ export const useSession = (
             roles,
           });
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error('[useSession] failed to fetch userRoles:', err?.code, err?.message);
           actions.chat.setMe({
             uid:         user.uid,
             email:       user.email        ?? '',
