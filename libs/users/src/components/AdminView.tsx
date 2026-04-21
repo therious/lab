@@ -97,6 +97,21 @@ const RemoveBtn = styled.button`
   &:hover { color: #c62828; }
 `;
 
+// Tag shown in the "available roles" section — click ✓ to grant
+const GrantTag = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f8e9;
+  color: #388e3c;
+  border: 1px solid #c8e6c9;
+  border-radius: 12px;
+  font-size: 12px;
+  padding: 2px 8px;
+  cursor: pointer;
+  &:hover { background: #dcedc8; }
+`;
+
 const AddRoleRow = styled.div`
   display: flex;
   gap: 6px;
@@ -212,6 +227,13 @@ export const AdminView = ({ appName }: Props) => {
 
   useEffect(() => { load(); }, [load]);
 
+  // All distinct roles across every user in the system, sorted
+  const allSystemRoles: string[] = React.useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach(r => r.roles.forEach(role => set.add(role)));
+    return Array.from(set).sort();
+  }, [rows]);
+
   const onRowClick = useCallback(({ data }: { data: AdminRow }) => {
     setSelected(data);
     setNewRole('');
@@ -224,24 +246,29 @@ export const AdminView = ({ appName }: Props) => {
     await load();
   }, [selected, db, load]);
 
-  const grant = useCallback(async () => {
-    const role = newRole.trim();
+  // Grant a role by name — used by both the text input and the system-roles tag list
+  const grantRole = useCallback(async (role: string) => {
     if (!role || !selected) return;
-    if (selected.roles.includes(role)) { setNewRole(''); return; }
+    if (selected.roles.includes(role)) return;
     setSaving(true);
     try {
       const updated = [...selected.roles, role];
       await setDoc(doc(db, 'userRoles', selected.uid), { roles: updated }, { merge: true });
-      setNewRole('');
       await load();
     } finally {
       setSaving(false);
-      inputRef.current?.focus();
     }
-  }, [newRole, selected, db, load]);
+  }, [selected, db, load]);
+
+  const grantFromInput = useCallback(async () => {
+    const role = newRole.trim();
+    await grantRole(role);
+    setNewRole('');
+    inputRef.current?.focus();
+  }, [newRole, grantRole]);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') grant();
+    if (e.key === 'Enter') grantFromInput();
   };
 
   const placeholder = appName ? `e.g. ${appName}:admin` : 'appname:rolename';
@@ -284,8 +311,25 @@ export const AdminView = ({ appName }: Props) => {
                 </RoleTagRow>
               </div>
 
+              {/* Roles that exist elsewhere in the system but not on this user */}
+              {allSystemRoles.filter(r => !selected.roles.includes(r)).length > 0 && (
+                <div>
+                  <PanelSub style={{ marginBottom: 6 }}>Grant from existing roles</PanelSub>
+                  <RoleTagRow>
+                    {allSystemRoles
+                      .filter(r => !selected.roles.includes(r))
+                      .map(r => (
+                        <GrantTag key={r} onClick={() => grantRole(r)} title="Grant this role">
+                          {r} ✓
+                        </GrantTag>
+                      ))
+                    }
+                  </RoleTagRow>
+                </div>
+              )}
+
               <div>
-                <PanelSub style={{ marginBottom: 6 }}>Grant role</PanelSub>
+                <PanelSub style={{ marginBottom: 6 }}>Grant new role</PanelSub>
                 <AddRoleRow>
                   <AddInput
                     ref={inputRef}
@@ -294,7 +338,7 @@ export const AdminView = ({ appName }: Props) => {
                     onKeyDown={onKeyDown}
                     placeholder={placeholder}
                   />
-                  <AddBtn onClick={grant} disabled={!newRole.trim() || saving}>
+                  <AddBtn onClick={grantFromInput} disabled={!newRole.trim() || saving}>
                     {saving ? '…' : 'Add'}
                   </AddBtn>
                 </AddRoleRow>
