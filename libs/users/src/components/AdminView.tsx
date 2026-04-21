@@ -196,15 +196,16 @@ const columnDefs = [
 // ── Main component ────────────────────────────────────────────────────────────
 
 type Props = {
-  /** Used to suggest role names, e.g. "ticket" → suggests "ticket:admin". Optional. */
-  appName?: string;
-  /** Override which app's users to show. Defaults to appKey() (the current origin).
-   *  Pass this when rendering from a cross-app admin tool. */
+  /** Override which app's users to show. Defaults to appKey() (current origin).
+   *  Pass this when rendering from the standalone admin app. */
   appId?: string;
+  /** Override the context appName — used by the admin app when showing a different app's users. */
+  appName?: string;
 };
 
-export const AdminView = ({ appName, appId }: Props) => {
-  const { db } = useUsersCtx();
+export const AdminView = ({ appId, appName: appNameProp }: Props) => {
+  const { db, appName: ctxAppName } = useUsersCtx();
+  const appName = appNameProp ?? ctxAppName;
   const [rows, setRows]         = useState<AdminRow[]>([]);
   const [selected, setSelected] = useState<AdminRow | null>(null);
   const [newRole, setNewRole]   = useState('');
