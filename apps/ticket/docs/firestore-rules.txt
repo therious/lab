@@ -26,7 +26,8 @@ service cloud.firestore {
     // This allows multiple apps to share one Firebase project without collision.
     match /apps/{appId} {
       // App registry document — written on first login so the admin app can
-      // discover all apps that have had at least one authenticated user.
+      // list all apps. Any authenticated user can write (to register their app)
+      // and any authenticated user can read (to discover apps in the admin UI).
       allow read:  if request.auth != null;
       allow write: if request.auth != null;
 
