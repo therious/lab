@@ -1,5 +1,5 @@
 // @ts-ignore
-import {oReduce} from './utils/oreduce';
+import {oReduce} from '@therious/utils';
 import axios from 'axios';
 
 //----- reducers and actions ----

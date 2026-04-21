@@ -1,4 +1,4 @@
-import {oReduce} from '../utils/oreduce';
+import {oReduce} from '@therious/utils';
 
 type Kind = 'patch'|'pref'|'version'|'filter';
 // todos move the date and the write through to middleware layer that does that stuff, so

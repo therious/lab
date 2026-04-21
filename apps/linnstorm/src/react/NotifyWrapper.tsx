@@ -1,7 +1,7 @@
 import React, {useEffect} from "react";
 import {SnackbarAction, useSnackbar, VariantType} from "notistack";
 import {actions, useSelector} from '../actions-integration';
-import {NotifyState, Notice} from '../actions/notify-slice'
+import {NotifyState, Notice} from '@therious/actions'
 import {Btn} from './Btn';
 
 // adapting from Humza, recall items that we have on display

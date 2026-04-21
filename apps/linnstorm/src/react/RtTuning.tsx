@@ -10,7 +10,7 @@ import {linnColorColumnsDef} from "../xform/columndefs";
 import {ContextMenu, Item, Menu, useContextMenu} from "react-contexify";
 import {ContextMenuHeader} from "./ContextMenuHeader";
 import {LinnParam} from '../linnutils/LinnVals';
-import {oReduce} from '../utils/oreduce';
+import {oReduce} from '@therious/utils';
 import {TotalState} from '../actions/combined-slices';
 
 const TSlider = styled.input`
