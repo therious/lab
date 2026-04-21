@@ -25,6 +25,10 @@ service cloud.firestore {
     // the client's hostname+port (e.g. "localhost_5173", "app.example.com").
     // This allows multiple apps to share one Firebase project without collision.
     match /apps/{appId} {
+      // App registry document — written on first login so the admin app can
+      // discover all apps that have had at least one authenticated user.
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null;
 
       // ── Users ──────────────────────────────────────────────────────────────
       // Any authenticated user can read all profiles (needed for the users grid).
