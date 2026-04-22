@@ -95,7 +95,7 @@ const gridstyle = {height: '259px', width: '297px'};
 const uploadRealTimeTuningPatch = genInterruptiblePatchUploader();
 type Re = React.ChangeEvent<HTMLInputElement>;
 
-const getRowNodeId = (data:any)=>data.nrpn
+const getRowId = (params:any)=>String(params.data.nrpn)
 const  RtTuning = () => {
     const {
       linn:  {tonic, scaleIndex, scaleName, scaleType, scaleCount, scaleSteps,
@@ -190,7 +190,7 @@ const  RtTuning = () => {
 
         {/*todo collect current values or default values and set all the sliders according to those*/}
 
-        <MyGrid style={gridstyle} contextM={openColorMenu} dark={true} rowData={colorRows} columnDefs={linnColorColumnsDef}  getRowNodeId={getRowNodeId}>
+        <MyGrid style={gridstyle} contextM={openColorMenu} dark={true} rowData={colorRows} columnDefs={linnColorColumnsDef}  getRowId={getRowId}>
           <Menu  theme="contexify_theme-dark" id={kColorsMenu}>
             <ContextMenuHeader>Colors Context Menu</ContextMenuHeader>
             <Item onClick={()=>actions.patch.saveAsUnnamed(patchData)}>Save current colors to new patch</Item>

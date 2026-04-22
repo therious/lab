@@ -7,7 +7,7 @@ import {useSelector} from "../actions-integration";
 import {CheckGroup} from "./CheckGroup.jsx";
 import {resetRecordable} from "../linnutils/mymidi";
 
-const getRowNodeId = data=>data.id
+const getRowId = params=>String(params.data.id)
 const gridstyle = {height: '700px', width: '100%'};
 
 export const  RtMidiview = () => {
@@ -51,7 +51,7 @@ export const  RtMidiview = () => {
         &nbsp; Midi Event Count:  {rowData.length}
 
         <hr/>
-      <MyGrid style={gridstyle} rowData={rowData.filter(ffFilter)} columnDefs={columnDefs}  getRowNodeId={getRowNodeId}/>
+      <MyGrid style={gridstyle} rowData={rowData.filter(ffFilter)} columnDefs={columnDefs}  getRowId={getRowId}/>
       </>
     );
 };

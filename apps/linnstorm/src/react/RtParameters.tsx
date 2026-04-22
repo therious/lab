@@ -23,8 +23,8 @@ PatchEditorsInit(actions.patch);
   instead it continues showing old rows that should no longer exist in patches array at all
 
  */
-const getRowNodeId = (data:any)=>data.nrpn
-const getPatchRowNodeId = (data:any)=>data.updated;
+const getRowId = (params:any)=>String(params.data.nrpn)
+const getPatchRowId = (params:any)=>String(params.data.updated);
 
 
 
@@ -152,7 +152,7 @@ export const  RtParameter = () => {
           Patch Filter: <input id="pfilter" name="pfilter" type="text" value={patchFilter} onChange={event => actions.patch.saveFilter(event.target.value)}/>
           </div>
           <hr/>
-          <MyGrid style={gridstyle} contextM={openPatchMenu} dark={false} rowData={patches} columnDefs={patchColumnDefs} getRowNodeId={getPatchRowNodeId}>
+          <MyGrid style={gridstyle} contextM={openPatchMenu} dark={false} rowData={patches} columnDefs={patchColumnDefs} getRowId={getPatchRowId}>
           <Menu id={kPatchContextMenu}>
             <ContextMenuHeader><span style={{color:'black'}}>Patch: </span>{currentPatchName}</ContextMenuHeader>
             <Separator />
@@ -177,7 +177,7 @@ export const  RtParameter = () => {
           </div>
           <hr/>
           <MyGrid style={gridstyle} contextM={openParamsMenu} dark={true} rowData={linnpropRows.filter(ffFilter)} columnDefs={paramColumnDefs}
-                  getRowNodeId={getRowNodeId}>
+                  getRowId={getRowId}>
                   <Menu  theme="contexify_theme-dark" id={kParamsContextMenu}>
                     <ContextMenuHeader><span style={{color:'black'}}>Patch: </span>Column A ({Object.keys(patchDataColumnA).length} keys)</ContextMenuHeader>
                     <Item onClick={()=>actions.patch.saveAsUnnamed(patchDataColumnA)}>Save Column A to new patch</Item>
