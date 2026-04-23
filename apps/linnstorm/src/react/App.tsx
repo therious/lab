@@ -13,6 +13,7 @@ import {
   UsersProvider, useSession, Login,
   UsersView, AdminView, RoleGuard,
 } from '@therious/users';
+import { RouteGuard } from './RouteGuard';
 import { Modalize } from '@therious/components';
 import { firebaseAuth, db } from '../firebase';
 
@@ -203,14 +204,14 @@ const AuthenticatedApp = ({ session }: { session: User }) => {
           <Modal content={<div><h1>{notice.level}</h1><hr/>{notice.msg}</div>} close={()=>{dismiss(notice.key)}}/>
           :
           <Routes>
-            <Route path="/"       element={<RtParameter/>}/>
-            <Route path="/intro"  element={<Intro/>}/>
-            <Route path="/params" element={<RtParameter/>}/>
-            <Route path="/tuning" element={<RtTuning/>}/>
-            <Route path="/midi"   element={<RtMidiview/>}/>
-            <Route path="/files"  element={<RtFiles/>}/>
-            <Route path="/users"  element={<UsersView session={session} />}/>
-            <Route path="/admin"  element={<RoleGuard roles={['admin']}><AdminView /></RoleGuard>}/>
+            <Route path="/"       element={<RouteGuard><RtParameter/></RouteGuard>}/>
+            <Route path="/intro"  element={<RouteGuard><Intro/></RouteGuard>}/>
+            <Route path="/params" element={<RouteGuard><RtParameter/></RouteGuard>}/>
+            <Route path="/tuning" element={<RouteGuard><RtTuning/></RouteGuard>}/>
+            <Route path="/midi"   element={<RouteGuard><RtMidiview/></RouteGuard>}/>
+            <Route path="/files"  element={<RouteGuard><RtFiles/></RouteGuard>}/>
+            <Route path="/users"  element={<RouteGuard><UsersView session={session} /></RouteGuard>}/>
+            <Route path="/admin"  element={<RouteGuard roles={['admin']}><AdminView /></RouteGuard>}/>
           </Routes>
         }
       </CenterBody>
