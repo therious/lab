@@ -139,8 +139,9 @@ const  RtTuning = () => {
   const baseNote = baseMidiNote + transposeSemis; // what is the first midi note number
 
   useEffect(()=>{
+    if (linnsConnected !== 1) return;
     uploadRealTimeTuningPatch(tuningToParamSet({ transposeSemis,tonic, tuningOffsetSemis}, scaleNotes));
-  },[transposeSemis,tonic, tuningOffsetSemis, scaleNotes]);
+  },[transposeSemis, tonic, tuningOffsetSemis, scaleNotes, linnsConnected]);
 
 
   const rotatedTwelve = rotateNRight(twelve, tonic);
