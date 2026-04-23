@@ -2,8 +2,11 @@ name: linnstorm
 version: 0.0.0
 private: true
 dependencies:
-  '@therious/actions': workspace:*
-  '@therious/utils':   workspace:*
+  '@therious/actions':     workspace:*
+  '@therious/components':  workspace:*
+  '@therious/users':       workspace:*
+  '@therious/utils':       workspace:*
+  firebase: ~10.12.0
   react: ~18.2.0
   react-dom: ~18.2.0
   react-json-tree: ~0.18.0
