@@ -287,10 +287,12 @@ const ToggleBtn = styled.button<{ $active: boolean }>`
   &:hover { border-color: #1a73e8; }
 `;
 
-const LANE_W     = 18;   // px per lane column
-const DOT_R      = 5;    // node circle radius
-const ROW_H      = 56;   // fixed height per message row
-const DATE_SEP_H = 30;   // height of a date separator row
+const LANE_W      = 18;   // px per lane column
+const DOT_R       = 6;    // diamond half-size (radius)
+const ROW_H       = 64;   // fixed height per message row
+const DATE_SEP_H  = 30;   // height of a date separator row
+const AVATAR_SIZE = 34;   // graph-view avatar diameter
+const AVATAR_COL  = 44;   // width of avatar column flanking the SVG
 
 // Assign each message a horizontal lane. Legacy auto-ID messages (no parents,
 // no snowflake ID) share lane 0 in sequence. Snowflake messages form the real DAG.
@@ -416,16 +418,17 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
   }), [items, msgToCY]);
 
   const dots = useMemo(() => items.map(({ msg, lane, cy }) => {
-    const cx    = lane * LANE_W + LANE_W / 2;
-    const mine  = msg.fromUid === myUid;
-    const fill  = isSnowflakeId(msg.id ?? '') ? (mine ? '#3c4043' : '#1a73e8') : '#aaa';
-    return <circle key={`dot-${msg.id ?? cy}`} cx={cx} cy={cy} r={DOT_R} fill={fill} />;
+    const cx   = lane * LANE_W + LANE_W / 2;
+    const mine = msg.fromUid === myUid;
+    const fill = isSnowflakeId(msg.id ?? '') ? (mine ? '#3c4043' : '#1a73e8') : '#aaa';
+    const pts  = `${cx},${cy - DOT_R} ${cx + DOT_R},${cy} ${cx},${cy + DOT_R} ${cx - DOT_R},${cy}`;
+    return <polygon key={`dot-${msg.id ?? cy}`} points={pts} fill={fill} />;
   }), [items, myUid]);
 
   return (
     <Messages>
       <div style={{ display: 'flex', minHeight: totalH }}>
-        {/* Left: lane graph */}
+        {/* Lane graph SVG */}
         <div style={{ width: svgW, flexShrink: 0, position: 'relative', alignSelf: 'stretch' }}>
           <svg style={{ position: 'absolute', top: 0, left: 0, overflow: 'visible' }}
                width={svgW} height={totalH}>
@@ -434,7 +437,27 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
           </svg>
         </div>
 
-        {/* Right: bubbles at fixed row heights matching SVG Y coordinates */}
+        {/* Avatar column — one avatar per row, vertically centred, diamonds point here */}
+        <div style={{ width: AVATAR_COL, flexShrink: 0, display: 'flex',
+                      flexDirection: 'column' }}>
+          {items.map((layout, i) => {
+            const { msg, showSep } = layout;
+            const profile = allUsers.find((u: UserProfile) => u.uid === msg.fromUid) ?? null;
+            return (
+              <React.Fragment key={i}>
+                {showSep && <div style={{ height: DATE_SEP_H }} />}
+                <div style={{ height: ROW_H, display: 'flex',
+                              alignItems: 'center', justifyContent: 'center' }}>
+                  <Avatar profile={profile}
+                          fallback={{ email: msg.fromEmail, displayName: msg.fromEmail }}
+                          size={AVATAR_SIZE} />
+                </div>
+              </React.Fragment>
+            );
+          })}
+        </div>
+
+        {/* Bubble column */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           {items.map((layout, i) => {
             const { msg, showSep, dateLabel } = layout;
@@ -442,15 +465,6 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
             const time    = new Date(msg.timestamp).toLocaleTimeString(undefined,
               { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const profile = allUsers.find((u: UserProfile) => u.uid === msg.fromUid) ?? null;
-            const bubble  = (
-              <BubbleWrap $mine={mine}>
-                {showAvatars && !mine && (
-                  <SenderLabel>{profile?.displayName ?? msg.fromEmail}</SenderLabel>
-                )}
-                <Bubble $mine={mine}>{msg.text}</Bubble>
-                <BubbleTime $mine={mine}>{time}</BubbleTime>
-              </BubbleWrap>
-            );
             return (
               <React.Fragment key={i}>
                 {showSep && (
@@ -458,12 +472,13 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
                 )}
                 <div style={{ height: ROW_H, display: 'flex', alignItems: 'center',
                               overflow: 'hidden' }}>
-                  {showAvatars && !mine ? (
-                    <MsgRow>
-                      <Avatar profile={profile} fallback={{ email: msg.fromEmail }} size={28} />
-                      {bubble}
-                    </MsgRow>
-                  ) : bubble}
+                  <BubbleWrap $mine={mine}>
+                    {showAvatars && !mine && (
+                      <SenderLabel>{profile?.displayName ?? msg.fromEmail}</SenderLabel>
+                    )}
+                    <Bubble $mine={mine}>{msg.text}</Bubble>
+                    <BubbleTime $mine={mine}>{time}</BubbleTime>
+                  </BubbleWrap>
                 </div>
               </React.Fragment>
             );
