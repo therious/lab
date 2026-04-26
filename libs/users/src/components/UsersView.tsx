@@ -302,7 +302,9 @@ export const UsersView = ({ session }: Props) => {
             participants:  r.participants  ?? [],
             nickname:      r.nickname      ?? '',
             createdBy:     r.createdBy     ?? '',
-            lastMessageAt: (r.lastMessageAt as Timestamp | null)?.toMillis() ?? null,
+            lastMessageAt: typeof r.lastMessageAt === 'number'
+                             ? r.lastMessageAt
+                             : (r.lastMessageAt as Timestamp | null)?.toMillis() ?? null,
             pending:       false,
           };
         });
@@ -321,7 +323,7 @@ export const UsersView = ({ session }: Props) => {
 
   useEffect(() => {
     if (!me?.uid || !otherUidKey) return;
-    const since  = Timestamp.now();
+    const since  = Date.now();   // numeric — matches new messages' numeric timestamp field
     const others = users.filter((u: UserProfile) => u.uid !== me.uid);
     const unsubs = others.map((user: UserProfile) => {
       const convoId = chatId(me.uid, user.uid);
@@ -339,7 +341,7 @@ export const UsersView = ({ session }: Props) => {
             fromUid:   d.from      ?? '',
             fromEmail: d.fromEmail ?? '',
             text:      d.text      ?? '',
-            timestamp: d.timestamp?.toMillis() ?? Date.now(),
+            timestamp: typeof d.timestamp === 'number' ? d.timestamp : d.timestamp?.toMillis() ?? Date.now(),
           });
         }),
         err => console.error('[1-1 message listener]', user.email, err.code),
@@ -353,7 +355,7 @@ export const UsersView = ({ session }: Props) => {
 
   useEffect(() => {
     if (!me?.uid || !groupIdKey) return;
-    const since = Timestamp.now();
+    const since = Date.now();    // numeric — matches new messages' numeric timestamp field
     const unsubs = groups.filter((g: GroupChat) => !g.pending).map((group: GroupChat) => {
       const q = query(
         collection(db, 'apps', appKey(), 'groupChats', group.id, 'messages'),
@@ -369,7 +371,7 @@ export const UsersView = ({ session }: Props) => {
             fromUid:   d.from      ?? '',
             fromEmail: d.fromEmail ?? '',
             text:      d.text      ?? '',
-            timestamp: d.timestamp?.toMillis() ?? Date.now(),
+            timestamp: typeof d.timestamp === 'number' ? d.timestamp : d.timestamp?.toMillis() ?? Date.now(),
           });
         }),
         err => console.error('[group message listener]', group.id, err.code),
