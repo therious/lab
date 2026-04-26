@@ -294,6 +294,11 @@ const DATE_SEP_H = 30;   // height of a date separator row
 
 // Assign each message a horizontal lane. Legacy auto-ID messages (no parents,
 // no snowflake ID) share lane 0 in sequence. Snowflake messages form the real DAG.
+//
+// A slot is only inheritable if the parent STILL occupies it — i.e. no other
+// child has already claimed it.  Without this check, sibling messages (two
+// children of the same parent sent concurrently) both land in the parent's slot
+// and appear as a straight line instead of a branch.
 function computeLanes(messages: ChatMessage[]): Map<string, number> {
   const slots: (string | null)[] = [];   // slot index → current thread owner id
   const result = new Map<string, number>();
@@ -302,24 +307,29 @@ function computeLanes(messages: ChatMessage[]): Map<string, number> {
     if (!msg.id) continue;
     const legacy  = !isSnowflakeId(msg.id);
     const parents = legacy ? [] : (msg.parents ?? []);
-    const parentSlots = parents
-      .map(p => result.get(p))
-      .filter((s): s is number => s !== undefined);
+
+    // Only parents that still own their original slot can be inherited
+    const inheritableSlots: number[] = parents
+      .map(p => ({ pid: p, s: result.get(p) }))
+      .filter((x): x is { pid: string; s: number } =>
+        x.s !== undefined && slots[x.s] === x.pid,
+      )
+      .map(x => x.s);
 
     let slot: number;
-    if (parentSlots.length === 0) {
-      if (legacy) {
-        // All legacy messages share lane 0 as a sequential chain
-        slot = 0;
-        slots[0] = msg.id;
-      } else {
-        slot = slots.indexOf(null);
-        if (slot < 0) { slot = slots.length; slots.push(null); }
-        slots[slot] = msg.id;
-      }
+    if (legacy) {
+      // Legacy messages form a sequential chain in lane 0
+      slot = 0;
+      slots[0] = msg.id;
+    } else if (inheritableSlots.length > 0) {
+      // Continue the earliest inheritable parent thread; merge any others
+      slot = Math.min(...inheritableSlots);
+      for (const ps of inheritableSlots) if (ps !== slot) slots[ps] = null;
+      slots[slot] = msg.id;
     } else {
-      slot = Math.min(...parentSlots);
-      for (const ps of parentSlots) if (ps !== slot) slots[ps] = null;
+      // All parent slots were already claimed by siblings — open a new lane
+      slot = slots.indexOf(null);
+      if (slot < 0) { slot = slots.length; slots.push(null); }
       slots[slot] = msg.id;
     }
     result.set(msg.id, slot);
