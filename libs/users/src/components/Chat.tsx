@@ -169,6 +169,33 @@ const ErrorBar = styled.div`
   flex-shrink: 0;
 `;
 
+// ── Avatar blob cache (page-lifetime) ────────────────────────────────────────
+// Fetch each avatar URL once per page load and store it as a blob URL so it
+// survives token expiry and transient network blips.  On failure, the last
+// successfully fetched blob URL is used as a fallback.
+
+const _avatarBlobCache  = new Map<string, string>();   // uid → blob URL
+const _avatarFetchInFlight = new Set<string>();         // uids currently being fetched
+
+async function _fetchAvatarBlob(uid: string, photoURL: string): Promise<string | null> {
+  if (_avatarFetchInFlight.has(uid)) return _avatarBlobCache.get(uid) ?? null;
+  _avatarFetchInFlight.add(uid);
+  try {
+    const res = await fetch(photoURL, { referrerPolicy: 'no-referrer' });
+    if (!res.ok) throw new Error(`${res.status}`);
+    const blob    = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const prev    = _avatarBlobCache.get(uid);
+    if (prev) URL.revokeObjectURL(prev);
+    _avatarBlobCache.set(uid, blobUrl);
+    return blobUrl;
+  } catch {
+    return _avatarBlobCache.get(uid) ?? null;  // stale cache is better than nothing
+  } finally {
+    _avatarFetchInFlight.delete(uid);
+  }
+}
+
 // ── Shared avatar with status dot ────────────────────────────────────────────
 
 type AvatarProps = {
@@ -178,6 +205,23 @@ type AvatarProps = {
 };
 
 const Avatar = ({ profile, fallback, size = 24 }: AvatarProps) => {
+  const uid       = profile?.uid ?? null;
+  const photoURL  = profile?.photoURL ?? null;
+
+  // Resolved img src: starts as whatever we have (blob cache or raw URL), updates
+  // after a fresh fetch completes.
+  const [imgSrc, setImgSrc] = useState<string | null>(() => {
+    if (!uid || !photoURL) return null;
+    return _avatarBlobCache.get(uid) ?? photoURL;
+  });
+
+  useEffect(() => {
+    if (!uid || !photoURL) { setImgSrc(null); return; }
+    // If already cached, use it immediately and skip re-fetch.
+    if (_avatarBlobCache.has(uid)) { setImgSrc(_avatarBlobCache.get(uid)!); return; }
+    _fetchAvatarBlob(uid, photoURL).then(url => { if (url) setImgSrc(url); });
+  }, [uid, photoURL]);
+
   const dotSize = Math.round(size * 0.34);
   const dot = profile ? (
     <div style={{
@@ -193,11 +237,20 @@ const Avatar = ({ profile, fallback, size = 24 }: AvatarProps) => {
     width: size, height: size,
   };
 
-  if (profile?.photoURL) {
+  if (imgSrc) {
     return (
       <div style={wrap}>
-        <img src={profile.photoURL} referrerPolicy="no-referrer" loading="lazy" alt=""
-          style={{ width: size, height: size, borderRadius: '50%', display: 'block' }} />
+        <img src={imgSrc}
+          alt=""
+          style={{ width: size, height: size, borderRadius: '50%', display: 'block' }}
+          onError={() => {
+            // Fetch failed or blob URL expired — re-fetch and fall back to cache.
+            if (uid && photoURL) {
+              _fetchAvatarBlob(uid, photoURL).then(url => { if (url) setImgSrc(url); });
+            }
+            setImgSrc(_avatarBlobCache.get(uid ?? '') ?? null);
+          }}
+        />
         {dot}
       </div>
     );
