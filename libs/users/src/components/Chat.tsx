@@ -375,6 +375,34 @@ function computeLayout(
   return { items, totalH: y };
 }
 
+// Colors assigned to participants in order of first appearance.
+// Index 0 is reserved for self (always black). Others get the palette in sequence.
+const USER_DOT_COLORS = [
+  '#1a73e8',  // blue
+  '#188038',  // green
+  '#c5221f',  // red
+  '#8430ce',  // purple
+  '#e37400',  // orange
+  '#00acc1',  // cyan
+  '#d01884',  // pink
+  '#795548',  // brown
+  '#546e7a',  // blue-grey
+  '#ff6f00',  // amber
+];
+
+function buildUserColorMap(messages: ChatMessage[], myUid: string): Map<string, string> {
+  const map = new Map<string, string>();
+  map.set(myUid, '#3c4043');  // self = near-black
+  let idx = 0;
+  for (const m of messages) {
+    if (!map.has(m.fromUid)) {
+      map.set(m.fromUid, USER_DOT_COLORS[idx % USER_DOT_COLORS.length]);
+      idx++;
+    }
+  }
+  return map;
+}
+
 const GraphView = ({ messages, myUid, showAvatars = false }:
     { messages: ChatMessage[]; myUid: string; showAvatars?: boolean }) => {
   const { useSelector } = useUsersCtx();
@@ -382,8 +410,9 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
   const allUsers  = useSelector((s: any) => s.users.list);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
-  const msgToLane = useMemo(() => computeLanes(messages), [messages]);
-  const maxLane   = useMemo(
+  const msgToLane   = useMemo(() => computeLanes(messages), [messages]);
+  const userColorMap = useMemo(() => buildUserColorMap(messages, myUid), [messages, myUid]);
+  const maxLane     = useMemo(
     () => msgToLane.size === 0 ? 0 : Math.max(0, ...msgToLane.values()),
     [msgToLane],
   );
@@ -419,11 +448,12 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
 
   const dots = useMemo(() => items.map(({ msg, lane, cy }) => {
     const cx   = lane * LANE_W + LANE_W / 2;
-    const mine = msg.fromUid === myUid;
-    const fill = isSnowflakeId(msg.id ?? '') ? (mine ? '#3c4043' : '#1a73e8') : '#aaa';
+    const fill = isSnowflakeId(msg.id ?? '')
+      ? (userColorMap.get(msg.fromUid) ?? '#aaa')
+      : '#bbb';
     const pts  = `${cx},${cy - DOT_R} ${cx + DOT_R},${cy} ${cx},${cy + DOT_R} ${cx - DOT_R},${cy}`;
     return <polygon key={`dot-${msg.id ?? cy}`} points={pts} fill={fill} />;
-  }), [items, myUid]);
+  }), [items, userColorMap]);
 
   return (
     <Messages>
