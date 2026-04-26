@@ -3,6 +3,7 @@ version: 0.0.0
 private: true
 dependencies:
   '@therious/actions':     workspace:*
+  '@therious/ag-grid':     workspace:*
   '@therious/components':  workspace:*
   '@therious/users':       workspace:*
   '@therious/utils':       workspace:*
