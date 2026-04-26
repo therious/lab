@@ -61,14 +61,18 @@ const Messages = styled.div`
   min-height: 0;
 `;
 
-const BubbleWrap = styled.div<{ $mine: boolean }>`
+// $alignRight overrides which edge BubbleWrap docks to (used in graph mode where
+// the conventional left/right is reversed relative to the column it lives in).
+const BubbleWrap = styled.div<{ $mine: boolean; $alignRight?: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: ${p => p.$mine ? 'flex-end' : 'flex-start'};
-  align-self:  ${p => p.$mine ? 'flex-end' : 'flex-start'};
+  align-self:  ${p => (p.$alignRight !== undefined ? p.$alignRight : p.$mine) ? 'flex-end' : 'flex-start'};
 `;
 
-const Bubble = styled.div<{ $mine: boolean }>`
+// $tailRight overrides which side the tail appears on (defaults to $mine).
+// In graph mode the SVG is centred, so both sides want a tail pointing inward.
+const Bubble = styled.div<{ $mine: boolean; $tailRight?: boolean }>`
   position: relative;
   max-width: 80%;
   padding: 7px 11px;
@@ -83,12 +87,12 @@ const Bubble = styled.div<{ $mine: boolean }>`
     position: absolute;
     bottom: 8px;
     border-style: solid;
-    right: ${p => p.$mine ? '-6px' : 'auto'};
-    left:  ${p => p.$mine ? 'auto' : '-6px'};
-    border-width: ${p => p.$mine ? '6px 0 6px 8px' : '6px 8px 6px 0'};
-    border-color: ${p => p.$mine
-      ? 'transparent transparent transparent #3c4043'
-      : 'transparent #f1f3f4 transparent transparent'};
+    right: ${p => (p.$tailRight ?? p.$mine) ? '-6px' : 'auto'};
+    left:  ${p => (p.$tailRight ?? p.$mine) ? 'auto'  : '-6px'};
+    border-width: ${p => (p.$tailRight ?? p.$mine) ? '6px 0 6px 8px' : '6px 8px 6px 0'};
+    border-color: ${p => (p.$tailRight ?? p.$mine)
+      ? `transparent transparent transparent ${p.$mine ? '#3c4043' : '#f1f3f4'}`
+      : `transparent ${p.$mine ? '#3c4043' : '#f1f3f4'} transparent transparent`};
   }
 `;
 
@@ -508,60 +512,93 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
     return <polygon key={`dot-${msg.id ?? cy}`} points={pts} fill={fill} />;
   }), [items, userColorMap]);
 
+  // Layout: [others bubble (flex1)] [left avatar (AVATAR_COL)] [SVG (svgW, absolute)]
+  //          [right avatar (AVATAR_COL)] [mine bubble (flex1)]
+  // The SVG is absolutely centred over the whole container.  Because both sides
+  // are symmetric (flex:1 + AVATAR_COL), the SVG spacer lands exactly at 50%.
   return (
     <Messages>
-      <div style={{ display: 'flex', minHeight: totalH }}>
-        {/* Lane graph SVG */}
-        <div style={{ width: svgW, flexShrink: 0, position: 'relative', alignSelf: 'stretch' }}>
-          <svg style={{ position: 'absolute', top: 0, left: 0, overflow: 'visible' }}
-               width={svgW} height={totalH}>
-            {lines}
-            {dots}
-          </svg>
-        </div>
+      <div style={{ position: 'relative', minHeight: totalH }}>
 
-        {/* Avatar column — one avatar per row, vertically centred, diamonds point here */}
-        <div style={{ width: AVATAR_COL, flexShrink: 0, display: 'flex',
-                      flexDirection: 'column' }}>
-          {items.map((layout, i) => {
-            const { msg, showSep } = layout;
-            const profile = allUsers.find((u: UserProfile) => u.uid === msg.fromUid) ?? null;
-            return (
-              <React.Fragment key={i}>
-                {showSep && <div style={{ height: DATE_SEP_H }} />}
-                <div style={{ height: ROW_H, display: 'flex',
-                              alignItems: 'center', justifyContent: 'center' }}>
-                  <Avatar profile={profile}
-                          fallback={{ email: msg.fromEmail, displayName: msg.fromEmail }}
-                          size={AVATAR_SIZE} />
-                </div>
-              </React.Fragment>
-            );
-          })}
-        </div>
+        {/* SVG overlay — centred absolutely, drawn behind row content */}
+        <svg style={{
+          position: 'absolute',
+          left: `calc(50% - ${svgW / 2}px)`,
+          top: 0,
+          overflow: 'visible',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }} width={svgW} height={totalH}>
+          {lines}
+          {dots}
+        </svg>
 
-        {/* Bubble column */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        {/* Rows — stacked, each has the same 5-cell flex layout */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
           {items.map((layout, i) => {
             const { msg, showSep, dateLabel } = layout;
             const mine    = msg.fromUid === myUid;
             const time    = new Date(msg.timestamp).toLocaleTimeString(undefined,
               { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const profile = allUsers.find((u: UserProfile) => u.uid === msg.fromUid) ?? null;
+
             return (
               <React.Fragment key={i}>
                 {showSep && (
-                  <DateSep style={{ height: DATE_SEP_H, margin: 0 }}>{dateLabel}</DateSep>
+                  <div style={{ height: DATE_SEP_H }}>
+                    <DateSep style={{ height: '100%', margin: 0 }}>{dateLabel}</DateSep>
+                  </div>
                 )}
-                <div style={{ height: ROW_H, display: 'flex', alignItems: 'center',
-                              overflow: 'hidden' }}>
-                  <BubbleWrap $mine={mine}>
-                    {showAvatars && !mine && (
-                      <SenderLabel>{profile?.displayName ?? msg.fromEmail}</SenderLabel>
+                <div style={{ height: ROW_H, display: 'flex', alignItems: 'center' }}>
+
+                  {/* Left: others' bubble — right-aligned toward centre */}
+                  <div style={{ flex: 1, minWidth: 0, overflow: 'hidden',
+                                display: 'flex', alignItems: 'center' }}>
+                    {!mine && (
+                      <BubbleWrap $mine={false} $alignRight={true}>
+                        {showAvatars && (
+                          <SenderLabel>{profile?.displayName ?? msg.fromEmail}</SenderLabel>
+                        )}
+                        <Bubble $mine={false} $tailRight={true}>{msg.text}</Bubble>
+                        <BubbleTime $mine={false}>{time}</BubbleTime>
+                      </BubbleWrap>
                     )}
-                    <Bubble $mine={mine}>{msg.text}</Bubble>
-                    <BubbleTime $mine={mine}>{time}</BubbleTime>
-                  </BubbleWrap>
+                  </div>
+
+                  {/* Left avatar (others) */}
+                  <div style={{ width: AVATAR_COL, flexShrink: 0,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {!mine && (
+                      <Avatar profile={profile}
+                              fallback={{ email: msg.fromEmail, displayName: msg.fromEmail }}
+                              size={AVATAR_SIZE} />
+                    )}
+                  </div>
+
+                  {/* Centre spacer matching SVG width */}
+                  <div style={{ width: svgW, flexShrink: 0 }} />
+
+                  {/* Right avatar (mine) */}
+                  <div style={{ width: AVATAR_COL, flexShrink: 0,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {mine && (
+                      <Avatar profile={profile}
+                              fallback={{ email: msg.fromEmail }}
+                              size={AVATAR_SIZE} />
+                    )}
+                  </div>
+
+                  {/* Right: my bubble — left-aligned toward centre */}
+                  <div style={{ flex: 1, minWidth: 0, overflow: 'hidden',
+                                display: 'flex', alignItems: 'center' }}>
+                    {mine && (
+                      <BubbleWrap $mine={true} $alignRight={false}>
+                        <Bubble $mine={true} $tailRight={false}>{msg.text}</Bubble>
+                        <BubbleTime $mine={true}>{time}</BubbleTime>
+                      </BubbleWrap>
+                    )}
+                  </div>
+
                 </div>
               </React.Fragment>
             );
