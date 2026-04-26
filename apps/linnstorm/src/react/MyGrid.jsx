@@ -29,7 +29,6 @@ export const  MyGrid = ({children, style, contextM, rowData, columnDefs, getRowI
 
     const gridOptions = {suppressPropertyNamesCheck : true};
     const className = `ag-theme-balham${dark? '-dark':''}`;
-    const sideBar = { toolPanels: ['columns'] };
     return (
         <div  className={className} style={style}>
             {children}
@@ -39,7 +38,6 @@ export const  MyGrid = ({children, style, contextM, rowData, columnDefs, getRowI
                 ref={gridRef}
                 components={components}
                 gridOptions={gridOptions}
-                sideBar={sideBar}
                 getRowId={getRowId}
                 columnDefs={columnDefs} rowData={rowData}/>
         </div>
