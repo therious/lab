@@ -297,10 +297,12 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
   const [sendErr, setSendErr] = useState<string | null>(null);
   const convoId  = chatId(me.uid, them.uid);
   const messages = useSelector((s: any) => s.chat.conversations[them.email] ?? []);
-  const headsRef = useRef<Heads>(makeHeads());
+  const headsRef   = useRef<Heads>(makeHeads());
+  const parentsRef = useRef<string[]>([]);   // heads snapshot at last keystroke
 
   useEffect(() => {
-    headsRef.current = makeHeads();
+    headsRef.current   = makeHeads();
+    parentsRef.current = [];
     actions.chat.setConversation(them.email, []);
     const q = query(collection(db, 'apps', appKey(), 'chats', convoId, 'messages'),
                     orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
@@ -333,7 +335,8 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
     setSendErr(null);
     const id      = chatMsgId();
     const ts      = Date.now();
-    const parents = snapshotHeads(headsRef.current);
+    const parents = parentsRef.current;   // captured at last keystroke, not now
+    parentsRef.current = [];
     updateHeads(headsRef.current, id, parents);
     actions.chat.messageSent(them.email, {
       id, fromUid: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: ts, parents,
@@ -351,12 +354,18 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
   }, [send]);
 
+  const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setText(e.target.value);
+    setSendErr(null);
+    parentsRef.current = snapshotHeads(headsRef.current);  // freeze causal context at edit time
+  }, []);
+
   return (
     <>
       <MessageList messages={messages} myUid={me.uid} />
       {sendErr && <ErrorBar>{sendErr}</ErrorBar>}
       <InputRow>
-        <TextInput value={text} onChange={e => { setText(e.target.value); setSendErr(null); }}
+        <TextInput value={text} onChange={onChange}
           onKeyDown={onKey} placeholder={`Message ${them.displayName ?? them.email}…`} autoFocus />
         <SendBtn disabled={!text.trim()} onClick={send}>Send</SendBtn>
       </InputRow>
@@ -371,12 +380,14 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
   const [text, setText]       = useState('');
   const [sendErr, setSendErr] = useState<string | null>(null);
   const messages = useSelector((s: any) => s.chat.conversations[group.id] ?? []);
-  const headsRef = useRef<Heads>(makeHeads());
+  const headsRef   = useRef<Heads>(makeHeads());
+  const parentsRef = useRef<string[]>([]);   // heads snapshot at last keystroke
 
   // History — skip for pending chats (no Firestore document yet)
   useEffect(() => {
     if (group.pending) return;
-    headsRef.current = makeHeads();
+    headsRef.current   = makeHeads();
+    parentsRef.current = [];
     actions.chat.setConversation(group.id, []);
     const q = query(collection(db, 'apps', appKey(), 'groupChats', group.id, 'messages'),
                     orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
@@ -409,7 +420,8 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
     setSendErr(null);
     const id      = chatMsgId();
     const ts      = Date.now();
-    const parents = snapshotHeads(headsRef.current);
+    const parents = parentsRef.current;   // captured at last keystroke, not now
+    parentsRef.current = [];
     updateHeads(headsRef.current, id, parents);
 
     const message: ChatMessage = {
@@ -448,12 +460,18 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
   }, [send]);
 
+  const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setText(e.target.value);
+    setSendErr(null);
+    parentsRef.current = snapshotHeads(headsRef.current);  // freeze causal context at edit time
+  }, []);
+
   return (
     <>
       <MessageList messages={messages} myUid={me.uid} showAvatars />
       {sendErr && <ErrorBar>{sendErr}</ErrorBar>}
       <InputRow>
-        <TextInput value={text} onChange={e => { setText(e.target.value); setSendErr(null); }}
+        <TextInput value={text} onChange={onChange}
           onKeyDown={onKey} placeholder={`Message ${group.nickname}…`} autoFocus />
         <SendBtn disabled={!text.trim()} onClick={send}>Send</SendBtn>
       </InputRow>
