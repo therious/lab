@@ -506,7 +506,7 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
   const { db, actions, useSelector } = useUsersCtx();
   const [text, setText]         = useState('');
   const [sendErr, setSendErr]   = useState<string | null>(null);
-  const [graphMode, setGraphMode] = useState(false);
+  const [graphMode, setGraphMode] = useState(true);
   const convoId  = chatId(me.uid, them.uid);
   const messages = useSelector((s: any) => s.chat.conversations[them.email] ?? []);
   const headsRef   = useRef<Heads>(makeHeads());
@@ -596,7 +596,7 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
   const { db, actions, useSelector } = useUsersCtx();
   const [text, setText]           = useState('');
   const [sendErr, setSendErr]     = useState<string | null>(null);
-  const [graphMode, setGraphMode] = useState(false);
+  const [graphMode, setGraphMode] = useState(true);
   const messages = useSelector((s: any) => s.chat.conversations[group.id] ?? []);
   const headsRef   = useRef<Heads>(makeHeads());
   const parentsRef = useRef<string[]>([]);   // heads snapshot at last keystroke
