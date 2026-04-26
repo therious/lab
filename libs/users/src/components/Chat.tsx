@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { collection, doc, setDoc, writeBatch,
          query, orderBy, limitToLast, onSnapshot } from 'firebase/firestore';
 import { appKey } from '../app-key';
@@ -7,6 +7,7 @@ import styled from 'styled-components';
 import { useUsersCtx } from '../context';
 import { ChatMessage, UserRec, GroupChat, chatId, HISTORY_LIMIT } from '../slices/chat-slice';
 import { chatMsgId, msgTimestamp, makeHeads, updateHeads, snapshotHeads, Heads } from '../slices/chat-id';
+import { isSnowflakeId } from '@therious/utils';
 import { UserProfile, INACTIVITY_TIMEOUT_MS } from '../slices/users-slice';
 import { hashColor, statusDotColor } from './avatar-utils';
 
@@ -264,6 +265,206 @@ const MessageList = ({ messages, myUid, showAvatars = false }:
   );
 };
 
+// ── Graph view ───────────────────────────────────────────────────────────────
+
+const Toolbar = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  padding: 3px 8px;
+  border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
+  background: #fafafa;
+`;
+
+const ToggleBtn = styled.button<{ $active: boolean }>`
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid ${p => p.$active ? '#1a73e8' : '#dadce0'};
+  border-radius: 12px;
+  background: ${p => p.$active ? '#e8f0fe' : 'white'};
+  color: ${p => p.$active ? '#1a73e8' : '#5f6368'};
+  cursor: pointer;
+  &:hover { border-color: #1a73e8; }
+`;
+
+const LANE_W     = 18;   // px per lane column
+const DOT_R      = 5;    // node circle radius
+const ROW_H      = 56;   // fixed height per message row
+const DATE_SEP_H = 30;   // height of a date separator row
+
+// Assign each message a horizontal lane. Legacy auto-ID messages (no parents,
+// no snowflake ID) share lane 0 in sequence. Snowflake messages form the real DAG.
+function computeLanes(messages: ChatMessage[]): Map<string, number> {
+  const slots: (string | null)[] = [];   // slot index → current thread owner id
+  const result = new Map<string, number>();
+
+  for (const msg of messages) {
+    if (!msg.id) continue;
+    const legacy  = !isSnowflakeId(msg.id);
+    const parents = legacy ? [] : (msg.parents ?? []);
+    const parentSlots = parents
+      .map(p => result.get(p))
+      .filter((s): s is number => s !== undefined);
+
+    let slot: number;
+    if (parentSlots.length === 0) {
+      if (legacy) {
+        // All legacy messages share lane 0 as a sequential chain
+        slot = 0;
+        slots[0] = msg.id;
+      } else {
+        slot = slots.indexOf(null);
+        if (slot < 0) { slot = slots.length; slots.push(null); }
+        slots[slot] = msg.id;
+      }
+    } else {
+      slot = Math.min(...parentSlots);
+      for (const ps of parentSlots) if (ps !== slot) slots[ps] = null;
+      slots[slot] = msg.id;
+    }
+    result.set(msg.id, slot);
+  }
+  return result;
+}
+
+type MsgLayout = {
+  msg:         ChatMessage;
+  lane:        number;
+  cy:          number;   // dot center Y in SVG coordinates
+  rowTopY:     number;   // top of the message row
+  showSep:     boolean;
+  dateLabel:   string;
+  dateSepTopY: number;   // top of date separator (only when showSep)
+};
+
+function computeLayout(
+  messages: ChatMessage[],
+  msgToLane: Map<string, number>,
+): { items: MsgLayout[]; totalH: number } {
+  let y = 0;
+  const items: MsgLayout[] = [];
+  for (let i = 0; i < messages.length; i++) {
+    const msg      = messages[i];
+    const showSep  = i === 0 || toDateKey(messages[i - 1].timestamp) !== toDateKey(msg.timestamp);
+    const dateSepTopY = y;
+    if (showSep) y += DATE_SEP_H;
+    items.push({
+      msg,
+      lane:        msg.id ? (msgToLane.get(msg.id) ?? 0) : 0,
+      cy:          y + ROW_H / 2,
+      rowTopY:     y,
+      showSep,
+      dateLabel:   new Date(msg.timestamp).toLocaleDateString(undefined,
+                     { weekday: 'long', month: 'long', day: 'numeric' }),
+      dateSepTopY,
+    });
+    y += ROW_H;
+  }
+  return { items, totalH: y };
+}
+
+const GraphView = ({ messages, myUid, showAvatars = false }:
+    { messages: ChatMessage[]; myUid: string; showAvatars?: boolean }) => {
+  const { useSelector } = useUsersCtx();
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const allUsers  = useSelector((s: any) => s.users.list);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+  const msgToLane = useMemo(() => computeLanes(messages), [messages]);
+  const maxLane   = useMemo(
+    () => msgToLane.size === 0 ? 0 : Math.max(0, ...msgToLane.values()),
+    [msgToLane],
+  );
+  const { items, totalH } = useMemo(
+    () => computeLayout(messages, msgToLane),
+    [messages, msgToLane],
+  );
+  const msgToCY = useMemo(() => {
+    const m = new Map<string, { cx: number; cy: number }>();
+    for (const item of items)
+      if (item.msg.id) m.set(item.msg.id, { cx: item.lane * LANE_W + LANE_W / 2, cy: item.cy });
+    return m;
+  }, [items]);
+
+  const svgW = (maxLane + 1) * LANE_W + DOT_R;
+
+  // SVG elements: parent→child connector lines (drawn before dots so dots sit on top)
+  const lines = useMemo(() => items.flatMap(({ msg, lane, cy }) => {
+    const cx = lane * LANE_W + LANE_W / 2;
+    return (msg.parents ?? []).flatMap(pid => {
+      const p = msgToCY.get(pid);
+      if (!p) return [];
+      if (p.cx === cx) {
+        return [<line key={`${msg.id}-${pid}`}
+          x1={cx} y1={cy} x2={p.cx} y2={p.cy} stroke="#c8d3e8" strokeWidth={1.5} />];
+      }
+      const midY = (cy + p.cy) / 2;
+      return [<path key={`${msg.id}-${pid}`}
+        d={`M${cx},${cy} C${cx},${midY} ${p.cx},${midY} ${p.cx},${p.cy}`}
+        fill="none" stroke="#c8d3e8" strokeWidth={1.5} />];
+    });
+  }), [items, msgToCY]);
+
+  const dots = useMemo(() => items.map(({ msg, lane, cy }) => {
+    const cx    = lane * LANE_W + LANE_W / 2;
+    const mine  = msg.fromUid === myUid;
+    const fill  = isSnowflakeId(msg.id ?? '') ? (mine ? '#3c4043' : '#1a73e8') : '#aaa';
+    return <circle key={`dot-${msg.id ?? cy}`} cx={cx} cy={cy} r={DOT_R} fill={fill} />;
+  }), [items, myUid]);
+
+  return (
+    <Messages>
+      <div style={{ display: 'flex', minHeight: totalH }}>
+        {/* Left: lane graph */}
+        <div style={{ width: svgW, flexShrink: 0, position: 'relative', alignSelf: 'stretch' }}>
+          <svg style={{ position: 'absolute', top: 0, left: 0, overflow: 'visible' }}
+               width={svgW} height={totalH}>
+            {lines}
+            {dots}
+          </svg>
+        </div>
+
+        {/* Right: bubbles at fixed row heights matching SVG Y coordinates */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          {items.map((layout, i) => {
+            const { msg, showSep, dateLabel } = layout;
+            const mine    = msg.fromUid === myUid;
+            const time    = new Date(msg.timestamp).toLocaleTimeString(undefined,
+              { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const profile = allUsers.find((u: UserProfile) => u.uid === msg.fromUid) ?? null;
+            const bubble  = (
+              <BubbleWrap $mine={mine}>
+                {showAvatars && !mine && (
+                  <SenderLabel>{profile?.displayName ?? msg.fromEmail}</SenderLabel>
+                )}
+                <Bubble $mine={mine}>{msg.text}</Bubble>
+                <BubbleTime $mine={mine}>{time}</BubbleTime>
+              </BubbleWrap>
+            );
+            return (
+              <React.Fragment key={i}>
+                {showSep && (
+                  <DateSep style={{ height: DATE_SEP_H, margin: 0 }}>{dateLabel}</DateSep>
+                )}
+                <div style={{ height: ROW_H, display: 'flex', alignItems: 'center',
+                              overflow: 'hidden' }}>
+                  {showAvatars && !mine ? (
+                    <MsgRow>
+                      <Avatar profile={profile} fallback={{ email: msg.fromEmail }} size={28} />
+                      {bubble}
+                    </MsgRow>
+                  ) : bubble}
+                </div>
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
+      <div ref={bottomRef} />
+    </Messages>
+  );
+};
+
 // ── Header avatars ────────────────────────────────────────────────────────────
 
 const HeaderAvatar = ({ them }: { them: UserRec }) => {
@@ -293,8 +494,9 @@ const GroupHeaderAvatars = ({ group }: { group: GroupChat }) => {
 
 const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
   const { db, actions, useSelector } = useUsersCtx();
-  const [text, setText]       = useState('');
-  const [sendErr, setSendErr] = useState<string | null>(null);
+  const [text, setText]         = useState('');
+  const [sendErr, setSendErr]   = useState<string | null>(null);
+  const [graphMode, setGraphMode] = useState(false);
   const convoId  = chatId(me.uid, them.uid);
   const messages = useSelector((s: any) => s.chat.conversations[them.email] ?? []);
   const headsRef   = useRef<Heads>(makeHeads());
@@ -362,7 +564,12 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
 
   return (
     <>
-      <MessageList messages={messages} myUid={me.uid} />
+      <Toolbar>
+        <ToggleBtn $active={graphMode} onClick={() => setGraphMode(m => !m)}>Graph</ToggleBtn>
+      </Toolbar>
+      {graphMode
+        ? <GraphView messages={messages} myUid={me.uid} />
+        : <MessageList messages={messages} myUid={me.uid} />}
       {sendErr && <ErrorBar>{sendErr}</ErrorBar>}
       <InputRow>
         <TextInput value={text} onChange={onChange}
@@ -377,8 +584,9 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
 
 const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
   const { db, actions, useSelector } = useUsersCtx();
-  const [text, setText]       = useState('');
-  const [sendErr, setSendErr] = useState<string | null>(null);
+  const [text, setText]           = useState('');
+  const [sendErr, setSendErr]     = useState<string | null>(null);
+  const [graphMode, setGraphMode] = useState(false);
   const messages = useSelector((s: any) => s.chat.conversations[group.id] ?? []);
   const headsRef   = useRef<Heads>(makeHeads());
   const parentsRef = useRef<string[]>([]);   // heads snapshot at last keystroke
@@ -468,7 +676,12 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
 
   return (
     <>
-      <MessageList messages={messages} myUid={me.uid} showAvatars />
+      <Toolbar>
+        <ToggleBtn $active={graphMode} onClick={() => setGraphMode(m => !m)}>Graph</ToggleBtn>
+      </Toolbar>
+      {graphMode
+        ? <GraphView messages={messages} myUid={me.uid} showAvatars />
+        : <MessageList messages={messages} myUid={me.uid} showAvatars />}
       {sendErr && <ErrorBar>{sendErr}</ErrorBar>}
       <InputRow>
         <TextInput value={text} onChange={onChange}
