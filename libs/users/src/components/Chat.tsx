@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { collection, addDoc, doc, setDoc, writeBatch,
-         query, orderBy, limitToLast, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, setDoc, writeBatch,
+         query, orderBy, limitToLast, onSnapshot } from 'firebase/firestore';
 import { appKey } from '../app-key';
 import { User } from 'firebase/auth';
 import styled from 'styled-components';
 import { useUsersCtx } from '../context';
 import { ChatMessage, UserRec, GroupChat, chatId, HISTORY_LIMIT } from '../slices/chat-slice';
+import { chatMsgId, msgTimestamp, makeHeads, updateHeads, snapshotHeads, Heads } from '../slices/chat-id';
 import { UserProfile, INACTIVITY_TIMEOUT_MS } from '../slices/users-slice';
 import { hashColor, statusDotColor } from './avatar-utils';
 
@@ -296,23 +297,30 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
   const [sendErr, setSendErr] = useState<string | null>(null);
   const convoId  = chatId(me.uid, them.uid);
   const messages = useSelector((s: any) => s.chat.conversations[them.email] ?? []);
+  const headsRef = useRef<Heads>(makeHeads());
 
   useEffect(() => {
+    headsRef.current = makeHeads();
     actions.chat.setConversation(them.email, []);
-    const q     = query(collection(db, 'apps', appKey(), 'chats', convoId, 'messages'),
-                        orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
+    const q = query(collection(db, 'apps', appKey(), 'chats', convoId, 'messages'),
+                    orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
     return onSnapshot(q,
       snap => {
         if (snap.metadata.fromCache && snap.docs.length === 0) return;
-        actions.chat.setConversation(them.email, snap.docs.map((d: any) => {
-          const data = d.data();
+        const msgs = snap.docs.map((d: any) => {
+          const data    = d.data();
+          const parents = data.parents ?? [];
+          updateHeads(headsRef.current, d.id, parents);
           return {
+            id:        d.id,
             fromUid:   data.from      ?? '',
             fromEmail: data.fromEmail ?? '',
             text:      data.text      ?? '',
-            timestamp: data.timestamp?.toMillis() ?? Date.now(),
+            timestamp: msgTimestamp(data, d.id),
+            parents,
           };
-        }));
+        });
+        actions.chat.setConversation(them.email, msgs);
       },
       err => setSendErr(`History unavailable: ${err.code}`),
     );
@@ -323,12 +331,16 @@ const ActiveChat = ({ me, them }: { me: User; them: UserRec }) => {
     if (!msg) return;
     setText('');
     setSendErr(null);
+    const id      = chatMsgId();
+    const ts      = Date.now();
+    const parents = snapshotHeads(headsRef.current);
+    updateHeads(headsRef.current, id, parents);
     actions.chat.messageSent(them.email, {
-      fromUid: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: Date.now(),
+      id, fromUid: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: ts, parents,
     });
     try {
-      await addDoc(collection(db, 'apps', appKey(), 'chats', convoId, 'messages'), {
-        from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: serverTimestamp(),
+      await setDoc(doc(db, 'apps', appKey(), 'chats', convoId, 'messages', id), {
+        from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: ts, parents,
       });
     } catch (e: any) {
       setSendErr(`Send failed: ${e?.code ?? e?.message ?? 'unknown error'}`);
@@ -359,25 +371,32 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
   const [text, setText]       = useState('');
   const [sendErr, setSendErr] = useState<string | null>(null);
   const messages = useSelector((s: any) => s.chat.conversations[group.id] ?? []);
+  const headsRef = useRef<Heads>(makeHeads());
 
   // History — skip for pending chats (no Firestore document yet)
   useEffect(() => {
     if (group.pending) return;
+    headsRef.current = makeHeads();
     actions.chat.setConversation(group.id, []);
-    const q     = query(collection(db, 'apps', appKey(), 'groupChats', group.id, 'messages'),
-                        orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
+    const q = query(collection(db, 'apps', appKey(), 'groupChats', group.id, 'messages'),
+                    orderBy('timestamp', 'asc'), limitToLast(HISTORY_LIMIT));
     return onSnapshot(q,
       snap => {
         if (snap.metadata.fromCache && snap.docs.length === 0) return;
-        actions.chat.setConversation(group.id, snap.docs.map((d: any) => {
-          const data = d.data();
+        const msgs = snap.docs.map((d: any) => {
+          const data    = d.data();
+          const parents = data.parents ?? [];
+          updateHeads(headsRef.current, d.id, parents);
           return {
+            id:        d.id,
             fromUid:   data.from      ?? '',
             fromEmail: data.fromEmail ?? '',
             text:      data.text      ?? '',
-            timestamp: data.timestamp?.toMillis() ?? Date.now(),
+            timestamp: msgTimestamp(data, d.id),
+            parents,
           };
-        }));
+        });
+        actions.chat.setConversation(group.id, msgs);
       },
       err => setSendErr(`History unavailable: ${err.code}`),
     );
@@ -388,9 +407,13 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
     if (!msg) return;
     setText('');
     setSendErr(null);
+    const id      = chatMsgId();
+    const ts      = Date.now();
+    const parents = snapshotHeads(headsRef.current);
+    updateHeads(headsRef.current, id, parents);
 
     const message: ChatMessage = {
-      fromUid: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: Date.now(),
+      id, fromUid: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: ts, parents,
     };
     actions.chat.groupMessageSent(group.id, message);
 
@@ -402,20 +425,19 @@ const ActiveGroupChat = ({ me, group }: { me: User; group: GroupChat }) => {
           participants:  group.participants,
           nickname:      group.nickname,
           createdBy:     group.createdBy,
-          createdAt:     serverTimestamp(),
-          lastMessageAt: serverTimestamp(),
+          createdAt:     ts,
+          lastMessageAt: ts,
         });
-        const msgRef = doc(collection(db, 'apps', appKey(), 'groupChats', group.id, 'messages'));
-        batch.set(msgRef, {
-          from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: serverTimestamp(),
+        batch.set(doc(db, 'apps', appKey(), 'groupChats', group.id, 'messages', id), {
+          from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: ts, parents,
         });
         await batch.commit();
       } else {
-        await addDoc(collection(db, 'apps', appKey(), 'groupChats', group.id, 'messages'), {
-          from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: serverTimestamp(),
+        await setDoc(doc(db, 'apps', appKey(), 'groupChats', group.id, 'messages', id), {
+          from: me.uid, fromEmail: me.email ?? '', text: msg, timestamp: ts, parents,
         });
         await setDoc(doc(db, 'apps', appKey(), 'groupChats', group.id),
-          { lastMessageAt: serverTimestamp() }, { merge: true });
+          { lastMessageAt: ts }, { merge: true });
       }
     } catch (e: any) {
       setSendErr(`Send failed: ${e?.code ?? e?.message ?? 'unknown error'}`);

@@ -8,6 +8,7 @@
   "peerDependencies": {
     "@therious/actions":    "workspace:*",
     "@therious/ag-grid":    "workspace:*",
+    "@therious/utils":      "workspace:*",
     "@therious/components": "workspace:*",
     "ag-grid-community":    "~32.0.2",
     "ag-grid-react":        "~32.0.2",

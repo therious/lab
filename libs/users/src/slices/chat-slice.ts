@@ -8,7 +8,9 @@ export type ChatMessage = {
   fromUid:   string;
   fromEmail: string;
   text:      string;
-  timestamp: number; // unix ms
+  timestamp: number;   // unix ms
+  id?:       string;   // snowflake doc ID (present after Firestore round-trip)
+  parents?:  string[]; // causal heads at composition time; absent on legacy messages
 };
 
 export type GroupChat = {

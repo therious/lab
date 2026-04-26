@@ -24,5 +24,9 @@ export { useSession, signout } from './auth';
 // ── App-origin key — used to namespace Firestore paths ───────────────────────
 export { appKey } from './app-key';
 
+// ── Chat message IDs and causal heads ────────────────────────────────────────
+export { chatMsgId, tsFromMsgId, msgTimestamp, makeHeads, updateHeads, snapshotHeads } from './slices/chat-id';
+export type { Heads } from './slices/chat-id';
+
 // ── Role utilities ────────────────────────────────────────────────────────────
 export { satisfies, hasAnyRole, satisfiesInApp, hasAnyRoleInApp } from './role-utils';
