@@ -348,12 +348,10 @@ const ToggleBtn = styled.button<{ $active: boolean }>`
   &:hover { border-color: #1a73e8; }
 `;
 
-const LANE_W      = 18;   // px per lane column
-const DOT_R       = 6;    // diamond half-size (radius)
-const ROW_H       = 64;   // fixed height per message row
-const DATE_SEP_H  = 30;   // height of a date separator row
-const AVATAR_SIZE = 34;   // graph-view avatar diameter
-const AVATAR_COL  = 44;   // width of avatar column flanking the SVG
+const LANE_W     = 32;   // px per lane — must be >= AVATAR_R*2 so circles don't overlap
+const AVATAR_R   = 13;   // SVG avatar radius (diameter 26)
+const ROW_H      = 64;   // fixed height per message row
+const DATE_SEP_H = 30;   // height of a date separator row
 
 // Assign each message a horizontal lane. Legacy auto-ID messages (no parents,
 // no snowflake ID) share lane 0 in sequence. Snowflake messages form the real DAG.
@@ -436,33 +434,72 @@ function computeLayout(
   return { items, totalH: y };
 }
 
-// Colors assigned to participants in order of first appearance.
-// Index 0 is reserved for self (always black). Others get the palette in sequence.
-const USER_DOT_COLORS = [
-  '#1a73e8',  // blue
-  '#188038',  // green
-  '#c5221f',  // red
-  '#8430ce',  // purple
-  '#e37400',  // orange
-  '#00acc1',  // cyan
-  '#d01884',  // pink
-  '#795548',  // brown
-  '#546e7a',  // blue-grey
-  '#ff6f00',  // amber
-];
+// ── SVG avatar node (renders inside <svg>) ───────────────────────────────────
 
-function buildUserColorMap(messages: ChatMessage[], myUid: string): Map<string, string> {
-  const map = new Map<string, string>();
-  map.set(myUid, '#3c4043');  // self = near-black
-  let idx = 0;
-  for (const m of messages) {
-    if (!map.has(m.fromUid)) {
-      map.set(m.fromUid, USER_DOT_COLORS[idx % USER_DOT_COLORS.length]);
-      idx++;
-    }
+type SvgAvatarNodeProps = {
+  cx: number; cy: number; r: number;
+  uid: string; profile: UserProfile | null; fallback: { email: string };
+  nodeId: string;
+};
+
+const SvgAvatarNode = ({ cx, cy, r, uid, profile, fallback, nodeId }: SvgAvatarNodeProps) => {
+  const photoURL = profile?.photoURL ?? null;
+
+  const [imgSrc, setImgSrc] = useState<string | null>(() => {
+    if (!uid || !photoURL) return null;
+    return _avatarBlobCache.get(uid) ?? photoURL;
+  });
+
+  useEffect(() => {
+    if (!uid || !photoURL) { setImgSrc(null); return; }
+    if (_avatarBlobCache.has(uid)) { setImgSrc(_avatarBlobCache.get(uid)!); return; }
+    _fetchAvatarBlob(uid, photoURL).then(url => { if (url) setImgSrc(url); });
+  }, [uid, photoURL]);
+
+  const clipId  = `svgav-${nodeId}`;
+  const dotR    = Math.round(r * 0.33);
+  const dotCx   = Math.round(cx + r * 0.65);
+  const dotCy   = Math.round(cy + r * 0.65);
+  const dotFill = profile
+    ? statusDotColor(profile.isOnline, profile.lastSeen, INACTIVITY_TIMEOUT_MS)
+    : '#dadce0';
+
+  const statusDot = (
+    <circle cx={dotCx} cy={dotCy} r={dotR} fill={dotFill} stroke="white" strokeWidth={1.5} />
+  );
+
+  if (imgSrc) {
+    return (
+      <g>
+        <defs>
+          <clipPath id={clipId}><circle cx={cx} cy={cy} r={r} /></clipPath>
+        </defs>
+        <image href={imgSrc}
+               x={cx - r} y={cy - r} width={r * 2} height={r * 2}
+               clipPath={`url(#${clipId})`}
+               onError={(() => {
+                 setImgSrc(null);
+                 if (photoURL) _fetchAvatarBlob(uid, photoURL).then(u => { if (u) setImgSrc(u); });
+               }) as unknown as React.ReactEventHandler<SVGImageElement>} />
+        {statusDot}
+      </g>
+    );
   }
-  return map;
-}
+
+  const label = (profile?.displayName ?? profile?.email ?? fallback.email ?? '?')[0].toUpperCase();
+  const bg    = hashColor(profile?.email ?? fallback.email);
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={r} fill={bg} />
+      <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
+            fill="white" fontSize={Math.round(r * 0.88)}
+            style={{ userSelect: 'none', pointerEvents: 'none' }}>
+        {label}
+      </text>
+      {statusDot}
+    </g>
+  );
+};
 
 const GraphView = ({ messages, myUid, showAvatars = false }:
     { messages: ChatMessage[]; myUid: string; showAvatars?: boolean }) => {
@@ -471,9 +508,8 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
   const allUsers  = useSelector((s: any) => s.users.list);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
-  const msgToLane   = useMemo(() => computeLanes(messages), [messages]);
-  const userColorMap = useMemo(() => buildUserColorMap(messages, myUid), [messages, myUid]);
-  const maxLane     = useMemo(
+  const msgToLane = useMemo(() => computeLanes(messages), [messages]);
+  const maxLane   = useMemo(
     () => msgToLane.size === 0 ? 0 : Math.max(0, ...msgToLane.values()),
     [msgToLane],
   );
@@ -488,9 +524,9 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
     return m;
   }, [items]);
 
-  const svgW = (maxLane + 1) * LANE_W + DOT_R;
+  const svgW = (maxLane + 1) * LANE_W;
 
-  // SVG elements: parent→child connector lines (drawn before dots so dots sit on top)
+  // Lines drawn first so avatar circles render on top
   const lines = useMemo(() => items.flatMap(({ msg, lane, cy }) => {
     const cx = lane * LANE_W + LANE_W / 2;
     return (msg.parents ?? []).flatMap(pid => {
@@ -507,15 +543,6 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
     });
   }), [items, msgToCY]);
 
-  const dots = useMemo(() => items.map(({ msg, lane, cy }) => {
-    const cx   = lane * LANE_W + LANE_W / 2;
-    const fill = isSnowflakeId(msg.id ?? '')
-      ? (userColorMap.get(msg.fromUid) ?? '#aaa')
-      : '#bbb';
-    const pts  = `${cx},${cy - DOT_R} ${cx + DOT_R},${cy} ${cx},${cy + DOT_R} ${cx - DOT_R},${cy}`;
-    return <polygon key={`dot-${msg.id ?? cy}`} points={pts} fill={fill} />;
-  }), [items, userColorMap]);
-
   // Layout: [others bubble (flex1)] [left avatar (AVATAR_COL)] [SVG (svgW, absolute)]
   //          [right avatar (AVATAR_COL)] [mine bubble (flex1)]
   // The SVG is absolutely centred over the whole container.  Because both sides
@@ -524,17 +551,27 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
     <Messages>
       <div style={{ position: 'relative', minHeight: totalH }}>
 
-        {/* SVG overlay — centred absolutely, drawn behind row content */}
+        {/* SVG overlay — centred absolutely; lines behind avatars */}
         <svg style={{
           position: 'absolute',
           left: `calc(50% - ${svgW / 2}px)`,
           top: 0,
           overflow: 'visible',
-          pointerEvents: 'none',
           zIndex: 0,
         }} width={svgW} height={totalH}>
           {lines}
-          {dots}
+          {items.map(({ msg, lane, cy }) => {
+            const cx      = lane * LANE_W + LANE_W / 2;
+            const profile = allUsers.find((u: UserProfile) => u.uid === msg.fromUid) ?? null;
+            return (
+              <SvgAvatarNode key={`av-${msg.id ?? cy}`}
+                cx={cx} cy={cy} r={AVATAR_R}
+                uid={msg.fromUid}
+                nodeId={msg.id ?? `${lane}-${Math.round(cy)}`}
+                profile={profile}
+                fallback={{ email: msg.fromEmail }} />
+            );
+          })}
         </svg>
 
         {/* Rows — stacked, each has the same 5-cell flex layout */}
@@ -573,28 +610,8 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
                     )}
                   </div>
 
-                  {/* Left avatar (others) */}
-                  <div style={{ width: AVATAR_COL, flexShrink: 0,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {!mine && (
-                      <Avatar profile={profile}
-                              fallback={{ email: msg.fromEmail, displayName: msg.fromEmail }}
-                              size={AVATAR_SIZE} />
-                    )}
-                  </div>
-
-                  {/* Centre spacer matching SVG width */}
+                  {/* Centre spacer — SVG avatars live here */}
                   <div style={{ width: svgW, flexShrink: 0 }} />
-
-                  {/* Right avatar (mine) */}
-                  <div style={{ width: AVATAR_COL, flexShrink: 0,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {mine && (
-                      <Avatar profile={profile}
-                              fallback={{ email: msg.fromEmail }}
-                              size={AVATAR_SIZE} />
-                    )}
-                  </div>
 
                   {/* Right: my bubble — left-aligned toward centre */}
                   <div style={{ flex: 1, minWidth: 0, overflow: 'hidden',
