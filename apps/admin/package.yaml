@@ -15,7 +15,7 @@ dependencies:
   react-redux: ~7.2.9
   react-router-dom: ~6.24.0
   redux: ~4.2.1
-  styled-components: ~6.1.8
+  styled-components: ~6.3.12
   typescript: ~5.4.5
 scripts:
   start: vite

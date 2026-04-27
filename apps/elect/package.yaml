@@ -17,10 +17,10 @@ dependencies:
   redux:                ~4.2.1
   reflect-metadata:     ~0.1.13
   reselect:             ~4.1.7
-  styled-components:    ~6.1.8
+  styled-components:    ~6.3.12
   typescript:           ~5.4.5
 devDependencies:
-  '@swc/plugin-styled-components': ^12.3.0
+  '@swc/plugin-styled-components': ~12.8.0
 scripts:
   start:       pnpm --filter . indexOnce && VITE_CJS_IGNORE_WARNING=true vite
   dev:         pnpm --filter . indexOnce && VITE_CJS_IGNORE_WARNING=true vite
