@@ -618,7 +618,8 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
                 <div style={{ height: ROW_H, display: 'flex', alignItems: 'center' }}>
 
                   {/* Left: others' bubble — right-aligned toward centre */}
-                  <div style={{ flex: 1, minWidth: 0, overflow: 'hidden',
+                  {/* overflow:visible so the ::after tail pseudo-element is not clipped */}
+                  <div style={{ flex: 1, minWidth: 0,
                                 display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                     {!mine && (
                       <BubbleWrap $mine={false} $alignRight={true}>
@@ -641,7 +642,7 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
                   <div style={{ width: svgW, flexShrink: 0 }} />
 
                   {/* Right: my bubble — left-aligned toward centre */}
-                  <div style={{ flex: 1, minWidth: 0, overflow: 'hidden',
+                  <div style={{ flex: 1, minWidth: 0,
                                 display: 'flex', alignItems: 'center' }}>
                     {mine && (
                       <BubbleWrap $mine={true} $alignRight={false}>
