@@ -112,7 +112,7 @@ export function getChordNotes(chord: string, key: string, octave: number = 4): n
 
   // Build chord tones based on quality and extensions
   let intervals: number[];
-  
+
   // Handle suspended chords first
   if (chordInfo.quality === 'sus4') {
     intervals = [0, 5, 7]; // root, perfect 4th, 5th
@@ -139,7 +139,7 @@ export function getChordNotes(chord: string, key: string, octave: number = 4): n
       default:
         intervals = [0, 4, 7]; // default to major
     }
-    
+
     // Add extensions
     if (chordInfo.extensions.includes('maj7')) {
       intervals.push(11); // major 7th
@@ -152,11 +152,11 @@ export function getChordNotes(chord: string, key: string, octave: number = 4): n
         intervals.push(10); // minor 7th (dominant 7th for major, minor 7th for minor)
       }
     }
-    
+
     if (chordInfo.extensions.includes('6')) {
       intervals.push(9); // major 6th
     }
-    
+
     if (chordInfo.extensions.includes('9')) {
       // Add 7th first if not already present
       if (!chordInfo.extensions.includes('7') && !chordInfo.extensions.includes('maj7')) {
@@ -167,18 +167,12 @@ export function getChordNotes(chord: string, key: string, octave: number = 4): n
   }
 
   // Arrange chord tones in a good voicing around middle C
-  // This creates a more natural chord sound with proper spacing
   const chordTones: number[] = [];
 
-  // Calculate proper octaves for each interval to center around middle C
-  // Middle C is in octave 4. For a chord centered around middle C:
-  // - Root in octave 3 or 4 (depending on the note)
-  // - 3rd and 5th in octave 4
   intervals.forEach((interval) => {
     const semitone = (rootSemitone + interval) % 12;
     const noteName = NOTES[semitone];
 
-    // Arrange notes to be centered around middle C (octave 4)
     const noteOctave = (interval === 0)? octave - 1 :
                        (interval <= 7) ? octave :
                        octave + 1;
@@ -189,16 +183,118 @@ export function getChordNotes(chord: string, key: string, octave: number = 4): n
   return chordTones;
 }
 
+// ── Sampler engine (Salamander Grand Piano C2–C7 samples) ────────────────────
+// Adapted from https://github.com/gregjopa/piano-flash-cards (MIT licence).
+// Samples: Salamander Grand Piano by Alexander Holm (CC BY 3.0).
+
+type SampleMap = { C2: AudioBuffer; C3: AudioBuffer; C4: AudioBuffer;
+                   C5: AudioBuffer; C6: AudioBuffer; C7: AudioBuffer };
+
+/** Convert a frequency (Hz) to the nearest MIDI note number. */
+function freqToMidi(freq: number): number {
+  return Math.round(12 * Math.log2(freq / 440) + 69);
+}
+
+/** Pick the nearest C-sample for a given MIDI note to minimise pitch shifting.
+ *  Returns [detuneInCents, sample]. */
+function bestSample(midi: number, samples: SampleMap): [number, AudioBuffer] {
+  // MIDI numbers for C2–C7: 36, 48, 60, 72, 84, 96
+  const sampleMidi = [36, 48, 60, 72, 84, 96];
+  const keys = ['C2', 'C3', 'C4', 'C5', 'C6', 'C7'] as const;
+
+  let best = 0;
+  let bestDist = Math.abs(midi - sampleMidi[0]);
+  for (let i = 1; i < sampleMidi.length; i++) {
+    const d = Math.abs(midi - sampleMidi[i]);
+    if (d < bestDist) { bestDist = d; best = i; }
+  }
+
+  return [(midi - sampleMidi[best]) * 100, samples[keys[best]]];
+}
+
+class SamplerEngine {
+  private ctx: AudioContext;
+  private masterGain: GainNode;
+  private samples: SampleMap | null = null;
+  private loading: Promise<void>;
+
+  constructor(ctx: AudioContext, masterGain: GainNode) {
+    this.ctx = ctx;
+    this.masterGain = masterGain;
+
+    // Polyfill Safari's callback-based decodeAudioData
+    if (this.ctx.decodeAudioData.length !== 1) {
+      const orig = this.ctx.decodeAudioData.bind(this.ctx);
+      this.ctx.decodeAudioData = (buf) =>
+        new Promise((res, rej) => orig(buf, res, rej));
+    }
+
+    const names = ['C2v10', 'C3v10', 'C4v10', 'C5v10', 'C6v10', 'C7v10'];
+    this.loading = Promise.all(
+      names.map(n => this.loadSample(`/audio/${n}.mp3`))
+    ).then(([C2, C3, C4, C5, C6, C7]) => {
+      this.samples = { C2, C3, C4, C5, C6, C7 };
+    });
+  }
+
+  private loadSample(url: string): Promise<AudioBuffer> {
+    return fetch(url)
+      .then(r => r.arrayBuffer())
+      .then(buf => this.ctx.decodeAudioData(buf));
+  }
+
+  /** Returns true once all samples have been decoded and are ready. */
+  get ready(): boolean { return this.samples !== null; }
+
+  /** Wait until samples are loaded (used before first playback). */
+  whenReady(): Promise<void> { return this.loading; }
+
+  /**
+   * Schedule a single piano note via sample + pitch-shift.
+   * @param freq     Target frequency in Hz
+   * @param startAt  AudioContext timestamp to begin playback
+   * @param duration Envelope duration in seconds (sample fades out at end)
+   * @param gain     Peak gain (0–1)
+   */
+  scheduleNote(freq: number, startAt: number, duration: number, gain: number) {
+    if (!this.samples) return;
+
+    const midi = freqToMidi(freq);
+    const [detuneCents, sample] = bestSample(midi, this.samples);
+
+    const src = this.ctx.createBufferSource();
+    src.buffer = sample;
+    if (src.detune) {
+      src.detune.value = detuneCents;
+    } else {
+      src.playbackRate.value = 2 ** (detuneCents / 1200);
+    }
+
+    // Simple piano envelope: instant attack, exponential decay
+    const env = this.ctx.createGain();
+    env.gain.setValueAtTime(gain, startAt);
+    env.gain.exponentialRampToValueAtTime(0.001, startAt + duration);
+
+    src.connect(env);
+    env.connect(this.masterGain);
+    src.start(startAt);
+    src.stop(startAt + duration + 0.05); // small buffer past envelope end
+  }
+}
+
+// ── ChordPlayer ──────────────────────────────────────────────────────────────
+
 export class ChordPlayer {
   private audioContext: AudioContext | null = null;
   private gainNode: GainNode | null = null;
+  private sampler: SamplerEngine | null = null;
   private isPlaying = false;
   private currentProgression: string[] = [];
   private currentKey = 'C';
   private currentTempo = 60;
   private currentIndex = 0;
   private playCallback: ((index: number) => void) | null = null;
-  private playTimeoutId: NodeJS.Timeout | null = null;
+  private playTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private arpeggioType = 'block';
   private hyphenatedChords: string[] = [];
   private hyphenatedChordIndex = 0;
@@ -208,99 +304,34 @@ export class ChordPlayer {
       this.audioContext = new AudioContext();
       this.gainNode = this.audioContext.createGain();
       this.gainNode.connect(this.audioContext.destination);
-      this.gainNode.gain.value = 0.2; // Lower volume
+      this.gainNode.gain.value = 0.6;
+      this.sampler = new SamplerEngine(this.audioContext, this.gainNode);
     } catch (e) {
       console.error('Failed to initialize AudioContext:', e);
     }
   }
 
-  playChord(frequencies: number[], duration: number, gain: number = 0.2, arpeggio: string = 'block') {
-    if (!this.audioContext || !this.gainNode) return;
+  playChord(frequencies: number[], duration: number, gain: number = 0.6, arpeggio: string = 'block') {
+    if (!this.audioContext || !this.sampler || !this.sampler.ready) return;
 
     const currentTime = this.audioContext.currentTime;
 
-    // Handle arpeggiation
+    // Build play order for arpeggiation
     let noteOrder = [...frequencies];
-    if (arpeggio === 'up') {
-      noteOrder = [...frequencies];
-    } else if (arpeggio === 'down') {
+    if (arpeggio === 'down') {
       noteOrder = [...frequencies].reverse();
     } else if (arpeggio === 'updown') {
       noteOrder = [...frequencies, ...frequencies.slice().reverse().slice(1)];
     } else if (arpeggio === 'downup') {
-      noteOrder = [...frequencies].reverse();
-      noteOrder = [...noteOrder, ...frequencies.slice().slice(1)];
+      const rev = [...frequencies].reverse();
+      noteOrder = [...rev, ...frequencies.slice(1)];
     }
 
     const noteDelay = arpeggio === 'block' ? 0 : duration / noteOrder.length;
+    const noteDuration = arpeggio === 'block' ? duration : Math.max(noteDelay * 2, duration * 0.6);
 
-    noteOrder.forEach((freq, index) => {
-      // Create multiple oscillators for richer piano sound
-      const baseGain = this.audioContext!.createGain();
-
-      // Fundamental tone
-      const fundamental = this.audioContext!.createOscillator();
-      const fundamentalGain = this.audioContext!.createGain();
-      fundamental.type = 'sine';
-      fundamental.frequency.value = freq;
-
-      // First harmonic (octave)
-      const harmonic2 = this.audioContext!.createOscillator();
-      const harmonic2Gain = this.audioContext!.createGain();
-      harmonic2.type = 'sine';
-      harmonic2.frequency.value = freq * 2;
-
-      // Second harmonic (fifth above octave)
-      const harmonic3 = this.audioContext!.createOscillator();
-      const harmonic3Gain = this.audioContext!.createGain();
-      harmonic3.type = 'sine';
-      harmonic3.frequency.value = freq * 3;
-
-      // Fourth harmonic (two octaves)
-      const harmonic4 = this.audioContext!.createOscillator();
-      const harmonic4Gain = this.audioContext!.createGain();
-      harmonic4.type = 'sine';
-      harmonic4.frequency.value = freq * 4;
-
-      const noteStart = currentTime + (index * noteDelay);
-      const noteDuration = arpeggio === 'block' ? duration : noteDelay * 0.95;
-
-      // Realistic piano envelope: very quick attack, exponential decay with a long tail
-      const attack = 0.001;
-      const hold = 0.15;
-      const sustain = gain * 0.25;
-
-      // Harmonic amplitudes (more realistic piano spectrum)
-      const amplitudes = [1.0, 0.3, 0.15, 0.05]; // fundamental, octave, 3rd, 4th
-
-      // Apply envelope to each harmonic
-      [fundamentalGain, harmonic2Gain, harmonic3Gain, harmonic4Gain].forEach((hGain, i) => {
-        const amplitude = gain * amplitudes[i];
-        hGain.gain.setValueAtTime(0, noteStart);
-        hGain.gain.linearRampToValueAtTime(amplitude, noteStart + attack);
-        hGain.gain.setValueAtTime(amplitude, noteStart + attack);
-        hGain.gain.linearRampToValueAtTime(sustain * amplitudes[i], noteStart + hold);
-        hGain.gain.exponentialRampToValueAtTime(0.001, noteStart + noteDuration);
-      });
-
-      // Connect oscillators
-      fundamental.connect(fundamentalGain);
-      harmonic2.connect(harmonic2Gain);
-      harmonic3.connect(harmonic3Gain);
-      harmonic4.connect(harmonic4Gain);
-
-      [fundamentalGain, harmonic2Gain, harmonic3Gain, harmonic4Gain].forEach(g => g.connect(baseGain));
-      baseGain.connect(this.gainNode!);
-
-      // Start all oscillators
-      fundamental.start(noteStart);
-      fundamental.stop(noteStart + noteDuration);
-      harmonic2.start(noteStart);
-      harmonic2.stop(noteStart + noteDuration);
-      harmonic3.start(noteStart);
-      harmonic3.stop(noteStart + noteDuration);
-      harmonic4.start(noteStart);
-      harmonic4.stop(noteStart + noteDuration);
+    noteOrder.forEach((freq, i) => {
+      this.sampler!.scheduleNote(freq, currentTime + i * noteDelay, noteDuration, gain);
     });
   }
 
@@ -318,23 +349,26 @@ export class ChordPlayer {
       this.audioContext = new AudioContext();
       this.gainNode = this.audioContext.createGain();
       this.gainNode.connect(this.audioContext.destination);
-      this.gainNode.gain.value = 0.2;
+      this.gainNode.gain.value = 0.6;
+      this.sampler = new SamplerEngine(this.audioContext, this.gainNode);
     }
 
     if (this.audioContext.state === 'suspended') {
       await this.audioContext.resume();
     }
 
+    // Wait for samples if they haven't loaded yet
+    if (this.sampler && !this.sampler.ready) {
+      await this.sampler.whenReady();
+    }
+
     this.playLoop();
   }
 
-  // Helper function to parse hyphenated chords
   private parseHyphenatedChord(chordString: string): string[] {
-    // Check if the chord string contains a hyphen (allowing for spaces around hyphens)
     const trimmed = chordString.trim();
     if (trimmed.includes('-')) {
-      // Split by hyphens and trim each part
-      return trimmed.split(/-/).map(part => part.trim()).filter(part => part.length > 0);
+      return trimmed.split(/-/).map(p => p.trim()).filter(p => p.length > 0);
     }
     return [chordString];
   }
@@ -343,92 +377,55 @@ export class ChordPlayer {
     if (!this.isPlaying) return;
 
     const chord = this.currentProgression[this.currentIndex];
-
-    // Check if this is a hyphenated chord (contains hyphens separating chord symbols)
     const chordParts = this.parseHyphenatedChord(chord);
-    const barDuration = 60 / this.currentTempo; // Duration of one bar in seconds
+    const barDuration = 60 / this.currentTempo;
 
-    // If we're in the middle of playing hyphenated chords, continue with the next sub-chord
     if (this.hyphenatedChords.length > 0 && this.hyphenatedChordIndex < this.hyphenatedChords.length) {
-      // Play the current sub-chord from the hyphenated sequence
       const subChord = this.hyphenatedChords[this.hyphenatedChordIndex];
       const subChordDuration = barDuration / this.hyphenatedChords.length;
       const notes = getChordNotes(subChord, this.currentKey);
 
-      // Trigger callback with the main progression index
-      if (this.playCallback) {
-        this.playCallback(this.currentIndex);
-      }
+      if (this.playCallback) this.playCallback(this.currentIndex);
+      this.playChord(notes, subChordDuration, 0.6, this.arpeggioType);
 
-      // Play the sub-chord
-      this.playChord(notes, subChordDuration, 0.15, this.arpeggioType);
-
-      // Move to next sub-chord
       this.hyphenatedChordIndex++;
-
-      // If we've played all sub-chords, move to next main chord
       if (this.hyphenatedChordIndex >= this.hyphenatedChords.length) {
         this.hyphenatedChords = [];
         this.hyphenatedChordIndex = 0;
         this.currentIndex = (this.currentIndex + 1) % this.currentProgression.length;
       }
 
-      // Schedule next chord/sub-chord
-      this.playTimeoutId = setTimeout(() => {
-        this.playLoop();
-      }, subChordDuration * 1000);
+      this.playTimeoutId = setTimeout(this.playLoop, subChordDuration * 1000);
+
     } else if (chordParts.length > 1) {
-      // This is a hyphenated chord - start playing the sequence
       this.hyphenatedChords = chordParts;
       this.hyphenatedChordIndex = 0;
 
-      // Play the first sub-chord
       const subChord = this.hyphenatedChords[0];
       const subChordDuration = barDuration / this.hyphenatedChords.length;
       const notes = getChordNotes(subChord, this.currentKey);
 
-      // Trigger callback
-      if (this.playCallback) {
-        this.playCallback(this.currentIndex);
-      }
+      if (this.playCallback) this.playCallback(this.currentIndex);
+      this.playChord(notes, subChordDuration, 0.6, this.arpeggioType);
 
-      // Play the sub-chord
-      this.playChord(notes, subChordDuration, 0.15, this.arpeggioType);
-
-      // Move to next sub-chord
       this.hyphenatedChordIndex++;
-
-      // If this was the only sub-chord, move to next main chord
       if (this.hyphenatedChordIndex >= this.hyphenatedChords.length) {
         this.hyphenatedChords = [];
         this.hyphenatedChordIndex = 0;
         this.currentIndex = (this.currentIndex + 1) % this.currentProgression.length;
       }
 
-      // Schedule next chord/sub-chord
-      this.playTimeoutId = setTimeout(() => {
-        this.playLoop();
-      }, subChordDuration * 1000);
+      this.playTimeoutId = setTimeout(this.playLoop, subChordDuration * 1000);
+
     } else {
-      // Regular (non-hyphenated) chord
       const notes = getChordNotes(chord, this.currentKey);
       const duration = barDuration;
 
-      // Trigger callback
-      if (this.playCallback) {
-        this.playCallback(this.currentIndex);
-      }
+      if (this.playCallback) this.playCallback(this.currentIndex);
+      this.playChord(notes, duration, 0.6, this.arpeggioType);
 
-      // Play the chord
-      this.playChord(notes, duration, 0.15, this.arpeggioType);
-
-      // Move to next chord
       this.currentIndex = (this.currentIndex + 1) % this.currentProgression.length;
-
-      // Schedule next chord
-      this.playTimeoutId = setTimeout(() => {
-        this.playLoop();
-      }, duration * 1000);
+      this.playTimeoutId = setTimeout(this.playLoop, duration * 1000);
     }
   };
 
@@ -447,4 +444,3 @@ export class ChordPlayer {
     this.currentTempo = bpm;
   }
 }
-
