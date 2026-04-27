@@ -548,22 +548,23 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
       const p = msgToCY.get(pid);
       if (!p) return [];
 
-      const sameSession   = childSession !== null && miniSessionOf(pid) === childSession;
-      const stroke        = '#c8d3e8';
-      const strokeWidth   = 1.5;
+      const sameSession     = childSession !== null && miniSessionOf(pid) === childSession;
+      const stroke          = '#c8d3e8';
+      const strokeWidth     = 1.5;
       const strokeDasharray = sameSession ? '4 4' : undefined;
+      const opacity         = sameSession ? 0.5 : 1;
 
       if (p.cx === cx) {
         return [<line key={`${msg.id}-${pid}`}
           x1={cx} y1={cy} x2={p.cx} y2={p.cy}
           stroke={stroke} strokeWidth={strokeWidth}
-          strokeDasharray={strokeDasharray} />];
+          strokeDasharray={strokeDasharray} opacity={opacity} />];
       }
       const midY = (cy + p.cy) / 2;
       return [<path key={`${msg.id}-${pid}`}
         d={`M${cx},${cy} C${cx},${midY} ${p.cx},${midY} ${p.cx},${p.cy}`}
         fill="none" stroke={stroke} strokeWidth={strokeWidth}
-        strokeDasharray={strokeDasharray} />];
+        strokeDasharray={strokeDasharray} opacity={opacity} />];
     });
   }), [items, msgToCY]);
 
