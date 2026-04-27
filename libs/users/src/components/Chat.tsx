@@ -72,9 +72,17 @@ const BubbleWrap = styled.div<{ $mine: boolean; $alignRight?: boolean }>`
 
 // $tailRight overrides which side the tail appears on (defaults to $mine).
 // In graph mode the SVG is centred, so both sides want a tail pointing inward.
+// Sizes both the bubble and the time/name row together:
+// min-width = natural width of the nowrap time row; max-width = 300px (or available space).
+const BubbleBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  max-width: min(300px, 100%);
+`;
+
 const Bubble = styled.div<{ $mine: boolean; $tailRight?: boolean }>`
   position: relative;
-  max-width: 80%;
   padding: 7px 11px;
   border-radius: 14px;
   font-size: 13px;
@@ -100,6 +108,7 @@ const BubbleTime = styled.div<{ $mine: boolean }>`
   font-size: 10px;
   color: #aaa;
   margin: 1px 4px 0;
+  white-space: nowrap;
 `;
 
 const SenderLabel = styled.div`
@@ -297,15 +306,17 @@ const MessageList = ({ messages, myUid, showAvatars = false }:
 
         const bubble = (
           <BubbleWrap $mine={mine}>
-            <Bubble $mine={mine}>{m.text}</Bubble>
-            <BubbleTime $mine={mine}>
-              {time}
-              {showAvatars && !mine && (
-                <span style={{ color: '#888', marginLeft: 6 }}>
-                  {profile?.displayName ?? m.fromEmail}
-                </span>
-              )}
-            </BubbleTime>
+            <BubbleBody>
+              <Bubble $mine={mine}>{m.text}</Bubble>
+              <BubbleTime $mine={mine}>
+                {time}
+                {showAvatars && !mine && (
+                  <span style={{ color: '#888', marginLeft: 6 }}>
+                    {profile?.displayName ?? m.fromEmail}
+                  </span>
+                )}
+              </BubbleTime>
+            </BubbleBody>
           </BubbleWrap>
         );
 
@@ -597,15 +608,17 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
                                 display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                     {!mine && (
                       <BubbleWrap $mine={false} $alignRight={true}>
-                        <Bubble $mine={false} $tailRight={true}>{msg.text}</Bubble>
-                        <BubbleTime $mine={false}>
-                          {time}
-                          {showAvatars && (
-                            <span style={{ color: '#888', marginLeft: 6 }}>
-                              {profile?.displayName ?? msg.fromEmail}
-                            </span>
-                          )}
-                        </BubbleTime>
+                        <BubbleBody>
+                          <Bubble $mine={false} $tailRight={true}>{msg.text}</Bubble>
+                          <BubbleTime $mine={false}>
+                            {time}
+                            {showAvatars && (
+                              <span style={{ color: '#888', marginLeft: 6 }}>
+                                {profile?.displayName ?? msg.fromEmail}
+                              </span>
+                            )}
+                          </BubbleTime>
+                        </BubbleBody>
                       </BubbleWrap>
                     )}
                   </div>
@@ -618,8 +631,10 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
                                 display: 'flex', alignItems: 'center' }}>
                     {mine && (
                       <BubbleWrap $mine={true} $alignRight={false}>
-                        <Bubble $mine={true} $tailRight={false}>{msg.text}</Bubble>
-                        <BubbleTime $mine={true}>{time}</BubbleTime>
+                        <BubbleBody>
+                          <Bubble $mine={true} $tailRight={false}>{msg.text}</Bubble>
+                          <BubbleTime $mine={true}>{time}</BubbleTime>
+                        </BubbleBody>
                       </BubbleWrap>
                     )}
                   </div>
