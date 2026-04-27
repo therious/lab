@@ -5,5 +5,8 @@ import { analyzer } from 'vite-bundle-analyzer'
 // https://vitejs.dev/config/
 
 export default defineConfig({
-  plugins: [react({tsDecorators:true})/*, analyzer()*/], // enabled analyzer breaks builds leaving a server running for examining bundles
+  plugins: [react({
+    tsDecorators: true,
+    plugins: [['@swc/plugin-styled-components', { displayName: true, ssr: false }]],
+  })/*, analyzer()*/], // enabled analyzer breaks builds leaving a server running for examining bundles
 });
