@@ -297,11 +297,15 @@ const MessageList = ({ messages, myUid, showAvatars = false }:
 
         const bubble = (
           <BubbleWrap $mine={mine}>
-            {showAvatars && !mine && (
-              <SenderLabel>{profile?.displayName ?? m.fromEmail}</SenderLabel>
-            )}
             <Bubble $mine={mine}>{m.text}</Bubble>
-            <BubbleTime $mine={mine}>{time}</BubbleTime>
+            <BubbleTime $mine={mine}>
+              {time}
+              {showAvatars && !mine && (
+                <span style={{ color: '#888', marginLeft: 6 }}>
+                  {profile?.displayName ?? m.fromEmail}
+                </span>
+              )}
+            </BubbleTime>
           </BubbleWrap>
         );
 
@@ -556,11 +560,15 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
                                 display: 'flex', alignItems: 'center' }}>
                     {!mine && (
                       <BubbleWrap $mine={false} $alignRight={true}>
-                        {showAvatars && (
-                          <SenderLabel>{profile?.displayName ?? msg.fromEmail}</SenderLabel>
-                        )}
                         <Bubble $mine={false} $tailRight={true}>{msg.text}</Bubble>
-                        <BubbleTime $mine={false}>{time}</BubbleTime>
+                        <BubbleTime $mine={false}>
+                          {time}
+                          {showAvatars && (
+                            <span style={{ color: '#888', marginLeft: 6 }}>
+                              {profile?.displayName ?? msg.fromEmail}
+                            </span>
+                          )}
+                        </BubbleTime>
                       </BubbleWrap>
                     )}
                   </div>
