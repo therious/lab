@@ -622,7 +622,8 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
                   <div style={{ flex: 1, minWidth: 0,
                                 display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                     {!mine && (
-                      <BubbleWrap $mine={false} $alignRight={true}>
+                      // paddingTop offsets BubbleTime height so the Bubble itself centres on avatar cy
+                      <BubbleWrap $mine={false} $alignRight={true} style={{ paddingTop: 14 }}>
                         <BubbleBody>
                           <Bubble $mine={false} $tailRight={true}>{msg.text}</Bubble>
                           <BubbleTime $mine={false}>
@@ -645,7 +646,7 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
                   <div style={{ flex: 1, minWidth: 0,
                                 display: 'flex', alignItems: 'center' }}>
                     {mine && (
-                      <BubbleWrap $mine={true} $alignRight={false}>
+                      <BubbleWrap $mine={true} $alignRight={false} style={{ paddingTop: 14 }}>
                         <BubbleBody>
                           <Bubble $mine={true} $tailRight={false}>{msg.text}</Bubble>
                           <BubbleTime $mine={true}>{time}</BubbleTime>
