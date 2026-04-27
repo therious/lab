@@ -13,6 +13,7 @@ import { MyGrid } from './MyGrid';
 import { Chat } from './Chat';
 import { HSplit, VSplit } from './SplitPane';
 import { hashColor, statusDotColor } from './avatar-utils';
+import { avatarBlobCache, fetchAvatarBlob } from './avatar-cache';
 
 // ── Layout ───────────────────────────────────────────────────────────────────
 
@@ -150,6 +151,20 @@ const NicknameDialog = ({ participants, onConfirm, onCancel }: NicknameDialogPro
 
 // ── Column defs — users ───────────────────────────────────────────────────────
 
+// Renders an avatar image via the shared blob cache so the same fetched blob
+// is reused across UsersView, group-chat grid, and the Chat graph.
+const CachedImg = ({ uid, photoURL, size }: { uid: string; photoURL: string; size: number }) => {
+  const [src, setSrc] = useState<string>(() => avatarBlobCache.get(uid) ?? photoURL);
+  useEffect(() => {
+    if (avatarBlobCache.has(uid)) { setSrc(avatarBlobCache.get(uid)!); return; }
+    fetchAvatarBlob(uid, photoURL).then(url => { if (url) setSrc(url); });
+  }, [uid, photoURL]);
+  return (
+    <img src={src} referrerPolicy="no-referrer" alt=""
+      style={{ width: size, height: size, borderRadius: '50%', display: 'block' }} />
+  );
+};
+
 const StatusDot = ({ isOnline, lastSeen }: { isOnline: boolean; lastSeen: number | null }) => (
   <div style={{
     position: 'absolute', bottom: 1, right: 1,
@@ -162,11 +177,10 @@ const StatusDot = ({ isOnline, lastSeen }: { isOnline: boolean; lastSeen: number
 const AvatarCell = ({ value, data }: any) => {
   const wrap: React.CSSProperties = { position: 'relative', display: 'inline-block', marginTop: 2 };
   const dot = <StatusDot isOnline={!!data?.isOnline} lastSeen={data?.lastSeen ?? null} />;
-  if (value) {
+  if (value && data?.uid) {
     return (
       <div style={wrap}>
-        <img src={value} referrerPolicy="no-referrer" loading="lazy" alt=""
-          style={{ width: 28, height: 28, borderRadius: '50%', display: 'block' }} />
+        <CachedImg uid={data.uid} photoURL={value} size={28} />
         {dot}
       </div>
     );
@@ -207,8 +221,7 @@ const MultiAvatarCell = ({ data }: any) => {
       {shown.map(p => (
         <div key={p.uid} style={{ position: 'relative', width: 22, height: 22, flexShrink: 0 }}>
           {p.photoURL
-            ? <img src={p.photoURL} referrerPolicy="no-referrer" loading="lazy" alt=""
-                style={{ width: 22, height: 22, borderRadius: '50%', display: 'block' }} />
+            ? <CachedImg uid={p.uid} photoURL={p.photoURL} size={22} />
             : <div style={{ width: 22, height: 22, borderRadius: '50%',
                 background: hashColor(p.email), color: 'white', fontSize: 9,
                 display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

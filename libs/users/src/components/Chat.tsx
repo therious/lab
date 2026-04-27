@@ -10,6 +10,7 @@ import { chatMsgId, msgTimestamp, makeHeads, updateHeads, snapshotHeads, miniSes
 import { isSnowflakeId } from '@therious/utils';
 import { UserProfile, INACTIVITY_TIMEOUT_MS } from '../slices/users-slice';
 import { hashColor, statusDotColor } from './avatar-utils';
+import { avatarBlobCache, fetchAvatarBlob } from './avatar-cache';
 
 // ── Styles ───────────────────────────────────────────────────────────────────
 
@@ -182,33 +183,6 @@ const ErrorBar = styled.div`
   flex-shrink: 0;
 `;
 
-// ── Avatar blob cache (page-lifetime) ────────────────────────────────────────
-// Fetch each avatar URL once per page load and store it as a blob URL so it
-// survives token expiry and transient network blips.  On failure, the last
-// successfully fetched blob URL is used as a fallback.
-
-const _avatarBlobCache  = new Map<string, string>();   // uid → blob URL
-const _avatarFetchInFlight = new Set<string>();         // uids currently being fetched
-
-async function _fetchAvatarBlob(uid: string, photoURL: string): Promise<string | null> {
-  if (_avatarFetchInFlight.has(uid)) return _avatarBlobCache.get(uid) ?? null;
-  _avatarFetchInFlight.add(uid);
-  try {
-    const res = await fetch(photoURL, { referrerPolicy: 'no-referrer' });
-    if (!res.ok) throw new Error(`${res.status}`);
-    const blob    = await res.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    const prev    = _avatarBlobCache.get(uid);
-    if (prev) URL.revokeObjectURL(prev);
-    _avatarBlobCache.set(uid, blobUrl);
-    return blobUrl;
-  } catch {
-    return _avatarBlobCache.get(uid) ?? null;  // stale cache is better than nothing
-  } finally {
-    _avatarFetchInFlight.delete(uid);
-  }
-}
-
 // ── Shared avatar with status dot ────────────────────────────────────────────
 
 type AvatarProps = {
@@ -225,14 +199,14 @@ const Avatar = ({ profile, fallback, size = 24 }: AvatarProps) => {
   // after a fresh fetch completes.
   const [imgSrc, setImgSrc] = useState<string | null>(() => {
     if (!uid || !photoURL) return null;
-    return _avatarBlobCache.get(uid) ?? photoURL;
+    return avatarBlobCache.get(uid) ?? photoURL;
   });
 
   useEffect(() => {
     if (!uid || !photoURL) { setImgSrc(null); return; }
     // If already cached, use it immediately and skip re-fetch.
-    if (_avatarBlobCache.has(uid)) { setImgSrc(_avatarBlobCache.get(uid)!); return; }
-    _fetchAvatarBlob(uid, photoURL).then(url => { if (url) setImgSrc(url); });
+    if (avatarBlobCache.has(uid)) { setImgSrc(avatarBlobCache.get(uid)!); return; }
+    fetchAvatarBlob(uid, photoURL).then(url => { if (url) setImgSrc(url); });
   }, [uid, photoURL]);
 
   const dotSize = Math.round(size * 0.34);
@@ -259,9 +233,9 @@ const Avatar = ({ profile, fallback, size = 24 }: AvatarProps) => {
           onError={() => {
             // Fetch failed or blob URL expired — re-fetch and fall back to cache.
             if (uid && photoURL) {
-              _fetchAvatarBlob(uid, photoURL).then(url => { if (url) setImgSrc(url); });
+              fetchAvatarBlob(uid, photoURL).then(url => { if (url) setImgSrc(url); });
             }
-            setImgSrc(_avatarBlobCache.get(uid ?? '') ?? null);
+            setImgSrc(avatarBlobCache.get(uid ?? '') ?? null);
           }}
         />
         {dot}
@@ -458,13 +432,13 @@ const SvgAvatarNode = ({ cx, cy, r, uid, profile, fallback, nodeId }: SvgAvatarN
 
   const [imgSrc, setImgSrc] = useState<string | null>(() => {
     if (!uid || !photoURL) return null;
-    return _avatarBlobCache.get(uid) ?? photoURL;
+    return avatarBlobCache.get(uid) ?? photoURL;
   });
 
   useEffect(() => {
     if (!uid || !photoURL) { setImgSrc(null); return; }
-    if (_avatarBlobCache.has(uid)) { setImgSrc(_avatarBlobCache.get(uid)!); return; }
-    _fetchAvatarBlob(uid, photoURL).then(url => { if (url) setImgSrc(url); });
+    if (avatarBlobCache.has(uid)) { setImgSrc(avatarBlobCache.get(uid)!); return; }
+    fetchAvatarBlob(uid, photoURL).then(url => { if (url) setImgSrc(url); });
   }, [uid, photoURL]);
 
   const clipId  = `svgav-${nodeId}`;
@@ -490,7 +464,7 @@ const SvgAvatarNode = ({ cx, cy, r, uid, profile, fallback, nodeId }: SvgAvatarN
                clipPath={`url(#${clipId})`}
                onError={(() => {
                  setImgSrc(null);
-                 if (photoURL) _fetchAvatarBlob(uid, photoURL).then(u => { if (u) setImgSrc(u); });
+                 if (photoURL) fetchAvatarBlob(uid, photoURL).then(u => { if (u) setImgSrc(u); });
                }) as unknown as React.ReactEventHandler<SVGImageElement>} />
         {statusDot}
       </g>
