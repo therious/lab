@@ -594,7 +594,7 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
 
                   {/* Left: others' bubble — right-aligned toward centre */}
                   <div style={{ flex: 1, minWidth: 0, overflow: 'hidden',
-                                display: 'flex', alignItems: 'center' }}>
+                                display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                     {!mine && (
                       <BubbleWrap $mine={false} $alignRight={true}>
                         <Bubble $mine={false} $tailRight={true}>{msg.text}</Bubble>
