@@ -25,7 +25,7 @@ export { useSession, signout } from './auth';
 export { appKey } from './app-key';
 
 // ── Chat message IDs and causal heads ────────────────────────────────────────
-export { chatMsgId, tsFromMsgId, msgTimestamp, makeHeads, updateHeads, snapshotHeads } from './slices/chat-id';
+export { chatMsgId, tsFromMsgId, msgTimestamp, makeHeads, updateHeads, snapshotHeads, miniSessionOf } from './slices/chat-id';
 export type { Heads } from './slices/chat-id';
 
 // ── Role utilities ────────────────────────────────────────────────────────────

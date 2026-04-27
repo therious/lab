@@ -6,7 +6,7 @@ import { User } from 'firebase/auth';
 import styled from 'styled-components';
 import { useUsersCtx } from '../context';
 import { ChatMessage, UserRec, GroupChat, chatId, HISTORY_LIMIT } from '../slices/chat-slice';
-import { chatMsgId, msgTimestamp, makeHeads, updateHeads, snapshotHeads, Heads } from '../slices/chat-id';
+import { chatMsgId, msgTimestamp, makeHeads, updateHeads, snapshotHeads, miniSessionOf, Heads } from '../slices/chat-id';
 import { isSnowflakeId } from '@therious/utils';
 import { UserProfile, INACTIVITY_TIMEOUT_MS } from '../slices/users-slice';
 import { hashColor, statusDotColor } from './avatar-utils';
@@ -537,20 +537,33 @@ const GraphView = ({ messages, myUid, showAvatars = false }:
 
   const svgW = (maxLane + 1) * LANE_W;
 
-  // Lines drawn first so avatar circles render on top
+  // Lines drawn first so avatar circles render on top.
+  // Same-minisession connections (same browser tab) are drawn dotted to
+  // de-emphasise the obvious "I typed these in sequence" causality.
   const lines = useMemo(() => items.flatMap(({ msg, lane, cy }) => {
-    const cx = lane * LANE_W + LANE_W / 2;
+    const cx           = lane * LANE_W + LANE_W / 2;
+    const childSession = miniSessionOf(msg.id ?? '');
+
     return (msg.parents ?? []).flatMap(pid => {
       const p = msgToCY.get(pid);
       if (!p) return [];
+
+      const sameSession   = childSession !== null && miniSessionOf(pid) === childSession;
+      const stroke        = '#c8d3e8';
+      const strokeWidth   = 1.5;
+      const strokeDasharray = sameSession ? '4 4' : undefined;
+
       if (p.cx === cx) {
         return [<line key={`${msg.id}-${pid}`}
-          x1={cx} y1={cy} x2={p.cx} y2={p.cy} stroke="#c8d3e8" strokeWidth={1.5} />];
+          x1={cx} y1={cy} x2={p.cx} y2={p.cy}
+          stroke={stroke} strokeWidth={strokeWidth}
+          strokeDasharray={strokeDasharray} />];
       }
       const midY = (cy + p.cy) / 2;
       return [<path key={`${msg.id}-${pid}`}
         d={`M${cx},${cy} C${cx},${midY} ${p.cx},${midY} ${p.cx},${p.cy}`}
-        fill="none" stroke="#c8d3e8" strokeWidth={1.5} />];
+        fill="none" stroke={stroke} strokeWidth={strokeWidth}
+        strokeDasharray={strokeDasharray} />];
     });
   }), [items, msgToCY]);
 
