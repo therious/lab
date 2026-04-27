@@ -234,12 +234,19 @@ class SamplerEngine {
       names.map(n => this.loadSample(`/audio/${n}.mp3`))
     ).then(([C2, C3, C4, C5, C6, C7]) => {
       this.samples = { C2, C3, C4, C5, C6, C7 };
+      console.log('[SamplerEngine] piano samples ready');
+    }).catch(err => {
+      console.error('[SamplerEngine] failed to load samples:', err);
+      throw err;
     });
   }
 
   private loadSample(url: string): Promise<AudioBuffer> {
     return fetch(url)
-      .then(r => r.arrayBuffer())
+      .then(r => {
+        if (!r.ok) throw new Error(`Failed to fetch ${url}: ${r.status}`);
+        return r.arrayBuffer();
+      })
       .then(buf => this.ctx.decodeAudioData(buf));
   }
 
@@ -359,7 +366,13 @@ export class ChordPlayer {
 
     // Wait for samples if they haven't loaded yet
     if (this.sampler && !this.sampler.ready) {
-      await this.sampler.whenReady();
+      try {
+        await this.sampler.whenReady();
+      } catch (err) {
+        console.error('[ChordPlayer] cannot start — sample loading failed:', err);
+        this.isPlaying = false;
+        return;
+      }
     }
 
     this.playLoop();
