@@ -1,5 +1,5 @@
 import {useState, useEffect, useCallback} from 'react';
-import styled, { keyframes } from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 import {Random} from '@therious/random';
 import {Ticket} from '../ticket/Ticket';
 import {Player} from '../ticket/Player';
@@ -39,7 +39,7 @@ const TicketDiv = styled.div<{$url:string, $introduced:boolean}>`
   transform-style: preserve-3d;
   perspective: 10px;
 
-  ${p => !p.$introduced && `animation: ${intro.name} 2s forwards;`}
+  ${p => !p.$introduced && css`animation: ${intro} 2s forwards;`}
 
   &:hover {
     animation: ${shake} 0.5s;
