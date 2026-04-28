@@ -29,9 +29,8 @@ dependencies:
   reselect: ~4.1.7
   tsyringe: ~4.7.0
 scripts:
-  start: vite
-  dev: vite
-  build: tsc && vite build
+  start: node ../../scripts/generate-build-info.js && VITE_CJS_IGNORE_WARNING=true vite
+  build: node ../../scripts/generate-build-info.js && tsc && vite build
   preview: vite preview --port 5176
 browserslist:
   production:

@@ -33,11 +33,10 @@ dependencies:
   web-vitals: ^2.1.4
   xstate: 4.28.1
 scripts:
-  start: VITE_CJS_IGNORE_WARNING=true vite
-  dev: VITE_CJS_IGNORE_WARNING=true vite
-  secstart: doppler run -- vite
-  build: tsc && vite build
-  secbuild: doppler run -- sh -c "tsc && vite build"
+  start: node ../../scripts/generate-build-info.js && VITE_CJS_IGNORE_WARNING=true vite
+  secstart: doppler run -- sh -c "node ../../scripts/generate-build-info.js && vite"
+  build: node ../../scripts/generate-build-info.js && tsc && vite build
+  secbuild: doppler run -- sh -c "node ../../scripts/generate-build-info.js && tsc && vite build"
   preview: vite preview --port 5173
   lint: eslint . --ext js,jsx,ts,tsx
 browserslist:
