@@ -116,7 +116,7 @@ const AuthenticatedApp = ({ session }: { session: User }) => {
 
   return (
     <Layout left={left} right={right}>
-      <Navbar title="Linnstorm" buildInfo={buildInfo} branding rightContent={<UserBadge />}>
+      <Navbar title="Linnstorm" buildInfo={buildInfo} branding rightContent={<UserBadge />} style={{ gridArea: 'Navbar' }}>
         <NavItem to="/params" $active={curPath === '/params' || curPath === '/'}>Parameters</NavItem>
         <NavItem to="/tuning" $active={curPath === '/tuning'}>Tuning</NavItem>
         <NavItem to="/midi"   $active={curPath === '/midi'}>Midi View</NavItem>

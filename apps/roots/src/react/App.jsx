@@ -95,7 +95,7 @@ const App = () => {
       <UsersProvider db={db} auth={firebaseAuth} actions={actions} useSelector={useSelector} appName="roots">
         <Layout left={left} right={right}>
 
-          <Navbar title="Roots" buildInfo={buildInfo} branding rightContent={<UserBadge />}>
+          <Navbar title="Roots" buildInfo={buildInfo} branding rightContent={<UserBadge />} style={{ gridArea: 'Navbar' }}>
             <NavItem to="/grid" $active={location.pathname === '/grid' || location.pathname === '/'}>Grid View</NavItem>
             <NavItem to="/star" $active={location.pathname === '/star'}>Visualization</NavItem>
             <NavItem to="/users" $active={location.pathname === '/users'}>Users</NavItem>

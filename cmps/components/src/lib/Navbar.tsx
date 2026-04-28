@@ -15,16 +15,16 @@ const linkHoverBg = '#283593';
 // ── App shell layout ──────────────────────────────────────────────────────────
 
 export const AppLayout = styled.div`
-  display: grid;
-  height: 100vh;
-  width: 100vw;
-  grid-template-rows: 44px minmax(0, 1fr);
-  grid-template-areas: "Navbar" "Body";
-  box-sizing: border-box;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 `;
 
 export const AppBody = styled.main`
-  grid-area: Body;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 `;
 
@@ -57,13 +57,14 @@ export const NavDivider = styled.div`
 // ── Navbar shell ──────────────────────────────────────────────────────────────
 
 const NavBar = styled.nav`
-  grid-area: Navbar;
+  flex-shrink: 0;
   background: ${midnight};
   display: flex;
   align-items: center;
   padding: 0 16px;
   gap: 4px;
   overflow: hidden;
+  box-sizing: border-box;
 `;
 
 const Title = styled.div`
