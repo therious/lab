@@ -102,6 +102,51 @@ const AppCardSub = styled.div`
   margin-top: 4px;
 `;
 
+// ── "Deployed Apps Only" toggle ───────────────────────────────────────────────
+
+const ToggleWrap = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  cursor: pointer;
+  user-select: none;
+  font-size: 12px;
+  color: #c5cae9;
+`;
+
+const ToggleTrack = styled.span<{ $on: boolean }>`
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: ${p => p.$on ? '#26a69a' : '#3949ab'};
+  transition: background 0.2s;
+  flex-shrink: 0;
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: white;
+    top: 2px;
+    left: ${p => p.$on ? '16px' : '2px'};
+    transition: left 0.2s;
+  }
+`;
+
+const HiddenCheckbox = styled.input.attrs({ type: 'checkbox' })`
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+`;
+
+const isLocalhost = (appId: string) => appId.includes('_');
+
 // ── App route — renders AdminView for a specific appId from the URL param ─────
 
 const AppRoute = () => {
@@ -144,7 +189,19 @@ const HomeScreen = ({ appIds }: { appIds: string[] }) => {
 
 const AuthenticatedApp = ({ session }: { session: User }) => {
   const [appIds, setAppIds] = useState<string[]>([]);
+  const [deployedOnly, setDeployedOnly] = useState<boolean>(
+    () => localStorage.getItem('admin:deployedOnly') === 'true'
+  );
   const curPath = useLocation().pathname;
+
+  const filteredAppIds = deployedOnly ? appIds.filter(id => !isLocalhost(id)) : appIds;
+
+  const toggleDeployedOnly = () => {
+    setDeployedOnly(prev => {
+      localStorage.setItem('admin:deployedOnly', String(!prev));
+      return !prev;
+    });
+  };
 
   useEffect(() => {
     getDocs(collection(db, 'apps'))
@@ -166,8 +223,8 @@ const AuthenticatedApp = ({ session }: { session: User }) => {
           <Navbar>
             <NavTitle>Admin</NavTitle>
             <StyledLink to="/" $active={curPath === '/'}>Home</StyledLink>
-            {appIds.length > 0 && <NavDivider />}
-            {appIds.map(appId => {
+            {filteredAppIds.length > 0 && <NavDivider />}
+            {filteredAppIds.map(appId => {
               const label = appId.includes('_') ? appId.split('_')[0] : appId;
               const port  = appId.includes('_') ? `:${appId.split('_')[1]}` : '';
               return (
@@ -180,11 +237,16 @@ const AuthenticatedApp = ({ session }: { session: User }) => {
                 </StyledLink>
               );
             })}
+            <ToggleWrap onClick={toggleDeployedOnly}>
+              <HiddenCheckbox checked={deployedOnly} onChange={() => {}} />
+              <ToggleTrack $on={deployedOnly} />
+              Deployed only
+            </ToggleWrap>
           </Navbar>
 
           <Body>
             <Routes>
-              <Route path="/"           element={<HomeScreen appIds={appIds} />} />
+              <Route path="/"           element={<HomeScreen appIds={filteredAppIds} />} />
               <Route path="/app/:appId" element={<AppRoute />} />
             </Routes>
           </Body>
