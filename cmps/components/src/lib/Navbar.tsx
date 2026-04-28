@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import { NavLink, NavLinkProps } from 'react-router-dom';
 import styled from 'styled-components';
 import { useBuildInfoTooltip } from './BuildInfo';
+import { NetlifyBranding } from './Branding';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
@@ -75,8 +76,17 @@ const Title = styled.div`
   cursor: default;
 `;
 
+// BrandingSlot: flex:1 so it fills the gap between nav links and rightContent.
+// When rightContent is present it centers within that gap; otherwise it right-justifies.
+const BrandingSlot = styled.div<{ $hasRight: boolean }>`
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: ${p => p.$hasRight ? 'center' : 'flex-end'};
+  min-width: 0;
+`;
+
 const RightSlot = styled.div`
-  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -92,13 +102,15 @@ export interface NavbarProps {
   buildInfo?: Parameters<typeof useBuildInfoTooltip>[0];
   /** Nav links and other content placed after the title */
   children?: ReactNode;
-  /** Content placed flush to the right (UserProfile, BuildInfo, toggles, …) */
+  /** Show the Netlify deployment badge. Centered when rightContent is present, right-justified otherwise. */
+  branding?: boolean;
+  /** Content placed flush to the right (UserBadge, toggles, …) */
   rightContent?: ReactNode;
   className?: string;
   style?: React.CSSProperties;
 }
 
-export function Navbar({ title, buildInfo, children, rightContent, className, style }: NavbarProps) {
+export function Navbar({ title, buildInfo, children, branding, rightContent, className, style }: NavbarProps) {
   const { containerRef, tooltipProps, tooltip } = useBuildInfoTooltip(buildInfo);
   return (
     <NavBar className={className} style={style}>
@@ -109,6 +121,7 @@ export function Navbar({ title, buildInfo, children, rightContent, className, st
         </Title>
       )}
       {children}
+      {branding && <BrandingSlot $hasRight={!!rightContent}><NetlifyBranding /></BrandingSlot>}
       {rightContent && <RightSlot>{rightContent}</RightSlot>}
     </NavBar>
   );

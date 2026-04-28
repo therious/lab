@@ -1,18 +1,26 @@
 import { useLocation } from 'react-router-dom';
 import { SnackbarProvider } from 'notistack';
 import { User } from 'firebase/auth';
+import styled from 'styled-components';
 
-import { Modalize } from '@therious/components';
+import { Modalize, Navbar, AppLayout, AppBody, NavItem } from '@therious/components';
 import { useSelector, actions } from './actions-integration';
 import {
   UsersProvider, useSession, Login, UsersView, AdminView,
-  RouteConfig, GuardedRoutes, useAccessibleRoutes, Foyer,
+  RouteConfig, GuardedRoutes, useAccessibleRoutes, Foyer, UserBadge,
 } from '@therious/users';
 import { firebaseAuth, db } from './firebase';
 
-import { Game }        from './react/Game';
-import { Layout, CenterBody, MyNavLink, Navbar } from './react/Navbar';
+import { Game }          from './react/Game';
 import { NotifyWrapper } from './react/NotifyWrapper';
+
+// @ts-ignore - generated at build time by generate-build-info.js
+import buildInfo from './build-info.json';
+
+const TicketBody = styled(AppBody)`
+  background-color: #b1c3a9;
+  color: #0c0e0d;
+`;
 
 const Profile = () => <>{`profile here`}</>;
 
@@ -32,16 +40,23 @@ const AuthenticatedApp = ({ session }: { session: User }) => {
   const visible = useAccessibleRoutes(routes);
 
   return (
-    <Layout>
-      <Navbar>
+    <AppLayout>
+      <Navbar
+        title="Ticket"
+        buildInfo={buildInfo}
+        branding
+        rightContent={<UserBadge />}
+      >
         {visible.map(r => (
-          <MyNavLink key={r.path} curPath={curPath} to={r.path}>{r.label}</MyNavLink>
+          <NavItem key={r.path} to={r.path} $active={curPath === r.path}>
+            {r.label}
+          </NavItem>
         ))}
       </Navbar>
-      <CenterBody>
+      <TicketBody>
         <GuardedRoutes routes={routes} />
-      </CenterBody>
-    </Layout>
+      </TicketBody>
+    </AppLayout>
   );
 };
 

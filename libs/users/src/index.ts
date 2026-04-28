@@ -16,7 +16,6 @@ export { AdminView }                                    from './components/Admin
 export { Login }                                        from './components/Login';
 export { RoleGuard }                                    from './components/RoleGuard';
 export { UserBadge }                                    from './components/UserBadge';
-export type { UserBadgeProps }                          from './components/UserBadge';
 export { Foyer, GuardedRoutes, useAccessibleRoutes }    from './components/route-utils';
 export type { RouteConfig }                             from './components/route-utils';
 
