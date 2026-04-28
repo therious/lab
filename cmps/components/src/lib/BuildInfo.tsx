@@ -157,38 +157,20 @@ function formatMnemonic(mnemonic: string): string {
 }
 
 /**
- * BuildInfo component displays build information (commit hash, branch, dates)
- *
- * This component is designed to be reusable across all UI-only applications.
- *
- * Styled to match UserProfile widget: same height, padding, background, border-radius, border
- * Positioned on the right side, just before UserProfile widget with small gap
- *
- * @param buildInfo - Optional build info data. If not provided, component will try to import from '../build-info.json'
- * @param className - Optional CSS class name
- * @param style - Optional inline styles
+ * Returns the tooltip ReactNode for a given build info object (or null if absent).
+ * Exported so other components (e.g. Navbar title) can reuse the same tooltip content.
  */
-export function BuildInfo({ buildInfo: buildInfoProp, className, style }: BuildInfoProps) {
-  // Format dates (use empty strings if buildInfo not available)
-  const authoredParts = buildInfoProp ? formatDateForDisplay(buildInfoProp.authoredDate, null) : { identical: '', different: '', isFullyIdentical: false };
-  const committedParts = buildInfoProp ? formatDateForDisplay(
-    buildInfoProp.committedDate,
-    buildInfoProp.authoredDate
-  ) : { identical: '', different: '', isFullyIdentical: false };
-  const builtParts = buildInfoProp ? formatDateForDisplay(
-    buildInfoProp.builtDate,
-    buildInfoProp.committedDate
-  ) : { identical: '', different: '', isFullyIdentical: false };
+export function buildInfoTooltipContent(buildInfoProp: BuildInfoData | null | undefined): React.ReactNode {
+  if (!buildInfoProp) return null;
 
-  // Format mnemonic
-  const formattedMnemonic = buildInfoProp?.mnemonic ? formatMnemonic(buildInfoProp.mnemonic) : null;
+  const authoredParts   = formatDateForDisplay(buildInfoProp.authoredDate, null);
+  const committedParts  = formatDateForDisplay(buildInfoProp.committedDate, buildInfoProp.authoredDate);
+  const builtParts      = formatDateForDisplay(buildInfoProp.builtDate, buildInfoProp.committedDate);
+  const formattedMnemonic = buildInfoProp.mnemonic ? formatMnemonic(buildInfoProp.mnemonic) : null;
 
-  // Tooltip content (conditionally rendered based on buildInfoProp)
-  const tooltipContent = buildInfoProp ? (
-    <>
-      <TooltipTable>
-        <tbody>
-
+  return (
+    <TooltipTable>
+      <tbody>
         {formattedMnemonic && (
           <tr>
             <TooltipLabelCell>Mnemonic:</TooltipLabelCell>
@@ -224,19 +206,36 @@ export function BuildInfo({ buildInfo: buildInfoProp, className, style }: BuildI
             {builtParts.different}
           </TooltipValueCellLast>
         </tr>
-        </tbody>
-      </TooltipTable>
-    </>
-  ) : null;
+      </tbody>
+    </TooltipTable>
+  );
+}
 
-  // Always call hook unconditionally (hooks must be called in the same order)
-  const {containerRef, tooltipProps, tooltip } = useTooltip(tooltipContent);
+/**
+ * Hook that wires build info into useTooltip. Use when you want the BuildInfo
+ * tooltip on an arbitrary element rather than the standalone BuildInfo widget.
+ *
+ * @example
+ * const { containerRef, tooltipProps, tooltip } = useBuildInfoTooltip(buildInfo);
+ * return <span ref={containerRef} {...tooltipProps}>{appName}{tooltip}</span>;
+ */
+export function useBuildInfoTooltip(buildInfo: BuildInfoData | null | undefined) {
+  return useTooltip(buildInfoTooltipContent(buildInfo));
+}
+
+/**
+ * BuildInfo component — standalone widget showing commit hash + mnemonic,
+ * with full details on hover.
+ */
+export function BuildInfo({ buildInfo: buildInfoProp, className, style }: BuildInfoProps) {
+  const formattedMnemonic = buildInfoProp?.mnemonic ? formatMnemonic(buildInfoProp.mnemonic) : null;
+  const { containerRef, tooltipProps, tooltip } = useBuildInfoTooltip(buildInfoProp);
 
   return buildInfoProp
-    ?<Container ref={containerRef} className={className} style={style}{...tooltipProps}>
-      <WidgetLine>{buildInfoProp.commitHash}</WidgetLine>
-      {formattedMnemonic && (<WidgetLine><MnemonicText>{formattedMnemonic}</MnemonicText></WidgetLine>)}
-      {tooltip}
-     </Container>
+    ? <Container ref={containerRef} className={className} style={style} {...tooltipProps}>
+        <WidgetLine>{buildInfoProp.commitHash}</WidgetLine>
+        {formattedMnemonic && <WidgetLine><MnemonicText>{formattedMnemonic}</MnemonicText></WidgetLine>}
+        {tooltip}
+      </Container>
     : null;
 }

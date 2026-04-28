@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { NavLink, NavLinkProps } from 'react-router-dom';
 import styled from 'styled-components';
+import { useBuildInfoTooltip } from './BuildInfo';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
@@ -64,13 +65,14 @@ const NavBar = styled.nav`
   overflow: hidden;
 `;
 
-const Title = styled.span`
+const Title = styled.div`
   color: #e8eaf6;
   font-weight: bold;
   font-size: 15px;
   margin-right: 8px;
   letter-spacing: 0.03em;
   flex-shrink: 0;
+  cursor: default;
 `;
 
 const RightSlot = styled.div`
@@ -86,6 +88,8 @@ const RightSlot = styled.div`
 export interface NavbarProps {
   /** Bold title text shown on the left */
   title?: ReactNode;
+  /** When provided, hovering the title reveals the BuildInfo tooltip */
+  buildInfo?: Parameters<typeof useBuildInfoTooltip>[0];
   /** Nav links and other content placed after the title */
   children?: ReactNode;
   /** Content placed flush to the right (UserProfile, BuildInfo, toggles, …) */
@@ -94,10 +98,16 @@ export interface NavbarProps {
   style?: React.CSSProperties;
 }
 
-export function Navbar({ title, children, rightContent, className, style }: NavbarProps) {
+export function Navbar({ title, buildInfo, children, rightContent, className, style }: NavbarProps) {
+  const { containerRef, tooltipProps, tooltip } = useBuildInfoTooltip(buildInfo);
   return (
     <NavBar className={className} style={style}>
-      {title && <Title>{title}</Title>}
+      {title && (
+        <Title ref={containerRef} {...(buildInfo ? tooltipProps : {})}>
+          {title}
+          {tooltip}
+        </Title>
+      )}
       {children}
       {rightContent && <RightSlot>{rightContent}</RightSlot>}
     </NavBar>

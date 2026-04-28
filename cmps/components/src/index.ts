@@ -8,3 +8,4 @@ export * from './lib/BuildInfo';
 export * from './lib/useTooltip';
 export * from './lib/AppUrl';
 export * from './lib/Navbar';
+export * from './lib/Branding';
