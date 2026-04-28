@@ -30,6 +30,7 @@ export const useSession = (
             uid:         user.uid,
             email:       user.email        ?? '',
             displayName: user.displayName  ?? user.email ?? '',
+            photoURL:    user.photoURL,
             roles,
           });
         })
@@ -39,6 +40,7 @@ export const useSession = (
             uid:         user.uid,
             email:       user.email        ?? '',
             displayName: user.displayName  ?? user.email ?? '',
+            photoURL:    user.photoURL,
             roles:       [],
           });
         })

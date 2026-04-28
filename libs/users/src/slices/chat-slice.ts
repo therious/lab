@@ -2,7 +2,7 @@ export const HISTORY_LIMIT = 100;
 
 export const chatId = (a: string, b: string) => [a, b].sort().join('__');
 
-export type UserRec = { uid: string; displayName: string; email: string; roles: string[]; };
+export type UserRec = { uid: string; displayName: string; email: string; roles: string[]; photoURL?: string | null; };
 
 export type ChatMessage = {
   fromUid:   string;
