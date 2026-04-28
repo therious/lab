@@ -18,9 +18,8 @@ dependencies:
   styled-components: ~6.3.12
   typescript: ~5.4.5
 scripts:
-  start: vite
-  dev: vite
-  build: tsc && vite build
+  start:   node ../../scripts/generate-build-info.js && VITE_CJS_IGNORE_WARNING=true vite
+  build:   node ../../scripts/generate-build-info.js && tsc && vite build
   preview: vite preview --port 5175
 browserslist:
   production:
