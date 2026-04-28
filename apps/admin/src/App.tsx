@@ -237,8 +237,8 @@ const AuthenticatedApp = ({ session }: { session: User }) => {
                 </StyledLink>
               );
             })}
-            <ToggleWrap onClick={toggleDeployedOnly}>
-              <HiddenCheckbox checked={deployedOnly} onChange={() => {}} />
+            <ToggleWrap>
+              <HiddenCheckbox checked={deployedOnly} onChange={toggleDeployedOnly} />
               <ToggleTrack $on={deployedOnly} />
               Deployed only
             </ToggleWrap>
