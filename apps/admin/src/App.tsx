@@ -1,66 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { Route, Routes, NavLink, useLocation, useParams } from 'react-router-dom';
+import { Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { User } from 'firebase/auth';
 import { collection, getDocs } from 'firebase/firestore';
 import styled from 'styled-components';
 
-import { Modalize } from '@therious/components';
+import { Modalize, Navbar, AppLayout, AppBody, NavItem, NavDivider } from '@therious/components';
 import { useSelector, actions } from './actions-integration';
 import {
-  UsersProvider, useSession, Login, AdminView, RoleGuard,
+  UsersProvider, useSession, Login, AdminView, RoleGuard, UserBadge,
 } from '@therious/users';
 import { firebaseAuth, db } from './firebase';
 
-// ── Layout ────────────────────────────────────────────────────────────────────
+// @ts-ignore - generated at build time by generate-build-info.js
+import buildInfo from './build-info.json';
 
-const AppShell = styled.div`
-  display: grid;
-  height: 100vh;
-  width: 100vw;
-  grid-template-rows: 44px minmax(0, 1fr);
-  grid-template-areas: "Navbar" "Body";
-  box-sizing: border-box;
-`;
-
-const Navbar = styled.nav`
-  grid-area: Navbar;
-  background: #1a237e;
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  gap: 4px;
-`;
-
-const NavTitle = styled.span`
-  color: #e8eaf6;
-  font-weight: bold;
-  font-size: 15px;
-  margin-right: 16px;
-  letter-spacing: 0.03em;
-`;
-
-const NavDivider = styled.div`
-  width: 1px;
-  height: 20px;
-  background: #3949ab;
-  margin: 0 8px;
-`;
-
-const StyledLink = styled(NavLink)<{ $active?: boolean }>`
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 13px;
-  color: ${p => p.$active ? '#fff' : '#c5cae9'};
-  background: ${p => p.$active ? '#3949ab' : 'transparent'};
-  text-decoration: none;
-  &:hover { background: #283593; color: #fff; }
-`;
-
-const Body = styled.main`
-  grid-area: Body;
-  overflow: hidden;
-`;
+// ── App-specific layout pieces ────────────────────────────────────────────────
 
 const CenterMessage = styled.div`
   display: flex;
@@ -79,7 +33,7 @@ const AppGrid = styled.div`
   padding: 32px;
 `;
 
-const AppCard = styled(NavLink)`
+const AppCard = styled(NavItem)`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -88,11 +42,11 @@ const AppCard = styled(NavLink)`
   height: 100px;
   border: 1px solid #dadce0;
   border-radius: 8px;
-  text-decoration: none;
   color: #202124;
   font-size: 14px;
   font-weight: 500;
   background: white;
+  padding: 0;
   &:hover { background: #f8f9fa; border-color: #1a73e8; color: #1a73e8; }
 `;
 
@@ -108,7 +62,6 @@ const ToggleWrap = styled.label`
   display: flex;
   align-items: center;
   gap: 7px;
-  margin-left: auto;
   cursor: pointer;
   user-select: none;
   font-size: 12px;
@@ -147,18 +100,16 @@ const HiddenCheckbox = styled.input.attrs({ type: 'checkbox' })`
 
 const isLocalhost = (appId: string) => appId.includes('_');
 
-// ── App route — renders AdminView for a specific appId from the URL param ─────
+// ── App route ─────────────────────────────────────────────────────────────────
 
 const AppRoute = () => {
   const { appId } = useParams<{ appId: string }>();
   if (!appId) return null;
-  // Pass appName derived from appId so role suggestions say e.g. "ticket:admin"
-  // rather than "admin:admin" (the admin app's own symbolic name).
   const appName = appId.includes('_') ? appId.split('_')[0] : appId;
   return <AdminView appId={appId} appName={appName} />;
 };
 
-// ── Home screen — grid of discovered app cards ────────────────────────────────
+// ── Home screen ───────────────────────────────────────────────────────────────
 
 const HomeScreen = ({ appIds }: { appIds: string[] }) => {
   if (appIds.length === 0) {
@@ -185,7 +136,7 @@ const HomeScreen = ({ appIds }: { appIds: string[] }) => {
   );
 };
 
-// ── Authenticated shell — loads app list, renders nav + routes ─────────────
+// ── Authenticated shell ───────────────────────────────────────────────────────
 
 const AuthenticatedApp = ({ session }: { session: User }) => {
   const [appIds, setAppIds] = useState<string[]>([]);
@@ -216,47 +167,55 @@ const AuthenticatedApp = ({ session }: { session: User }) => {
     </CenterMessage>
   );
 
+  const toggle = (
+    <ToggleWrap>
+      <HiddenCheckbox checked={deployedOnly} onChange={toggleDeployedOnly} />
+      <ToggleTrack $on={deployedOnly} />
+      Deployed only
+    </ToggleWrap>
+  );
+
   return (
     <UsersProvider db={db} auth={firebaseAuth} actions={actions} useSelector={useSelector} appName="admin">
       <RoleGuard roles={['admin']} fallback={noAccessFallback}>
-        <AppShell>
-          <Navbar>
-            <NavTitle>Admin</NavTitle>
-            <StyledLink to="/" $active={curPath === '/'}>Home</StyledLink>
+        <AppLayout>
+          <Navbar
+            title="Admin"
+            buildInfo={buildInfo}
+            rightContent={
+              <>
+                {toggle}
+                <NavDivider />
+                <UserBadge />
+              </>
+            }
+          >
+            <NavItem to="/" $active={curPath === '/'}>Home</NavItem>
             {filteredAppIds.length > 0 && <NavDivider />}
             {filteredAppIds.map(appId => {
               const label = appId.includes('_') ? appId.split('_')[0] : appId;
               const port  = appId.includes('_') ? `:${appId.split('_')[1]}` : '';
               return (
-                <StyledLink
-                  key={appId}
-                  to={`/app/${appId}`}
-                  $active={curPath === `/app/${appId}`}
-                >
+                <NavItem key={appId} to={`/app/${appId}`} $active={curPath === `/app/${appId}`}>
                   {label}{port}
-                </StyledLink>
+                </NavItem>
               );
             })}
-            <ToggleWrap>
-              <HiddenCheckbox checked={deployedOnly} onChange={toggleDeployedOnly} />
-              <ToggleTrack $on={deployedOnly} />
-              Deployed only
-            </ToggleWrap>
           </Navbar>
 
-          <Body>
+          <AppBody>
             <Routes>
               <Route path="/"           element={<HomeScreen appIds={filteredAppIds} />} />
               <Route path="/app/:appId" element={<AppRoute />} />
             </Routes>
-          </Body>
-        </AppShell>
+          </AppBody>
+        </AppLayout>
       </RoleGuard>
     </UsersProvider>
   );
 };
 
-// ── Root — handles loading / auth states ──────────────────────────────────────
+// ── Root ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
   const [session, , loading] = useSession(firebaseAuth, db, actions);

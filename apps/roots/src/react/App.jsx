@@ -1,11 +1,11 @@
 import React, {useEffect} from 'react';
-import { Route, Routes, NavLink, useLocation } from "react-router-dom"
+import { Route, Routes, useLocation } from "react-router-dom"
 
 import styled from 'styled-components';
 
 import {actions, useSelector} from '../actions-integration';
-import { UsersProvider, useSession, Login, UsersView, AdminView, RoleGuard } from '@therious/users';
-import { Modalize } from '@therious/components';
+import { UsersProvider, useSession, Login, UsersView, AdminView, RoleGuard, UserBadge } from '@therious/users';
+import { Modalize, Navbar, NavItem, NavDivider } from '@therious/components';
 import { firebaseAuth, db } from '../firebase';
 
 import {SnackbarProvider} from "notistack";
@@ -16,142 +16,67 @@ import {RtGridView} from "./RtGridView.jsx";
 import {RtStarView} from "./RtStarView";
 import {PersistentGraphContainer} from "./PersistentGraphContainer";
 
-const palette = {
-      plum: '#4b54a1',
-      black: '#0c0e0d',
-      blueslate: '#465f73',
-      slate: '#5f5f7b',
-      drab: '#b1c3a9',
-      sky: '#5e86ba',
-      moon: '#b3961e',
-      midnight: '#0b2383',
+// @ts-ignore - generated at build time by generate-build-info.js
+import buildInfo from '../build-info.json';
 
-      gold: 'gold',
-      cornsilk: 'cornsilk',
-      blue: 'blue',
-      forest: 'forestgreen',
-      crimson: 'crimson'
-};
+// ── Layout ────────────────────────────────────────────────────────────────────
 
 const Layout = styled.div`
     display:grid;
     height: calc(100vh);
     width: calc(100vw);
-    
     row-gap:4px;
     column-gap:4px;
-
     grid-template-columns: ${props=>props.left}px minmax(0, 1fr);
-    grid-template-rows: 30px minmax(0, 1fr);
+    grid-template-rows: 44px minmax(0, 1fr);
     grid-template-areas: "LNavbar Navbar"
                          "Left CenterBody";
 `;
 
 Layout.defaultProps = {left:0, right:0};
 
-const Navbar = styled.section`
-    grid-area: Navbar;
-    padding-top: 5px;
-    background-color: ${palette.midnight};
-    color: ${palette.drab};
-    height:fit-content;
-    overflow: auto;
-`;
-
 const CenterBody = styled.section`
     display: block;
     height:100%;
     grid-area: CenterBody;
-    background-color: ${palette.drab};
-    color: ${palette.black};
+    background-color: #b1c3a9;
+    color: #0c0e0d;
 `;
+
 const Left = styled.section`
     grid-area: Left;
-    background-color: ${palette.cornsilk};
-    color: ${palette.midnight};
-`;
-const Right = styled.section`
-    grid-area: Right;
-    background-color: ${palette.cornsilk};
-    color: ${palette.midnight};
+    background-color: cornsilk;
+    color: #0b2383;
 `;
 
-
-
-const topCssAttributes = `
-  padding-right:          5px;
-  padding-left:          5px;
-  margin-left: 5px;
-  margin-right: 5px;
+const TopButton = styled.button`
+  padding: 0 5px;
+  margin: 0 5px;
 `;
 
-
-const TopButton = styled.button`${topCssAttributes}`;
-
-const StyledLink =  styled(NavLink)`
-  display: inline-block;
-  background: ${props=>props?.$active? '#0f0': 'antiquewhite'};
-  min-width: 100px;
-  border: 1px solid white;
-  margin: 0;
-  padding: 5px;
-
-  &:active {
-    color: red;
-  }
-
-  &:hover {
-    background: palegreen;
-  }
-
-  border-radius: 3px;
-
-  & > * {
-    color: orange;
-    text-decoration: none;
-  }
-`;
-
-
-const MyNavLink = ({to, children, curPath})=> {
-  return <StyledLink $active={curPath === to} to={to}>{children}</StyledLink>
-}
-
-
-
+// ── App ───────────────────────────────────────────────────────────────────────
 
 let messageCtr = 0;
 
-const  App = () => {
+const App = () => {
   const location = useLocation();
   const [session, , loading] = useSession(firebaseAuth, db, actions);
 
-  // when app renders, plug in handler for updates to local storage
-  // todo move this to patch-middleware instead when it is created
   useEffect(()=> {
-    // disable browser level context menu it is in the way of our context menus
     window.document.body.addEventListener('contextmenu', (e)=>{e.preventDefault()});
-
-    window.onstorage =
-    evt => {
-      if(evt === undefined)
-        return;
+    window.onstorage = evt => {
+      if(evt === undefined) return;
       actions.patch.mirrorOtherInstance(evt.key, evt.oldValue, evt.newValue);
-    }},
-  []);
+    };
+  }, []);
 
-
-  // useSelector got complex because we didn't compensate for adding slices
-  // resimplify after adding some types to make this easier
   const {
-    local:    {layout:   {left,right}},
+    local:    {layout: {left, right}},
     notify:   {notices:[notice=undefined]},
-    } = useSelector(s=>s);
+  } = useSelector(s=>s);
 
-
-  const {warn,error,fatal,dismiss} = actions.notify;
-
-  const {  toggleLeft, toggleRight, } = actions.local;
+  const {warn, error, fatal, dismiss} = actions.notify;
+  const {toggleLeft, toggleRight} = actions.local;
 
   if (loading) return null;
 
@@ -164,76 +89,51 @@ const  App = () => {
     );
   }
 
-   return  (
-   <SnackbarProvider maxSnack={5} hideIconVariant
-                     anchorOrigin={{vertical: "top", horizontal: "right",}}
-                     >
-     <NotifyWrapper />
-     <UsersProvider db={db} auth={firebaseAuth} actions={actions} useSelector={useSelector} appName="roots">
+  return (
+    <SnackbarProvider maxSnack={5} hideIconVariant anchorOrigin={{vertical: "top", horizontal: "right"}}>
+      <NotifyWrapper />
+      <UsersProvider db={db} auth={firebaseAuth} actions={actions} useSelector={useSelector} appName="roots">
         <Layout left={left} right={right}>
 
-            <Navbar>
-              <div style={{ margin: 'auto', width: '50%', display: 'inline-block'}}>
-                <MyNavLink curPath={location.pathname} to="/grid">Grid View</MyNavLink>
-                <MyNavLink curPath={location.pathname} to="/star">Visualization</MyNavLink>
-                <MyNavLink curPath={location.pathname} to="/users">Users</MyNavLink>
-                <RoleGuard roles={['admin']}>
-                  <MyNavLink curPath={location.pathname} to="/admin">Admin</MyNavLink>
-                </RoleGuard>
+          <Navbar title="Roots" buildInfo={buildInfo} branding rightContent={<UserBadge />}>
+            <NavItem to="/grid" $active={location.pathname === '/grid' || location.pathname === '/'}>Grid View</NavItem>
+            <NavItem to="/star" $active={location.pathname === '/star'}>Visualization</NavItem>
+            <NavItem to="/users" $active={location.pathname === '/users'}>Users</NavItem>
+            <RoleGuard roles={['admin']}>
+              <NavDivider />
+              <NavItem to="/admin" $active={location.pathname === '/admin'}>Admin</NavItem>
+            </RoleGuard>
+          </Navbar>
 
-                {/*<MyNavLink curPath={location.pathname} to="/files">Import/Export Settings</MyNavLink>*/}
-
-              </div>
-              <div style={{float:'right', display: 'inline-block', marginRight:'20px'}}>
-                <a style={{color:'white', textDecoration:'none', font: 'Roboto', }}
-                href="https://www.netlify.com">
-                <span style={{verticalAlign: 'top', fontStyle: 'italic'}}>deployed via</span> <img height="20px" src="/netlify/full-logo-dark.svg" alt="Netlify"/></a>
-              </div>
-
-            </Navbar>
-            <Left>
-              <TopButton onClick={()=>{toggleLeft(100)}}>Left</TopButton>
-
-              <TopButton onClick={()=>fatal({msg:`${messageCtr++}: I am fatal`})}>Fatal Message</TopButton>
-              <TopButton onClick={()=>error({msg:`${messageCtr++}: Seen one error`, remedy:'Acknowledge'})}>Error Message</TopButton>
-              <TopButton onClick={()=>warn({msg:`${messageCtr++}: This is a warning with Modal as a remedy`, remedy:'Modal'})}>Modal Warning</TopButton>
-              <TopButton onClick={()=>warn({msg:`${messageCtr++}: This is a warning with Acknowledge as a remedy`, remedy:'Acknowledge'})}>Warning</TopButton>
-              <TopButton onClick={()=>{toggleRight(900)}}>Toggle Slice View</TopButton>
-
-            </Left>
-
+          <Left>
+            <TopButton onClick={()=>{toggleLeft(100)}}>Left</TopButton>
+            <TopButton onClick={()=>fatal({msg:`${messageCtr++}: I am fatal`})}>Fatal Message</TopButton>
+            <TopButton onClick={()=>error({msg:`${messageCtr++}: Seen one error`, remedy:'Acknowledge'})}>Error Message</TopButton>
+            <TopButton onClick={()=>warn({msg:`${messageCtr++}: This is a warning with Modal as a remedy`, remedy:'Modal'})}>Modal Warning</TopButton>
+            <TopButton onClick={()=>warn({msg:`${messageCtr++}: This is a warning with Acknowledge as a remedy`, remedy:'Acknowledge'})}>Warning</TopButton>
+            <TopButton onClick={()=>{toggleRight(900)}}>Toggle Slice View</TopButton>
+          </Left>
 
           <CenterBody>
-            {/* Persistent graph container - always mounted to keep iframe alive */}
             <PersistentGraphContainer />
-
-            {notice && notice.level === 'fatal'?
-              <Modal content={notice.msg} noClose/>
-                :
-              (notice && notice.remedy === 'Modal')? /*Modal isn't really one of the options */
-                <Modal content={<div><h1>{notice.level}</h1><hr/>{notice.msg}</div>} close={()=>{dismiss(notice.key)}}/>
-                :
-                <>
-                  <Routes>
-                    <Route path="/"        element={<RtGridView/>}/>
-                    <Route path="/grid"    element={<RtGridView/>}/>
-                    <Route path="/star"    element={<RtStarView/>}/>
-                    <Route path="/users"   element={<UsersView session={session} />}/>
-                    <Route path="/admin"   element={
-                      <RoleGuard roles={['admin']}>
-                        <AdminView />
-                      </RoleGuard>
-                    }/>
+            {notice && notice.level === 'fatal'
+              ? <Modal content={notice.msg} noClose/>
+              : (notice && notice.remedy === 'Modal')
+                ? <Modal content={<div><h1>{notice.level}</h1><hr/>{notice.msg}</div>} close={()=>{dismiss(notice.key)}}/>
+                : <Routes>
+                    <Route path="/"      element={<RtGridView/>}/>
+                    <Route path="/grid"  element={<RtGridView/>}/>
+                    <Route path="/star"  element={<RtStarView/>}/>
+                    <Route path="/users" element={<UsersView session={session} />}/>
+                    <Route path="/admin" element={<RoleGuard roles={['admin']}><AdminView /></RoleGuard>}/>
                   </Routes>
-                </>
             }
           </CenterBody>
 
         </Layout>
-     </UsersProvider>
-   </SnackbarProvider>
-    );
+      </UsersProvider>
+    </SnackbarProvider>
+  );
 };
-
 
 export default App;
