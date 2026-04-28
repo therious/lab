@@ -836,6 +836,9 @@ importers:
       '@viz-js/viz':
         specifier: ~3.4.0
         version: 3.4.0
+      react-router-dom:
+        specifier: ~6.24.0
+        version: 6.24.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
 
   libs/actions:
     dependencies:

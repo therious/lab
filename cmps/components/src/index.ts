@@ -7,3 +7,4 @@ export * from './lib/DagViewer';
 export * from './lib/BuildInfo';
 export * from './lib/useTooltip';
 export * from './lib/AppUrl';
+export * from './lib/Navbar';
