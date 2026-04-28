@@ -22,16 +22,13 @@ const TicketBody = styled(AppBody)`
   color: #0c0e0d;
 `;
 
-const Profile = () => <>{`profile here`}</>;
-
 // Route table — single source of truth for nav visibility and routing.
 // roles omitted = no restriction (any logged-in user can access).
 // Add a roles array to protect a route: roles: ['ticket:player']
 const makeRoutes = (session: User): RouteConfig[] => [
-  { path: '/',        label: 'Game',    element: <Foyer><Game /></Foyer> },
-  { path: '/users',   label: 'Users',   element: <UsersView session={session} /> },
-  { path: '/profile', label: 'Profile', element: <Profile /> },
-  { path: '/admin',   label: 'Admin',   roles: ['admin'], element: <AdminView /> },
+  { path: '/',      label: 'Game',  element: <Foyer><Game /></Foyer> },
+  { path: '/users', label: 'Users', element: <UsersView session={session} /> },
+  { path: '/admin', label: 'Admin', roles: ['admin'], element: <AdminView /> },
 ];
 
 const AuthenticatedApp = ({ session }: { session: User }) => {
