@@ -182,14 +182,10 @@ const AuthenticatedApp = ({ session }: { session: User }) => {
           <Navbar
             title="Admin"
             buildInfo={buildInfo}
-            rightContent={
-              <>
-                {toggle}
-                <NavDivider />
-                <UserBadge />
-              </>
-            }
+            rightContent={<UserBadge />}
           >
+            {toggle}
+            <NavDivider />
             <NavItem to="/" $active={curPath === '/'}>Home</NavItem>
             {filteredAppIds.length > 0 && <NavDivider />}
             {filteredAppIds.map(appId => {

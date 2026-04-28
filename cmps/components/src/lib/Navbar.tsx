@@ -91,6 +91,7 @@ const RightSlot = styled.div`
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  margin-left: auto;
 `;
 
 // ── Navbar component ──────────────────────────────────────────────────────────

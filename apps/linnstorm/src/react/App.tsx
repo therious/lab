@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect} from 'react';
-import { Route, Routes, NavLink, useLocation } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import { User } from 'firebase/auth';
 
 import styled from 'styled-components';
@@ -11,11 +11,14 @@ import {SnackbarProvider} from "notistack";
 
 import {
   UsersProvider, useSession, Login,
-  UsersView, AdminView, RoleGuard,
+  UsersView, AdminView, RoleGuard, UserBadge,
 } from '@therious/users';
 import { RouteGuard } from './RouteGuard';
-import { Modalize } from '@therious/components';
+import { Modalize, Navbar, NavItem, NavDivider } from '@therious/components';
 import { firebaseAuth, db } from '../firebase';
+
+// @ts-ignore - generated at build time by generate-build-info.js
+import buildInfo from '../build-info.json';
 
 import {NotifyWrapper} from "./NotifyWrapper";
 import {Modal} from "./Modal";
@@ -26,23 +29,6 @@ import {RtMidiview} from "./RtMidiview";
 import {RtFiles} from "./RtFiles.jsx";
 import {midiSetup} from "../linnutils/mymidi";
 
-const palette = {
-      plum: '#4b54a1',
-      black: '#0c0e0d',
-      blueslate: '#465f73',
-      slate: '#5f5f7b',
-      drab: '#b1c3a9',
-      sky: '#5e86ba',
-      moon: '#b3961e',
-      midnight: '#0b2383',
-
-      gold: 'gold',
-      cornsilk: 'cornsilk',
-      blue: 'blue',
-      forest: 'forestgreen',
-      crimson: 'crimson'
-};
-
 const Layout = styled.div<{left:number, right:number}>`
     display:grid;
     height: calc(100vh);
@@ -52,73 +38,33 @@ const Layout = styled.div<{left:number, right:number}>`
     column-gap:4px;
 
     grid-template-columns: ${props=>props.left}px minmax(0, 1fr) ${props=>props.right}px;
-    grid-template-rows: 30px minmax(0, 1fr);
+    grid-template-rows: 44px minmax(0, 1fr);
     grid-template-areas: "LNavbar Navbar Navbar"
                          "Left CenterBody Right";
-`;
-
-const Navbar = styled.section`
-    grid-area: Navbar;
-    padding-top: 5px;
-    background-color: ${palette.midnight};
-    color: ${palette.drab};
-    height:fit-content;
-    overflow: auto;
 `;
 
 const CenterBody = styled.section`
     display: block;
     height:100%;
     grid-area: CenterBody;
-    background-color: ${palette.drab};
-    color: ${palette.black};
+    background-color: #b1c3a9;
+    color: #0c0e0d;
 `;
 const Left = styled.section`
     grid-area: Left;
-    background-color: ${palette.cornsilk};
-    color: ${palette.midnight};
+    background-color: cornsilk;
+    color: #0b2383;
 `;
 const Right = styled.section`
     grid-area: Right;
-    background-color: ${palette.cornsilk};
-    color: ${palette.midnight};
+    background-color: cornsilk;
+    color: #0b2383;
 `;
 
-const topCssAttributes = `
-  padding-right:          5px;
-  padding-left:          5px;
-  margin-left: 5px;
-  margin-right: 5px;
+const TopButton = styled.button`
+  padding: 0 5px;
+  margin: 0 5px;
 `;
-
-const TopButton = styled.button`${topCssAttributes}`;
-
-const StyledLink = styled(NavLink)<{$active: boolean}>`
-  display: inline-block;
-  background: ${(props:any) => props?.$active? '#0f0': 'antiquewhite'};
-  min-width: 100px;
-  border: 1px solid white;
-  margin: 0;
-  padding: 5px;
-
-  &:active {
-    color: red;
-  }
-
-  &:hover {
-    background: palegreen;
-  }
-
-  border-radius: 3px;
-
-  & > * {
-    color: orange;
-    text-decoration: none;
-  }
-`;
-
-const MyNavLink = ({to, children, curPath}:{to:string, children:React.ReactNode, curPath:string}) =>
-  <StyledLink $active={curPath === to} to={to}>{children}</StyledLink>;
 
 const AllSlices = () => <div>{Object.keys(actions).map((slice)=><SliceView key={slice} slice={slice}/>)}</div>;
 
@@ -170,23 +116,15 @@ const AuthenticatedApp = ({ session }: { session: User }) => {
 
   return (
     <Layout left={left} right={right}>
-      <Navbar>
-        <div style={{ margin: 'auto', width: '50%', display: 'inline-block'}}>
-          <MyNavLink curPath={curPath} to="/params">Parameters</MyNavLink>
-          <MyNavLink curPath={curPath} to="/tuning">Tuning</MyNavLink>
-          <MyNavLink curPath={curPath} to="/midi">Midi View</MyNavLink>
-          <MyNavLink curPath={curPath} to="/users">Users</MyNavLink>
-          <RoleGuard roles={['admin']}>
-            <MyNavLink curPath={curPath} to="/admin">Admin</MyNavLink>
-          </RoleGuard>
-        </div>
-        <div style={{float:'right', display: 'inline-block', marginRight:'20px'}}>
-          <a style={{color:'white', textDecoration:'none', font: 'Roboto'}}
-             href="https://www.netlify.com">
-            <span style={{verticalAlign: 'top', fontStyle: 'italic'}}>deployed via</span>{' '}
-            <img height="20px" src="/netlify/full-logo-dark.svg" alt="Netlify"/>
-          </a>
-        </div>
+      <Navbar title="Linnstorm" buildInfo={buildInfo} branding rightContent={<UserBadge />}>
+        <NavItem to="/params" $active={curPath === '/params' || curPath === '/'}>Parameters</NavItem>
+        <NavItem to="/tuning" $active={curPath === '/tuning'}>Tuning</NavItem>
+        <NavItem to="/midi"   $active={curPath === '/midi'}>Midi View</NavItem>
+        <NavItem to="/users"  $active={curPath === '/users'}>Users</NavItem>
+        <RoleGuard roles={['admin']}>
+          <NavDivider />
+          <NavItem to="/admin" $active={curPath === '/admin'}>Admin</NavItem>
+        </RoleGuard>
       </Navbar>
       <Left>
         <TopButton onClick={()=>{toggleLeft(100)}}>Left</TopButton>
