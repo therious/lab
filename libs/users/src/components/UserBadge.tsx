@@ -5,7 +5,7 @@ import { signout } from '../auth';
 import { hashColor } from './avatar-utils';
 import { avatarBlobCache, fetchAvatarBlob } from './avatar-cache';
 
-// ── Popup (fixed-position to escape any parent overflow:hidden) ───────────────
+// ── Popup ─────────────────────────────────────────────────────────────────────
 
 const PopupFixed = styled.div<{ $top: number; $right: number }>`
   position: fixed;
@@ -16,8 +16,24 @@ const PopupFixed = styled.div<{ $top: number; $right: number }>`
   border-radius: 6px;
   padding: 10px 14px 6px;
   z-index: 10000;
-  min-width: 180px;
+  min-width: 200px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+`;
+
+// Header row: text on left, avatar on right
+const PopupHeader = styled.div`
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  margin-bottom: 8px;
+`;
+
+const PopupTextCol = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 `;
 
 const PopupLabel = styled.div`
@@ -39,7 +55,6 @@ const PopupName = styled.div`
 const PopupEmail = styled.div`
   font-size: 12px;
   color: #9fa8da;
-  margin-bottom: 8px;
   word-break: break-all;
 `;
 
@@ -88,7 +103,7 @@ interface AvatarMiniProps {
   size?: number;
 }
 
-const AvatarMini = ({ uid, photoURL, email, displayName, size = 28 }: AvatarMiniProps) => {
+const AvatarMini = ({ uid, photoURL, email, displayName, size = 32 }: AvatarMiniProps) => {
   const [imgSrc, setImgSrc] = useState<string | null>(() =>
     photoURL ? (avatarBlobCache.get(uid) ?? photoURL) : null
   );
@@ -158,9 +173,14 @@ export function UserBadge() {
       <AvatarMini uid={uid} photoURL={photoURL ?? null} email={email} displayName={displayName} />
       {open && (
         <PopupFixed $top={pos.top} $right={pos.right}>
-          <PopupLabel>Signed in as</PopupLabel>
-          {displayName && <PopupName>{displayName}</PopupName>}
-          <PopupEmail>{email}</PopupEmail>
+          <PopupHeader>
+            <PopupTextCol>
+              <PopupLabel>Signed in as</PopupLabel>
+              {displayName && <PopupName>{displayName}</PopupName>}
+              <PopupEmail>{email}</PopupEmail>
+            </PopupTextCol>
+            <AvatarMini uid={uid} photoURL={photoURL ?? null} email={email} displayName={displayName} size={56} />
+          </PopupHeader>
           <PopupDivider />
           <SignoutBtn onClick={handleSignout}>Sign out</SignoutBtn>
         </PopupFixed>
