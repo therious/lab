@@ -59,6 +59,12 @@ servers/elections/priv/static/
 **/build-info.json
 **/src/build-info.json
 
+# SWC compiler plugin cache (platform-specific WASM blobs, regenerated automatically)
+**/.swc/
+
+# favicon.io generator output folders (actual PNGs are in src/assets/)
+**/favicon_io/
+
 # Elixir/Phoenix dependencies (managed by Mix)
 **/deps/
 **/_build/
