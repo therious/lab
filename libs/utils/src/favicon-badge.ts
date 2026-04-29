@@ -61,28 +61,49 @@ function drawBadge(ctx: CanvasRenderingContext2D, size: number, color: string): 
 export function badgeFavicon(color: string | null): void {
   if (!color) return;
 
-  const source = bestFaviconLink();
-  const size   = 32;
-  const canvas = document.createElement('canvas');
-  canvas.width  = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
+  const all = Array.from(document.querySelectorAll<HTMLLinkElement>(
+    'link[rel~="icon"], link[rel="shortcut icon"]'
+  ));
+  const svgLink = all.find(l => l.href.includes('.svg')) ?? null;
+  const pngLink = all.find(l => l.href.includes('.png')) ?? null;
+  const size = 32;
 
-  const finish = () => {
-    drawBadge(ctx, size, color);
-    replaceAllFavicons(canvas.toDataURL('image/png'));
+  const makeCanvas = () => {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    return c;
   };
 
-  if (!source?.href) {
-    finish();
-    return;
-  }
-
-  const img = new Image();
-  img.onload = () => {
-    ctx.drawImage(img, 0, 0, size, size);
-    finish();
+  const applyBadge = (c: HTMLCanvasElement) => {
+    drawBadge(c.getContext('2d')!, size, color);
+    replaceAllFavicons(c.toDataURL('image/png'));
   };
-  img.onerror = finish;
-  img.src = source.href;
+
+  const loadImage = (href: string, onLoad: (img: HTMLImageElement) => void) => {
+    const img = new Image();
+    img.onload = () => onLoad(img);
+    img.onerror = () => applyBadge(makeCanvas()); // badge on blank as last resort
+    img.src = href;
+  };
+
+  const tryPng = () => {
+    if (!pngLink) { applyBadge(makeCanvas()); return; }
+    loadImage(pngLink.href, img => {
+      const c = makeCanvas();
+      if (img.naturalWidth > 0) c.getContext('2d')!.drawImage(img, 0, 0, size, size);
+      applyBadge(c);
+    });
+  };
+
+  if (!svgLink) { tryPng(); return; }
+
+  loadImage(svgLink.href, img => {
+    const c = makeCanvas();
+    if (img.naturalWidth > 0) c.getContext('2d')!.drawImage(img, 0, 0, size, size);
+    try {
+      applyBadge(c);            // throws if SVG had <foreignObject>
+    } catch (_) {
+      tryPng();                 // fresh canvas, uncontaminated by the SVG
+    }
+  });
 }
