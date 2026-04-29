@@ -12,8 +12,7 @@
 export function envBadgeColor(): string | null {
   const h = window.location.hostname;
   if (h === 'localhost' || h === '127.0.0.1') return '#ff8c00'; // orange — local
-  if (h.includes('staging') || h.includes('preview') || h.includes('netlify')) return '#a855f7'; // purple — preview/staging
-  return null; // production — leave favicon untouched
+  return null; // deployed — leave favicon untouched
 }
 
 /** Picks the best favicon link to use as a base (SVG > PNG > other > ICO). */

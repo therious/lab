@@ -1,7 +1,6 @@
 export function envBadgeColor(): string | null {
   const h = window.location.hostname;
   if (h === 'localhost' || h === '127.0.0.1') return '#ff8c00';
-  if (h.includes('staging') || h.includes('preview') || h.includes('netlify')) return '#a855f7';
   return null;
 }
 
