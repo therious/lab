@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
-import { badgeFavicon, envBadgeColor } from './favicon-badge'
+import { badgeFavicon, envBadgeColor } from '@therious/utils'
 badgeFavicon(envBadgeColor())
 
 createRoot(document.getElementById('root')!).render(
