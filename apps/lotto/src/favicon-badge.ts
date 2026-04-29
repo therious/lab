@@ -8,7 +8,8 @@ export function envBadgeColor(): string | null {
 export function badgeFavicon(color: string | null): void {
   if (!color) return;
   const all = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel~="icon"], link[rel="shortcut icon"]'));
-  const source = all.find(l => l.href.includes('.svg')) ?? all.find(l => l.href.includes('.png')) ?? all[0] ?? null;
+  // Prefer PNG — the lotto SVG has no width/height attrs which breaks canvas drawImage
+  const source = all.find(l => l.href.includes('-32x32.png')) ?? all.find(l => l.href.includes('.png')) ?? all[0] ?? null;
   const size = 32;
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
