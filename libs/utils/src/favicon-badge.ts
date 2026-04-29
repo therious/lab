@@ -1,5 +1,5 @@
 /**
- * Overlays a small colored dot on the current favicon at runtime.
+ * Overlays a small letter on the current favicon at runtime.
  * Call once on app startup to badge local/staging/etc. tabs.
  *
  * Usage:
@@ -11,20 +11,19 @@
 /** Returns a badge color based on hostname, or null for production (no badge). */
 export function envBadgeColor(): string | null {
   const h = window.location.hostname;
-  if (h === 'localhost' || h === '127.0.0.1') return '#f97316'; // orange — local
+  if (h === 'localhost' || h === '127.0.0.1') return '#ff8c00'; // orange — local
   if (h.includes('staging') || h.includes('preview') || h.includes('netlify')) return '#a855f7'; // purple — preview/staging
   return null; // production — leave favicon untouched
 }
 
-/** Picks the best favicon link to use as a base (PNG/SVG preferred over ICO). */
+/** Picks the best favicon link to use as a base (SVG > PNG > other > ICO). */
 function bestFaviconLink(): HTMLLinkElement | null {
   const all = Array.from(document.querySelectorAll<HTMLLinkElement>(
     'link[rel~="icon"], link[rel="shortcut icon"]'
   ));
-  // Prefer PNG then SVG then anything, skip .ico
   return (
-    all.find(l => l.href.includes('.png')) ??
     all.find(l => l.href.includes('.svg')) ??
+    all.find(l => l.href.includes('.png')) ??
     all.find(l => !l.href.includes('.ico')) ??
     all[0] ??
     null
@@ -45,23 +44,21 @@ function replaceAllFavicons(dataUrl: string): void {
 }
 
 function drawBadge(ctx: CanvasRenderingContext2D, size: number, color: string): void {
-  const r  = Math.round(size * 0.28);
-  const cx = size - r - 2;
-  const cy = size - r - 2;
+  const fontSize = Math.round(size * 0.68);
+  ctx.font         = `bold ${fontSize}px sans-serif`;
+  ctx.textAlign    = 'left';
+  ctx.textBaseline = 'bottom';
 
-  // White halo so the dot is visible on any background
-  ctx.beginPath();
-  ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
-  ctx.fillStyle = 'white';
-  ctx.fill();
+  // Thin dark outline for legibility on any background
+  ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+  ctx.lineWidth   = Math.max(2, Math.round(fontSize * 0.12));
+  ctx.strokeText('L', 0, size + Math.round(fontSize * 0.15));
 
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.fillStyle = color;
-  ctx.fill();
+  ctx.fillText('L', 0, size + Math.round(fontSize * 0.15));
 }
 
-/** Draws a colored dot over the existing favicon and replaces all favicon links. */
+/** Draws an 'L' badge over the existing favicon and replaces all favicon links. */
 export function badgeFavicon(color: string | null): void {
   if (!color) return;
 
@@ -72,24 +69,21 @@ export function badgeFavicon(color: string | null): void {
   canvas.height = size;
   const ctx = canvas.getContext('2d')!;
 
-  if (!source?.href) {
-    // No existing favicon — draw badge on blank canvas
+  const finish = () => {
     drawBadge(ctx, size, color);
     replaceAllFavicons(canvas.toDataURL('image/png'));
+  };
+
+  if (!source?.href) {
+    finish();
     return;
   }
 
   const img = new Image();
-  img.crossOrigin = 'anonymous';
   img.onload = () => {
     ctx.drawImage(img, 0, 0, size, size);
-    drawBadge(ctx, size, color);
-    replaceAllFavicons(canvas.toDataURL('image/png'));
+    finish();
   };
-  img.onerror = () => {
-    // Image failed to load (e.g. ICO) — badge on blank canvas
-    drawBadge(ctx, size, color);
-    replaceAllFavicons(canvas.toDataURL('image/png'));
-  };
+  img.onerror = finish;
   img.src = source.href;
 }
