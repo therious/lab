@@ -15,20 +15,6 @@ export function envBadgeColor(): string | null {
   return null; // deployed — leave favicon untouched
 }
 
-/** Picks the best favicon link to use as a base (SVG > PNG > other > ICO). */
-function bestFaviconLink(): HTMLLinkElement | null {
-  const all = Array.from(document.querySelectorAll<HTMLLinkElement>(
-    'link[rel~="icon"], link[rel="shortcut icon"]'
-  ));
-  return (
-    all.find(l => l.href.includes('.svg')) ??
-    all.find(l => l.href.includes('.png')) ??
-    all.find(l => !l.href.includes('.ico')) ??
-    all[0] ??
-    null
-  );
-}
-
 /** Removes all favicon links and inserts a single replacement. */
 function replaceAllFavicons(dataUrl: string): void {
   document.querySelectorAll<HTMLLinkElement>(

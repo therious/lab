@@ -5,7 +5,7 @@ import {Config} from "./utils/config";
 import {actions, connectRootComponent} from './actions-integration';
 import {AboveApp} from './react/AboveApp';
 import { badgeFavicon, envBadgeColor } from '@therious/utils';
-badgeFavicon(envBadgeColor());
+if (import.meta.env.DEV) badgeFavicon(envBadgeColor());
 
 (async ()=>{
   try {

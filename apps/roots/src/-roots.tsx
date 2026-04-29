@@ -6,7 +6,7 @@ import {Config} from "@therious/boot";
 import {actions, connectRootComponent} from './actions-integration';
 import {AboveApp} from './react/AboveApp';
 import {deprecate, ThrowsIf, Log, badgeFavicon, envBadgeColor} from '@therious/utils';
-badgeFavicon(envBadgeColor());
+if (import.meta.env.DEV) badgeFavicon(envBadgeColor());
 
 class TestMe
 {

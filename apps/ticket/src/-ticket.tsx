@@ -9,7 +9,7 @@ import {Config, Inflate} from "@therious/boot";
 import './fsm/some-tests';
 import "@therious/utils"
 import { badgeFavicon, envBadgeColor } from '@therious/utils';
-badgeFavicon(envBadgeColor());
+if (import.meta.env.DEV) badgeFavicon(envBadgeColor());
 
 
 (async ()=>{
