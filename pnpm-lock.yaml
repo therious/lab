@@ -126,6 +126,9 @@ importers:
       '@therious/users':
         specifier: workspace:*
         version: link:../../libs/users
+      '@therious/utils':
+        specifier: workspace:*
+        version: link:../../libs/utils
       ag-grid-community:
         specifier: ~32.0.2
         version: 32.0.2
@@ -826,6 +829,9 @@ importers:
       react-dom:
         specifier: 18.x
         version: 18.2.0(react@18.2.0)
+      react-router-dom:
+        specifier: '>=6'
+        version: 6.24.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       styled-components:
         specifier: 5.x
         version: 5.3.11(@babel/core@7.28.5)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)
@@ -836,9 +842,6 @@ importers:
       '@viz-js/viz':
         specifier: ~3.4.0
         version: 3.4.0
-      react-router-dom:
-        specifier: ~6.24.0
-        version: 6.24.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
 
   libs/actions:
     dependencies:
