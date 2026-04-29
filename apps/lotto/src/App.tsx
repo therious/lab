@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
+import { useBuildInfoTooltip } from '@therious/components';
 import type { LotteryGame, PredictionResult } from './types';
+// @ts-ignore - generated at build time by generate-build-info.js
+import buildInfo from './build-info.json';
 import { powerballData } from './data/powerball';
 import { megamillionsData } from './data/megamillions';
 import { lottoData } from './data/lotto';
@@ -44,6 +47,7 @@ function App() {
   const [showPrintTickets, setShowPrintTickets] = useState<boolean>(false);
   const [savedTicketsCount, setSavedTicketsCount] = useState<number>(0);
   const workerRef = useRef<Worker | null>(null);
+  const { containerRef: iconRef, tooltipProps: iconTooltipProps, tooltip: iconTooltip } = useBuildInfoTooltip(buildInfo);
 
   // Update saved tickets count on mount and when storage changes
   useEffect(() => {
@@ -410,7 +414,7 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1><img src="/favicon.svg" alt="" style={{ height: '1em', verticalAlign: 'middle', marginBottom:'0.3em', marginRight: '0.07em' }} /> Lottery Number Predictor</h1>
+        <h1><span ref={iconRef} {...iconTooltipProps} style={{ display: 'inline-block', lineHeight: 0, cursor: 'help' }}><img src="/favicon.svg" alt="" style={{ height: '1em', verticalAlign: 'middle', marginBottom:'0.3em', marginRight: '0.07em' }} />{iconTooltip}</span> Lottery Number Predictor</h1>
         <p className="subtitle">
           Predict winning combinations based on impressive--albeit bogus--historical data analysis
         </p>
