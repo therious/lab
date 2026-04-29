@@ -19,10 +19,10 @@
     "@therious/utils": "workspace:*",
     "@viz-js/viz": "~3.4.0",
     "d3-graphviz": ">=5.4.0",
-    "react": "18.x",
-    "react-dom": "18.x",
+    "react": ">=18",
+    "react-dom": ">=18",
     "react-router-dom": ">=6",
-    "styled-components": "5.x"
+    "styled-components": ">=5"
   },
   "devDependencies": {
     "@types/d3-graphviz": "~2.6.10",

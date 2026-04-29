@@ -8,4 +8,7 @@ export default defineConfig({
   worker: {
     format: 'es',
   },
+  resolve: {
+    dedupe: ['react', 'react-dom', 'styled-components'],
+  },
 })
