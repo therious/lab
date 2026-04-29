@@ -5,7 +5,8 @@ import { createRoot } from 'react-dom/client';
 import {Config} from "@therious/boot";
 import {actions, connectRootComponent} from './actions-integration';
 import {AboveApp} from './react/AboveApp';
-import {deprecate, ThrowsIf, Log} from '@therious/utils';
+import {deprecate, ThrowsIf, Log, badgeFavicon, envBadgeColor} from '@therious/utils';
+badgeFavicon(envBadgeColor());
 
 class TestMe
 {

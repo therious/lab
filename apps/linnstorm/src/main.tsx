@@ -4,6 +4,8 @@ import { createRoot } from 'react-dom/client';
 import {Config} from "./utils/config";
 import {actions, connectRootComponent} from './actions-integration';
 import {AboveApp} from './react/AboveApp';
+import { badgeFavicon, envBadgeColor } from '@therious/utils';
+badgeFavicon(envBadgeColor());
 
 (async ()=>{
   try {

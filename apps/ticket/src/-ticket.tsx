@@ -8,6 +8,8 @@ import {connectRootComponent} from './actions-integration';
 import {Config, Inflate} from "@therious/boot";
 import './fsm/some-tests';
 import "@therious/utils"
+import { badgeFavicon, envBadgeColor } from '@therious/utils';
+badgeFavicon(envBadgeColor());
 
 
 (async ()=>{
