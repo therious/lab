@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import "ag-grid-enterprise";
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-balham.min.css';
+import 'ag-grid-community/styles/ag-theme-balham.css';
 import 'react-contexify/ReactContexify.css';
 
 
@@ -18,6 +18,7 @@ export class MyGrid extends Component {
         return (
             <div className="ag-theme-balham-dark" style={style}>
                 <AgGridReact
+                    theme="legacy"
                     defaultColDef={{ enableRowGroup: true, sortable: true, filter: true }}
                     sideBar={{ toolPanels: ['columns', 'filters'] }}
                     getRowId={({ data }) => String(data.id)}
