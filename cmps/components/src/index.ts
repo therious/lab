@@ -9,3 +9,4 @@ export * from './lib/useTooltip';
 export * from './lib/AppUrl';
 export * from './lib/Navbar';
 export * from './lib/Branding';
+export * from './lib/ErrorBoundary';
