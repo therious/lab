@@ -1,0 +1,71 @@
+{
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "index": "node ./scripts/library-index-generator.js ${1:---watch=false}",
+    "indexOnce": "node ./scripts/library-index-generator.js",
+    "indexWatch": "node ./scripts/library-index-generator.js --watch",
+    "lint": "eslint . --ext js,jsx,ts,tsx",
+    "mgStart": "docker compose -f scripts/docker-compose-memgraph.yaml up",
+    "mgStop": "docker compose -f scripts/docker-compose-memgraph.yaml down",
+    "toyserve": "ts-node ./scripts/toy-server.ts",
+    "f": "npm run --workspace",
+    "test": "npm run test --workspaces --if-present",
+    "deploy": "ts-node ./deploy-scripts/deploy-as-branch.ts ${1} ${2} ${3}",
+    "release": "ts-node ./deploy-scripts/create-release.ts ${1}"
+  },
+  "engines": {
+    "node": ">=18.17.1"
+  },
+  "devDependencies": {
+    "@hzamir/npm-run-all": "~4.1.7",
+    "@types/node": "~20.12.10",
+    "@types/react": "~18.2.64",
+    "@types/react-dom": "~18.2.21",
+    "@types/react-redux": "~7.1.25",
+    "@types/styled-components": "~5.1.26",
+    "@types/stylis": "~4.2.5",
+    "@vitejs/plugin-react-swc": "~3.6.0",
+    "@swc/plugin-styled-components": "~12.8.0",
+    "@typescript-eslint/eslint-plugin": "~7.7.0",
+    "@typescript-eslint/parser": "~7.7.0",
+    "eslint": "~8.57.0",
+    "eslint-plugin-import": "~2.29.1",
+    "eslint-plugin-react-hooks": "~4.6.0",
+    "eslint-plugin-react-refresh": "~0.4.6",
+    "eslint-plugin-react": "~7.34.1",
+    "redux-devtools-extension": "~2.13.9",
+    "typescript": "~5.4.5",
+    "vite": "~5.3.1",
+    "vitest": "~1.6.1",
+    "vite-bundle-analyzer": "~0.10.3",
+    "vite-plugin-static-copy": "~1.0.5",
+    "chokidar": "~3.6.0",
+    "glob": "~13.0.0",
+    "ws": "~8.17.1",
+    "@types/ws": "~8.5.3",
+    "minimist": "~1.2.8",
+    "ts-node": "~10.9.1",
+    "lerna": "~8.1.2",
+    "js-yaml": "~4.1.0",
+    "electron": "~30.0.1",
+    "electron-builder": "~24.13.3",
+    "vite-plugin-electron": "~0.28.7",
+    "vite-plugin-electron-renderer": "~0.14.5"
+  },
+  "workspaces": [
+    "apps/**",
+    "servers/**",
+    "cmps/**",
+    "libs/**",
+    "scripts",
+    "!**/test/**"
+  ],
+  "overrides": {
+    "marked@<4.10.10": ">=4.0.10",
+    "json5": ">=2.2.2",
+    "tar": ">=6.2.1",
+    "ejs": ">=3.1.10",
+    "braces": "~3.0.3"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "name": "ticket",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@therious/actions": "*",
+    "@therious/ag-grid": "*",
+    "@therious/users": "*",
+    "@therious/boot": "*",
+    "@therious/components": "*",
+    "@therious/fsm": "*",
+    "@therious/random": "*",
+    "@therious/utils": "*",
+    "ag-grid-community": "~32.0.2",
+    "ag-grid-react": "~32.0.2",
+    "axios": "~1.15.0",
+    "date-fns": "~3.6.0",
+    "firebase": "~10.12.0",
+    "immer": "~10.0.4",
+    "js-yaml": "~4.1.1",
+    "notistack": "~3.0.1",
+    "react": "~18.2.0",
+    "react-contexify": "6.0.0",
+    "react-dom": "~18.2.0",
+    "react-redux": "~7.2.9",
+    "react-router-dom": "~6.24.0",
+    "redux": "~4.2.1",
+    "reflect-metadata": "~0.1.13",
+    "reselect": "~4.1.7",
+    "styled-components": "~6.3.12",
+    "stylis": "~4.3.1",
+    "typescript": "~5.4.5",
+    "vis-network": "~9.1.9",
+    "web-vitals": "^2.1.4",
+    "xstate": "4.28.1"
+  },
+  "scripts": {
+    "start": "node ../../scripts/generate-build-info.js && VITE_CJS_IGNORE_WARNING=true vite",
+    "secstart": "doppler run -- sh -c \"node ../../scripts/generate-build-info.js && vite\"",
+    "build": "node ../../scripts/generate-build-info.js && tsc && vite build",
+    "secbuild": "doppler run -- sh -c \"node ../../scripts/generate-build-info.js && tsc && vite build\"",
+    "preview": "vite preview --port 5173",
+    "lint": "eslint . --ext js,jsx,ts,tsx"
+  },
+  "browserslist": {
+    "production": [
+      "Chrome >= 112",
+      "Edge >= 112",
+      "Firefox >= 112",
+      "Safari >= 16.4"
+    ],
+    "development": [
+      "Chrome >= 112",
+      "Edge >= 112",
+      "Firefox >= 112",
+      "Safari >= 16.4"
+    ]
+  }
+}
