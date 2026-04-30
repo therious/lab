@@ -16,6 +16,15 @@ export function initFeed(adapter, dispatch) {
 }
 
 /**
+ * Disconnect the current adapter, clear accumulated feed data, and connect a new one.
+ */
+export function switchAdapter(newAdapter, dispatch) {
+  if (_adapter) _adapter.disconnect();
+  dispatch({ type: 'feedReset' });
+  initFeed(newAdapter, dispatch);
+}
+
+/**
  * Redux middleware — pass-through for most actions.
  * Forwards outbound order actions to the adapter if it implements send().
  */
