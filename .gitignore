@@ -80,5 +80,3 @@ docs/firebase.txt
 /apps/*/package.json
 /servers/*/package.json
 /scripts/package.json
-/cmps/*/package.json
-/libs/*/package.json

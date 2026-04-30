@@ -1,0 +1,8 @@
+{
+  "name": "@therious/random",
+  "version": "0.1.0",
+  "author": "Haim Zamir <hzamir@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "main": "./src/index.ts"
+}
