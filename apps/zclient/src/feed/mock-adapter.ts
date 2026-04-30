@@ -1,3 +1,12 @@
+// MockAdapter — offline / after-hours data source.
+//
+// Generates a random price walk across a fixed symbol list, firing one trade
+// per interval and rebuilding the full quote snapshot after each tick.
+// Parties are a static list emitted once on connect.
+//
+// Use this as the default factory in connect-app.jsx; switch to FinnhubAdapter
+// during market hours when a live key is available.
+
 import type { FeedAdapter, FeedCallbacks, TradeRecord, QuoteRecord, PartyRecord } from './types';
 
 const SYMBOLS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA'];
@@ -26,11 +35,13 @@ export class MockAdapter implements FeedAdapter {
   }
 
   connect(callbacks: FeedCallbacks) {
+    // Parties are static — emit once up front.
     callbacks.onParties(PARTIES);
 
     this.intervalId = setInterval(() => {
+      // Pick a random symbol and apply a small random walk with slight upward drift.
       const symbol = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-      const move   = (Math.random() - 0.495) * 0.5;   // slight upward drift
+      const move   = (Math.random() - 0.495) * 0.5;
       this.prices[symbol] = Math.max(1, this.prices[symbol] + move);
       const price = parseFloat(this.prices[symbol].toFixed(2));
 
@@ -44,6 +55,8 @@ export class MockAdapter implements FeedAdapter {
 
       callbacks.onTrades([trade]);
 
+      // Rebuild the full quote snapshot after every trade so all symbols stay current.
+      // bid/ask are ±0.05% around the last price (tight spread for a mock).
       const quotes: QuoteRecord[] = SYMBOLS.map(s => ({
         name: s,
         bid:  parseFloat((this.prices[s] * 0.9995).toFixed(2)),

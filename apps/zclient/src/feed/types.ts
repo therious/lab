@@ -1,3 +1,13 @@
+// ── Feed adapter contract ─────────────────────────────────────────────────────
+//
+// All data sources (mock, Finnhub, future OMS WebSocket) implement FeedAdapter.
+// The middleware calls connect() once the user is authenticated and holds at
+// least one feed role (Trades / Quotes / Parties). It calls disconnect() on
+// logout or adapter switch.
+//
+// Data flows one way: adapter → callbacks → Redux dispatch → reducers → views.
+// Outbound actions (order placement) use the optional send() method.
+
 export interface TradeRecord {
   sequence: number;
   timestamp: number;  // ms since epoch
@@ -7,7 +17,7 @@ export interface TradeRecord {
 }
 
 export interface QuoteRecord {
-  name: string;  // symbol
+  name: string;  // symbol, matches the key field used by stateProducer
   bid:  number;
   ask:  number;
 }
