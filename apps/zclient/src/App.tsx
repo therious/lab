@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation, Navigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import styled from 'styled-components';
@@ -21,6 +21,7 @@ import { UsersView }   from '@therious/users';
 
 // @ts-ignore - generated at build time
 import buildInfo from './build-info.json';
+import { switchFeed, hasFinnhubKey } from './connect-app';
 
 
 // ── Sidebar layout (three columns inside AppBody) ─────────────────────────────
@@ -74,6 +75,13 @@ export default function App() {
 
   const navRoutes = useNavRoutes(ROUTES);
 
+  const [feedSource, setFeedSource] = useState<'mock' | 'live'>('mock');
+  const toggleFeed = () => {
+    const next = feedSource === 'mock' ? 'live' : 'mock';
+    setFeedSource(next);
+    switchFeed(next);
+  };
+
   const toggleLeft  = () => dispatch({ type: 'ToggleLeft',  expanded: 100 });
   const toggleRight = () => dispatch({ type: 'ToggleRight', expanded: 300 });
 
@@ -93,6 +101,15 @@ export default function App() {
             ? <NavItem key={r.path} to={r.path} $active={curPath === r.path}>{r.label}</NavItem>
             : <NavItemDisabled key={r.path} title={`Requires role: ${missingRoles.join(', ')}`}>{r.label}</NavItemDisabled>
         )}
+        <NavDivider />
+        <NavToggle
+          on={feedSource === 'live'}
+          onClick={toggleFeed}
+          disabled={!hasFinnhubKey}
+          title={!hasFinnhubKey ? 'Set VITE_FINNHUB_KEY in .env.local to enable live data' : undefined}
+        >
+          Live
+        </NavToggle>
         <NavDivider />
         <NavToggle on={layout.left > 0} onClick={toggleLeft}>Left</NavToggle>
         <NavToggle on={layout.right > 0} onClick={toggleRight}>Right</NavToggle>

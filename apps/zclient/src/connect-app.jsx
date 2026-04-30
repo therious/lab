@@ -33,9 +33,19 @@ function sliceCreators({ name, creators }) {
 
 import { initialState } from './constants/initial-state';
 import * as funcs from './action-funcs';
-import { feedMiddleware, initFeed } from './feed/feed-middleware';
+import { feedMiddleware, initFeed, switchAdapter } from './feed/feed-middleware';
 import { MockAdapter } from './feed/mock-adapter';
-// import { FinnhubAdapter } from './feed/finnhub-adapter';
+import { FinnhubAdapter } from './feed/finnhub-adapter';
+
+const LIVE_SYMBOLS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA'];
+export const hasFinnhubKey = !!import.meta.env.VITE_FINNHUB_KEY;
+
+export function switchFeed(source) {
+  const adapter = source === 'live'
+    ? new FinnhubAdapter({ token: import.meta.env.VITE_FINNHUB_KEY, symbols: LIVE_SYMBOLS })
+    : new MockAdapter();
+  switchAdapter(adapter, store.dispatch);
+}
 import * as actionCreators from './action-creators';
 import App from './App';
 
@@ -73,8 +83,6 @@ const store = createStore(
 
 const omsActions = bindActionCreators(actionCreators, store.dispatch);
 
-// Connect the feed adapter — swap MockAdapter for FinnhubAdapter to use live data:
-// initFeed(new FinnhubAdapter({ token: import.meta.env.VITE_FINNHUB_KEY, symbols: ['AAPL','MSFT','GOOGL','AMZN','TSLA'] }), store.dispatch);
 initFeed(new MockAdapter(), store.dispatch);
 
 // Bind users/chat slice actions for UsersProvider

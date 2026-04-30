@@ -70,11 +70,12 @@ export const NavItemDisabled = styled.span`
 
 // ── Toggle switch ─────────────────────────────────────────────────────────────
 
-const ToggleWrapper = styled.label`
+const ToggleWrapper = styled.label<{ $disabled?: boolean }>`
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  cursor: pointer;
+  cursor: ${p => p.$disabled ? 'not-allowed' : 'pointer'};
+  opacity: ${p => p.$disabled ? 0.4 : 1};
   flex-shrink: 0;
 `;
 
@@ -107,14 +108,16 @@ const ToggleThumb = styled.span<{ $on: boolean }>`
 `;
 
 export interface NavToggleProps {
-  on: boolean;
-  onClick: () => void;
-  children: ReactNode;
+  on:        boolean;
+  onClick:   () => void;
+  children:  ReactNode;
+  disabled?: boolean;
+  title?:    string;
 }
 
-export function NavToggle({ on, onClick, children }: NavToggleProps) {
+export function NavToggle({ on, onClick, children, disabled, title }: NavToggleProps) {
   return (
-    <ToggleWrapper onClick={onClick}>
+    <ToggleWrapper $disabled={disabled} title={title} onClick={disabled ? undefined : onClick}>
       <ToggleLabel>{children}</ToggleLabel>
       <ToggleTrack $on={on}>
         <ToggleThumb $on={on} />
