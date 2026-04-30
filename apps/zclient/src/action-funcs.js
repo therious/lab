@@ -50,19 +50,28 @@ function rdExtractGenerator(keyField)
 // accepts a response.data array of objects, reducing it and returning accumulated result in propName
 // accepts a response.data array of objects, reducing it and returning accumulated result in propName
 // the reducer takes the keyField, and assigns each value to the key field in the accumulator
+// replaces the entire collection (quotes, parties — always latest snapshot)
 function stateProducer(propName, keyField) {
     const extractorf = rdExtractGenerator(keyField);
-
     return function(state,{response}) {
         const result = response.data.reduce(extractorf, {});
         return {...state, [propName]:result}
     }
 }
 
+// merges incoming records into the existing collection (trades — cumulative)
+function stateAccumulator(propName, keyField) {
+    const extractorf = rdExtractGenerator(keyField);
+    return function(state,{response}) {
+        const incoming = response.data.reduce(extractorf, {});
+        return {...state, [propName]: {...state[propName], ...incoming}}
+    }
+}
+
 export const simpleValue = () => (state, action) => ({...state, [action.type]:action.value});
 
-export const omsQuoteListResponse       = stateProducer('quotes', 'name');
-export const omsTradeListResponse       = stateProducer('trades', 'sequence');
+export const omsQuoteListResponse       = stateProducer('quotes',  'name');
+export const omsTradeListResponse       = stateAccumulator('trades', 'sequence');
 export const omsPartyListResponse       = stateProducer('parties', 'name');
 
 export const pickGrid = (state, {value})=>({...state, pickGrid:value});
