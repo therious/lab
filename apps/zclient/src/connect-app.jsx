@@ -33,18 +33,25 @@ function sliceCreators({ name, creators }) {
 
 import { initialState } from './constants/initial-state';
 import * as funcs from './action-funcs';
-import { feedMiddleware, initFeed, switchAdapter } from './feed/feed-middleware';
+import { feedMiddleware, setAdapterFactory, switchAdapter, hasAnyFeedRole, isFeedConnected } from './feed/feed-middleware';
 import { MockAdapter } from './feed/mock-adapter';
 import { FinnhubAdapter } from './feed/finnhub-adapter';
 
 const LIVE_SYMBOLS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA'];
 export const hasFinnhubKey = !!import.meta.env.VITE_FINNHUB_KEY;
 
+// Register the default factory — the middleware will call it once the user's roles arrive.
+setAdapterFactory(() => new MockAdapter());
+
 export function switchFeed(source) {
-  const adapter = source === 'live'
-    ? new FinnhubAdapter({ token: import.meta.env.VITE_FINNHUB_KEY, symbols: LIVE_SYMBOLS })
-    : new MockAdapter();
-  switchAdapter(adapter, store.dispatch);
+  const roles = store.getState().chat.me?.roles ?? [];
+  if (!hasAnyFeedRole(roles)) return;
+
+  const factory = source === 'live'
+    ? () => new FinnhubAdapter({ token: import.meta.env.VITE_FINNHUB_KEY, symbols: LIVE_SYMBOLS })
+    : () => new MockAdapter();
+  setAdapterFactory(factory);
+  if (isFeedConnected()) switchAdapter(factory(), store.dispatch);
 }
 import * as actionCreators from './action-creators';
 import App from './App';
@@ -82,8 +89,6 @@ const store = createStore(
 );
 
 const omsActions = bindActionCreators(actionCreators, store.dispatch);
-
-initFeed(new MockAdapter(), store.dispatch);
 
 // Bind users/chat slice actions for UsersProvider
 const chatActions  = bindActionCreators(sliceCreators(chatSlice),  store.dispatch);
