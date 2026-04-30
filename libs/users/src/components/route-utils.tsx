@@ -1,5 +1,6 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
+import { ErrorBoundary } from '@therious/components';
 import { useUsersCtx } from '../context';
 import { hasAnyRoleInApp } from '../role-utils';
 import { RoleGuard }    from './RoleGuard';
@@ -60,9 +61,11 @@ export const GuardedRoutes = ({ routes }: { routes: RouteConfig[] }) => (
   <Routes>
     {routes.map(r => (
       <Route key={r.path} path={r.path} element={
-        r.roles?.length
-          ? <RoleGuard roles={r.roles}>{r.element}</RoleGuard>
-          : r.element
+        <ErrorBoundary label={r.label || r.path}>
+          {r.roles?.length
+            ? <RoleGuard roles={r.roles}>{r.element}</RoleGuard>
+            : r.element}
+        </ErrorBoundary>
       } />
     ))}
   </Routes>
