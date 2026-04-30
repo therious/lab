@@ -35,12 +35,12 @@ const SidebarLayout = styled.div<{ $left: number; $right: number }>`
   overflow: hidden;
 `;
 
-const SidePanel = styled.section<{ area: string }>`
-  grid-area: ${p => p.area};
+const SidePanel = styled.section<{ $area: string }>`
+  grid-area: ${p => p.$area};
   background: cornsilk;
   color: #0b2383;
   overflow: hidden;
-  display: ${p => p.area === 'Left' ? 'flex' : 'flex'};
+  display: flex;
   align-items: flex-start;
   padding: 4px;
   font-size: 0.75rem;
@@ -117,11 +117,11 @@ export default function App() {
 
       <AppBody>
         <SidebarLayout $left={layout.left} $right={layout.right}>
-          <SidePanel area="Left">Left panel</SidePanel>
+          <SidePanel $area="Left">Left panel</SidePanel>
           <CenterArea>
             <GuardedRoutes routes={ROUTES} />
           </CenterArea>
-          <SidePanel area="Right">Right panel</SidePanel>
+          <SidePanel $area="Right">Right panel</SidePanel>
         </SidebarLayout>
       </AppBody>
     </AppLayout>

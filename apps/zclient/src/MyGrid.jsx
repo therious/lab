@@ -16,15 +16,14 @@ export class MyGrid extends Component {
     render() {
         const {rowData, columnDefs} = this.props;
         return (
-            <div className="ag-theme-dark" style={style}>
+            <div className="ag-theme-balham-dark" style={style}>
                 <AgGridReact
-                    defaultColDef={{enableRowGroup:true}}
-                    toolPanel={'columns'}
-                    showToolPanel={true}
-                    reactNext={true}
-                    deltaRowDataMode={true}
-                    getRowNodeId={data=>data.id}
-                    columnDefs={columnDefs} rowData={rowData}/>
+                    defaultColDef={{ enableRowGroup: true, sortable: true, filter: true }}
+                    sideBar={{ toolPanels: ['columns', 'filters'] }}
+                    getRowId={({ data }) => String(data.id)}
+                    columnDefs={columnDefs}
+                    rowData={rowData}
+                />
             </div>
         );
     }
