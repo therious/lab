@@ -9,7 +9,10 @@ dependencies:
   "@therious/boot":           *ws
   "@therious/components":     *ws
   "@therious/fsm":            *ws
+  "@therious/users":          *ws
   "@therious/utils":          *ws
+  firebase:                   ~10.12.0
+  react-router-dom:           ~6.24.0
   ag-grid-community:          &ag ~32.0.2
   ag-grid-enterprise:         *ag
   ag-grid-react:              *ag
@@ -27,9 +30,9 @@ dependencies:
   xstate:                     4.28.1
 
 scripts:
-  start:       VITE_CJS_IGNORE_WARNING=true vite  #it looks like react-swc plugin might be cause of the warning I am turning off?
-  dev:         VITE_CJS_IGNORE_WARNING=true vite
-  build:       tsc && vite build
+  start:       node ../../scripts/generate-build-info.js && VITE_CJS_IGNORE_WARNING=true vite
+  dev:         node ../../scripts/generate-build-info.js && VITE_CJS_IGNORE_WARNING=true vite
+  build:       node ../../scripts/generate-build-info.js && tsc && vite build
   preview:     vite preview
   lint:        eslint . --ext js,jsx,ts,tsx
 

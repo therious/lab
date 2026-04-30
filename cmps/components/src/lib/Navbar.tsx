@@ -54,6 +54,75 @@ export const NavDivider = styled.div`
   flex-shrink: 0;
 `;
 
+// ── Disabled nav item (no access) ────────────────────────────────────────────
+
+export const NavItemDisabled = styled.span`
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #4a5080;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: not-allowed;
+  user-select: none;
+`;
+
+// ── Toggle switch ─────────────────────────────────────────────────────────────
+
+const ToggleWrapper = styled.label`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+`;
+
+const ToggleLabel = styled.span`
+  color: ${linkIdle};
+  font-size: 12px;
+  user-select: none;
+`;
+
+const ToggleTrack = styled.span<{ $on: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  width: 32px;
+  height: 17px;
+  border-radius: 9px;
+  padding: 2px;
+  box-sizing: border-box;
+  background: ${p => p.$on ? '#4caf50' : 'rgba(255,255,255,0.18)'};
+  transition: background 0.18s;
+  flex-shrink: 0;
+`;
+
+const ToggleThumb = styled.span<{ $on: boolean }>`
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: ${p => p.$on ? '#fff' : '#9fa8da'};
+  transition: transform 0.18s, background 0.18s;
+  transform: translateX(${p => p.$on ? '15px' : '0'});
+`;
+
+export interface NavToggleProps {
+  on: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}
+
+export function NavToggle({ on, onClick, children }: NavToggleProps) {
+  return (
+    <ToggleWrapper onClick={onClick}>
+      <ToggleLabel>{children}</ToggleLabel>
+      <ToggleTrack $on={on}>
+        <ToggleThumb $on={on} />
+      </ToggleTrack>
+    </ToggleWrapper>
+  );
+}
+
 // ── Navbar shell ──────────────────────────────────────────────────────────────
 
 const NavBar = styled.nav`

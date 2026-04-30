@@ -1,4 +1,6 @@
 import "reflect-metadata";
+import { badgeFavicon, envBadgeColor } from '@therious/utils';
+if (import.meta.env.DEV) badgeFavicon(envBadgeColor());
 import {Config, Inflate} from "@therious/boot";
 
 // get the relevant classes registered for injection with an import

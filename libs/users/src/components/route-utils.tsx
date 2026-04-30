@@ -19,16 +19,37 @@ export type RouteConfig = {
 /**
  * Returns the subset of routes the current user can access.
  * Use this to render only the nav entries the user is permitted to see.
- *
- * Behaviour:
- *  - No roles / empty roles array  → always included (requireAuth=false or any logged-in user)
- *  - Has roles                     → included only if the user satisfies at least one
- *  - requireAuth=false (skip mode) → same rule; no roles = included, roles = excluded (no user)
  */
 export const useAccessibleRoutes = (routes: RouteConfig[]): RouteConfig[] => {
   const { useSelector, appName } = useUsersCtx();
   const userRoles: string[] = useSelector((s: any) => s.chat.me?.roles ?? []);
   return routes.filter(r => hasAnyRoleInApp(userRoles, r.roles ?? [], appName));
+};
+
+export type NavRouteEntry = {
+  route:      RouteConfig;
+  accessible: boolean;
+  /** Human-readable role names required (stripped of namespace prefix). */
+  missingRoles: string[];
+};
+
+/**
+ * Returns all labeled routes annotated with accessibility.
+ * Use when you want to show disabled nav items for routes the user can't reach.
+ */
+export const useNavRoutes = (routes: RouteConfig[]): NavRouteEntry[] => {
+  const { useSelector, appName } = useUsersCtx();
+  const userRoles: string[] = useSelector((s: any) => s.chat.me?.roles ?? []);
+  return routes
+    .filter(r => r.label)
+    .map(r => {
+      const required = r.roles ?? [];
+      const accessible = hasAnyRoleInApp(userRoles, required, appName);
+      const missingRoles = accessible
+        ? []
+        : required.map(role => role.includes(':') ? role.split(':')[1] : role);
+      return { route: r, accessible, missingRoles };
+    });
 };
 
 /**

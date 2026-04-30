@@ -16,8 +16,8 @@ export { AdminView }                                    from './components/Admin
 export { Login }                                        from './components/Login';
 export { RoleGuard }                                    from './components/RoleGuard';
 export { UserBadge }                                    from './components/UserBadge';
-export { Foyer, GuardedRoutes, useAccessibleRoutes }    from './components/route-utils';
-export type { RouteConfig }                             from './components/route-utils';
+export { Foyer, GuardedRoutes, useAccessibleRoutes, useNavRoutes } from './components/route-utils';
+export type { RouteConfig, NavRouteEntry }                         from './components/route-utils';
 
 // ── Auth utilities — call from App.tsx ───────────────────────────────────────
 export { useSession, signout } from './auth';
