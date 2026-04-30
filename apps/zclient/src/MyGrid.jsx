@@ -6,7 +6,8 @@ import React, { Component } from 'react';
   const _error = console.error.bind(console);
   console.error = (...args) => {
     const msg = typeof args[0] === 'string' ? args[0] : '';
-    if (msg.includes('AG Grid') || msg.startsWith('*')) return;
+    // License banner lines start with '*'; the lead message matches 'AG Grid.*License'
+    if (msg.startsWith('*') || /AG Grid.*License/i.test(msg)) return;
     _error(...args);
   };
 })();
