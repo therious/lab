@@ -56,6 +56,7 @@ devDependencies:
   minimist: ~1.2.8                               # lightweight cli argument processing
   ts-node:                            ~10.9.1    # no fuss run typescript directly without bundling
   lerna:                              ~8.1.2     # lerna doesn't support package.yaml, so derive package.json first with script
+  js-yaml:                            ~4.1.0     # used by scripts/yaml-to-npm.js to convert package.yaml → package.json
 
   # these are for electron app projects, e.g. lectro
   electron:                           ~30.0.1
