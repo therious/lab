@@ -1,15 +1,10 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useSelector } from 'react-redux';
 import { MyGrid } from '../MyGrid';
 import { columnDefsMap } from '../xform/columndefs';
-import { aPartiesSelector, omsActions } from '../connect-app';
+import { aPartiesSelector } from '../connect-app';
 
 export function PartiesView() {
   const rowData = useSelector(aPartiesSelector);
-
-  useEffect(() => {
-    omsActions.omsPartyList();
-  }, []);
-
   return <MyGrid rowData={rowData} columnDefs={(columnDefsMap as any)['Parties']} />;
 }

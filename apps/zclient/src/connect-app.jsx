@@ -33,7 +33,9 @@ function sliceCreators({ name, creators }) {
 
 import { initialState } from './constants/initial-state';
 import * as funcs from './action-funcs';
-import { getMiddleware, init } from './example-redux-middleware';
+import { feedMiddleware, initFeed } from './feed/feed-middleware';
+import { MockAdapter } from './feed/mock-adapter';
+// import { FinnhubAdapter } from './feed/finnhub-adapter';
 import * as actionCreators from './action-creators';
 import App from './App';
 
@@ -66,12 +68,14 @@ const rootReducer = combineReducers({
 
 const store = createStore(
   rootReducer,
-  composeWithDevTools(applyMiddleware(getMiddleware))
+  composeWithDevTools(applyMiddleware(feedMiddleware))
 );
 
-// Bind OMS action creators and wire them into the API middleware
 const omsActions = bindActionCreators(actionCreators, store.dispatch);
-init(omsActions);
+
+// Connect the feed adapter — swap MockAdapter for FinnhubAdapter to use live data:
+// initFeed(new FinnhubAdapter({ token: import.meta.env.VITE_FINNHUB_KEY, symbols: ['AAPL','MSFT','GOOGL','AMZN','TSLA'] }), store.dispatch);
+initFeed(new MockAdapter(), store.dispatch);
 
 // Bind users/chat slice actions for UsersProvider
 const chatActions  = bindActionCreators(sliceCreators(chatSlice),  store.dispatch);
