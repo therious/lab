@@ -1,4 +1,16 @@
 import React, { Component } from 'react';
+
+// Suppress AG Grid Enterprise license nag messages in the console.
+// This is a dev/demo app — remove if a license is ever purchased.
+;(function suppressAgGridLicenseNoise() {
+  const _error = console.error.bind(console);
+  console.error = (...args) => {
+    const msg = typeof args[0] === 'string' ? args[0] : '';
+    if (msg.includes('AG Grid') || msg.startsWith('*')) return;
+    _error(...args);
+  };
+})();
+
 import "ag-grid-enterprise";
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
