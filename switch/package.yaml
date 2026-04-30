@@ -1,0 +1,21 @@
+name:        '@therious/switch'
+version:     1.0.0
+private:     true
+type:        module
+description: Switches the monorepo between pnpm (package.yaml) and npm (package.json) build modes
+
+dependencies:
+  js-yaml:   ~4.1.0     # YAML parser — resolves anchors automatically
+  glob:      ~10.4.0    # file discovery matching workspace globs
+
+scripts:
+  # Convert to npm: generate package.json files, wipe pnpm node_modules.
+  # Follow up with: cd .. && npm install
+  to-npm:    node to-npm.js
+
+  # Revert to pnpm: remove generated package.json files, wipe npm node_modules.
+  # Follow up with: cd .. && pnpm install
+  to-pnpm:   node to-pnpm.js
+
+  # Wipe this directory's own node_modules (re-run npm install to restore)
+  wipe:      rm -rf node_modules
