@@ -15,8 +15,7 @@ This document covers two parallel efforts on the `alt` branch:
 pnpm reads `package.yaml` when it exists and ignores `package.json`. npm reads `package.json`
 and ignores `package.yaml`. Because of this, both files can live side-by-side in every
 package directory. The `alt` branch commits generated `package.json` files; the `main` branch
-never has them (or gitignores them). No files need to be deleted when switching between the
-two package managers.
+gitignores them. No app logic changes when switching between the two package managers.
 
 ### What needs converting
 
@@ -28,62 +27,70 @@ two package managers.
 | `pnpm.overrides` in root manifest | `overrides` at root `package.json` level |
 | YAML anchors (`&ag ~32.0.2` / `*ag`) | resolved to their literal values by the parser |
 
-### Conversion script — `scripts/yaml-to-npm.js`
+### Conversion tooling — `switch/`
 
-A Node.js script that walks the workspace and generates `package.json` next to every
-`package.yaml`. No new dependencies are needed — `js-yaml` is already a transitive
-dependency, and `glob` is already in root devDependencies.
-
-**Algorithm:**
+The `switch/` directory is an isolated Node package (outside all workspace globs) that owns
+the conversion scripts. It has its own `package.json` committed so it can bootstrap itself
+without any prior install.
 
 ```
-for each package.yaml in (root + all workspace globs):
-  1. Parse with js-yaml (anchors are resolved automatically by the parser)
-  2. Replace every dependency value matching /^workspace:/ with the bare version
-     ("workspace:*" → "*", "workspace:~1.2.3" → "~1.2.3")
-  3. If this is the root manifest:
-     a. Add "workspaces" from pnpm-workspace.yaml packages list
-     b. Rename "pnpm.overrides" → "overrides"
-  4. Write package.json (pretty-printed JSON)
+switch/
+  package.yaml     ← source of truth (js-yaml, glob dependencies)
+  package.json     ← committed; lets `cd switch && npm install` work from a fresh clone
+  to-npm.js        ← generates package.json files, wipes node_modules
+  to-pnpm.js       ← removes generated package.json files, wipes node_modules
 ```
 
-Run it:
+**Switching to npm (fresh clone or after pnpm session):**
 ```bash
-node scripts/yaml-to-npm.js        # generate all package.json files
-npm install                        # install from generated manifests
+cd switch && npm install     # one-time; installs js-yaml + glob into switch/node_modules
+npm run to-npm               # generates all package.json files, wipes node_modules
+cd .. && npm install         # installs workspace deps via npm
 ```
 
-The script is idempotent — re-running it after adding a dependency to a `package.yaml`
-regenerates the corresponding `package.json` in place.
+**Reverting to pnpm:**
+```bash
+cd switch && npm run to-pnpm   # removes generated package.json files, wipes node_modules
+cd .. && pnpm install          # reinstalls via pnpm
+```
+
+**Why `switch/` is isolated:**
+- Lives outside all `pnpm-workspace.yaml` globs so pnpm never touches it
+- Has its own committed `package.json` so it works before any install step
+- Its `node_modules` is never wiped by the conversion scripts (both `to-npm.js` and
+  `to-pnpm.js` exclude `switch/**` when removing `node_modules`)
+
+**Wipe scripts** (remove all artifacts of one side):
+- pnpm side: `pnpm wipe` (root `package.yaml`) — removes all `node_modules` trees
+- npm side: `npm run wipe` (generated root `package.json`) — removes all `node_modules`
+  trees and all generated `package.json` files
 
 ### Root `package.json` additions (alt branch only)
 
-The root `package.json` needs two things the root `package.yaml` does not have:
+The generated root `package.json` gets:
 
 ```json
 {
-  "workspaces": [
-    "apps/**",
-    "servers/**",
-    "cmps/**",
-    "libs/**",
-    "scripts",
-    "!**/test/**"
-  ]
+  "workspaces": ["apps/**", "servers/**", "cmps/**", "libs/**", "scripts", "!**/test/**"],
+  "overrides": { ... },
+  "scripts": {
+    "generate": "cd switch && npm run to-npm",
+    "wipe":     "cd switch && npm run to-pnpm"
+  }
 }
 ```
 
-These are taken directly from `pnpm-workspace.yaml` by the conversion script.
+These are injected by `to-npm.js`; they are not in `package.yaml`.
 
 ### Keeping `alt` in sync with `main`
 
-`package.yaml` files are the source of truth. The workflow when a dependency changes:
+`package.yaml` files are the source of truth. When a dependency changes:
 
 ```bash
-# 1. On main (or merged into alt): edit the relevant package.yaml
-# 2. On alt: run the conversion script
-node scripts/yaml-to-npm.js
-# 3. Commit both the package.yaml change and the regenerated package.json
+# 1. Edit the relevant package.yaml (on main or after merging main into alt)
+# 2. Regenerate package.json files
+cd switch && npm run to-npm
+# 3. Commit both
 git add '**/package.json' package.json
 git commit -m "sync: regenerate package.json files"
 ```
@@ -94,22 +101,17 @@ regeneration step is always manual on `alt`.
 ### npm workspace script aliases
 
 The root `package.yaml` uses `pnpm --filter` for scoped commands (`pnpm f ticket start`).
-npm does not have a `--filter` shorthand. The generated root `package.json` should include
-an equivalent using npm workspaces:
+The generated root `package.json` includes the npm equivalent:
 
 ```json
-{
-  "scripts": {
-    "f": "npm run --workspace"
-  }
-}
+{ "scripts": { "f": "npm run --workspace" } }
 ```
 
 Usage: `npm run f apps/ticket start`
 
 ---
 
-## Part 2 — Offline Demo Mode
+## Part 2 — Offline Demo Mode (mockery)
 
 ### Problem
 
@@ -120,7 +122,7 @@ In the demo environment:
 
 ### Approach
 
-A new server package `servers/demo` running Fastify. It implements the minimal subset of
+A new server package `servers/mockery` running Fastify. It implements the minimal subset of
 the Firebase REST API that the apps actually call, backed by a local JSON file store. The
 apps detect an environment variable (`VITE_DEMO_MODE=true`) and redirect their Firebase SDK
 connections to this local server instead of Google.
@@ -130,7 +132,7 @@ Firebase itself supports this pattern via its Emulator Suite. The JS SDK ships
 host. The demo server implements the emulator wire protocol for the subset the apps use,
 so no changes are needed to app logic — only to `firebase.ts` in each app.
 
-### What the demo server implements
+### What the mockery server implements
 
 **Auth (port 9099, Firebase Auth Emulator protocol):**
 - `POST /identitytoolkit.googleapis.com/v1/accounts:signInWithPassword` — email/password login
@@ -147,15 +149,15 @@ so no changes are needed to app logic — only to `firebase.ts` in each app.
   - `apps/{appId}/groupChats/{groupId}/messages` — group messages
 - Real-time listeners via Server-Sent Events (the emulator protocol uses SSE/WebSocket)
 
-**Persistence:** a single `demo-data.json` file written on every mutation. This survives
+**Persistence:** a single `mockery-data.json` file written on every mutation. This survives
 server restarts and gives the demo a consistent starting state that can be committed.
 
 **Finnhub feed:** already handled — `MockAdapter` runs locally with no network calls.
 
-### `servers/demo` package structure
+### `servers/mockery` package structure
 
 ```
-servers/demo/
+servers/mockery/
   package.yaml
   server.ts          ← Fastify entry point, mounts auth + firestore routers
   src/
@@ -166,7 +168,7 @@ servers/demo/
       routes.ts      ← CRUD + SSE listener endpoints
       store.ts       ← JSON file read/write with in-memory cache
     seed/
-      demo-data.json ← initial data committed to the repo (users, roles, demo messages)
+      mockery-data.json  ← initial data committed to the repo (users, roles, demo messages)
 ```
 
 ### Switching an app into demo mode
@@ -197,14 +199,14 @@ VITE_DEMO_MODE=true
 ### Running the full demo stack
 
 ```bash
-# Terminal 1 — demo server (auth + firestore emulation)
-pnpm f demo start        # or: npm run f servers/demo start
+# Terminal 1 — mockery server (auth + firestore emulation)
+pnpm f mockery start        # or: npm run f servers/mockery start
 
 # Terminal 2 — app (zclient or any other)
 pnpm f zclient start
 ```
 
-The MockAdapter starts automatically once the user logs in via the demo server.
+The MockAdapter starts automatically once the user logs in via the mockery server.
 
 ---
 
@@ -212,30 +214,29 @@ The MockAdapter starts automatically once the user logs in via the demo server.
 
 ### What gets promoted
 
-Once `servers/demo` is working and validated on `alt`, it should move to `main` as a
+Once `servers/mockery` is working and validated on `alt`, it should move to `main` as a
 first-class member of the monorepo. It is useful beyond the constrained demo environment:
 
 - **Local development without a live Firebase project** — onboarding new contributors
   without giving them Firebase credentials
-- **CI testing** — run integration tests against the demo server instead of a shared
+- **CI testing** — run integration tests against the mockery server instead of a shared
   Firebase project
-- **Snapshot testing** — commit `demo-data.json` with known state for reproducible tests
+- **Snapshot testing** — commit `mockery-data.json` with known state for reproducible tests
 
 ### Migration path
 
-1. Open a PR from `alt` into `main` containing only `servers/demo/**`
+1. Open a PR from `alt` into `main` containing only `servers/mockery/**`
 2. Add `VITE_DEMO_MODE` guard to `firebase.ts` in all apps (small, safe change)
-3. The conversion script (`scripts/yaml-to-npm.js`) stays `alt`-only — it is only
-   useful if npm compatibility is needed again
+3. The `switch/` directory and all generated `package.json` files stay `alt`-only
 
 ### What stays in `alt`
 
 - All generated `package.json` files
-- `scripts/yaml-to-npm.js`
-- Any npm-specific root config (`engines.npm`, etc.)
+- `switch/` directory (conversion scripts)
+- Any npm-specific root config
 
 These are not useful on `main` and would create noise. The `alt` branch is rebased or
-merged periodically from `main` and the `package.json` files regenerated each time.
+merged periodically from `main` and the `package.json` files regenerated via `switch/` each time.
 
 ---
 
@@ -244,15 +245,16 @@ merged periodically from `main` and the `package.json` files regenerated each ti
 | Situation | Command |
 |---|---|
 | Normal development (your machine) | `pnpm ...` — reads `package.yaml`, ignores `package.json` |
-| Demo environment install | `npm install` — reads `package.json`, ignores `package.yaml` |
-| Adding a dependency | Edit `package.yaml`, run `node scripts/yaml-to-npm.js` on `alt`, commit both |
-| Pulling `main` changes into `alt` | `git merge main` then `node scripts/yaml-to-npm.js && git add '**/package.json'` |
-| Demo server only (no npm build needed) | Cherry-pick `servers/demo` onto `main` directly |
+| Demo environment install | `cd switch && npm install && npm run to-npm && cd .. && npm install` |
+| Adding a dependency | Edit `package.yaml`, run `cd switch && npm run to-npm` on `alt`, commit both |
+| Pulling `main` changes into `alt` | `git merge main` then `cd switch && npm run to-npm && git add '**/package.json'` |
+| Wipe pnpm artifacts | `pnpm wipe` (root) — removes all `node_modules`, re-run `pnpm install` |
+| Wipe npm artifacts | `npm run wipe` (root) — removes `node_modules` + generated `package.json` files |
+| Demo server only (no npm build needed) | Cherry-pick `servers/mockery` onto `main` directly |
 
 ### `.gitignore` strategy
 
-On `main`: add `**/package.json` to `.gitignore` (or leave absent — they won't exist)
+On `main`: generated `package.json` files are gitignored (they don't exist on main)
 On `alt`: `package.json` files are committed and NOT gitignored
 
-This can be handled with a `.gitignore` difference between branches, or simply by
-convention (only run the conversion script on `alt`, never on `main`).
+The `switch/package.json` is always committed on both branches (it is not a generated file).
