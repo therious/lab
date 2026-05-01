@@ -189,7 +189,7 @@ console.log('\nRemoving node_modules...\n');
 const moduleDirs = globSync('**/node_modules', {
   cwd:      ROOT,
   absolute: true,
-  ignore:   ['**/node_modules/**', 'switch/**'],  // leave switch's own intact
+  ignore:   ['switch/**'],  // leave switch's own node_modules intact
 });
 
 for (const dir of moduleDirs) {
