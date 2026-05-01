@@ -18,9 +18,9 @@
  *   If appDir is not provided, detects from current working directory
  */
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 
 // Determine app directory
 const appDir = process.argv[2] || process.cwd();
@@ -158,14 +158,10 @@ function generateBuildInfo() {
   return buildInfo;
 }
 
-if (require.main === module) {
-  try {
-    generateBuildInfo();
-  } catch (error) {
-    console.error('Error generating build info:', error.message);
-    process.exit(1);
-  }
+try {
+  generateBuildInfo();
+} catch (error) {
+  console.error('Error generating build info:', error.message);
+  process.exit(1);
 }
-
-module.exports = { generateBuildInfo };
 
