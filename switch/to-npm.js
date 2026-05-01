@@ -48,8 +48,12 @@ function stripWorkspaceDeps(pkg) {
   }
 }
 
-function adaptRoot(pkg, workspaceGlobs) {
-  pkg.workspaces = workspaceGlobs;
+function adaptRoot(pkg, workspaceGlobs, resolvedWorkspaces) {
+  // Use resolved directory paths rather than raw pnpm globs.
+  // pnpm globs like "servers/**" match recursively and can produce nested workspaces
+  // (e.g. servers/elections AND servers/elections/scripts), which crash npm's arborist.
+  // Resolved paths are the concrete set of dirs that actually contain a package.json.
+  pkg.workspaces = resolvedWorkspaces;
 
   if (pkg.pnpm?.overrides) pkg.overrides = pkg.pnpm.overrides;
   delete pkg.pnpm;
@@ -92,6 +96,22 @@ const memberYamls = workspaceGlobs
 
 const allYamls = [join(ROOT, 'package.yaml'), ...memberYamls];
 
+// Resolve concrete workspace dirs for npm's workspaces array.
+// pnpm globs like "servers/**" match recursively and can produce nested workspaces
+// (e.g. servers/elections AND servers/elections/scripts) which crash npm's arborist.
+// Instead, enumerate the concrete package directories explicitly.
+const resolvedWorkspaces = [
+  ...new Set([
+    // dirs that have (or will have) a package.json generated from a package.yaml
+    ...memberYamls.map(p => dirname(p).replace(ROOT + '/', '')),
+    // dirs that already have a real package.json (libs, cmps, scripts, etc.)
+    ...workspaceGlobs
+      .filter(g => !g.startsWith('!'))
+      .flatMap(g => globSync(`${g}/package.json`, { cwd: ROOT, absolute: true }))
+      .map(p => dirname(p).replace(ROOT + '/', '')),
+  ]),
+];
+
 // ── Convert yaml-based packages ───────────────────────────────────────────────
 
 console.log(`\nGenerating ${allYamls.length} package.json file(s)...\n`);
@@ -108,7 +128,7 @@ for (const yamlPath of allYamls) {
   }
 
   stripWorkspaceDeps(pkg);
-  if (isRoot) adaptRoot(pkg, workspaceGlobs);
+  if (isRoot) adaptRoot(pkg, workspaceGlobs, resolvedWorkspaces);
 
   const out = join(dirname(yamlPath), 'package.json');
   writeFileSync(out, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
