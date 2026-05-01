@@ -5,18 +5,23 @@
 // then wipes all node_modules so npm can install fresh.
 //
 // Run from the switch/ directory:
-//   npm run to-npm         (after: cd .. && npm install)
+//   npm run to-npm         (after: cd .. && npm install --legacy-peer-deps)
 //   node to-npm.js
+//
+// Safe to run multiple times — idempotent. No state file is used; to-pnpm.js
+// reconstructs workspace: refs from the workspace member list rather than
+// relying on saved originals.
 //
 // What it does:
 //   1. Reads pnpm-workspace.yaml to discover workspace members.
 //   2. For each package.yaml: parses it (js-yaml resolves YAML anchors),
 //      strips the workspace: protocol from dependency versions, writes package.json.
-//   3. Root manifest additionally gets: workspaces array, overrides (from pnpm.overrides),
-//      pnpm engine entry removed, and npm-specific utility scripts injected.
-//   4. For real package.json files (no sibling package.yaml): saves originals to
-//      switch/.originals.json, then patches workspace: in-place. to-pnpm.js restores
-//      from that file — no git required.
+//   3. Root manifest additionally gets: workspaces array (resolved to concrete dirs,
+//      not raw globs), overrides (from pnpm.overrides), pnpm engine entry removed,
+//      and npm-specific utility scripts injected.
+//   4. For real package.json files (no sibling package.yaml, e.g. libs/cmps):
+//      strips workspace: in-place. to-pnpm.js knows how to reverse this without
+//      any saved state.
 //   5. Wipes all node_modules directories in the repo so npm installs cleanly.
 
 import { readFileSync, writeFileSync, rmSync } from 'fs';
@@ -25,9 +30,7 @@ import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
 import { globSync } from 'glob';
 
-const ROOT       = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const SWITCH_DIR = dirname(fileURLToPath(import.meta.url));
-const ORIGINALS  = join(SWITCH_DIR, '.originals.json');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 // ── Conversion helpers ────────────────────────────────────────────────────────
 
@@ -48,11 +51,10 @@ function stripWorkspaceDeps(pkg) {
   }
 }
 
-function adaptRoot(pkg, workspaceGlobs, resolvedWorkspaces) {
+function adaptRoot(pkg, resolvedWorkspaces) {
   // Use resolved directory paths rather than raw pnpm globs.
-  // pnpm globs like "servers/**" match recursively and can produce nested workspaces
-  // (e.g. servers/elections AND servers/elections/scripts), which crash npm's arborist.
-  // Resolved paths are the concrete set of dirs that actually contain a package.json.
+  // Globs like "servers/**" match recursively and can produce nested workspaces
+  // (e.g. servers/elections AND servers/elections/scripts) which crash npm's arborist.
   pkg.workspaces = resolvedWorkspaces;
 
   if (pkg.pnpm?.overrides) pkg.overrides = pkg.pnpm.overrides;
@@ -90,26 +92,33 @@ function adaptRoot(pkg, workspaceGlobs, resolvedWorkspaces) {
 const wsConfig       = yaml.load(readFileSync(join(ROOT, 'pnpm-workspace.yaml'), 'utf8'));
 const workspaceGlobs = wsConfig.packages ?? [];
 
-const IGNORE_DIRS = ['**/node_modules/**', '**/deps/**', '**/.git/**'];
+// Never descend into node_modules, deps, or follow symlinks (which could lead
+// back into node_modules via npm workspace links).
+const GLOB_OPTS = {
+  cwd:      ROOT,
+  absolute: true,
+  follow:   false,
+  ignore:   ['**/node_modules', '**/deps', '**/.git'],
+};
+
+// Definitive guard: paths that go through node_modules or deps are never
+// workspace members, regardless of what the glob returns.
+const isWorkspacePath = p => !/[/\\](node_modules|deps)[/\\]/.test(p);
 
 const memberYamls = workspaceGlobs
   .filter(g => !g.startsWith('!'))
-  .flatMap(g => globSync(`${g}/package.yaml`, { cwd: ROOT, absolute: true, ignore: IGNORE_DIRS }));
+  .flatMap(g => globSync(`${g}/package.yaml`, GLOB_OPTS));
 
 const allYamls = [join(ROOT, 'package.yaml'), ...memberYamls];
 
 // Resolve concrete workspace dirs for npm's workspaces array.
-// pnpm globs like "servers/**" match recursively and can produce nested workspaces
-// (e.g. servers/elections AND servers/elections/scripts) which crash npm's arborist.
-// Instead, enumerate the concrete package directories explicitly.
 const resolvedWorkspaces = [
   ...new Set([
-    // dirs that have (or will have) a package.json generated from a package.yaml
     ...memberYamls.map(p => dirname(p).replace(ROOT + '/', '')),
-    // dirs that already have a real package.json (libs, cmps, scripts, etc.)
     ...workspaceGlobs
       .filter(g => !g.startsWith('!'))
-      .flatMap(g => globSync(`${g}/package.json`, { cwd: ROOT, absolute: true, ignore: IGNORE_DIRS }))
+      .flatMap(g => globSync(`${g}/package.json`, GLOB_OPTS))
+      .filter(isWorkspacePath)
       .map(p => dirname(p).replace(ROOT + '/', '')),
   ]),
 ];
@@ -130,7 +139,7 @@ for (const yamlPath of allYamls) {
   }
 
   stripWorkspaceDeps(pkg);
-  if (isRoot) adaptRoot(pkg, workspaceGlobs, resolvedWorkspaces);
+  if (isRoot) adaptRoot(pkg, resolvedWorkspaces);
 
   const out = join(dirname(yamlPath), 'package.json');
   writeFileSync(out, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
@@ -139,57 +148,46 @@ for (const yamlPath of allYamls) {
 
 // ── Patch real package.json files (no sibling package.yaml) ──────────────────
 // Libs and cmps have committed package.json files (not generated from yaml) that
-// may contain workspace: protocol. Save originals to switch/.originals.json before
-// patching so to-pnpm.js can restore them without needing git.
+// use workspace: protocol. Strip it so npm can install them.
+// to-pnpm.js reverses this without any saved state — see comment there.
 
-const yamlDirs = new Set(allYamls.map(p => dirname(p)));
-
+const yamlDirs     = new Set(allYamls.map(p => dirname(p)));
 const realPkgJsons = workspaceGlobs
   .filter(g => !g.startsWith('!'))
-  .flatMap(g => globSync(`${g}/package.json`, { cwd: ROOT, absolute: true }))
-  .filter(p => !yamlDirs.has(dirname(p)));
+  .flatMap(g => globSync(`${g}/package.json`, GLOB_OPTS))
+  .filter(p => isWorkspacePath(p) && !yamlDirs.has(dirname(p)));
 
 console.log('\nPatching real package.json files (stripping workspace: protocol)...\n');
 
-const originals = {};  // { relativePath: originalContent }
 let patched = 0;
-
 for (const pkgPath of realPkgJsons) {
   const rel = pkgPath.replace(ROOT + '/', '');
-  let original;
+  let pkg;
   try {
-    original = readFileSync(pkgPath, 'utf8');
+    pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
   } catch (err) {
     console.error(`  ERROR reading ${rel}: ${err.message}`);
     continue;
   }
 
-  const pkg = JSON.parse(original);
   const before = JSON.stringify(pkg);
   stripWorkspaceDeps(pkg);
-  if (JSON.stringify(pkg) === before) continue;  // no workspace: refs, nothing to do
+  if (JSON.stringify(pkg) === before) continue;
 
-  originals[rel] = original;
   writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
   console.log(`  patched  ${rel}`);
   patched++;
 }
-
-if (patched > 0) {
-  writeFileSync(ORIGINALS, JSON.stringify(originals, null, 2) + '\n', 'utf8');
-  console.log(`\n${patched} file(s) patched. Originals saved to switch/.originals.json`);
-} else {
-  console.log('\nNo workspace: references found in real package.json files.');
-}
+console.log(patched > 0 ? `\n${patched} file(s) patched.` : '\nNo workspace: refs found — already clean.');
 
 // ── Wipe node_modules ─────────────────────────────────────────────────────────
 
 console.log('\nRemoving node_modules...\n');
 
 const moduleDirs = globSync('**/node_modules', {
-  cwd:      ROOT,
+  cwd:    ROOT,
   absolute: true,
-  ignore:   ['switch/**'],  // leave switch's own node_modules intact
+  ignore: ['switch/**'],
 });
 
 for (const dir of moduleDirs) {
@@ -197,4 +195,4 @@ for (const dir of moduleDirs) {
   console.log(`  removed  ${dir.replace(ROOT + '/', '')}`);
 }
 
-console.log('\nDone. Next: cd .. && npm install\n');
+console.log('\nDone. Next: cd .. && npm install --legacy-peer-deps\n');
