@@ -90,9 +90,11 @@ function adaptRoot(pkg, workspaceGlobs, resolvedWorkspaces) {
 const wsConfig       = yaml.load(readFileSync(join(ROOT, 'pnpm-workspace.yaml'), 'utf8'));
 const workspaceGlobs = wsConfig.packages ?? [];
 
+const IGNORE_DIRS = ['**/node_modules/**', '**/deps/**', '**/.git/**'];
+
 const memberYamls = workspaceGlobs
   .filter(g => !g.startsWith('!'))
-  .flatMap(g => globSync(`${g}/package.yaml`, { cwd: ROOT, absolute: true }));
+  .flatMap(g => globSync(`${g}/package.yaml`, { cwd: ROOT, absolute: true, ignore: IGNORE_DIRS }));
 
 const allYamls = [join(ROOT, 'package.yaml'), ...memberYamls];
 
@@ -107,7 +109,7 @@ const resolvedWorkspaces = [
     // dirs that already have a real package.json (libs, cmps, scripts, etc.)
     ...workspaceGlobs
       .filter(g => !g.startsWith('!'))
-      .flatMap(g => globSync(`${g}/package.json`, { cwd: ROOT, absolute: true }))
+      .flatMap(g => globSync(`${g}/package.json`, { cwd: ROOT, absolute: true, ignore: IGNORE_DIRS }))
       .map(p => dirname(p).replace(ROOT + '/', '')),
   ]),
 ];
