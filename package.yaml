@@ -12,7 +12,6 @@ scripts:
   test:        pnpm --filter "./libs/*" --recursive run test # Run tests for all libraries that have a test script
   deploy:      ts-node ./deploy-scripts/deploy-as-branch.ts ${1} ${2} ${3}
   release:     ts-node ./deploy-scripts/create-release.ts ${1}
-  wipe:        cd switch && node to-pnpm.js
 engines:
   node:        ">=18.17.1"
   pnpm:        ">=8.7.4"

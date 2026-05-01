@@ -24,5 +24,5 @@ cd switch && npm run to-pnpm   # removes generated package.json files and all no
 cd .. && pnpm install
 ```
 
-**Wipe everything** (works from either side): `pnpm wipe` or `npm run wipe` — removes all node_modules and all generated package.json files.
+**Wipe everything** (works from either side): `cd switch && npm run wipe` — removes all node_modules and all generated package.json files.
 

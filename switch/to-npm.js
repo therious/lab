@@ -66,7 +66,6 @@ function adaptRoot(pkg, workspaceGlobs) {
 
   // Inject npm-side utility scripts (these live only in the generated package.json)
   pkg.scripts.generate = 'cd switch && node to-npm.js';
-  pkg.scripts.wipe     = 'cd switch && node to-pnpm.js';
 
   // Flag any remaining pnpm references
   for (const [name, cmd] of Object.entries(pkg.scripts)) {

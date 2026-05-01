@@ -11,6 +11,6 @@
   "scripts": {
     "to-npm": "node to-npm.js",
     "to-pnpm": "node to-pnpm.js",
-    "wipe": "rm -rf node_modules"
+    "wipe": "node to-pnpm.js"
   }
 }

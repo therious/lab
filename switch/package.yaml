@@ -17,5 +17,6 @@ scripts:
   # Follow up with: cd .. && pnpm install
   to-pnpm:   node to-pnpm.js
 
-  # Wipe this directory's own node_modules (re-run npm install to restore)
-  wipe:      rm -rf node_modules
+  # Wipe: remove all generated package.json files and all node_modules across the repo.
+  # Works from either side (pnpm or npm). Follow up with pnpm install or npm install.
+  wipe:      node to-pnpm.js
