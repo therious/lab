@@ -2,7 +2,7 @@
 //
 // Reverts the monorepo to pnpm mode:
 //   - Removes generated package.json files (those sitting alongside a package.yaml)
-//   - Restores real package.json files patched by to-npm.js via `git checkout`
+//   - Restores real package.json files patched by to-npm.js from switch/.originals.json
 //   - Wipes all node_modules
 //
 // Run from the switch/ directory:
@@ -11,19 +11,19 @@
 //
 // package.yaml files are never touched — they are always the source of truth.
 
-import { rmSync, existsSync } from 'fs';
-import { execSync } from 'child_process';
+import { rmSync, existsSync, readFileSync, writeFileSync } from 'fs';
 import { resolve, dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
-import { readFileSync } from 'fs';
 import { globSync } from 'glob';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT       = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const SWITCH_DIR = dirname(fileURLToPath(import.meta.url));
+const ORIGINALS  = join(SWITCH_DIR, '.originals.json');
 
-const wsConfig    = yaml.load(readFileSync(join(ROOT, 'pnpm-workspace.yaml'), 'utf8'));
+const wsConfig       = yaml.load(readFileSync(join(ROOT, 'pnpm-workspace.yaml'), 'utf8'));
 const workspaceGlobs = wsConfig.packages ?? [];
-const memberYamls = workspaceGlobs
+const memberYamls    = workspaceGlobs
   .filter(g => !g.startsWith('!'))
   .flatMap(g => globSync(`${g}/package.yaml`, { cwd: ROOT, absolute: true }));
 
@@ -46,24 +46,19 @@ for (const yamlPath of allYamls) {
 console.log(`\n${removed} file(s) removed.`);
 
 // ── Restore real package.json files patched by to-npm.js ─────────────────────
-// These are committed with workspace: protocol; git checkout restores that form.
+// Originals were saved to switch/.originals.json before patching.
 
-const yamlDirs = new Set(allYamls.map(p => dirname(p)));
-
-const realPkgJsons = workspaceGlobs
-  .filter(g => !g.startsWith('!'))
-  .flatMap(g => globSync(`${g}/package.json`, { cwd: ROOT, absolute: true }))
-  .filter(p => !yamlDirs.has(dirname(p)));
-
-if (realPkgJsons.length > 0) {
-  console.log('\nRestoring patched package.json files via git checkout...\n');
-  const rel = realPkgJsons.map(p => p.replace(ROOT + '/', ''));
-  try {
-    execSync(`git checkout -- ${rel.join(' ')}`, { cwd: ROOT, stdio: 'inherit' });
-    for (const r of rel) console.log(`  restored  ${r}`);
-  } catch {
-    console.warn('  ⚠  git checkout failed — files may already be clean or git not available');
+if (existsSync(ORIGINALS)) {
+  console.log('\nRestoring patched package.json files from switch/.originals.json...\n');
+  const originals = JSON.parse(readFileSync(ORIGINALS, 'utf8'));
+  for (const [rel, content] of Object.entries(originals)) {
+    writeFileSync(join(ROOT, rel), content, 'utf8');
+    console.log(`  restored  ${rel}`);
   }
+  rmSync(ORIGINALS);
+  console.log('\nOriginals restored and switch/.originals.json removed.');
+} else {
+  console.log('\nNo switch/.originals.json found — nothing to restore.');
 }
 
 // ── Wipe node_modules ─────────────────────────────────────────────────────────
