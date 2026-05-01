@@ -1,6 +1,7 @@
 // to-npm.js
 //
 // Generates a package.json alongside every package.yaml in the workspace,
+// patches workspace: protocol out of real package.json files (libs/cmps),
 // then wipes all node_modules so npm can install fresh.
 //
 // Run from the switch/ directory:
@@ -13,7 +14,9 @@
 //      strips the workspace: protocol from dependency versions, writes package.json.
 //   3. Root manifest additionally gets: workspaces array, overrides (from pnpm.overrides),
 //      pnpm engine entry removed, and npm-specific utility scripts injected.
-//   4. Wipes all node_modules directories in the repo so npm installs cleanly.
+//   4. For real package.json files (no sibling package.yaml): patches workspace: in-place.
+//      to-pnpm.js restores them via `git checkout`.
+//   5. Wipes all node_modules directories in the repo so npm installs cleanly.
 
 import { readFileSync, writeFileSync, rmSync, existsSync } from 'fs';
 import { resolve, dirname, join } from 'path';
@@ -86,7 +89,7 @@ const memberYamls = workspaceGlobs
 
 const allYamls = [join(ROOT, 'package.yaml'), ...memberYamls];
 
-// ── Convert ───────────────────────────────────────────────────────────────────
+// ── Convert yaml-based packages ───────────────────────────────────────────────
 
 console.log(`\nGenerating ${allYamls.length} package.json file(s)...\n`);
 
@@ -109,11 +112,44 @@ for (const yamlPath of allYamls) {
   console.log(`  wrote  ${out.replace(ROOT + '/', '')}`);
 }
 
+// ── Patch real package.json files (no sibling package.yaml) ──────────────────
+// These are committed with workspace: protocol (valid for pnpm) and must be
+// patched in-place for npm. to-pnpm.js restores them via `git checkout`.
+
+const yamlDirs = new Set(allYamls.map(p => dirname(p)));
+
+const realPkgJsons = workspaceGlobs
+  .filter(g => !g.startsWith('!'))
+  .flatMap(g => globSync(`${g}/package.json`, { cwd: ROOT, absolute: true }))
+  .filter(p => !yamlDirs.has(dirname(p)));  // exclude dirs that have a package.yaml
+
+console.log('\nPatching real package.json files (stripping workspace: protocol)...\n');
+
+let patched = 0;
+for (const pkgPath of realPkgJsons) {
+  const rel = pkgPath.replace(ROOT + '/', '');
+  let pkg;
+  try {
+    pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
+  } catch (err) {
+    console.error(`  ERROR parsing ${rel}: ${err.message}`);
+    continue;
+  }
+
+  const before = JSON.stringify(pkg);
+  stripWorkspaceDeps(pkg);
+  if (JSON.stringify(pkg) === before) continue;  // no workspace: refs, skip
+
+  writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
+  console.log(`  patched  ${rel}`);
+  patched++;
+}
+console.log(`\n${patched} file(s) patched.`);
+
 // ── Wipe node_modules ─────────────────────────────────────────────────────────
 
 console.log('\nRemoving node_modules...\n');
 
-// Find all node_modules up to depth 4, not descending into existing ones
 const moduleDirs = globSync('**/node_modules', {
   cwd:      ROOT,
   absolute: true,
