@@ -5,8 +5,8 @@ type: module
 author: Haim Zamir
 license: MIT
 scripts:
-  start: node ../../scripts/generate-build-info.js && VITE_CJS_IGNORE_WARNING=true vite
-  build: node ../../scripts/generate-build-info.js && tsc && vite build
+  start: node ../../scripts/generate-build-info.mjs && VITE_CJS_IGNORE_WARNING=true vite
+  build: node ../../scripts/generate-build-info.mjs && tsc && vite build
   preview: vite preview
   lint: eslint . --ext js,jsx,ts,tsx
 dependencies:

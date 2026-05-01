@@ -3,8 +3,8 @@ private: true
 version: 0.0.0
 type: module
 scripts:
-  start: node ../../scripts/generate-build-info.js && vite
-  build: node ../../scripts/generate-build-info.js && tsc && vite build
+  start: node ../../scripts/generate-build-info.mjs && vite
+  build: node ../../scripts/generate-build-info.mjs && tsc && vite build
   preview: vite preview
   lint: eslint . --ext js,jsx,ts,tsx
 dependencies:

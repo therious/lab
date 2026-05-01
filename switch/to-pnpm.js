@@ -17,7 +17,7 @@
 // package.yaml files are never touched — they are always the source of truth.
 
 import { rmSync, existsSync, readFileSync, writeFileSync } from 'fs';
-import { resolve, dirname, join } from 'path';
+import { resolve, relative, dirname, join, sep } from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
 import { globSync } from 'glob';
@@ -58,7 +58,7 @@ for (const yamlPath of allYamls) {
   const pkgJson = join(dirname(yamlPath), 'package.json');
   if (existsSync(pkgJson)) {
     rmSync(pkgJson);
-    console.log(`  removed  ${pkgJson.replace(ROOT + '/', '')}`);
+    console.log(`  removed  ${relative(ROOT, pkgJson).split(sep).join('/')}`);
     removed++;
   }
 }
@@ -114,7 +114,7 @@ console.log('\nRestoring workspace: protocol in real package.json files...\n');
 
 let restored = 0;
 for (const pkgPath of realPkgJsons) {
-  const rel = pkgPath.replace(ROOT + '/', '');
+  const rel = relative(ROOT, pkgPath).split(sep).join('/');
   let pkg;
   try {
     pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
@@ -143,7 +143,7 @@ const moduleDirs = globSync('**/node_modules', {
 
 for (const dir of moduleDirs) {
   rmSync(dir, { recursive: true, force: true });
-  console.log(`  removed  ${dir.replace(ROOT + '/', '')}`);
+  console.log(`  removed  ${relative(ROOT, dir).split(sep).join('/')}`);
 }
 
 console.log('\nDone. Next: cd .. && pnpm install\n');

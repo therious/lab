@@ -24,7 +24,7 @@ devDependencies:
 scripts:
   start:       pnpm --filter . indexOnce && VITE_CJS_IGNORE_WARNING=true vite
   dev:         pnpm --filter . indexOnce && VITE_CJS_IGNORE_WARNING=true vite
-  build:       node scripts/generate-build-info.js && tsc && vite build
+  build:       node scripts/generate-build-info.mjs && tsc && vite build
   preview:     vite preview --port 5173
   lint:        eslint . --ext js,jsx,ts,tsx
   serve:       bash scripts/build-and-serve.sh

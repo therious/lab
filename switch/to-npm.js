@@ -25,7 +25,7 @@
 //   5. Wipes all node_modules directories in the repo so npm installs cleanly.
 
 import { readFileSync, writeFileSync, rmSync } from 'fs';
-import { resolve, dirname, join } from 'path';
+import { resolve, relative, dirname, join, sep } from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
 import { globSync } from 'glob';
@@ -114,12 +114,12 @@ const allYamls = [join(ROOT, 'package.yaml'), ...memberYamls];
 // Resolve concrete workspace dirs for npm's workspaces array.
 const resolvedWorkspaces = [
   ...new Set([
-    ...memberYamls.map(p => dirname(p).replace(ROOT + '/', '')),
+    ...memberYamls.map(p => relative(ROOT, dirname(p)).split(sep).join('/')),
     ...workspaceGlobs
       .filter(g => !g.startsWith('!'))
       .flatMap(g => globSync(`${g}/package.json`, GLOB_OPTS))
       .filter(isWorkspacePath)
-      .map(p => dirname(p).replace(ROOT + '/', '')),
+      .map(p => relative(ROOT, dirname(p)).split(sep).join('/')),
   ]),
 ];
 
@@ -129,7 +129,7 @@ console.log(`\nGenerating ${allYamls.length} package.json file(s)...\n`);
 
 for (const yamlPath of allYamls) {
   const isRoot = yamlPath === join(ROOT, 'package.yaml');
-  const rel    = yamlPath.replace(ROOT + '/', '');
+  const rel    = relative(ROOT, yamlPath).split(sep).join('/');
   let pkg;
   try {
     pkg = yaml.load(readFileSync(yamlPath, 'utf8'));
@@ -143,7 +143,7 @@ for (const yamlPath of allYamls) {
 
   const out = join(dirname(yamlPath), 'package.json');
   writeFileSync(out, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
-  console.log(`  wrote  ${out.replace(ROOT + '/', '')}`);
+  console.log(`  wrote  ${relative(ROOT, out).split(sep).join('/')}`);
 }
 
 // ── Patch real package.json files (no sibling package.yaml) ──────────────────
@@ -161,7 +161,7 @@ console.log('\nPatching real package.json files (stripping workspace: protocol).
 
 let patched = 0;
 for (const pkgPath of realPkgJsons) {
-  const rel = pkgPath.replace(ROOT + '/', '');
+  const rel = relative(ROOT, pkgPath).split(sep).join('/');
   let pkg;
   try {
     pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
@@ -192,7 +192,7 @@ const moduleDirs = globSync('**/node_modules', {
 
 for (const dir of moduleDirs) {
   rmSync(dir, { recursive: true, force: true });
-  console.log(`  removed  ${dir.replace(ROOT + '/', '')}`);
+  console.log(`  removed  ${relative(ROOT, dir).split(sep).join('/')}`);
 }
 
 console.log('\nDone. Next: cd .. && npm install --legacy-peer-deps\n');
