@@ -24,5 +24,24 @@ cd switch && npm run to-pnpm   # removes generated package.json files and all no
 cd .. && pnpm install
 ```
 
-**Wipe everything** (works from either side): `cd switch && npm run wipe` — removes all node_modules and all generated package.json files.
+**Wipe everything** (works from either side): `cd switch && npm run wipe` — removes all node_modules and all generated package.json files. Safe to run multiple times regardless of current state.
+
+## Running individual apps (npm)
+
+After `npm install --legacy-peer-deps`, run or build any app from the repo root:
+
+```bash
+npm run start -w apps/ticket
+npm run start -w apps/zclient
+npm run build -w apps/ticket
+```
+
+Or `cd` into the package directly:
+
+```bash
+cd apps/ticket && npm start
+cd apps/ticket && npm run build
+```
+
+Apps with a `start` script run a Vite dev server (default port 5173). If two apps are started simultaneously, the second will use the next available port.
 
