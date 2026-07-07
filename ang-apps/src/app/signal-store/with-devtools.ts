@@ -1,15 +1,16 @@
-import { isDevMode, isSignal }                               from '@angular/core';
+import { effect, isDevMode }                                from '@angular/core';
 import { getState, patchState, signalStoreFeature, withHooks } from '@ngrx/signals';
 
+// ── Shared action-name cell ────────────────────────────────────────────────────
+// injectActions() sets this before every method call so the effect() below
+// can read the right name when it fires after the state change settles.
+export const currentAction = { name: '@@INIT' };
+
+// ── DevTools connection type ───────────────────────────────────────────────────
 interface DevToolsConnection {
   init(state: unknown): void;
   send(action: { type: string }, state: unknown): void;
-  subscribe(listener: (message: DevToolsMessage) => void): () => void;
-}
-interface DevToolsMessage {
-  type: string;
-  state?: string;
-  payload?: { type?: string };
+  subscribe(listener: (msg: { type: string; state?: string; payload?: { type?: string } }) => void): void;
 }
 
 function getExtension(): { connect(o: { name: string }): DevToolsConnection } | null {
@@ -19,22 +20,22 @@ function getExtension(): { connect(o: { name: string }): DevToolsConnection } | 
 }
 
 /**
- * Adds Redux DevTools integration to any signalStore.
+ * Adds Redux DevTools visibility to a signalStore.
  *
- * Place after withMethods so all methods are present when onInit wraps them.
+ * Works in two halves:
  *
- *   export const CounterStore = signalStore(
- *     withState(initial),
- *     withComputed(...),
- *     withMethods(...),
- *     withDevtools('CounterStore'),   ← last
- *   );
+ *   1. withDevtools() installs an effect() that fires whenever any state signal
+ *      changes and sends { type: currentAction.name, state } to DevTools.
  *
- * What you get in DevTools:
- * - State tree visible under the store name
- * - Each method call logged as `StoreName/methodName` (with its args)
- * - Time-travel and RESET supported via JUMP_TO_STATE / JUMP_TO_ACTION
- * - No-op in production (isDevMode() guard)
+ *   2. injectActions() (in actions.ts) sets currentAction.name = 'Store/method'
+ *      before calling each store method, so the effect sees the right label.
+ *
+ * Time-travel (JUMP_TO_ACTION / JUMP_TO_STATE / RESET) is also wired up.
+ * No-ops in production (isDevMode() guard).
+ *
+ * Note: all signals (state + computed) are visible in DevTools state tree.
+ * Computed values are included because getState() returns a snapshot.
+ * Actually only base state is in getState() — computed is derived separately.
  */
 export function withDevtools(storeName: string) {
   return signalStoreFeature(
@@ -47,7 +48,7 @@ export function withDevtools(storeName: string) {
         const conn = ext.connect({ name: storeName });
         conn.init(getState(store));
 
-        // Support time-travel and reset from DevTools panel
+        // Time-travel and reset
         conn.subscribe((msg) => {
           if (msg.type !== 'DISPATCH' || !msg.state) return;
           const kind = msg.payload?.type;
@@ -56,19 +57,13 @@ export function withDevtools(storeName: string) {
           }
         });
 
-        // Wrap every method so DevTools shows the real action name.
-        // Signals are functions too — isSignal() filters them out.
-        const s = store as Record<string, unknown>;
-        for (const key of Object.keys(s)) {
-          const val = s[key];
-          if (typeof val !== 'function' || isSignal(val)) continue;
-          const original = val as (...a: unknown[]) => unknown;
-          s[key] = (...args: unknown[]) => {
-            original(...args);
-            // State is already updated by patchState inside the method
-            conn.send({ type: `${storeName}/${key}` }, getState(store));
-          };
-        }
+        // effect() re-runs after every patchState() that changed a signal.
+        // currentAction.name is set by injectActions() before each call,
+        // so it reflects which method triggered this state change.
+        effect(() => {
+          const state = getState(store);
+          conn.send({ type: currentAction.name }, state);
+        });
       },
     })),
   );
