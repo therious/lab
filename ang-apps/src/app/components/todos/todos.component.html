@@ -1,0 +1,53 @@
+<section>
+  <h2>Todos</h2>
+
+  <!-- Store-level computed signal: progressLabel() -->
+  @if (hasItems()) {
+    <p style="color:#555;font-size:.9rem">
+      {{ progressLabel() }}
+      &nbsp;·&nbsp;
+      <!-- Component-level computed signal: doneRatio() -->
+      {{ (doneRatio() * 100).toFixed(0) }}%
+    </p>
+  }
+
+  <!-- Pure state signal: @for iterates todos() directly -->
+  @if (hasItems()) {
+    <ul style="margin:.75rem 0">
+      @for (todo of todos(); track todo.id) {
+        <li>
+          <input type="checkbox" [checked]="todo.done" (change)="toggleTodo(todo.id)">
+          <span [class.done]="todo.done">{{ todo.text }}</span>
+          <button (click)="removeTodo(todo.id)" style="margin-left:auto;font-size:.75rem">✕</button>
+        </li>
+      }
+    </ul>
+  } @else {
+    <!-- Component-level computed signal: isEmpty() -->
+    <p style="color:#aaa;margin:.75rem 0">No todos yet.</p>
+  }
+
+  <!-- Store-level computed: allDone() -->
+  @if (allDone()) {
+    <p style="color:#15803d;margin-bottom:.5rem">All done!</p>
+  }
+
+  <!-- Store-level computed: hasDone() and completedCount() -->
+  @if (hasDone()) {
+    <button (click)="clearDone()" style="margin-bottom:.75rem">
+      Clear done ({{ completedCount() }})
+    </button>
+  }
+
+  <div class="row">
+    <input
+      type="text"
+      placeholder="New todo…"
+      [ngModel]="draft()"
+      (ngModelChange)="draft.set($event)"
+      (keydown.enter)="addTodo()"
+      style="flex:1"
+    >
+    <button (click)="addTodo()" [disabled]="!draft().trim()">Add</button>
+  </div>
+</section>

@@ -1,0 +1,31 @@
+<section>
+  <h2>Counter</h2>
+
+  <!-- Pure signals — read by calling them as functions -->
+  <p>Count: <strong>{{ count() }}</strong> &nbsp;
+     <span class="chip">{{ stepLabel() }}</span>
+  </p>
+
+  <!-- Computed signal — recalculates only when count() or step() change -->
+  <p style="color:#555;font-size:.9rem">{{ summary() }}</p>
+
+  <div class="row" style="margin-top:.75rem">
+    <button (click)="decrement()">− {{ step() }}</button>
+    <button (click)="increment()">+ {{ step() }}</button>
+    <button (click)="reset()" [disabled]="isZero()">Reset</button>
+  </div>
+
+  <!-- Computed: isZero gates the disabled state above -->
+
+  <div class="row" style="margin-top:.75rem">
+    <label>Custom step:</label>
+    <button (click)="nudgeCustom(-1)">−</button>
+    <span>{{ customStep() }}</span>
+    <button (click)="nudgeCustom(1)">+</button>
+    <button (click)="applyCustom()">Apply</button>
+  </div>
+
+  @if (isNeg()) {
+    <p style="color:#b91c1c;margin-top:.5rem">Count is negative!</p>
+  }
+</section>
