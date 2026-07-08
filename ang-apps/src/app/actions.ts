@@ -1,22 +1,17 @@
-import { inject }              from '@angular/core';
-import { AppStore }            from './signal-store/app.store';
-import { counterSlice }        from './signal-store/counter-slice';
-import { todosSlice }          from './signal-store/todos-slice';
-import { buildSliceActions }   from './signal-store/build-slice-actions';
+import { inject }            from '@angular/core';
+import { AppStore }          from './signal-store/app.store';
+import { allSlices }         from './signal-store/combined-slices';
+import { buildAllActions }   from './signal-store/build-slice-actions';
 
 /**
- * Returns the namespaced actions object.
- * Each slice's creators drive the type and implementation —
- * no action names or patchState calls are written here.
+ * Returns the namespaced actions object, fully derived from allSlices.
+ * Adding a slice to combined-slices.ts is all that's needed —
+ * no code changes here.
  *
  *   const actions = injectActions()
- *   actions.counter.increment()        // (step: number) — typed from creators
- *   actions.todos.addTodo('Buy milk')  // (text: string) — typed from creators
+ *   actions.counter.setStep(5)         // typed (step: number) => void
+ *   actions.todos.addTodo('Buy milk')  // typed (text: string) => void
  */
 export function injectActions() {
-  const store = inject(AppStore);
-  return {
-    counter: buildSliceActions(counterSlice, store),
-    todos:   buildSliceActions(todosSlice, store),
-  } as const;
+  return buildAllActions(allSlices, inject(AppStore));
 }
