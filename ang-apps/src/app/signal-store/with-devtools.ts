@@ -57,11 +57,13 @@ export function withDevtools(storeName: string, enabled = true) {
           }
         });
 
-        // effect() re-runs after every patchState() that changed a signal.
-        // currentAction.name is set by injectActions() before each call,
-        // so it reflects which method triggered this state change.
+        // effect() fires once immediately to establish signal dependencies,
+        // then again on every subsequent patchState().  Skip the first run —
+        // conn.init() above already sent the initial state as @@INIT.
+        let initialized = false;
         effect(() => {
           const state = getState(store);
+          if (!initialized) { initialized = true; return; }
           conn.send({ type: currentAction.name }, state);
         });
       },
