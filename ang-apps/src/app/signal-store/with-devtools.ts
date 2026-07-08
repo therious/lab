@@ -37,11 +37,11 @@ function getExtension(): { connect(o: { name: string }): DevToolsConnection } | 
  * Computed values are included because getState() returns a snapshot.
  * Actually only base state is in getState() — computed is derived separately.
  */
-export function withDevtools(storeName: string) {
+export function withDevtools(storeName: string, enabled = true) {
   return signalStoreFeature(
     withHooks((store) => ({
       onInit() {
-        if (!isDevMode()) return;
+        if (!enabled || !isDevMode()) return;
         const ext = getExtension();
         if (!ext) return;
 
