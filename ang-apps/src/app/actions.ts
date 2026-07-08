@@ -1,39 +1,42 @@
-import { inject }              from '@angular/core';
-import { CounterStore }        from './signal-store/counter/counter.store';
-import { TodosStore }          from './signal-store/todos/todos.store';
-import { currentAction }       from './signal-store/with-devtools';
+import { inject }          from '@angular/core';
+import { patchState }      from '@ngrx/signals';
+import { AppStore }        from './signal-store/app.store';
+import { counterSlice }    from './signal-store/counter/counter-slice';
+import { todosSlice }      from './signal-store/todos/todos-slice';
+import { currentAction }   from './signal-store/with-devtools';
 
 /**
- * Dispatch-only facade — the only place in the app that calls store methods.
+ * Parallel to actions-integration/index.tsx in the React apps.
  *
- * Before each call we set currentAction.name so that withDevtools()'s effect()
- * can label the DevTools entry with the real method name
- * (e.g. "CounterStore/increment") instead of a generic string.
+ * Each method sets the DevTools action label, then calls patchState()
+ * with the slice's pure reducer — equivalent to dispatch(actionCreator(payload))
+ * flowing through combineReducers in Redux.
  *
  * Usage:
  *   const actions = injectActions()
  *   actions.counter.increment()
  *   actions.todos.addTodo('Buy milk')
  *
- *   const { counter: ca } = injectActions()   // slice alias
+ *   const { counter: ca } = injectActions()
  *   ca.setStep(5)
  */
 export function injectActions() {
-  const counter = inject(CounterStore);
-  const todos   = inject(TodosStore);
+  const store = inject(AppStore);
+  const c = counterSlice.reducers;
+  const t = todosSlice.reducers;
 
   return {
     counter: {
-      increment: () => { currentAction.name = 'CounterStore/increment'; counter.increment(); },
-      decrement: () => { currentAction.name = 'CounterStore/decrement'; counter.decrement(); },
-      reset:     () => { currentAction.name = 'CounterStore/reset';     counter.reset();     },
-      setStep:   (step: number) => { currentAction.name = 'CounterStore/setStep'; counter.setStep(step); },
+      increment: ()             => { currentAction.name = 'counter/increment'; patchState(store, s => ({ counter: c.increment(s.counter) })); },
+      decrement: ()             => { currentAction.name = 'counter/decrement'; patchState(store, s => ({ counter: c.decrement(s.counter) })); },
+      reset:     ()             => { currentAction.name = 'counter/reset';     patchState(store, { counter: counterSlice.initialState }); },
+      setStep:   (step: number) => { currentAction.name = 'counter/setStep';   patchState(store, s => ({ counter: c.setStep(s.counter, { step }) })); },
     },
     todos: {
-      addTodo:    (text: string) => { currentAction.name = 'TodosStore/addTodo';    todos.addTodo(text);    },
-      removeTodo: (id: string)   => { currentAction.name = 'TodosStore/removeTodo'; todos.removeTodo(id);   },
-      toggleTodo: (id: string)   => { currentAction.name = 'TodosStore/toggleTodo'; todos.toggleTodo(id);   },
-      clearDone:  ()             => { currentAction.name = 'TodosStore/clearDone';  todos.clearDone();      },
+      addTodo:    (text: string) => { currentAction.name = 'todos/addTodo';    patchState(store, s => ({ todos: t.addTodo(s.todos, { text }) })); },
+      removeTodo: (id: string)   => { currentAction.name = 'todos/removeTodo'; patchState(store, s => ({ todos: t.removeTodo(s.todos, { id }) })); },
+      toggleTodo: (id: string)   => { currentAction.name = 'todos/toggleTodo'; patchState(store, s => ({ todos: t.toggleTodo(s.todos, { id }) })); },
+      clearDone:  ()             => { currentAction.name = 'todos/clearDone';  patchState(store, s => ({ todos: t.clearDone(s.todos) })); },
     },
   } as const;
 }

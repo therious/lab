@@ -1,27 +1,28 @@
-import { inject }       from '@angular/core';
-import { CounterStore } from './signal-store/counter/counter.store';
-import { TodosStore }   from './signal-store/todos/todos.store';
+import { inject }   from '@angular/core';
+import { AppStore } from './signal-store/app.store';
 
 /**
- * Signal-read facade.  Every property on the returned slice is a Signal<T>
- * (state signals from withState, computed signals from withComputed).
+ * Parallel to the typed useSelector hook in the React apps.
+ *
+ * AppStore.counter is a DeepSignal<CounterState> so nested keys
+ * (count, step, items …) are accessible as Signal<T> directly.
+ *
+ * Computed signals (doubled, isZero, …) are NOT on the store — they
+ * belong in the component that needs them, the same way useMemo()
+ * stays in the React component rather than in the slice.
  *
  *   const state = injectState()
+ *   state.counter.count     // Signal<number>   — pure store state
+ *   state.todos.items       // Signal<Todo[]>   — pure store state
  *
- *   // Pure state signals:
- *   state.counter.count          // Signal<number>
- *   state.todos.items            // Signal<Todo[]>
- *
- *   // Store-level computed signals (defined via withComputed in the slice):
- *   state.counter.doubled        // Signal<number>
- *   state.todos.completedCount   // Signal<number>
- *
- *   // Component-level computed (derived locally):
- *   const isNeg = computed(() => state.counter.count() < 0)
+ *   // In the component:
+ *   readonly doubled = computed(() => this.count() * 2)   // local memoization
  */
 export function injectState() {
+  const store = inject(AppStore);
+
   return {
-    counter: inject(CounterStore),
-    todos:   inject(TodosStore),
+    counter: store.counter,   // DeepSignal<CounterState> — .count, .step as Signal<T>
+    todos:   store.todos,     // DeepSignal<TodosState>   — .items as Signal<Todo[]>
   } as const;
 }

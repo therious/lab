@@ -11,29 +11,24 @@ import { injectState }   from '../../state';
   templateUrl: './counter.component.html',
 })
 export class CounterComponent {
-  // ── Namespaced access — no store imports in this file ─────────────────────
+  // ── Namespaced access — no store or NgRx imports in this file ─────────────
   private actions = injectActions();
   private state   = injectState();
-  private ca      = this.actions.counter;   // slice alias
+  private ca      = this.actions.counter;
 
-  // ── Pure state signals (from withState in counter.store.ts) ───────────────
-  // Direct window into the store's raw state — updates on every patchState().
+  // ── Pure state signals — direct reads from the store (parallel to useSelector)
   readonly count = this.state.counter.count;   // Signal<number>
   readonly step  = this.state.counter.step;    // Signal<number>
 
-  // ── Store-level computed signals (from withComputed in counter.store.ts) ──
-  // Defined once in the slice; any component can read them without re-computing.
-  readonly doubled   = this.state.counter.doubled;    // Signal<number>
-  readonly isZero    = this.state.counter.isZero;     // Signal<boolean>
-  readonly stepLabel = this.state.counter.stepLabel;  // Signal<string>
-  readonly summary   = this.state.counter.summary;    // Signal<string>
+  // ── Computed signals — local memoization (parallel to useMemo in React)
+  // These derive from store signals but live in the component, not the store.
+  readonly isZero    = computed(() => this.count() === 0);
+  readonly isNeg     = computed(() => this.count() < 0);
+  readonly doubled   = computed(() => this.count() * 2);
+  readonly stepLabel = computed(() => `step = ${this.step()}`);
+  readonly summary   = computed(() => `${this.count()} · ×2 = ${this.doubled()}`);
 
-  // ── Component-level computed signals (computed() here, not in the store) ──
-  // Purely local derivations; useful when the logic is component-specific.
-  readonly isNeg  = computed(() => this.count() < 0);
-  readonly bigNum = computed(() => Math.abs(this.count()) > 100);
-
-  // ── Component-local state (signal(), never touches the store) ─────────────
+  // ── Component-local state (signal() — never goes to the store) ────────────
   readonly customStep = signal(5);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
