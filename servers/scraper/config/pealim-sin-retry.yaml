@@ -1,8 +1,0 @@
-scraper: PealimScraper
-baseUrl: https://www.pealim.com
-delayMs: 2000
-roots: []
-bootSequence:
-  - PealimScraper
-note: Querying ש roots to get results for corresponding שׂ roots
-mapping: {}
