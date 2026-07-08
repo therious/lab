@@ -1,7 +1,3 @@
-/**
- * Shared test utilities for specs that need the real AppStore.
- * Import from here rather than setting up TestBed individually.
- */
 import { TestBed }    from '@angular/core/testing';
 import { patchState, getState } from '@ngrx/signals';
 import { AppStore }   from '../app/signal-store/app.store';
@@ -13,19 +9,28 @@ import { buildAllActions } from '../app/signal-store/build-slice-actions';
 export type TestStore   = InstanceType<typeof AppStore>;
 export type TestActions = ReturnType<typeof buildAllActions<typeof allSlices>>;
 
-/** Call in beforeEach. Returns the real store + typed actions. */
-export function setupStore(): { store: TestStore; actions: TestActions } {
-  TestBed.configureTestingModule({});
+/**
+ * Grab AppStore from the already-configured TestBed and build actions.
+ * Call this AFTER TestBed.configureTestingModule — never before.
+ */
+export function injectStore(): { store: TestStore; actions: TestActions } {
   const store = TestBed.inject(AppStore);
   return { store, actions: buildAllActions(allSlices, store) };
 }
 
-/** Snapshot the full app state. Thin wrapper kept here so specs don't import @ngrx/signals directly. */
+/**
+ * For specs that only need the store (no component).
+ * Calls configureTestingModule({}) internally so tests stay one-liners.
+ */
+export function setupStore(): { store: TestStore; actions: TestActions } {
+  TestBed.configureTestingModule({});
+  return injectStore();
+}
+
 export function storeState(store: TestStore) {
   return getState(store);
 }
 
-/** Reset all slices to their initial values between tests. */
 export function resetStore(store: TestStore): void {
   patchState(store, {
     counter: counterSlice.initialState,
@@ -33,5 +38,4 @@ export function resetStore(store: TestStore): void {
   });
 }
 
-/** Re-export patchState for specs that need to set arbitrary state. */
 export { patchState };

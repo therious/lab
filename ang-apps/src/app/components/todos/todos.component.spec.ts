@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TodosComponent } from './todos.component';
-import { setupStore, storeState, patchState, TestStore } from '../../../testing/store-testing';
+import { injectStore, storeState, patchState, TestStore } from '../../../testing/store-testing';
 import { TodosState } from '../../signal-store/todos-slice';
 
 describe('TodosComponent', () => {
@@ -13,8 +13,8 @@ describe('TodosComponent', () => {
     patchState(store, { todos: { items } });
 
   beforeEach(async () => {
-    ({ store } = setupStore());
     await TestBed.configureTestingModule({ imports: [TodosComponent] }).compileComponents();
+    ({ store } = injectStore());
     fixture   = TestBed.createComponent(TodosComponent);
     component = fixture.componentInstance;
     element   = fixture.nativeElement;

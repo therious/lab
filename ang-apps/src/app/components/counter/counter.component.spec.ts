@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CounterComponent } from './counter.component';
-import { setupStore, storeState, resetStore, patchState, TestStore } from '../../../testing/store-testing';
+import { injectStore, storeState, patchState, TestStore } from '../../../testing/store-testing';
 
 describe('CounterComponent', () => {
   let fixture:   ComponentFixture<CounterComponent>;
@@ -9,8 +9,8 @@ describe('CounterComponent', () => {
   let store:     TestStore;
 
   beforeEach(async () => {
-    ({ store } = setupStore());
     await TestBed.configureTestingModule({ imports: [CounterComponent] }).compileComponents();
+    ({ store } = injectStore());
     fixture   = TestBed.createComponent(CounterComponent);
     component = fixture.componentInstance;
     element   = fixture.nativeElement;
