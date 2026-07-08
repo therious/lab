@@ -1,8 +1,8 @@
 import { inject }          from '@angular/core';
 import { patchState }      from '@ngrx/signals';
 import { AppStore }        from './signal-store/app.store';
-import { counterSlice }    from './signal-store/counter/counter-slice';
-import { todosSlice }      from './signal-store/todos/todos-slice';
+import { counterSlice }    from './signal-store/counter-slice';
+import { todosSlice }      from './signal-store/todos-slice';
 import { currentAction }   from './signal-store/with-devtools';
 
 /**

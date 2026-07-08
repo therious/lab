@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule }  from '@angular/forms';
 import { injectActions } from '../../actions';
 import { injectState }   from '../../state';
-import { type Todo }     from '../../signal-store/todos/todos-slice';
+import { type Todo }     from '../../signal-store/todos-slice';
 
 @Component({
   selector: 'app-todos',
@@ -26,6 +26,13 @@ export class TodosComponent {
   readonly hasDone        = computed(() => this.todos().some(t => t.done));
   readonly allDone        = computed(() => this.hasItems() && this.pendingCount() === 0);
   readonly progressLabel  = computed(() => `${this.completedCount()} / ${this.todos().length} done`);
+
+  // ── Component-level computed signals ──────────────────────────────────────
+  // Derived locally — these don't belong in the shared store.
+  readonly doneRatio = computed(() =>
+    this.todos().length === 0 ? 0 : this.completedCount() / this.todos().length
+  );
+  readonly isEmpty = computed(() => !this.hasItems());
 
   // ── Component-local state ─────────────────────────────────────────────────
   readonly draft = signal('');

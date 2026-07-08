@@ -1,11 +1,11 @@
 // Parallel to apps/ticket/src/actions/combined-slices.ts
 // Register every slice here; AppStore is built from this list.
 
-import { counterSlice } from './counter/counter-slice';
-import { todosSlice }   from './todos/todos-slice';
+import { counterSlice } from './counter-slice';
+import { todosSlice }   from './todos-slice';
 
-export type { CounterState } from './counter/counter-slice';
-export type { TodosState, Todo } from './todos/todos-slice';
+export type { CounterState } from './counter-slice';
+export type { TodosState, Todo } from './todos-slice';
 
 export const allSlices = [counterSlice, todosSlice] as const;
 

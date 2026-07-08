@@ -1,7 +1,7 @@
 import { signalStore, withState } from '@ngrx/signals';
 import { withDevtools }           from './with-devtools';
-import { counterSlice }           from './counter/counter-slice';
-import { todosSlice }             from './todos/todos-slice';
+import { counterSlice }           from './counter-slice';
+import { todosSlice }             from './todos-slice';
 
 /**
  * The single application store — a reactive state container.
