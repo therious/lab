@@ -34,9 +34,19 @@ const reducers = {
   }),
 };
 
+const computedDefs = {
+  completedCount: (s: TodosState) => s.items.filter(t => t.done).length,
+  pendingCount:   (s: TodosState) => s.items.filter(t => !t.done).length,
+  hasItems:       (s: TodosState) => s.items.length > 0,
+  hasDone:        (s: TodosState) => s.items.some(t => t.done),
+  allDone:        (s: TodosState) => s.items.length > 0 && s.items.every(t => t.done),
+  progressLabel:  (s: TodosState) => `${s.items.filter(t => t.done).length} / ${s.items.length} done`,
+};
+
 export const todosSlice = {
   name: 'todos' as const,
   initialState,
   creators,
   reducers,
+  computed: computedDefs,
 };

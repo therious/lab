@@ -323,6 +323,62 @@ Every component that calls `injectState().todos.completedCount` reads the **same
 `Signal<number>` instance**. It evaluates once when `todos.items` changes, regardless
 of how many components are subscribed to it.
 
+### Can I add a `computed` section to the slice itself?
+
+Yes, and it is a practical improvement. A slice can carry a `computed` map of plain
+projection functions alongside its `creators` and `reducers`. Each projection is a pure
+function `(state: S) => derivedValue` — no Angular import, no `Signal`, just a
+calculation. The integration layer wraps each one in `computed()` from `@angular/core`
+and produces a typed `Signal<T>`.
+
+```typescript
+// counter-slice.ts — still pure TypeScript
+const computedDefs = {
+  doubled:   (s: CounterState) => s.count * 2,
+  isZero:    (s: CounterState) => s.count === 0,
+  stepLabel: (s: CounterState) => `step = ${s.step}`,
+};
+
+export const counterSlice = { name: 'counter' as const, initialState,
+                              creators, reducers, computed: computedDefs };
+```
+
+A `buildSliceComputed(defs, stateSignal)` helper (parallel to `buildSliceActions`)
+iterates the projection map and wraps each entry:
+
+```typescript
+// build-slice-computed.ts
+export function buildSliceComputed<S, C extends Record<string, (s: S) => unknown>>(
+  defs: C,
+  stateSignal: Signal<S>,
+): { [K in keyof C]: Signal<ReturnType<C[K]>> } { ... }
+```
+
+A singleton injectable (`AppComputedState`) calls this once per slice and holds the
+results. `injectState()` then injects it and merges the computed signals into the same
+namespace as the raw state signals:
+
+```typescript
+// state.ts — component sees a unified surface
+const state = injectState();
+state.counter.count     // Signal<number>  — raw state
+state.counter.doubled   // Signal<number>  — from slice computed
+state.todos.items       // Signal<Todo[]>  — raw state
+state.todos.hasItems    // Signal<boolean> — from slice computed
+```
+
+**Key constraint:** projections in the `computed` slice section work on raw state values,
+not on other computed signals. `summary: s => \`${s.count} · ×2 = ${s.count * 2}\``
+must re-derive `doubled` inline rather than reading the `doubled` signal. If you need to
+chain computed signals, define the chained derivation in `AppComputedState` where signal
+references are available.
+
+This pattern is now implemented in the codebase. See:
+- `signal-store/counter-slice.ts` and `signal-store/todos-slice.ts` — `computed` section
+- `signal-store/build-slice-computed.ts` — the wrapping utility
+- `signal-store/app-computed.ts` — the singleton injectable
+- `state.ts` — unified surface
+
 ### Where computed signals belong — decision guide
 
 | Derived value | Where to define it |

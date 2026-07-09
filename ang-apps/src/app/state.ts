@@ -1,28 +1,36 @@
-import { inject }   from '@angular/core';
-import { AppStore } from './signal-store/app.store';
+import { inject }             from '@angular/core';
+import { AppStore }           from './signal-store/app.store';
+import { AppComputedState }   from './signal-store/app-computed';
 
 /**
- * Parallel to the typed useSelector hook in the React apps.
+ * Single signal-read facade.
  *
- * AppStore.counter is a DeepSignal<CounterState> so nested keys
- * (count, step, items …) are accessible as Signal<T> directly.
- *
- * Computed signals (doubled, isZero, …) are NOT on the store — they
- * belong in the component that needs them, the same way useMemo()
- * stays in the React component rather than in the slice.
+ * Returns a unified surface of raw state signals and slice-computed signals.
+ * The computed signals come from the singleton AppComputedState — they are
+ * created once regardless of how many components call injectState().
  *
  *   const state = injectState()
- *   state.counter.count     // Signal<number>   — pure store state
- *   state.todos.items       // Signal<Todo[]>   — pure store state
+ *   state.counter.count        // Signal<number>  — raw DeepSignal field
+ *   state.counter.doubled      // Signal<number>  — from counterSlice.computed
+ *   state.todos.items          // Signal<Todo[]>  — raw DeepSignal field
+ *   state.todos.completedCount // Signal<number>  — from todosSlice.computed
  *
- *   // In the component:
- *   readonly doubled = computed(() => this.count() * 2)   // local memoization
+ *   // Component-specific derivations that don't belong in the slice:
+ *   readonly doneRatio = computed(() => this.completedCount() / this.todos().length)
  */
 export function injectState() {
-  const store = inject(AppStore);
+  const store   = inject(AppStore);
+  const derived = inject(AppComputedState);
 
   return {
-    counter: store.counter,   // DeepSignal<CounterState> — .count, .step as Signal<T>
-    todos:   store.todos,     // DeepSignal<TodosState>   — .items as Signal<Todo[]>
+    counter: {
+      count: store.counter.count,
+      step:  store.counter.step,
+      ...derived.counter,         // doubled, isZero, isNeg, stepLabel, summary
+    },
+    todos: {
+      items: store.todos.items,
+      ...derived.todos,           // completedCount, pendingCount, hasItems, hasDone, allDone, progressLabel
+    },
   } as const;
 }

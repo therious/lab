@@ -16,19 +16,19 @@ export class TodosComponent {
   private actions = injectActions();
   private state   = injectState();
 
-  // ── Pure state signal ─────────────────────────────────────────────────────
-  readonly todos = this.state.todos.items;   // Signal<Todo[]>
+  // ── Raw state signal ──────────────────────────────────────────────────────
+  readonly todos = this.state.todos.items;
 
-  // ── Computed signals (local memoization — parallel to useMemo) ────────────
-  readonly completedCount = computed(() => this.todos().filter(t => t.done).length);
-  readonly pendingCount   = computed(() => this.todos().filter(t => !t.done).length);
-  readonly hasItems       = computed(() => this.todos().length > 0);
-  readonly hasDone        = computed(() => this.todos().some(t => t.done));
-  readonly allDone        = computed(() => this.hasItems() && this.pendingCount() === 0);
-  readonly progressLabel  = computed(() => `${this.completedCount()} / ${this.todos().length} done`);
+  // ── Slice-computed signals (from todosSlice.computed, shared singleton) ───
+  readonly completedCount = this.state.todos.completedCount;
+  readonly pendingCount   = this.state.todos.pendingCount;
+  readonly hasItems       = this.state.todos.hasItems;
+  readonly hasDone        = this.state.todos.hasDone;
+  readonly allDone        = this.state.todos.allDone;
+  readonly progressLabel  = this.state.todos.progressLabel;
 
-  // ── Component-level computed signals ──────────────────────────────────────
-  // Derived locally — these don't belong in the shared store.
+  // ── Component-local derived signals ───────────────────────────────────────
+  // doneRatio and isEmpty are specific to this component's display logic
   readonly doneRatio = computed(() =>
     this.todos().length === 0 ? 0 : this.completedCount() / this.todos().length
   );

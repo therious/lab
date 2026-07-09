@@ -11,25 +11,24 @@ import { injectState }   from '../../state';
   templateUrl: './counter.component.html',
 })
 export class CounterComponent {
-  // ── Namespaced access — no store or NgRx imports in this file ─────────────
   private actions = injectActions();
   private state   = injectState();
   private ca      = this.actions.counter;
 
-  // ── Pure state signals — direct reads from the store (parallel to useSelector)
-  readonly count = this.state.counter.count;   // Signal<number>
-  readonly step  = this.state.counter.step;    // Signal<number>
+  // ── Raw state signals ─────────────────────────────────────────────────────
+  readonly count = this.state.counter.count;
 
-  // ── Computed signals — local memoization (parallel to useMemo in React)
-  // These derive from store signals but live in the component, not the store.
-  readonly isZero    = computed(() => this.count() === 0);
-  readonly isNeg     = computed(() => this.count() < 0);
-  readonly doubled   = computed(() => this.count() * 2);
-  readonly stepLabel = computed(() => `step = ${this.step()}`);
-  readonly summary   = computed(() => `${this.count()} · ×2 = ${this.doubled()}`);
+  // ── Slice-computed signals (from counterSlice.computed, shared singleton) ─
+  readonly step      = this.state.counter.step;
+  readonly doubled   = this.state.counter.doubled;
+  readonly isZero    = this.state.counter.isZero;
+  readonly isNeg     = this.state.counter.isNeg;
+  readonly stepLabel = this.state.counter.stepLabel;
+  readonly summary   = this.state.counter.summary;
 
-  // ── Component-local state (signal() — never goes to the store) ────────────
+  // ── Component-local state and derived signals ─────────────────────────────
   readonly customStep = signal(5);
+  readonly bigNum     = computed(() => Math.abs(this.count()) > 100);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   readonly increment   = () => this.ca.increment();

@@ -11,10 +11,11 @@ export type SliceActions<C extends Record<string, Creator>> = {
   [K in keyof C]: (...args: Parameters<C[K]>) => void;
 };
 
-type AnySlice = {
+export type AnySlice = {
   name: string;
   creators: Record<string, Creator>;
-  reducers: Record<string, Reducer<any>>;
+  reducers:  Record<string, Reducer<any>>;
+  computed?: Record<string, (s: any) => unknown>;
 };
 
 // Mapped type: distribute over a union of slice types, use each slice's

@@ -24,9 +24,19 @@ const reducers = {
   setStep:   (s: CounterState, { step }: { step: number }) => ({ ...s, step }),
 };
 
+// computed: pure (state) => derivedValue — no Angular, wrapping happens in app-computed.ts
+const computedDefs = {
+  doubled:   (s: CounterState) => s.count * 2,
+  isZero:    (s: CounterState) => s.count === 0,
+  isNeg:     (s: CounterState) => s.count < 0,
+  stepLabel: (s: CounterState) => `step = ${s.step}`,
+  summary:   (s: CounterState) => `${s.count} · ×2 = ${s.count * 2}`,
+};
+
 export const counterSlice = {
   name: 'counter' as const,
   initialState,
   creators,
   reducers,
+  computed: computedDefs,
 };
