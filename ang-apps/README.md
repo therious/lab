@@ -323,6 +323,68 @@ Every component that calls `injectState().todos.completedCount` reads the **same
 `Signal<number>` instance**. It evaluates once when `todos.items` changes, regardless
 of how many components are subscribed to it.
 
+### Are DeepSignal properties and computed signals dormant until something reads them?
+
+Yes for both, with one important exception.
+
+**Angular signals use a lazy pull model, not an eager push model.**
+
+When `patchState` writes to the store, it calls `set()` on the root `WritableSignal`.
+That synchronously marks every direct dependent as "dirty" — but "marking dirty" is just
+flipping a boolean flag, O(1), no computation. The actual re-evaluation of a signal's
+projection function is deferred until the signal is read.
+
+A `computed` signal that nobody is reading:
+- Gets flagged dirty when its source changes (negligible cost)
+- Does **not** run its projection function
+- Does not allocate, does not render, does not produce garbage
+
+This means the computed signals in `AppComputedState` (`doubled`, `completedCount`, etc.)
+cost essentially nothing while the components that expose them are not mounted. When a
+component mounts and Angular reads the signal during template evaluation, the projection
+runs once and the result is cached until the next dirty-marking.
+
+**DeepSignal nodes are created lazily too.**
+
+`toDeepSignal` returns a Proxy. The computed node for `store.counter.count` is not
+created when the store is instantiated — it is created the first time that property path
+is accessed. Subsequent accesses return the cached node. A deeply nested path that nobody
+ever accesses is never constructed.
+
+**The exception: `effect()`**
+
+`effect()` is eager. It runs after its dependencies change regardless of whether anything
+reads the result. This is by design — effects exist precisely to produce side effects
+(sending to DevTools, making HTTP calls, writing to localStorage). The `withDevtools`
+effect in this codebase fires on every `patchState` call unconditionally. That is the
+intended behaviour; it is also why effects should be used sparingly and `computed` should
+be preferred for derived state.
+
+**This is not the same as RxJS observables.**
+
+An RxJS `BehaviorSubject` pushes its new value to every active subscriber synchronously
+on each `next()` call. If ten components subscribe to the same selector, all ten receive
+the value immediately, even if none of them are visible. NgRx Signal Store does not work
+this way. The store's root `WritableSignal` is not an Observable. State changes propagate
+as dirty flags, and computations run on demand. There is no subscription to maintain, no
+teardown required, and no risk of the "hot observable" concern where a signal
+unnecessarily re-evaluates for invisible consumers.
+
+**Practical implication for this pattern.**
+
+`AppComputedState` creates its computed signals once on first injection. After that:
+- If `CounterComponent` is mounted and its template reads `doubled`, the projection runs
+  after each counter state change.
+- If `CounterComponent` is not in the DOM, `doubled` is flagged dirty but never
+  re-evaluated — zero computation cost.
+- If a component calls `injectState()` but only accesses `counter.count` and never
+  reads `counter.doubled`, the `doubled` projection never runs for that component's
+  lifetime.
+
+The signal graph charges you only for what you actually consume.
+
+---
+
 ### Can I add a `computed` section to the slice itself?
 
 Yes, and it is a practical improvement. A slice can carry a `computed` map of plain
